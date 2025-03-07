@@ -1,0 +1,71 @@
+import express from 'express';
+import path from 'path';
+import type { Request, Response } from 'express';
+import { genreRoutes, cityRoutes, countryRoutes, movieLanguageRoutes } from './routes';
+
+// app.use(cors());
+// app.use(helmet());
+// app.use(compression());
+// app.use(morgan('tiny', { stream: logStream }));
+// app.use(bodyParser.json());
+
+const app = express();
+
+app.get('/api', (req: Request, res: Response) => {
+  res.status(200).json({
+    name: 'reelfake-api',
+    version: '1.0.0',
+  });
+});
+
+// OpenAPI routes
+app.get('/openapi', (req, res) => {
+  res.sendFile(path.join(process.cwd(), 'openapi', 'dist', 'openapi.yaml'));
+});
+
+app.get('/api/docs', (req, res) => {
+  res.sendFile(path.join(process.cwd(), 'openapi', 'docs.html'));
+});
+
+app.get('/api/redocs', (req, res) => {
+  res.sendFile(path.join(process.cwd(), 'openapi', 'redocs.html'));
+});
+
+// /api/genres
+app.use('/api/genres', genreRoutes);
+
+// /api/countries
+app.use('/api/countries', countryRoutes);
+
+// /api/movie_languages
+app.use('/api/movie_languages', movieLanguageRoutes);
+
+// /api/cities
+app.use('/api/cities', cityRoutes);
+
+// /api/films
+// app.use('/api/films', movieRoutes);
+
+// /api/films/{film_id}&include_actors={true or false or yes or no or 0 or 1}
+// /api/films?genres=genre_name1,genre_name2,genre_nam3&include_actors={true or false or yes or no or 0 or 1}
+// /api/films?release_year={release_year}&genres={list_of_genres}&include_actors={true or false or yes or no or 0 or 1}
+
+// /api/actors?include_movies={true or false or yes or no or 0 or 1}
+
+// /api/stores
+// select store_id, count(film_id) from inventory group by store_id order by store_id
+// /api/stores?state={state}&city={city}&get_stock={true or false or yes or no or 0 or 1}
+// /api/stores/staff
+
+// /api/customers
+// /api/customers/rentals
+// /api/customers?state={state}&city={city}
+
+// /api/inventory
+// /api/inventory?state={state}&city={city}
+
+// /api/staff
+// /api/staff/{staff_id}
+// /api/staff/{staff_id}/rentals
+
+export default app;

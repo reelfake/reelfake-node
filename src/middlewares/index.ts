@@ -1,0 +1,1 @@
+export { validateGenresInQuery } from './genreMiddleware';

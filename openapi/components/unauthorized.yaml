@@ -1,0 +1,5 @@
+description: Api key is missing or invalid
+headers:
+  WWW_Authenticate:
+    schema:
+      type: string

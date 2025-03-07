@@ -1,0 +1,10 @@
+type: object
+properties:
+  id:
+    type: integer
+  cityName:
+    type: string
+  stateName:
+    type: string
+  countryId:
+    type: integer

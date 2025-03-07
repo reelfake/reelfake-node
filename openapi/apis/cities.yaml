@@ -1,0 +1,37 @@
+get:
+  summary: Get the list of the cities
+  security:
+    - ReelFake_ApiKey_Auth: []
+  operationId: getCities
+  parameters:
+    - name: includeCountry
+      in: query
+      description: Include the country data for each city (if true will each city will contain country object)
+      required: false
+      schema:
+        type: boolean
+  responses:
+    '200':
+      description: Successfully returned a list of the cities
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: ../components/cityWithCountry.yaml
+                  length:
+                    type: integer
+              - type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: ../components/city.yaml
+                  length:
+                    type: integer
+    '401':
+      $ref: ../components/unauthorized.yaml

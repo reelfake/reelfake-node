@@ -1,0 +1,21 @@
+get:
+  summary: Get all available genres
+  security:
+    - ReelFake_ApiKey_Auth: []
+  operationId: getGenres
+  responses:
+    '200':
+      description: Successfully returned a list of available movie genres
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  $ref: ../components/genre.yaml
+              length:
+                type: integer
+    '401':
+      $ref: ../components/unauthorized.yaml

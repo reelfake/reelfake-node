@@ -1,0 +1,21 @@
+get:
+  summary: Get all available movie languages
+  security:
+    - ReelFake_ApiKey_Auth: []
+  operationId: getMovieLanguages
+  responses:
+    '200':
+      description: Successfully returned a list of available movie languages
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  $ref: ../components/movieLanguage.yaml
+              length:
+                type: integer
+    '401':
+      $ref: ../components/unauthorized.yaml

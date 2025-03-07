@@ -1,0 +1,191 @@
+openapi: 3.1.0
+info:
+  version: 1.0.0
+  title: Reel Fake Api
+  description: A REST api for buying or renting a movie dvd (only for educational purposes)
+  license:
+    name: MIT License
+    url: https://mit-license.org
+  contact:
+    name: Pratap Reddy
+    email: pratapreddy15@gmail.com
+servers:
+  - url: http://reelfake.com
+    description: Production server
+  - url: http://127.0.0.1:8000
+    description: Local server
+security:
+  - ReelFake_ApiKey_Auth: []
+paths:
+  /genres:
+    get:
+      summary: Get all available genres
+      security:
+        - ReelFake_ApiKey_Auth: []
+      operationId: getGenres
+      responses:
+        '200':
+          description: Successfully returned a list of available movie genres
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/genre'
+                  length:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/unauthorized'
+  /cities:
+    get:
+      summary: Get the list of the cities
+      security:
+        - ReelFake_ApiKey_Auth: []
+      operationId: getCities
+      parameters:
+        - name: includeCountry
+          in: query
+          description: Include the country data for each city (if true will each city will contain country object)
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Successfully returned a list of the cities
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/cityWithCountry'
+                      length:
+                        type: integer
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/city'
+                      length:
+                        type: integer
+        '401':
+          $ref: '#/components/responses/unauthorized'
+  /countries:
+    get:
+      summary: Get all the countries
+      security:
+        - ReelFake_ApiKey_Auth: []
+      operationId: getCountries
+      responses:
+        '200':
+          description: Successfully returned a list of countries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/country'
+                  length:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/unauthorized'
+  /movie_languages:
+    get:
+      summary: Get all available movie languages
+      security:
+        - ReelFake_ApiKey_Auth: []
+      operationId: getMovieLanguages
+      responses:
+        '200':
+          description: Successfully returned a list of available movie languages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/movieLanguage'
+                  length:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/unauthorized'
+components:
+  securitySchemes:
+    ReelFake_ApiKey_Auth:
+      type: apiKey
+      name: reelfake-api-key
+      in: header
+  schemas:
+    genre:
+      type: object
+      properties:
+        id:
+          type: integer
+        genreName:
+          type: string
+    cityWithCountry:
+      type: object
+      properties:
+        id:
+          type: integer
+        cityName:
+          type: string
+        stateName:
+          type: string
+        country:
+          type: object
+          properties:
+            id:
+              type: integer
+            countryName:
+              type: string
+            countryCode:
+              type: string
+    city:
+      type: object
+      properties:
+        id:
+          type: integer
+        cityName:
+          type: string
+        stateName:
+          type: string
+        countryId:
+          type: integer
+    country:
+      type: object
+      properties:
+        id:
+          type: integer
+        countryName:
+          type: string
+        countryCode:
+          type: string
+    movieLanguage:
+      type: object
+      properties:
+        id:
+          type: integer
+        languageName:
+          type: string
+        languageCode:
+          type: string
+  responses:
+    unauthorized:
+      description: Api key is missing or invalid
+      headers:
+        WWW_Authenticate:
+          schema:
+            type: string

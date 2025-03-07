@@ -1,0 +1,21 @@
+get:
+  summary: Get all the countries
+  security:
+    - ReelFake_ApiKey_Auth: []
+  operationId: getCountries
+  responses:
+    '200':
+      description: Successfully returned a list of countries
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  $ref: ../components/country.yaml
+              length:
+                type: integer
+    '401':
+      $ref: ../components/unauthorized.yaml

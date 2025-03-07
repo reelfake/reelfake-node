@@ -1,0 +1,8 @@
+/genres:
+  $ref: apis/genres.yaml
+/cities:
+  $ref: apis/cities.yaml
+/countries:
+  $ref: apis/countries.yaml
+/movie_languages:
+  $ref: apis/movieLanguages.yaml

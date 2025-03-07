@@ -1,0 +1,26 @@
+openapi: 3.1.0
+info:
+  version: 1.0.0
+  title: Reel Fake Api
+  description: A REST api for buying or renting a movie dvd (only for educational purposes)
+  license:
+    name: MIT License
+    url: https://mit-license.org
+  contact:
+    name: Pratap Reddy
+    email: pratapreddy15@gmail.com
+servers:
+  - url: http://reelfake.com
+    description: Production server
+  - url: http://127.0.0.1:8000
+    description: Local server
+components:
+  securitySchemes:
+    ReelFake_ApiKey_Auth:
+      type: apiKey
+      name: reelfake-api-key
+      in: header
+security:
+  - ReelFake_ApiKey_Auth: []
+paths:
+  $ref: ./paths.yaml
