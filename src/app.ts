@@ -1,7 +1,9 @@
 import express from 'express';
 import path from 'path';
-import type { Request, Response } from 'express';
+import type { NextFunction, Request, Response } from 'express';
+import { AppError } from './utils';
 import { genreRoutes, cityRoutes, countryRoutes, movieLanguageRoutes } from './routes';
+import { ERROR_MESSAGES } from './constants';
 
 // app.use(cors());
 // app.use(helmet());
@@ -10,6 +12,14 @@ import { genreRoutes, cityRoutes, countryRoutes, movieLanguageRoutes } from './r
 // app.use(bodyParser.json());
 
 const app = express();
+
+app.use((req: Request, res: Response, next: NextFunction) => {
+  if (req.headers['api_key'] === undefined || req.headers['api_key'] !== process.env.API_KEY) {
+    return next(new AppError(ERROR_MESSAGES.INVALID_MISSING_API_KEY, 401));
+  }
+
+  next();
+});
 
 app.get('/api', (req: Request, res: Response) => {
   res.status(200).json({
@@ -67,5 +77,30 @@ app.use('/api/cities', cityRoutes);
 // /api/staff
 // /api/staff/{staff_id}
 // /api/staff/{staff_id}/rentals
+
+app.use('*', (req: Request, res: Response) => {
+  res.status(404).json({
+    message: `Route ${req.originalUrl} does not exist`,
+  });
+});
+
+app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
+  if (error instanceof AppError) {
+    const appError = error as AppError;
+    appError.status = appError.status || 'failed';
+    appError.statusCode = appError.statusCode || 500;
+    res.status(appError.statusCode).json({
+      status: appError.status,
+      message: error.message,
+      stack: process.env.NODE_ENV === 'dev' ? error.stack : undefined,
+    });
+  } else {
+    res.status(500).json({
+      status: 'error',
+      message: error.message,
+      stack: process.env.NODE_ENV === 'dev' ? error.stack : undefined,
+    });
+  }
+});
 
 export default app;

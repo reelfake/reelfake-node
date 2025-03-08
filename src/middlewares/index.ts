@@ -1,1 +1,1 @@
-export { validateGenresInQuery } from './genreMiddleware';
+export { default as validateGenresInQuery } from './genreMiddleware';

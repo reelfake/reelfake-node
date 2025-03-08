@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { GENRES } from '../constants';
 
-export function validateGenresInQuery(req: Request, res: Response, next: NextFunction) {
+export default function validateGenresInQuery(req: Request, res: Response, next: NextFunction) {
   const { genres } = req.query as { genres: string };
 
   if (genres) {
