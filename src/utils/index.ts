@@ -1,1 +1,7 @@
-export { queryGenres, queryCities, queryCountries, queryMovieLanguages } from './dbQuery';
+export {
+  queryGenres,
+  queryCities,
+  queryCountries,
+  queryMovieLanguages,
+  queryCitiesByCountry,
+} from './dbQuery';

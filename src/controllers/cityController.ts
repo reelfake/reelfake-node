@@ -11,3 +11,11 @@ export const getCities = async (req: Request, res: Response) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+export const getCitiesByCountry = async (req: Request, res: Response) => {
+  try {
+  } catch (err: unknown) {
+    const error = err as Error;
+    res.status(500).json({ error: error.message });
+  }
+};

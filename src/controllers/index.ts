@@ -1,4 +1,4 @@
 export { getGenres } from './genreController';
-export { getCities } from './cityController';
+export { getCities, getCitiesByCountry } from './cityController';
 export { getCountries } from './countryController';
 export { getMovieLanguages } from './movieLanguageController';

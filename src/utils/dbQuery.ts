@@ -26,9 +26,17 @@ export async function queryCities(includeCountry: boolean = false) {
     return citiesWithCountry;
   }
 
-  const cities = await CityModel.findAll();
+  const cities = await CityModel.findAll({
+    attributes: ['id', 'cityName', 'stateName', 'countryId'],
+  });
 
   return cities;
+}
+
+export async function queryCitiesByCountry(countryCode: string) {
+  const cities = await CityModel.findAll({
+    where: {},
+  });
 }
 
 export async function queryMovieLanguages() {
