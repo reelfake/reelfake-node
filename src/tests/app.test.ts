@@ -2,10 +2,12 @@ import supertest from 'supertest';
 
 import app from '../app';
 
+const apiKey = process.env.API_KEY || '';
+
 describe('App', () => {
   it('GET /api should return api name and version', async () => {
     const server = supertest(app);
-    const response = await server.get('/api');
+    const response = await server.get('/api').set('api_key', apiKey);
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ name: 'reelfake-api', version: '1.0.0' });
   });
@@ -15,7 +17,7 @@ describe('App', () => {
     process.env.PORT = '';
 
     const server = supertest(app);
-    const response = await server.get('/api');
+    const response = await server.get('/api').set('api_key', apiKey);
     expect(response.status).toBe(200);
   });
 });

@@ -1,5 +1,5 @@
 import { GenreModel } from '../models';
-import { CityModel, CountryModel, MovieLanguageModel } from '../models';
+import { CityModel, CountryModel, MovieLanguageModel, MovieModel } from '../models';
 
 export async function queryGenres() {
   const genres = await GenreModel.findAll();
@@ -42,4 +42,13 @@ export async function queryCitiesByCountry(countryCode: string) {
 export async function queryMovieLanguages() {
   const movieLanguages = await MovieLanguageModel.findAll();
   return movieLanguages;
+}
+
+export async function queryMovies(pageNumber: number, limitPerPage: number) {
+  const movies = await MovieModel.findAll({
+    limit: limitPerPage,
+    offset: limitPerPage * pageNumber,
+    order: [['id', 'ASC']],
+  });
+  return movies;
 }

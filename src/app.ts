@@ -2,7 +2,7 @@ import express from 'express';
 import path from 'path';
 import type { NextFunction, Request, Response } from 'express';
 import { AppError } from './utils';
-import { genreRoutes, cityRoutes, countryRoutes, movieLanguageRoutes } from './routes';
+import { genreRoutes, cityRoutes, countryRoutes, movieLanguageRoutes, movieRoutes } from './routes';
 import { ERROR_MESSAGES } from './constants';
 
 // app.use(cors());
@@ -53,30 +53,21 @@ app.use('/api/movie_languages', movieLanguageRoutes);
 // /api/cities
 app.use('/api/cities', cityRoutes);
 
-// /api/films
-// app.use('/api/films', movieRoutes);
+// /api/movies?page_number=page_number&limit_per_page=limit
+app.use('/api/movies', movieRoutes);
 
-// /api/films/{film_id}&include_actors={true or false or yes or no or 0 or 1}
-// /api/films?genres=genre_name1,genre_name2,genre_nam3&include_actors={true or false or yes or no or 0 or 1}
-// /api/films?release_year={release_year}&genres={list_of_genres}&include_actors={true or false or yes or no or 0 or 1}
+// /api/movies?release_year=release_year
+// Filter movies by release year
+
+// /api/movies/:id
+// Returns complete information about the movie
+
+// /api/movies/:id?genres=genres_separated_by_comma&include_actors=flag
+// Returns complete data about movie with the ability to
+// filter by genres, whether or not to include actors
 
 // /api/actors?include_movies={true or false or yes or no or 0 or 1}
-
-// /api/stores
-// select store_id, count(film_id) from inventory group by store_id order by store_id
-// /api/stores?state={state}&city={city}&get_stock={true or false or yes or no or 0 or 1}
-// /api/stores/staff
-
-// /api/customers
-// /api/customers/rentals
-// /api/customers?state={state}&city={city}
-
-// /api/inventory
-// /api/inventory?state={state}&city={city}
-
-// /api/staff
-// /api/staff/{staff_id}
-// /api/staff/{staff_id}/rentals
+// Each actor data will have movie id, title, genres and release dates
 
 app.use('*', (req: Request, res: Response) => {
   res.status(404).json({

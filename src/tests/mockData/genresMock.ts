@@ -1,4 +1,4 @@
-export const genresMock = [
+export default [
   {
     id: 1,
     genreName: 'Action',
