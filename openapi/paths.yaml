@@ -6,3 +6,5 @@
   $ref: apis/countries.yaml
 /movie_languages:
   $ref: apis/movieLanguages.yaml
+/movies:
+  $ref: apis/movies.yaml

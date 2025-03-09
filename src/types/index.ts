@@ -1,4 +1,4 @@
-import { DataType } from 'sequelize';
+import { DataType, Model, BuildOptions } from 'sequelize';
 import type { Sequelize } from 'sequelize';
 
 export type ModelField = {

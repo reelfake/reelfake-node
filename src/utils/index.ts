@@ -3,8 +3,8 @@ export {
   queryCities,
   queryCountries,
   queryMovieLanguages,
-  queryCitiesByCountry,
   queryMovies,
+  queryMoviesPage,
 } from './dbQuery';
 export { AppError } from './appError';
 export { default as routeFnWrapper } from './routeFuncWrappter';

@@ -1,28 +1,35 @@
 import type { Request, Response, NextFunction } from 'express';
-import { queryMovies, AppError } from '../utils';
+import { queryMoviesPage } from '../utils';
+import { MovieModel } from '../models';
+import { PAGINATION_HEADERS, ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
 
 export const getMovies = async (req: Request, res: Response, next: NextFunction) => {
-  const { page_number, limit_per_page } = req.query;
-
-  if (!req.query.page_number || !req.query.limit_per_page) {
-    throw new AppError('Page number and limit per page are required in the request', 400);
-  }
+  const { page_number } = req.query;
 
   const pageNumber = Number(page_number);
-  const limitPerPage = Number(limit_per_page);
+  const limitPerPage = ITEMS_PER_PAGE_FOR_PAGINATION;
 
-  if (isNaN(pageNumber) || isNaN(limitPerPage)) {
-    throw new AppError('Page number and limit per page must be a valid non-zero number', 400);
-  }
+  const lastSeenPageNumber = Number(req.get(PAGINATION_HEADERS.LAST_SEEN_PAGE_NUMBER));
+  const lastIdOfLastSeenPage = Number(req.get(PAGINATION_HEADERS.LAST_SEEN_PAGE_LAST_ID));
 
-  if (pageNumber < 1) {
-    throw new AppError('Page number must be a valid non-zero number', 400);
-  }
+  const totalMovies = await MovieModel.getTotalRowsCount();
 
-  if (limitPerPage < 2) {
-    throw new AppError('The limit per page must to be at least 2', 400);
-  }
+  const movies = await queryMoviesPage(
+    pageNumber,
+    limitPerPage,
+    lastSeenPageNumber,
+    lastIdOfLastSeenPage
+  );
+  const moviesLength = movies.length;
+  const lastMovieId = movies[moviesLength - 1].getDataValue('id');
 
-  const movies = await queryMovies(pageNumber, limitPerPage);
-  res.status(200).json({ items: movies, length: movies.length });
+  res
+    .status(200)
+    .set({ 'page-number': pageNumber, 'last-seen-id': lastMovieId })
+    .json({
+      items: movies,
+      length: movies.length,
+      totalPages: Math.floor(totalMovies / limitPerPage),
+      totalItems: Number(totalMovies),
+    });
 };

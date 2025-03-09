@@ -121,6 +121,58 @@ paths:
                     type: integer
         '401':
           $ref: '#/components/responses/unauthorized'
+  /movies:
+    get:
+      summary: Get movies by page
+      security:
+        - ReelFake_ApiKey_Auth: []
+      operationId: getMovies
+      parameters:
+        - in: header
+          name: last-seen-page
+          description: |
+            The page number of the previous visited or seen page.
+            This header is required when requesting pages after the first one.
+          required: false
+          schema:
+            type: integer
+        - in: header
+          name: last-seen-id
+          description: |
+            The id of the last movie that was in the last seen page.
+            This is header is required when requesting pages after the first one.
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully returned a list of movies for the given page
+          headers:
+            page-number:
+              description: The page number for which the movies are returned. This is needed when requesting next pages.
+              schema:
+                type: integer
+            last-seen-id:
+              description: The movie id of the last movie of the current page. This is needed when requesting next pages.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/movie'
+                  length:
+                    type: integer
+                  totalPages:
+                    type: integer
+                  totalItems:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/unauthorized'
 components:
   securitySchemes:
     ReelFake_ApiKey_Auth:
@@ -182,6 +234,49 @@ components:
           type: string
         languageCode:
           type: string
+    movie:
+      type: object
+      properties:
+        id:
+          type: integer
+        imdbId:
+          type: string
+        title:
+          type: string
+        originalTitle:
+          type: string
+        overview:
+          type: string
+        runtime:
+          type: integer
+        genres:
+          type: array
+          items:
+            type: string
+        country:
+          type: array
+          items:
+            type: string
+        language:
+          type: string
+        movieStatus:
+          type: string
+        popularity:
+          type: number
+        budget:
+          type: integer
+        revenue:
+          type: integer
+        ratingAverage:
+          type: integer
+        ratingCount:
+          type: integer
+        posterUrl:
+          type: string
+        rentalRate:
+          type: number
+        rentalDuration:
+          type: integer
   responses:
     unauthorized:
       description: Api key is missing or invalid

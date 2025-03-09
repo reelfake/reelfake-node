@@ -1,7 +1,8 @@
-import { DataTypes, Model } from 'sequelize';
+import { DataTypes } from 'sequelize';
+import BaseModel from './baseModel';
 import sequelize from '../sequelize.config';
 
-class Genre extends Model {}
+class Genre extends BaseModel {}
 
 Genre.init(
   {

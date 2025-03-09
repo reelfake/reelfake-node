@@ -6,11 +6,3 @@ export const getCities = async (req: Request, res: Response, next: NextFunction)
   const cities = await queryCities(includeCountry);
   res.status(200).json({ items: cities, length: cities.length });
 };
-
-export const getCitiesByCountry = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-  } catch (err: unknown) {
-    const error = err as Error;
-    res.status(500).json({ error: error.message });
-  }
-};

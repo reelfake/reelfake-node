@@ -14,7 +14,11 @@ import { ERROR_MESSAGES } from './constants';
 const app = express();
 
 app.use((req: Request, res: Response, next: NextFunction) => {
-  if (req.headers['api_key'] === undefined || req.headers['api_key'] !== process.env.API_KEY) {
+  const skipAuth = new RegExp('/api/(re)?docs/').test(req.path) || req.path === '/openapi';
+  if (
+    !skipAuth &&
+    (req.headers['api-key'] === undefined || req.headers['api-key'] !== process.env.API_KEY)
+  ) {
     return next(new AppError(ERROR_MESSAGES.INVALID_MISSING_API_KEY, 401));
   }
 

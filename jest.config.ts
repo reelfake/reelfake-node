@@ -13,6 +13,7 @@ const config: Config.InitialOptions = {
     '!<rootDir>/src/schemas/**/*.ts',
     '!<rootDir>/node_modules/**',
     '!<rootDir>/src/tests/**',
+    '!<rootDir>/src/sequelize.config.ts',
   ],
   coverageDirectory: '<rootDir>/testReport',
   testMatch: ['**/tests/**/*.test.ts', '!<rootDir>/src/server.ts'],

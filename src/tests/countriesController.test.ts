@@ -9,7 +9,7 @@ const apiKey = process.env.API_KEY || '';
 describe('Countries Controller', () => {
   it('GET /api/countries should return a list of countries', async () => {
     const server = supertest(app);
-    const response = await server.get('/api/countries').set('api_key', apiKey);
+    const response = await server.get('/api/countries').set('api-key', apiKey);
     expect(response.status).toBe(200);
     expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
     expect(response.body).toStrictEqual({
@@ -27,7 +27,7 @@ describe('Countries Controller', () => {
       .spyOn(dbQuery, 'queryCountries')
       .mockRejectedValue({ message: 'unit testing exception for /api/countries' });
     const server = supertest(app);
-    const response = await server.get('/api/countries').set('api_key', apiKey);
+    const response = await server.get('/api/countries').set('api-key', apiKey);
     expect(response.status).toBe(500);
     expect(response.body.message).toEqual('unit testing exception for /api/countries');
   });

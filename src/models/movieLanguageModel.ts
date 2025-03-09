@@ -1,7 +1,8 @@
-import { DataTypes, Model } from 'sequelize';
+import { DataTypes } from 'sequelize';
+import BaseModel from './baseModel';
 import sequelize from '../sequelize.config';
 
-class MovieLanguage extends Model {}
+class MovieLanguage extends BaseModel {}
 
 MovieLanguage.init(
   {

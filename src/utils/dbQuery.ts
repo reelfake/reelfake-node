@@ -1,5 +1,5 @@
-import { GenreModel } from '../models';
-import { CityModel, CountryModel, MovieLanguageModel, MovieModel } from '../models';
+import { QueryTypes, Sequelize, Op } from 'sequelize';
+import { GenreModel, CityModel, CountryModel, MovieLanguageModel, MovieModel } from '../models';
 
 export async function queryGenres() {
   const genres = await GenreModel.findAll();
@@ -33,21 +33,38 @@ export async function queryCities(includeCountry: boolean = false) {
   return cities;
 }
 
-export async function queryCitiesByCountry(countryCode: string) {
-  const cities = await CityModel.findAll({
-    where: {},
-  });
-}
-
 export async function queryMovieLanguages() {
   const movieLanguages = await MovieLanguageModel.findAll();
   return movieLanguages;
 }
 
-export async function queryMovies(pageNumber: number, limitPerPage: number) {
+export async function queryMovies(limitPerPage: number) {
   const movies = await MovieModel.findAll({
     limit: limitPerPage,
-    offset: limitPerPage * pageNumber,
+    order: [['id', 'ASC']],
+  });
+  return movies;
+}
+
+export async function queryMoviesPage(
+  pageNumber: number,
+  limitPerPage: number,
+  lastSeenPageNumber: number,
+  lastSeenId: number
+) {
+  if (pageNumber === 1) {
+    return await queryMovies(limitPerPage);
+  }
+
+  const startingId = lastSeenId + (pageNumber - lastSeenPageNumber - 1) * limitPerPage;
+
+  const movies = await MovieModel.findAll({
+    limit: limitPerPage,
+    where: {
+      id: {
+        [Op.gt]: startingId,
+      },
+    },
     order: [['id', 'ASC']],
   });
   return movies;

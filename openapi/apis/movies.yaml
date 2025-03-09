@@ -1,0 +1,51 @@
+get:
+  summary: Get movies by page
+  security:
+    - ReelFake_ApiKey_Auth: []
+  operationId: getMovies
+  parameters:
+    - in: header
+      name: last-seen-page
+      description: |
+        The page number of the previous visited or seen page.
+        This header is required when requesting pages after the first one.
+      required: false
+      schema:
+        type: integer
+    - in: header
+      name: last-seen-id
+      description: |
+        The id of the last movie that was in the last seen page.
+        This is header is required when requesting pages after the first one.
+      required: false
+      schema:
+        type: integer
+  responses:
+    '200':
+      description: Successfully returned a list of movies for the given page
+      headers:
+        page-number:
+          description: The page number for which the movies are returned. This is needed when requesting next pages.
+          schema:
+            type: integer
+        last-seen-id:
+          description: The movie id of the last movie of the current page. This is needed when requesting next pages.
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  $ref: ../components/movie.yaml
+              length:
+                type: integer
+              totalPages:
+                type: integer
+              totalItems:
+                type: integer
+    '401':
+      $ref: ../components/unauthorized.yaml

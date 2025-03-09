@@ -1,8 +1,9 @@
-import { DataTypes, Model } from 'sequelize';
+import { DataTypes } from 'sequelize';
+import BaseModel from './baseModel';
 import Country from './countryModel';
 import sequelize from '../sequelize.config';
 
-class City extends Model {}
+class City extends BaseModel {}
 
 City.init(
   {
