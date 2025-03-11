@@ -1,9 +1,15 @@
 get:
-  summary: Get movies by page
+  summary: Get movies released in a year
   security:
     - ReelFake_ApiKey_Auth: []
-  operationId: getMovies
+  operationId: getMoviesByYear
   parameters:
+    - in: path
+      name: releaseYear
+      required: true
+      description: The release year to find the movies
+      schema:
+        type: integer
     - in: query
       name: pageNumber
       required: false
@@ -38,6 +44,17 @@ get:
                 type: integer
     '404':
       description: The page is out of range meaning the page number provided in the request query has exceeded the total number of movies present.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+              message:
+                type: string
+    '500':
+      description: The server encountered unexpected exception
       content:
         application/json:
           schema:

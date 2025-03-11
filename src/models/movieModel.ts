@@ -11,6 +11,10 @@ Movie.init(
       primaryKey: true,
       field: 'id',
     },
+    tmdbId: {
+      type: DataTypes.INTEGER,
+      field: 'tmdb_id',
+    },
     imdbId: {
       type: DataTypes.STRING(60),
       field: 'imdb_id',
@@ -32,7 +36,7 @@ Movie.init(
       field: 'runtime',
     },
     releaseDate: {
-      type: DataTypes.DATE,
+      type: DataTypes.DATEONLY,
       field: 'release_date',
     },
     genres: {

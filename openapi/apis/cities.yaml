@@ -4,8 +4,8 @@ get:
     - ReelFake_ApiKey_Auth: []
   operationId: getCities
   parameters:
-    - name: includeCountry
-      in: query
+    - in: query
+      name: includeCountry
       description: Include the country data for each city (if true will each city will contain country object)
       required: false
       schema:

@@ -8,3 +8,5 @@
   $ref: apis/movieLanguages.yaml
 /movies:
   $ref: apis/movies.yaml
+/movies/{releaseYear}:
+  $ref: apis/moviesByYear.yaml

@@ -46,8 +46,8 @@ paths:
         - ReelFake_ApiKey_Auth: []
       operationId: getCities
       parameters:
-        - name: includeCountry
-          in: query
+        - in: query
+          name: includeCountry
           description: Include the country data for each city (if true will each city will contain country object)
           required: false
           schema:
@@ -128,32 +128,21 @@ paths:
         - ReelFake_ApiKey_Auth: []
       operationId: getMovies
       parameters:
-        - in: header
-          name: last-seen-page
-          description: |
-            The page number of the previous visited or seen page.
-            This header is required when requesting pages after the first one.
+        - in: query
+          name: pageNumber
           required: false
+          description: |
+            The page number (which starts with 1) to fetch the set of movies from.
+            The movies are split into multiple pages with each page having a limited number of movies.
           schema:
             type: integer
-        - in: header
-          name: last-seen-id
-          description: |
-            The id of the last movie that was in the last seen page.
-            This is header is required when requesting pages after the first one.
-          required: false
-          schema:
-            type: integer
+            default: 1
       responses:
         '200':
           description: Successfully returned a list of movies for the given page
           headers:
-            page-number:
-              description: The page number for which the movies are returned. This is needed when requesting next pages.
-              schema:
-                type: integer
-            last-seen-id:
-              description: The movie id of the last movie of the current page. This is needed when requesting next pages.
+            rf-page-number:
+              description: The page number that the list of movies returned belong to
               schema:
                 type: integer
           content:
@@ -173,6 +162,86 @@ paths:
                     type: integer
         '401':
           $ref: '#/components/responses/unauthorized'
+        '404':
+          description: The page is out of range meaning the page number provided in the request query has exceeded the total number of movies present.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+  /movies/{releaseYear}:
+    get:
+      summary: Get movies released in a year
+      security:
+        - ReelFake_ApiKey_Auth: []
+      operationId: getMoviesByYear
+      parameters:
+        - in: path
+          name: releaseYear
+          required: true
+          description: The release year to find the movies
+          schema:
+            type: integer
+        - in: query
+          name: pageNumber
+          required: false
+          description: |
+            The page number (which starts with 1) to fetch the set of movies from.
+            The movies are split into multiple pages with each page having a limited number of movies.
+          schema:
+            type: integer
+            default: 1
+      responses:
+        '200':
+          description: Successfully returned a list of movies for the given page
+          headers:
+            rf-page-number:
+              description: The page number that the list of movies returned belong to
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/movie'
+                  length:
+                    type: integer
+                  totalPages:
+                    type: integer
+                  totalItems:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          description: The page is out of range meaning the page number provided in the request query has exceeded the total number of movies present.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+        '500':
+          description: The server encountered unexpected exception
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
 components:
   securitySchemes:
     ReelFake_ApiKey_Auth:

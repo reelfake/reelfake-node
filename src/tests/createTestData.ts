@@ -5,6 +5,32 @@ import citiesMock from './mockData/citiesMock';
 import movieLanguagesMock from './mockData/movieLanguagesMock';
 import moviesMock from './mockData/moviesMock';
 
+const moviesMock1 = [
+  {
+    id: 154220,
+    tmdbId: 634528,
+    imdbId: 'tt6902332',
+    title: 'The Marksman',
+    originalTitle: 'The Marksman',
+    overview:
+      "Jim Hanson's quiet life is suddenly disturbed by two people crossing the US/Mexico border - a woman and her young son - desperate to flee a Mexican cartel. After a shootout leaves the mother dead, Jim becomes the boy's reluctant defender. He embraces his role as Miguel's protector and will stop at nothing to get him to safety, as they go on the run from the relentless assassins.",
+    runtime: 108,
+    releaseDate: '2021-01-15',
+    genres: ['Action', 'Drama', 'Thriller'],
+    country: ['United States of America'],
+    language: 'English',
+    movieStatus: 'Released',
+    popularity: 16.783,
+    budget: 23000000,
+    revenue: 23076711,
+    ratingAverage: 6.8,
+    ratingCount: 1613,
+    posterUrl: 'https://image.tmdb.org/t/p/w500/6vcDalR50RWa309vBH1NLmG2rjQ.jpg',
+    rentalRate: 11.0,
+    rentalDuration: 3,
+  },
+];
+
 const db = new sqlite3.Database('src/tests/test_db');
 
 db.serialize(() => {
@@ -42,6 +68,7 @@ db.serialize(() => {
 
   db.run(`CREATE TABLE IF NOT EXISTS v_movie (
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    tmdb_id INTEGER NOT NULL,
     imdb_id VARCHAR(60),
     title VARCHAR(255) NOT NULL,
     original_title VARCHAR(255) NOT NULL,
@@ -103,15 +130,15 @@ db.serialize(() => {
   console.log('Adding rows to movie table...');
   for (const m of moviesMock) {
     db.run(
-      `INSERT INTO v_movie (id, imdb_id, title, original_title, overview, runtime, release_date, genres, country, movie_language, movie_status, popularity, budget, revenue, rating_average, rating_count, poster_url, rental_rate, rental_duration) VALUES (${
+      `INSERT INTO v_movie (id, tmdb_id, imdb_id, title, original_title, overview, runtime, release_date, genres, country, movie_language, movie_status, popularity, budget, revenue, rating_average, rating_count, poster_url, rental_rate, rental_duration) VALUES (${
         m.id
-      }, "${m.imdbId}", "${m.title}", "${m.originalTitle}", "${m.overview}", ${m.runtime}, "${
-        m.releaseDate
-      }", "[${m.genres.join(',')}]", "[${m.country.join(',')}]", "${m.language}", "${
-        m.movieStatus
-      }", ${m.popularity}, ${m.budget}, ${m.revenue}, ${m.ratingAverage}, ${m.ratingCount}, "${
-        m.posterUrl
-      }", ${m.rentalRate}, ${m.rentalDuration})`
+      }, ${m.tmdbId}, "${m.imdbId}", "${m.title}", "${m.originalTitle}", "${m.overview}", ${
+        m.runtime
+      }, "${m.releaseDate}", "[${m.genres.join(',')}]", "[${m.country.join(',')}]", "${
+        m.language
+      }", "${m.movieStatus}", ${m.popularity}, ${m.budget}, ${m.revenue}, ${m.ratingAverage}, ${
+        m.ratingCount
+      }, "${m.posterUrl}", ${m.rentalRate}, ${m.rentalDuration})`
     );
   }
 });

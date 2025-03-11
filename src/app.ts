@@ -60,9 +60,6 @@ app.use('/api/cities', cityRoutes);
 // /api/movies?page_number=page_number&limit_per_page=limit
 app.use('/api/movies', movieRoutes);
 
-// /api/movies?release_year=release_year
-// Filter movies by release year
-
 // /api/movies/:id
 // Returns complete information about the movie
 

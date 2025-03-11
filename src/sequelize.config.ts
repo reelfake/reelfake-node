@@ -13,6 +13,8 @@ if (!db || !user || !password || !host || !port) {
   throw new Error('Missing environment variables required for connecting to the database');
 }
 
+const enableLogs = process.env.ENABLE_SEQUELIZE_LOGS === 'true';
+
 const sequelize = new Sequelize(db, user, password, {
   host,
   port: parseInt(port, 10),
@@ -23,7 +25,7 @@ const sequelize = new Sequelize(db, user, password, {
     acquire: 30000,
     idle: 10000,
   },
-  logging: false,
+  logging: enableLogs,
   storage: process.env.NODE_ENV === 'test' ? `${process.cwd()}/src/tests/test_db` : undefined,
 });
 
