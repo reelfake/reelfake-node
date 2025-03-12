@@ -1,8 +1,19 @@
-import { DataTypes } from 'sequelize';
+import { DataTypes, Op } from 'sequelize';
 import BaseModel from './baseModel';
 import sequelize from '../sequelize.config';
 
-class Movie extends BaseModel {}
+class Movie extends BaseModel {
+  public static async getRowsCountByGenres(genres: string[]) {
+    const countOfRows = await Movie.count({
+      where: {
+        genres: {
+          [Op.contains]: genres,
+        },
+      },
+    });
+    return countOfRows;
+  }
+}
 
 Movie.init(
   {

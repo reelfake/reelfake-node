@@ -13,6 +13,15 @@ get:
       schema:
         type: integer
         default: 1
+    - in: query
+      name: genres
+      required: false
+      description: |
+        The comma separated list of genres to filter the movies. The valid genres are action, adventure, animation, comedy, crime, documentary, drama, family, fantasy, history, horror, music , mystery, romance, science fiction, thriller, war and western.
+      schema:
+        type: array
+        items:
+          type: string
   responses:
     '200':
       description: Successfully returned a list of movies for the given page

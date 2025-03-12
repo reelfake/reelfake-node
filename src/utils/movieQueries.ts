@@ -1,9 +1,14 @@
-import { QueryTypes, Sequelize, Op, and, WhereOptions } from 'sequelize';
+import { Op, WhereOptions } from 'sequelize';
 import { MovieModel } from '../models';
 
-export async function queryMovies(limitPerPage: number) {
+export async function queryMovies(limitPerPage: number, genres: string[] = []) {
   const movies = await MovieModel.findAll({
     limit: limitPerPage,
+    where: {
+      genres: {
+        [Op.contains]: genres,
+      },
+    },
     order: [['id', 'ASC']],
   });
   return movies;
@@ -39,13 +44,14 @@ export async function queryMoviesByReleaseDates(limitPerPage: number, from: Date
   return movies;
 }
 
-export async function queryMoviesCountByYear(year: number) {
-  const releaseDateFrom = new Date(year, 0, 1);
-  const releaseDateTo = new Date(year, 11, 31);
+export async function queryMoviesCountByYear(year: number, genres: string[] = []) {
   const moviesCount = await MovieModel.count({
     where: {
       releaseDate: {
-        [Op.between]: [releaseDateFrom, releaseDateTo],
+        [Op.between]: [`${year}-01-01`, `${year}-12-31`],
+      },
+      genres: {
+        [Op.contains]: genres,
       },
     },
   });
@@ -96,9 +102,14 @@ export async function queryMoviesByYear(
   return movies;
 }
 
-export async function queryMoviesPage(pageNumber: number, limitPerPage: number, idOffset: number) {
+export async function queryMoviesPage(
+  pageNumber: number,
+  limitPerPage: number,
+  idOffset: number,
+  genres: string[] = []
+) {
   if (pageNumber === 1) {
-    return await queryMovies(limitPerPage);
+    return await queryMovies(limitPerPage, genres);
   }
 
   const movies = await MovieModel.findAll({
@@ -106,6 +117,9 @@ export async function queryMoviesPage(pageNumber: number, limitPerPage: number, 
     where: {
       id: {
         [Op.gte]: idOffset,
+      },
+      genres: {
+        [Op.contains]: genres,
       },
     },
     order: [['id', 'ASC']],

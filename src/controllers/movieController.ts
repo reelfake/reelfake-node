@@ -11,8 +11,8 @@ import { MovieModel } from '../models';
 import { ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
 
 export const getMovies = async (req: Request, res: Response, next: NextFunction) => {
-  const { pageNumber: pageNumberText } = req.query;
-
+  const { pageNumber: pageNumberText, genres: genresText } = req.query;
+  const genres = genresText ? genresText.toString().split(',') : [];
   const pageNumber = pageNumberText ? Number(pageNumberText) : 1;
   const limitPerPage = ITEMS_PER_PAGE_FOR_PAGINATION;
 
@@ -24,10 +24,15 @@ export const getMovies = async (req: Request, res: Response, next: NextFunction)
     page 3 starts at id = 101 which ((3 - 1) * 50) + 1
   */
   const idOffset = (pageNumber - 1) * limitPerPage + 1;
+  let totalMovies = -1;
+  if (genres.length > 0) {
+    totalMovies = await MovieModel.getRowsCountByGenres(genres);
+  } else {
+    totalMovies = await MovieModel.getTotalRowsCount();
+  }
 
-  const totalMovies = await MovieModel.getTotalRowsCount();
+  const movies = await queryMoviesPage(pageNumber, limitPerPage, idOffset, genres);
 
-  const movies = await queryMoviesPage(pageNumber, limitPerPage, idOffset);
   if (movies.length === 0) {
     throw new AppError('Page out of range', 404);
   }
@@ -44,24 +49,25 @@ export const getMovies = async (req: Request, res: Response, next: NextFunction)
 };
 
 export const getMoviesByYear = async (req: Request, res: Response, next: NextFunction) => {
-  const { pageNumber: pageNumberText } = req.query;
+  const { pageNumber: pageNumberText, genres: genresText } = req.query;
   const { releaseYear: releaseYearText } = req.params;
-
+  const genres = genresText ? genresText.toString().split(',') : [];
   const releaseYear = Number(releaseYearText);
 
   if (!MovieModel.sequelize) {
     throw new AppError('Server encoutered unhandled exception', 500);
   }
 
-  const totalMovies = await queryMoviesCountByYear(releaseYear);
+  const totalMovies = await queryMoviesCountByYear(releaseYear, genres);
 
   const pageNumber = pageNumberText ? Number(pageNumberText) : 1;
   const startingRowNumber =
     pageNumber * ITEMS_PER_PAGE_FOR_PAGINATION - ITEMS_PER_PAGE_FOR_PAGINATION;
+  const genresQuery = `{${genres.map((g) => `"${g}"`).join(',')}}`;
   const queryText = `
     WITH movies_with_row_number AS (
       SELECT ROW_NUMBER() OVER (ORDER BY release_date, id ASC) AS "rowNumber", *
-      FROM v_movie WHERE release_date BETWEEN '${releaseYear}-01-01' AND '${releaseYear}-12-31'
+      FROM v_movie WHERE release_date BETWEEN '${releaseYear}-01-01' AND '${releaseYear}-12-31' AND genres @> '${genresQuery}'
     )
     SELECT id, imdb_id AS "imdbId", title, original_title AS "originalTitle", overview, runtime, 
     release_date AS "releaseDate", genres, country, movie_language AS "language", movie_status AS "movieStatus", 
