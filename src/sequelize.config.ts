@@ -3,11 +3,11 @@ const envName = process.env.NODE_ENV || 'dev';
 dotenv.config({ path: `.env.${envName}` });
 
 import { Sequelize } from 'sequelize';
-const db = process.env.NODE_ENV === 'test' ? 'test_db' : process.env.DB_NAME;
-const user = process.env.NODE_ENV === 'test' ? 'test_user' : process.env.DB_USER;
-const password = process.env.NODE_ENV === 'test' ? 'test_password' : process.env.DB_PASSWORD;
-const host = process.env.NODE_ENV === 'test' ? 'test_host' : process.env.DB_HOST;
-const port = process.env.NODE_ENV === 'test' ? '1234' : process.env.DB_PORT;
+const db = process.env.DB_NAME;
+const user = process.env.DB_USER;
+const password = process.env.DB_PASSWORD;
+const host = process.env.DB_HOST;
+const port = process.env.DB_PORT;
 
 if (!db || !user || !password || !host || !port) {
   throw new Error('Missing environment variables required for connecting to the database');
@@ -18,7 +18,7 @@ const enableLogs = process.env.ENABLE_SEQUELIZE_LOGS === 'true';
 const sequelize = new Sequelize(db, user, password, {
   host,
   port: parseInt(port, 10),
-  dialect: process.env.NODE_ENV === 'test' ? 'sqlite' : 'postgres',
+  dialect: 'postgres',
   pool: {
     min: 2,
     max: 10,
@@ -26,7 +26,6 @@ const sequelize = new Sequelize(db, user, password, {
     idle: 10000,
   },
   logging: enableLogs,
-  storage: process.env.NODE_ENV === 'test' ? `${process.cwd()}/src/tests/test_db` : undefined,
 });
 
 export async function testDbConnection() {

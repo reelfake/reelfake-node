@@ -7,7 +7,7 @@ export default function validateGenresInQuery(req: Request, res: Response, next:
   if (genres) {
     const genresArr = genres.split(',');
     const availableGenres = Object.values(GENRES);
-    const invalidGenres = genresArr.filter((g) => !availableGenres.includes(g.trim() as GENRES));
+    const invalidGenres = genresArr.filter((g) => !availableGenres.includes(g.trim()));
     if (invalidGenres.length > 0) {
       res.status(400).json({ error: `Invalid genres - ${invalidGenres.join(', ')}` });
       return;

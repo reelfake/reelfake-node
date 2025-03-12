@@ -21,10 +21,6 @@ class BaseModel extends Model {
       throw new AppError(`Failed to query the total rows count from ${tableName} table`, 500);
     }
 
-    if (process.env.NODE_ENV === 'test') {
-      return countResult['count(id)'];
-    }
-
     return countResult.count;
   }
 }

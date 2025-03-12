@@ -1,8 +1,8 @@
 import supertest from 'supertest';
 
-import citiesMock from './mockData/citiesMock';
 import app from '../app';
 import * as dbQuery from '../utils/dbQuery';
+import { execQuery, FIELD_MAP } from './testUtil';
 
 const apiKey = process.env.API_KEY || '';
 
@@ -12,14 +12,15 @@ describe('Cities Controller', () => {
     const response = await server.get('/api/cities').set('api-key', apiKey);
     expect(response.status).toBe(200);
     expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
+    const expectedCities = await execQuery('SELECT * FROM city', FIELD_MAP.city);
     expect(response.body).toStrictEqual({
-      items: citiesMock.map((c) => ({
+      items: expectedCities.map((c) => ({
         id: c.id,
         cityName: c.cityName,
         stateName: c.stateName,
         countryId: c.countryId,
       })),
-      length: citiesMock.length,
+      length: expectedCities.length,
     });
   });
 

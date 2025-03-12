@@ -1,22 +1,13 @@
 import supertest from 'supertest';
 
-import moviesMock from './mockData/moviesMock';
 import app from '../app';
 import * as MovieModel from '../models/movieModel';
 import * as dbQuery from '../utils/movieQueries';
-
-jest.mock('../constants/preferences', () => ({
-  ITEMS_PER_PAGE_FOR_PAGINATION: 5,
-}));
+import { execQuery, getRowsCount, FIELD_MAP } from './testUtil';
 
 const apiKey = process.env.API_KEY || '';
 
 describe('Movie Controller', () => {
-  // afterEach(() => {
-  //   jest.clearAllMocks();
-  //   jest.resetAllMocks();
-  // });
-
   describe('Movies pagination', () => {
     it('GET /api/movies?pageNumber=2 should return movies for second page', async () => {
       const pageNumber = 2;
@@ -26,35 +17,39 @@ describe('Movie Controller', () => {
         .set('api-key', apiKey);
       expect(response.status).toBe(200);
       expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
-      const expectedMovies = moviesMock
-        .sort((movieA, movieB) => movieA.id - movieB.id)
-        .slice(5, 10);
+      const expectedMovies = await execQuery(
+        'SELECT * FROM v_movie ORDER BY id ASC LIMIT 50 OFFSET 50',
+        FIELD_MAP.movie
+      );
+      const totalRows = await getRowsCount('v_movie');
+      expect(response.body.length).toBe(expectedMovies.length);
+
       expect(response.body).toStrictEqual({
         items: expectedMovies.map((m) => ({
-          id: m.id,
-          tmdbId: m.tmdbId,
-          imdbId: m.imdbId === null ? 'null' : m.imdbId,
-          title: m.title,
-          originalTitle: m.originalTitle,
-          overview: m.overview,
-          runtime: m.runtime,
-          releaseDate: m.releaseDate,
-          genres: `[${m.genres.join(',')}]`,
-          country: `[${m.country.join(',')}]`,
-          language: m.language,
-          movieStatus: m.movieStatus,
-          popularity: m.popularity,
-          budget: m.budget,
-          revenue: m.revenue,
-          ratingAverage: m.ratingAverage,
-          ratingCount: m.ratingCount,
-          posterUrl: m.posterUrl,
-          rentalRate: m.rentalRate,
-          rentalDuration: m.rentalDuration,
+          id: m['id'],
+          tmdbId: m['tmdbId'],
+          imdbId: m['imdbId'],
+          title: m['title'],
+          originalTitle: m['originalTitle'],
+          overview: m['overview'],
+          runtime: m['runtime'],
+          releaseDate: m['releaseDate'],
+          genres: m['genres'],
+          country: m['country'],
+          language: m['language'],
+          movieStatus: m['movieStatus'],
+          popularity: m['popularity'],
+          budget: m['budget'],
+          revenue: m['revenue'],
+          ratingAverage: m['ratingAverage'],
+          ratingCount: m['ratingCount'],
+          posterUrl: m['posterUrl'],
+          rentalRate: m['rentalRate'],
+          rentalDuration: m['rentalDuration'],
         })),
-        length: 5,
-        totalItems: moviesMock.length,
-        totalPages: Math.ceil(moviesMock.length / 5),
+        length: 50,
+        totalItems: Number(totalRows),
+        totalPages: Math.ceil(totalRows / 50),
       });
       expect(response.headers['rf-page-number']).toBe('2');
     });
@@ -64,33 +59,37 @@ describe('Movie Controller', () => {
       const response = await server.get(`/api/movies`).set('api-key', apiKey);
       expect(response.status).toBe(200);
       expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
-      const expectedMovies = moviesMock.slice(0, 5);
+      const expectedMovies = await execQuery(
+        'SELECT * FROM v_movie ORDER BY id ASC LIMIT 50',
+        FIELD_MAP.movie
+      );
+      const totalRows = await getRowsCount('v_movie');
       expect(response.body).toStrictEqual({
         items: expectedMovies.map((m) => ({
-          id: m.id,
-          tmdbId: m.tmdbId,
-          imdbId: m.imdbId === null ? 'null' : m.imdbId,
-          title: m.title,
-          originalTitle: m.originalTitle,
-          overview: m.overview,
-          runtime: m.runtime,
-          releaseDate: m.releaseDate,
-          genres: `[${m.genres.join(',')}]`,
-          country: `[${m.country.join(',')}]`,
-          language: m.language,
-          movieStatus: m.movieStatus,
-          popularity: m.popularity,
-          budget: m.budget,
-          revenue: m.revenue,
-          ratingAverage: m.ratingAverage,
-          ratingCount: m.ratingCount,
-          posterUrl: m.posterUrl,
-          rentalRate: m.rentalRate,
-          rentalDuration: m.rentalDuration,
+          id: m['id'],
+          tmdbId: m['tmdbId'],
+          imdbId: m['imdbId'],
+          title: m['title'],
+          originalTitle: m['originalTitle'],
+          overview: m['overview'],
+          runtime: m['runtime'],
+          releaseDate: m['releaseDate'],
+          genres: m['genres'],
+          country: m['country'],
+          language: m['language'],
+          movieStatus: m['movieStatus'],
+          popularity: m['popularity'],
+          budget: m['budget'],
+          revenue: m['revenue'],
+          ratingAverage: m['ratingAverage'],
+          ratingCount: m['ratingCount'],
+          posterUrl: m['posterUrl'],
+          rentalRate: m['rentalRate'],
+          rentalDuration: m['rentalDuration'],
         })),
-        length: 5,
-        totalItems: moviesMock.length,
-        totalPages: Math.ceil(moviesMock.length / 5),
+        length: 50,
+        totalItems: Number(totalRows),
+        totalPages: Math.ceil(totalRows / 50),
       });
       expect(response.headers['rf-page-number']).toBe('1');
     });
@@ -115,8 +114,8 @@ describe('Movie Controller', () => {
       expect(response.body.message).toBe('Page number should be a valid non-zero positive number');
     });
 
-    it('GET /api/movies?pageNumber=100 should return 404 as it exceeded the available number of pages', async () => {
-      const pageNumber = 100;
+    it('GET /api/movies?pageNumber=999999 should return 404 as it exceeded the available number of pages', async () => {
+      const pageNumber = 999999;
       const server = supertest(app);
       const response = await server
         .get(`/api/movies?pageNumber=${pageNumber}`)
@@ -153,39 +152,41 @@ describe('Movie Controller', () => {
       const response = await server.get(`/api/movies/2020`).set('api-key', apiKey);
       expect(response.status).toBe(200);
       expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
-      const movies2020 = moviesMock.filter((m) => new Date(m.releaseDate).getFullYear() === 2020);
-      const expectedMovies = movies2020
-        .sort(
-          (movieA, movieB) =>
-            new Date(movieA.releaseDate).getTime() - new Date(movieB.releaseDate).getTime()
-        )
-        .slice(0, 5);
+      const expectedMovies = await execQuery(
+        "SELECT * FROM v_movie WHERE release_date BETWEEN '2020-01-01' AND '2020-12-31' ORDER BY release_date, id ASC LIMIT 50",
+        FIELD_MAP.movie
+      );
+      const totalRows = await getRowsCount(
+        'v_movie',
+        "release_date BETWEEN '2020-01-01' AND '2020-12-31'"
+      );
 
       expect(response.body).toStrictEqual({
         items: expectedMovies.map((m) => ({
-          id: m.id,
-          imdbId: m.imdbId === null ? 'null' : m.imdbId,
-          title: m.title,
-          originalTitle: m.originalTitle,
-          overview: m.overview,
-          runtime: m.runtime,
-          releaseDate: m.releaseDate,
-          genres: `[${m.genres.join(',')}]`,
-          country: `[${m.country.join(',')}]`,
-          language: m.language,
-          movieStatus: m.movieStatus,
-          popularity: m.popularity,
-          budget: m.budget,
-          revenue: m.revenue,
-          ratingAverage: m.ratingAverage,
-          ratingCount: m.ratingCount,
-          posterUrl: m.posterUrl,
-          rentalRate: m.rentalRate,
-          rentalDuration: m.rentalDuration,
+          id: m['id'],
+          tmdbId: m['tmdbId'],
+          imdbId: m['imdbId'],
+          title: m['title'],
+          originalTitle: m['originalTitle'],
+          overview: m['overview'],
+          runtime: m['runtime'],
+          releaseDate: m['releaseDate'],
+          genres: m['genres'],
+          country: m['country'],
+          language: m['language'],
+          movieStatus: m['movieStatus'],
+          popularity: m['popularity'],
+          budget: m['budget'],
+          revenue: m['revenue'],
+          ratingAverage: m['ratingAverage'],
+          ratingCount: m['ratingCount'],
+          posterUrl: m['posterUrl'],
+          rentalRate: m['rentalRate'],
+          rentalDuration: m['rentalDuration'],
         })),
-        length: expectedMovies.length,
-        totalItems: movies2020.length,
-        totalPages: Math.ceil(movies2020.length / 5),
+        length: 50,
+        totalItems: Number(totalRows),
+        totalPages: Math.ceil(totalRows / 50),
       });
     });
 
@@ -194,40 +195,62 @@ describe('Movie Controller', () => {
       const response = await server.get(`/api/movies/2020?pageNumber=2`).set('api-key', apiKey);
       expect(response.status).toBe(200);
       expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
-      const movies2020 = moviesMock.filter((m) => new Date(m.releaseDate).getFullYear() === 2020);
-      const expectedMovies = movies2020
-        .sort(
-          (movieA, movieB) =>
-            new Date(movieA.releaseDate).getTime() - new Date(movieB.releaseDate).getTime()
-        )
-        .slice(5, 10);
+      const expectedMovies = await execQuery(
+        "SELECT * FROM v_movie WHERE release_date BETWEEN '2020-01-01' AND '2020-12-31' ORDER BY release_date, id ASC LIMIT 50 OFFSET 50",
+        FIELD_MAP.movie
+      );
+      const totalRows = await getRowsCount(
+        'v_movie',
+        "release_date BETWEEN '2020-01-01' AND '2020-12-31'"
+      );
 
       expect(response.body).toStrictEqual({
         items: expectedMovies.map((m) => ({
-          id: m.id,
-          imdbId: m.imdbId === null ? 'null' : m.imdbId,
-          title: m.title,
-          originalTitle: m.originalTitle,
-          overview: m.overview,
-          runtime: m.runtime,
-          releaseDate: m.releaseDate,
-          genres: `[${m.genres.join(',')}]`,
-          country: `[${m.country.join(',')}]`,
-          language: m.language,
-          movieStatus: m.movieStatus,
-          popularity: m.popularity,
-          budget: m.budget,
-          revenue: m.revenue,
-          ratingAverage: m.ratingAverage,
-          ratingCount: m.ratingCount,
-          posterUrl: m.posterUrl,
-          rentalRate: m.rentalRate,
-          rentalDuration: m.rentalDuration,
+          id: m['id'],
+          tmdbId: m['tmdbId'],
+          imdbId: m['imdbId'],
+          title: m['title'],
+          originalTitle: m['originalTitle'],
+          overview: m['overview'],
+          runtime: m['runtime'],
+          releaseDate: m['releaseDate'],
+          genres: m['genres'],
+          country: m['country'],
+          language: m['language'],
+          movieStatus: m['movieStatus'],
+          popularity: m['popularity'],
+          budget: m['budget'],
+          revenue: m['revenue'],
+          ratingAverage: m['ratingAverage'],
+          ratingCount: m['ratingCount'],
+          posterUrl: m['posterUrl'],
+          rentalRate: m['rentalRate'],
+          rentalDuration: m['rentalDuration'],
         })),
-        length: expectedMovies.length,
-        totalItems: movies2020.length,
-        totalPages: Math.ceil(movies2020.length / 5),
+        length: 50,
+        totalItems: Number(totalRows),
+        totalPages: Math.ceil(totalRows / 50),
       });
+    });
+
+    it('GET /api/movies/2020?pageNumber=x should return 400 for invalid page_number', async () => {
+      const pageNumber = 'x';
+      const server = supertest(app);
+      const response = await server
+        .get(`/api/movies/2020?pageNumber=${pageNumber}`)
+        .set('api-key', apiKey);
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe('Page number should be a valid non-zero positive number');
+    });
+
+    it('GET /api/movies/2020?pageNumber=0 should return 400 for pageNumber being 0', async () => {
+      const pageNumber = 0;
+      const server = supertest(app);
+      const response = await server
+        .get(`/api/movies/2020?pageNumber=${pageNumber}`)
+        .set('api-key', apiKey);
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe('Page number should be a valid non-zero positive number');
     });
 
     it('GET /api/movies/2020 should return 500 if the sequelize instance is not present in the Movie model', async () => {

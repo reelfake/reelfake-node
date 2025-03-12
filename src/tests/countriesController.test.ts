@@ -1,8 +1,8 @@
 import supertest from 'supertest';
 
-import countriesMock from './mockData/countriesMock';
 import app from '../app';
 import * as dbQuery from '../utils/dbQuery';
+import { FIELD_MAP, execQuery } from './testUtil';
 
 const apiKey = process.env.API_KEY || '';
 
@@ -12,13 +12,14 @@ describe('Countries Controller', () => {
     const response = await server.get('/api/countries').set('api-key', apiKey);
     expect(response.status).toBe(200);
     expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
+    const expectedCountries = await execQuery('SELECT * FROM country', FIELD_MAP.country);
     expect(response.body).toStrictEqual({
-      items: countriesMock.map((c) => ({
+      items: expectedCountries.map((c) => ({
         id: c.id,
         countryName: c.countryName,
         countryCode: c.countryCode,
       })),
-      length: countriesMock.length,
+      length: expectedCountries.length,
     });
   });
 

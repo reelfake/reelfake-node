@@ -1,8 +1,8 @@
 import supertest from 'supertest';
 
-import movieLanguages from './mockData/movieLanguagesMock';
 import app from '../app';
 import * as dbQuery from '../utils/dbQuery';
+import { FIELD_MAP, execQuery } from './testUtil';
 
 const apiKey = process.env.API_KEY || '';
 
@@ -12,13 +12,17 @@ describe('Movie Languages Controller', () => {
     const response = await server.get('/api/movie_languages').set('api-key', apiKey);
     expect(response.status).toBe(200);
     expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
+    const expectedMovieLanguages = await execQuery(
+      'SELECT * FROM movie_language',
+      FIELD_MAP.movieLanguage
+    );
     expect(response.body).toStrictEqual({
-      items: movieLanguages.map((l) => ({
+      items: expectedMovieLanguages.map((l) => ({
         id: l.id,
-        languageName: l.language_name,
-        languageCode: l.iso_language_code,
+        languageName: l.languageName,
+        languageCode: l.languageCode,
       })),
-      length: movieLanguages.length,
+      length: expectedMovieLanguages.length,
     });
   });
 

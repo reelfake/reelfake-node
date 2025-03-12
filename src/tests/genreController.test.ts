@@ -1,8 +1,8 @@
 import supertest from 'supertest';
 
-import genresMock from './mockData/genresMock';
 import app from '../app';
 import * as dbQuery from '../utils/dbQuery';
+import { execQuery, FIELD_MAP } from './testUtil';
 
 const apiKey = process.env.API_KEY || '';
 
@@ -12,9 +12,10 @@ describe('Genre Controller', () => {
     const response = await server.get('/api/genres').set('api-key', apiKey);
     expect(response.status).toBe(200);
     expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
+    const expectedGenres = await execQuery('SELECT * FROM genre', FIELD_MAP.genre);
     expect(response.body).toStrictEqual({
-      items: genresMock.map((g) => ({ id: g.id, genreName: g.genreName })),
-      length: genresMock.length,
+      items: expectedGenres.map((g) => ({ id: g.id, genreName: g.genreName })),
+      length: expectedGenres.length,
     });
   });
 

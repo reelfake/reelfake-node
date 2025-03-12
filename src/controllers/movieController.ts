@@ -30,7 +30,6 @@ export const getMovies = async (req: Request, res: Response, next: NextFunction)
   } else {
     totalMovies = await MovieModel.getTotalRowsCount();
   }
-
   const movies = await queryMoviesPage(pageNumber, limitPerPage, idOffset, genres);
 
   if (movies.length === 0) {
@@ -69,7 +68,7 @@ export const getMoviesByYear = async (req: Request, res: Response, next: NextFun
       SELECT ROW_NUMBER() OVER (ORDER BY release_date, id ASC) AS "rowNumber", *
       FROM v_movie WHERE release_date BETWEEN '${releaseYear}-01-01' AND '${releaseYear}-12-31' AND genres @> '${genresQuery}'
     )
-    SELECT id, imdb_id AS "imdbId", title, original_title AS "originalTitle", overview, runtime, 
+    SELECT id, tmdb_id AS "tmdbId", imdb_id AS "imdbId", title, original_title AS "originalTitle", overview, runtime, 
     release_date AS "releaseDate", genres, country, movie_language AS "language", movie_status AS "movieStatus", 
     popularity, budget, revenue, rating_average AS "ratingAverage", rating_count AS "ratingCount", 
     poster_url AS "posterUrl", rental_rate AS "rentalRate", rental_duration AS "rentalDuration" 
