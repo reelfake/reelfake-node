@@ -17,11 +17,7 @@ describe('Movie Languages Controller', () => {
       FIELD_MAP.movieLanguage
     );
     expect(response.body).toStrictEqual({
-      items: expectedMovieLanguages.map((l) => ({
-        id: l.id,
-        languageName: l.languageName,
-        languageCode: l.languageCode,
-      })),
+      items: expectedMovieLanguages,
       length: expectedMovieLanguages.length,
     });
   });

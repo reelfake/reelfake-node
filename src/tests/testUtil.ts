@@ -2,13 +2,33 @@ import { Model, QueryTypes } from 'sequelize';
 import sequelize from '../sequelize.config';
 export * from './fieldMap';
 
-export async function execQuery(queryText: string, fieldMap: Record<string, string>) {
+export const ITEMS_COUNT_PER_PAGE_FOR_TEST = 50;
+
+export async function execQuery(
+  queryText: string,
+  fieldMap: Record<string, string>,
+  excludeTimestamps: boolean = true
+) {
   const result = await sequelize.query(queryText, {
     type: QueryTypes.SELECT,
     raw: true,
     plain: false,
     fieldMap,
   });
+
+  if (excludeTimestamps === false) {
+    return result;
+  }
+
+  for (const row of result) {
+    if ('created_at' in row) {
+      delete row['created_at'];
+    }
+
+    if ('updated_at' in row) {
+      delete row['updated_at'];
+    }
+  }
 
   return result as Array<{ [key: string]: string }>;
 }

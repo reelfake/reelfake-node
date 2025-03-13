@@ -14,7 +14,7 @@ describe('Genre Controller', () => {
     expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
     const expectedGenres = await execQuery('SELECT * FROM genre', FIELD_MAP.genre);
     expect(response.body).toStrictEqual({
-      items: expectedGenres.map((g) => ({ id: g.id, genreName: g.genreName })),
+      items: expectedGenres,
       length: expectedGenres.length,
     });
   });

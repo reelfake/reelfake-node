@@ -14,11 +14,7 @@ describe('Countries Controller', () => {
     expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
     const expectedCountries = await execQuery('SELECT * FROM country', FIELD_MAP.country);
     expect(response.body).toStrictEqual({
-      items: expectedCountries.map((c) => ({
-        id: c.id,
-        countryName: c.countryName,
-        countryCode: c.countryCode,
-      })),
+      items: expectedCountries,
       length: expectedCountries.length,
     });
   });
