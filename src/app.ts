@@ -14,7 +14,7 @@ import { ERROR_MESSAGES } from './constants';
 const app = express();
 
 app.use((req: Request, res: Response, next: NextFunction) => {
-  const skipAuth = new RegExp('/api/(re)?docs/').test(req.path) || req.path === '/openapi';
+  const skipAuth = new RegExp('/api/v1/(re)?docs/').test(req.path) || req.path === '/openapi/v1';
   if (
     !skipAuth &&
     (req.headers['api-key'] === undefined || req.headers['api-key'] !== process.env.API_KEY)
@@ -25,7 +25,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-app.get('/api', (req: Request, res: Response) => {
+app.get('/api/v1', (req: Request, res: Response) => {
   res.status(200).json({
     name: 'reelfake-api',
     version: '1.0.0',
@@ -33,32 +33,32 @@ app.get('/api', (req: Request, res: Response) => {
 });
 
 // OpenAPI routes
-app.get('/openapi', (req, res) => {
+app.get('/openapi/v1', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'openapi', 'dist', 'openapi.yaml'));
 });
 
-app.get('/api/docs', (req, res) => {
+app.get('/api/v1/docs', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'openapi', 'docs.html'));
 });
 
-app.get('/api/redocs', (req, res) => {
+app.get('/api/v1/redocs', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'openapi', 'redocs.html'));
 });
 
 // /api/genres
-app.use('/api/genres', genreRoutes);
+app.use('/api/v1/genres', genreRoutes);
 
 // /api/countries
-app.use('/api/countries', countryRoutes);
+app.use('/api/v1/countries', countryRoutes);
 
 // /api/movie_languages
-app.use('/api/movie_languages', movieLanguageRoutes);
+app.use('/api/v1/movie_languages', movieLanguageRoutes);
 
 // /api/cities
-app.use('/api/cities', cityRoutes);
+app.use('/api/v1/cities', cityRoutes);
 
 // /api/movies?page_number=page_number&limit_per_page=limit
-app.use('/api/movies', movieRoutes);
+app.use('/api/v1/movies', movieRoutes);
 
 // /api/movies/:id
 // Returns complete information about the movie

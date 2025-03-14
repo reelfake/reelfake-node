@@ -17,5 +17,14 @@ get:
                   $ref: ../components/country.yaml
               length:
                 type: integer
+    '400':
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
     '401':
       $ref: ../components/unauthorized.yaml

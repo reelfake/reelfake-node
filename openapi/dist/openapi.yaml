@@ -37,6 +37,15 @@ paths:
                       $ref: '#/components/schemas/genre'
                   length:
                     type: integer
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
         '401':
           $ref: '#/components/responses/unauthorized'
   /cities:
@@ -75,6 +84,15 @@ paths:
                           $ref: '#/components/schemas/city'
                       length:
                         type: integer
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
         '401':
           $ref: '#/components/responses/unauthorized'
   /countries:
@@ -97,6 +115,15 @@ paths:
                       $ref: '#/components/schemas/country'
                   length:
                     type: integer
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
         '401':
           $ref: '#/components/responses/unauthorized'
   /movie_languages:
@@ -119,6 +146,15 @@ paths:
                       $ref: '#/components/schemas/movieLanguage'
                   length:
                     type: integer
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
         '401':
           $ref: '#/components/responses/unauthorized'
   /movies:
@@ -169,6 +205,15 @@ paths:
                     type: integer
                   totalItems:
                     type: integer
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
         '401':
           $ref: '#/components/responses/unauthorized'
         '404':
@@ -178,8 +223,6 @@ paths:
               schema:
                 type: object
                 properties:
-                  status:
-                    type: string
                   message:
                     type: string
   /movies/{releaseYear}:
@@ -236,6 +279,15 @@ paths:
                     type: integer
                   totalItems:
                     type: integer
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
         '401':
           $ref: '#/components/responses/unauthorized'
         '404':
@@ -245,8 +297,6 @@ paths:
               schema:
                 type: object
                 properties:
-                  status:
-                    type: string
                   message:
                     type: string
         '500':
@@ -256,8 +306,6 @@ paths:
               schema:
                 type: object
                 properties:
-                  status:
-                    type: string
                   message:
                     type: string
 components:

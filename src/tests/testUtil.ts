@@ -21,6 +21,10 @@ export async function execQuery(
   }
 
   for (const row of result) {
+    if ('rowNumber' in row) {
+      delete row['rowNumber'];
+    }
+
     if ('created_at' in row) {
       delete row['created_at'];
     }

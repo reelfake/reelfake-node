@@ -1,9 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { Router } from 'express';
 import { routeFnWrapper, AppError } from '../utils';
-import { getMovies, getMoviesByYear } from '../controllers';
+import { getMovies, getMoviesByYear, getMoviesByDateRange } from '../controllers';
 import { GENRES } from '../constants';
-import { ENUM } from 'sequelize';
 
 const router = Router();
 
@@ -19,7 +18,7 @@ function validateRequestQuery(req: Request, res: Response, next: NextFunction) {
   const invalidGenres = [];
   const requestedGenres = genresText ? genresText.split(',') : [];
   for (const g of requestedGenres) {
-    const genreName = GENRES[g];
+    const genreName = GENRES[g.toLowerCase()];
     if (genreName) {
       updatedGenres.push(genreName);
     } else {
@@ -40,5 +39,6 @@ router.use(validateRequestQuery);
 
 router.get('/', routeFnWrapper(getMovies));
 router.get('/:releaseYear', routeFnWrapper(getMoviesByYear));
+router.get('/:startDate/:endDate', routeFnWrapper(getMoviesByDateRange));
 
 export default router;

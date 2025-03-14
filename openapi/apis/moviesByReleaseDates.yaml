@@ -2,14 +2,20 @@ get:
   summary: Get movies released in a year
   security:
     - ReelFake_ApiKey_Auth: []
-  operationId: getMoviesByYear
+  operationId: getMoviesByDateRange
   parameters:
     - in: path
-      name: releaseYear
+      name: startDate
       required: true
-      description: The release year to find the movies
+      description: The release start date of the movie
       schema:
-        type: integer
+        type: string
+    - in: path
+      name: endDate
+      required: true
+      description: The release end date of the movie
+      schema:
+        type: string
     - in: query
       name: pageNumber
       required: false

@@ -1,6 +1,5 @@
 import type { Sequelize } from 'sequelize';
 import { GenreModel, CityModel, CountryModel, MovieLanguageModel } from '../models';
-import { AppError } from './appError';
 
 export async function executeQuery(sequelize: Sequelize, query: string) {
   const queryResult = await sequelize.query(query);

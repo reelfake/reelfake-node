@@ -45,6 +45,15 @@ get:
                 type: integer
               totalItems:
                 type: integer
+    '400':
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
     '404':
       description: The page is out of range meaning the page number provided in the request query has exceeded the total number of movies present.
       content:
@@ -52,8 +61,6 @@ get:
           schema:
             type: object
             properties:
-              status:
-                type: string
               message:
                 type: string
     '401':
