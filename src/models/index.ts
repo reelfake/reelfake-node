@@ -3,3 +3,4 @@ export { default as CityModel } from './cityModel';
 export { default as CountryModel } from './countryModel';
 export { default as MovieLanguageModel } from './movieLanguageModel';
 export { default as MovieModel } from './movieModel';
+export { default as ActorModel } from './actorModel';

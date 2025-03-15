@@ -303,6 +303,51 @@ paths:
                 properties:
                   message:
                     type: string
+  /actors:
+    get:
+      summary: Get the actor list with pagination support
+      security:
+        - ReelFake_ApiKey_Auth: []
+      operationId: getActors
+      parameters:
+        - in: query
+          name: pageNumber
+          required: false
+          description: |
+            The page number (which starts with 1) to fetch the set of actors from.
+            The actors are split into multiple pages with each page having a limited number of actors.
+          schema:
+            type: integer
+            default: 1
+      responses:
+        '200':
+          description: Successfully returned a list of actors
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/actor'
+                  length:
+                    type: integer
+                  totalPages:
+                    type: integer
+                  totalItems:
+                    type: integer
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/unauthorized'
 components:
   securitySchemes:
     ReelFake_ApiKey_Auth:
@@ -465,6 +510,30 @@ components:
                 type: integer
               profilePictureUrl:
                 type: string
+    actor:
+      type: object
+      properties:
+        id:
+          type: integer
+        imdbId:
+          type: string
+        actorName:
+          type: string
+        biography:
+          type: string
+        birthday:
+          type: string
+          format: date
+        deathday:
+          type: string
+          format: date
+        placeOfBirth:
+          type: string
+        popularity:
+          type: number
+          format: float
+        profilePictureUrl:
+          type: string
   responses:
     unauthorized:
       description: Api key is missing or invalid

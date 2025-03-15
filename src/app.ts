@@ -2,7 +2,14 @@ import express from 'express';
 import path from 'path';
 import type { NextFunction, Request, Response } from 'express';
 import { AppError } from './utils';
-import { genreRoutes, cityRoutes, countryRoutes, movieLanguageRoutes, movieRoutes } from './routes';
+import {
+  genreRoutes,
+  cityRoutes,
+  countryRoutes,
+  movieLanguageRoutes,
+  movieRoutes,
+  actorRoutes,
+} from './routes';
 import { ERROR_MESSAGES } from './constants';
 
 // app.use(cors());
@@ -60,12 +67,7 @@ app.use('/api/v1/cities', cityRoutes);
 // /api/movies
 app.use('/api/v1/movies', movieRoutes);
 
-// /api/movies/:id?genres=genres_separated_by_comma&include_actors=flag
-// Returns complete data about movie with the ability to
-// filter by genres, whether or not to include actors
-
-// /api/actors?include_movies={true or false or yes or no or 0 or 1}
-// Each actor data will have movie id, title, genres and release dates
+app.use('/api/v1/actors', actorRoutes);
 
 app.use('*', (req: Request, res: Response) => {
   res.status(404).json({

@@ -1,4 +1,4 @@
-import { type Request, type Response } from 'express';
+import type { Request, Response } from 'express';
 import { Op, WhereOptions } from 'sequelize';
 import { Fn } from 'sequelize/lib/utils';
 import { executeQuery, AppError } from '../utils';

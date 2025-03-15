@@ -21,7 +21,7 @@ class BaseModel extends Model {
       throw new AppError(`Failed to query the total rows count from ${tableName} table`, 500);
     }
 
-    return countResult.count;
+    return Number(countResult.count);
   }
 }
 

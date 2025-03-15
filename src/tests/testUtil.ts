@@ -9,12 +9,21 @@ export async function execQuery(
   fieldMap: Record<string, string>,
   excludeTimestamps: boolean = true
 ) {
-  const result = await sequelize.query(queryText, {
-    type: QueryTypes.SELECT,
-    raw: true,
-    plain: false,
-    fieldMap,
-  });
+  let result: object[] | undefined = undefined;
+  try {
+    result = await sequelize.query(queryText, {
+      type: QueryTypes.SELECT,
+      raw: true,
+      plain: false,
+      fieldMap,
+    });
+  } catch (err) {
+    console.log(err);
+  }
+
+  if (!result) {
+    return [];
+  }
 
   if (excludeTimestamps === false) {
     return result;
