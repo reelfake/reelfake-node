@@ -57,11 +57,8 @@ app.use('/api/v1/movie_languages', movieLanguageRoutes);
 // /api/cities
 app.use('/api/v1/cities', cityRoutes);
 
-// /api/movies?page_number=page_number&limit_per_page=limit
+// /api/movies
 app.use('/api/v1/movies', movieRoutes);
-
-// /api/movies/:id
-// Returns complete information about the movie
 
 // /api/movies/:id?genres=genres_separated_by_comma&include_actors=flag
 // Returns complete data about movie with the ability to

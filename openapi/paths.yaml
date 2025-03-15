@@ -8,7 +8,3 @@
   $ref: apis/movieLanguages.yaml
 /movies:
   $ref: apis/movies.yaml
-/movies/{releaseYear}:
-  $ref: apis/moviesByYear.yaml
-/movies/{startDate}/{endDate}:
-  $ref: apis/moviesByReleaseDates.yaml

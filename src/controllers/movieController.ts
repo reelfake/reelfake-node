@@ -1,14 +1,25 @@
-import type { Request, Response } from 'express';
-import {
-  executeQuery,
-  AppError,
-  queryMoviesCountByYear,
-  getMoviesCountByReleaseDates,
-} from '../utils';
+import { type Request, type Response } from 'express';
+import { Op, WhereOptions } from 'sequelize';
+import { executeQuery, AppError } from '../utils';
 import { MovieModel } from '../models';
 import { ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
 
-const fetchMoviesByDates = async (
+function getReleaseDatesRangeFromQuery(req: Request) {
+  const { releaseYear: releaseYearText, releaseFrom, releaseTo } = req.query;
+  const releaseYear = Number(releaseYearText);
+
+  if (!isNaN(releaseYear)) {
+    return [`${releaseYear}-01-01`, `${releaseYear}-12-31`];
+  }
+
+  if (releaseFrom && releaseTo) {
+    return [releaseFrom, releaseTo];
+  }
+
+  return [];
+}
+
+const getMoviesUsingQuery = async (
   pageNumber: number,
   genres: string[],
   orderBy: string,
@@ -61,14 +72,36 @@ export const getMovies = async (req: Request, res: Response) => {
   const genres = genresText ? genresText.toString().split(',') : [];
   const limitPerPage = ITEMS_PER_PAGE_FOR_PAGINATION;
 
-  let totalMovies = -1;
+  const conditions: WhereOptions[] = [];
+
   if (genres.length > 0) {
-    totalMovies = await MovieModel.getRowsCountByGenres(genres);
-  } else {
-    totalMovies = await MovieModel.getTotalRowsCount();
+    conditions.push({
+      genres: {
+        [Op.contains]: genres,
+      },
+    });
   }
 
-  const movies = await fetchMoviesByDates(pageNumber, genres, 'id');
+  const [startDate, endDate] = getReleaseDatesRangeFromQuery(req);
+
+  const queryHasReleaseDates = startDate && endDate;
+
+  if (queryHasReleaseDates) {
+    conditions.push({
+      releaseDate: {
+        [Op.between]: [startDate, endDate],
+      },
+    });
+  }
+
+  const totalMovies = await MovieModel.getRowsCountWhere(conditions);
+
+  const movies = await getMoviesUsingQuery(
+    pageNumber,
+    genres,
+    queryHasReleaseDates ? 'release_date, id' : 'id',
+    queryHasReleaseDates ? `release_date BETWEEN '${startDate}' AND '${endDate}'` : ''
+  );
   const moviesCount = movies.length;
 
   if (moviesCount === 0) {
@@ -88,64 +121,16 @@ export const getMovies = async (req: Request, res: Response) => {
     });
 };
 
-export const getMoviesByYear = async (req: Request, res: Response) => {
-  const { pageNumber: pageNumberText, genres: genresText } = req.query;
-  const { releaseYear: releaseYearText } = req.params;
-  const genres = genresText ? genresText.toString().split(',') : [];
-  const releaseYear = Number(releaseYearText);
+export const getMovieById = async (req: Request, res: Response) => {
+  const { movieId: idText } = req.params;
 
-  if (!MovieModel.sequelize) {
-    throw new AppError('Server encoutered unhandled exception', 500);
-  }
+  const id = Number(idText);
 
-  const totalMovies = await queryMoviesCountByYear(releaseYear, genres);
+  const movie = await MovieModel.findOne({
+    where: {
+      id,
+    },
+  });
 
-  const pageNumber = pageNumberText ? Number(pageNumberText) : 1;
-  const movies = await fetchMoviesByDates(
-    pageNumber,
-    genres,
-    'release_date, id',
-    `release_date BETWEEN '${releaseYear}-01-01' AND '${releaseYear}-12-31'`
-  );
-
-  res
-    .status(200)
-    .set('rf-page-number', pageNumber.toString())
-    .json({
-      items: movies,
-      length: movies.length,
-      totalPages: Math.ceil(totalMovies / ITEMS_PER_PAGE_FOR_PAGINATION),
-      totalItems: Number(totalMovies),
-    });
-};
-
-export const getMoviesByDateRange = async (req: Request, res: Response) => {
-  const { pageNumber: pageNumberText, genres: genresText } = req.query;
-  const { startDate, endDate } = req.params;
-
-  if (!MovieModel.sequelize) {
-    throw new AppError('Server encoutered unhandled exception', 500);
-  }
-
-  const genres = genresText ? genresText.toString().split(',') : [];
-
-  const totalMovies = await getMoviesCountByReleaseDates(startDate, endDate, genres);
-
-  const pageNumber = pageNumberText ? Number(pageNumberText) : 1;
-  const movies = await fetchMoviesByDates(
-    pageNumber,
-    genres,
-    'release_date, id',
-    `release_date BETWEEN '${startDate}' AND '${endDate}'`
-  );
-
-  res
-    .status(200)
-    .set('rf-page-number', pageNumber.toString())
-    .json({
-      items: movies,
-      length: movies.length,
-      totalPages: Math.ceil(totalMovies / ITEMS_PER_PAGE_FOR_PAGINATION),
-      totalItems: Number(totalMovies),
-    });
+  res.status(200).json(movie);
 };
