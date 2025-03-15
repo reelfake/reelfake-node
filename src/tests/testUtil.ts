@@ -37,6 +37,19 @@ export async function execQuery(
   return result as Array<{ [key: string]: string }>;
 }
 
+export async function queryMovieObject(id: number, fieldMap: Record<string, string>) {
+  const result = await sequelize.query(`SELECT * FROM v_movie WHERE id = ${id}`, {
+    type: QueryTypes.SELECT,
+    raw: true,
+    plain: false,
+    fieldMap,
+  });
+  if (result.length > 0) {
+    return result[0];
+  }
+  return result;
+}
+
 export async function getRowsCount(tableName: string, where?: string) {
   const whereClause = where ? ' WHERE ' + where : '';
   const result = await sequelize.query<{ count: number }>(

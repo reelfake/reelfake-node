@@ -1,0 +1,49 @@
+get:
+  summary: Get movie detail using the id
+  security:
+    - ReelFake_ApiKey_Auth: []
+  operationId: getMovieById
+  parameters:
+    - in: path
+      name: movieId
+      required: true
+      description: The id of the move that is requested
+      schema:
+        type: integer
+    - in: query
+      name: includeActors
+      required: false
+      description: |
+        Whether or not to include the actors of the movie. Accepted values are true, false, yes, no, 0 and 1.
+        If includeActors value is truthy then the movie object will contain actors array.
+        If this is not present in query then it will default to false. If any value other than the accepted ones are
+        given, then 400 is returned.
+      schema:
+        type: boolean
+  responses:
+    '200':
+      description: Successfully returned a the movie data with or without the actors
+      content:
+        application/json:
+          schema:
+            $ref: ../components/movieWithActors.yaml
+    '400':
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    '404':
+      description: The movie does not exist for the given id
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    '401':
+      $ref: ../components/unauthorized.yaml

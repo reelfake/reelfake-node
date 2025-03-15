@@ -1,8 +1,10 @@
 import { type Request, type Response } from 'express';
 import { Op, WhereOptions } from 'sequelize';
+import { Fn } from 'sequelize/lib/utils';
 import { executeQuery, AppError } from '../utils';
 import { MovieModel } from '../models';
 import { ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
+import sequelize from '../sequelize.config';
 
 function getReleaseDatesRangeFromQuery(req: Request) {
   const { releaseYear: releaseYearText, releaseFrom, releaseTo } = req.query;
@@ -123,14 +125,47 @@ export const getMovies = async (req: Request, res: Response) => {
 
 export const getMovieById = async (req: Request, res: Response) => {
   const { movieId: idText } = req.params;
+  const { includeActors: includeActorsText } = req.query;
 
   const id = Number(idText);
+
+  const attributes: (string | [Fn, string])[] = [
+    'id',
+    'imdbId',
+    'title',
+    'originalTitle',
+    'overview',
+    'runtime',
+    'releaseDate',
+    'genres',
+    'country',
+    'language',
+    'movieStatus',
+    'popularity',
+    'budget',
+    'revenue',
+    'ratingAverage',
+    'ratingCount',
+    'posterUrl',
+    'rentalRate',
+    'rentalDuration',
+  ];
+
+  const includeActors = includeActorsText === 'true';
+  if (includeActors) {
+    attributes.push([sequelize.fn('public.get_actors', id), 'actors']);
+  }
 
   const movie = await MovieModel.findOne({
     where: {
       id,
     },
+    attributes,
   });
+
+  if (!movie) {
+    throw new AppError(`Movie with id ${id} does not exist`, 404);
+  }
 
   res.status(200).json(movie);
 };

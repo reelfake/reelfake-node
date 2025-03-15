@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { Router } from 'express';
 import { routeFnWrapper, AppError } from '../utils';
-import { getMovies } from '../controllers';
+import { getMovieById, getMovies } from '../controllers';
 import { GENRES } from '../constants';
 
 const router = Router();
@@ -26,7 +26,36 @@ function validateReleaseDate(releaseDate: string) {
   return isValid;
 }
 
-function validateRequestQuery(req: Request, res: Response, next: NextFunction) {
+function validateMovieIdRouteQuery(req: Request, res: Response, next: NextFunction) {
+  const { movieId: idText } = req.params;
+  let { includeActors: includeActorsText } = req.query;
+  includeActorsText = includeActorsText ? String(includeActorsText).trim().toLowerCase() : '';
+
+  const id = Number(idText);
+
+  if (isNaN(id) || id <= 0) {
+    throw new AppError('Invalid movie id. Movie id must be a non-zero positive number.', 400);
+  }
+
+  const includeActorsTruthies = ['true', 'yes', '1'];
+  const includeActorsFalsies = ['false', 'no', '0'];
+
+  if (
+    includeActorsText &&
+    ![...includeActorsTruthies, ...includeActorsFalsies].includes(includeActorsText)
+  ) {
+    throw new AppError(
+      'Invalid value for includeActors in query. Please refer to api specs for more information.',
+      400
+    );
+  }
+
+  req.query.includeActors = String(includeActorsTruthies.includes(includeActorsText));
+
+  next();
+}
+
+function validateMoviesRouteQuery(req: Request, res: Response, next: NextFunction) {
   const {
     pageNumber: pageNumberText = '1',
     releaseYear: releaseYearText,
@@ -83,6 +112,7 @@ function validateRequestQuery(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
-router.get('/', validateRequestQuery, routeFnWrapper(getMovies));
+router.get('/', validateMoviesRouteQuery, routeFnWrapper(getMovies));
+router.get('/:movieId', validateMovieIdRouteQuery, routeFnWrapper(getMovieById));
 
 export default router;

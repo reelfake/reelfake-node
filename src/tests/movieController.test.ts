@@ -1,9 +1,14 @@
 import supertest from 'supertest';
 
 import app from '../app';
-import * as MovieModel from '../models/movieModel';
 import * as dbQuery from '../utils/dbQuery';
-import { ITEMS_COUNT_PER_PAGE_FOR_TEST, execQuery, getRowsCount, FIELD_MAP } from './testUtil';
+import {
+  ITEMS_COUNT_PER_PAGE_FOR_TEST,
+  execQuery,
+  getRowsCount,
+  queryMovieObject,
+  FIELD_MAP,
+} from './testUtil';
 
 const apiKey = process.env.API_KEY || '';
 
@@ -541,6 +546,152 @@ describe('Movie Controller', () => {
       expect(response.body.message).toBe(
         'Invalid release date. Please refer to api specs for more information.'
       );
+    });
+  });
+
+  describe('GET /movies/:id', () => {
+    it('GET /movies/100 should return movie object for id 100', async () => {
+      const server = supertest(app);
+      const response = await server.get(`/api/v1/movies/100`).set('api-key', apiKey);
+      expect(response.status).toBe(200);
+      expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
+      const expectedMovieData = await queryMovieObject(100, FIELD_MAP.movie);
+      if ('tmdbId' in expectedMovieData) {
+        delete expectedMovieData['tmdbId'];
+      }
+      expect(response.body).toStrictEqual(expectedMovieData);
+    });
+
+    it('GET /movies/100?includeActors=false should return movie object without the actors', async () => {
+      const server = supertest(app);
+      const response = await server
+        .get(`/api/v1/movies/100?includeActors=false`)
+        .set('api-key', apiKey);
+      expect(response.status).toBe(200);
+      expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
+      const expectedMovieData = await queryMovieObject(100, FIELD_MAP.movie);
+      if ('tmdbId' in expectedMovieData) {
+        delete expectedMovieData['tmdbId'];
+      }
+      expect(response.body).toStrictEqual(expectedMovieData);
+    });
+
+    it('GET /movies/100?includeActors=no should return movie object without the actors', async () => {
+      const server = supertest(app);
+      const response = await server
+        .get(`/api/v1/movies/100?includeActors=no`)
+        .set('api-key', apiKey);
+      expect(response.status).toBe(200);
+      expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
+      const expectedMovieData = await queryMovieObject(100, FIELD_MAP.movie);
+      if ('tmdbId' in expectedMovieData) {
+        delete expectedMovieData['tmdbId'];
+      }
+      expect(response.body).toStrictEqual(expectedMovieData);
+    });
+
+    it('GET /movies/100?includeActors=0 should return movie object without the actors', async () => {
+      const server = supertest(app);
+      const response = await server
+        .get(`/api/v1/movies/100?includeActors=0`)
+        .set('api-key', apiKey);
+      expect(response.status).toBe(200);
+      expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
+      const expectedMovieData = await queryMovieObject(100, FIELD_MAP.movie);
+      if ('tmdbId' in expectedMovieData) {
+        delete expectedMovieData['tmdbId'];
+      }
+      expect(response.body).toStrictEqual(expectedMovieData);
+    });
+
+    it('GET /movies/100?includeActors=true should return movie object with the actors', async () => {
+      const server = supertest(app);
+      const response = await server
+        .get(`/api/v1/movies/100?includeActors=true`)
+        .set('api-key', apiKey);
+      expect(response.status).toBe(200);
+      expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
+      let queryResult = await execQuery(
+        `
+        SELECT *, public.get_actors(100) as actors FROM v_movie WHERE id = 100;
+      `,
+        FIELD_MAP.movie
+      );
+      const expectedMovieData = queryResult.at(0)!;
+      if ('tmdbId' in expectedMovieData) {
+        delete expectedMovieData['tmdbId'];
+      }
+      expect(response.body).toStrictEqual(expectedMovieData);
+    });
+
+    it('GET /movies/100?includeActors=yes should return movie object with the actors', async () => {
+      const server = supertest(app);
+      const response = await server
+        .get(`/api/v1/movies/100?includeActors=yes`)
+        .set('api-key', apiKey);
+      expect(response.status).toBe(200);
+      expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
+      let queryResult = await execQuery(
+        `
+        SELECT *, public.get_actors(100) as actors FROM v_movie WHERE id = 100;
+      `,
+        FIELD_MAP.movie
+      );
+      const expectedMovieData = queryResult.at(0)!;
+      if ('tmdbId' in expectedMovieData) {
+        delete expectedMovieData['tmdbId'];
+      }
+      expect(response.body).toStrictEqual(expectedMovieData);
+    });
+
+    it('GET /movies/100?includeActors=1 should return movie object with the actors', async () => {
+      const server = supertest(app);
+      const response = await server
+        .get(`/api/v1/movies/100?includeActors=1`)
+        .set('api-key', apiKey);
+      expect(response.status).toBe(200);
+      expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
+      let queryResult = await execQuery(
+        `
+        SELECT *, public.get_actors(100) as actors FROM v_movie WHERE id = 100;
+      `,
+        FIELD_MAP.movie
+      );
+      const expectedMovieData = queryResult.at(0)!;
+      if ('tmdbId' in expectedMovieData) {
+        delete expectedMovieData['tmdbId'];
+      }
+      expect(response.body).toStrictEqual(expectedMovieData);
+    });
+  });
+
+  describe('GET /movies/:id returning status code 4xx', () => {
+    it('GET /movie/abc should return 400 since the movie id is not valid', async () => {
+      const server = supertest(app);
+      const response = await server.get(`/api/v1/movies/abc`).set('api-key', apiKey);
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        'Invalid movie id. Movie id must be a non-zero positive number.'
+      );
+    });
+
+    it('GET /movies/100?includeActors=blahblah should return 400 since the includeActors flag has invalid value', async () => {
+      const server = supertest(app);
+      const response = await server
+        .get(`/api/v1/movies/100?includeActors=blahblahck`)
+        .set('api-key', apiKey);
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        'Invalid value for includeActors in query. Please refer to api specs for more information.'
+      );
+    });
+
+    it('GET /movies/10394829 should return 404 since movie with the given id does not exist', async () => {
+      const id = 10394829;
+      const server = supertest(app);
+      const response = await server.get(`/api/v1/movies/${id}`).set('api-key', apiKey);
+      expect(response.status).toBe(404);
+      expect(response.body.message).toBe(`Movie with id ${id} does not exist`);
     });
   });
 });
