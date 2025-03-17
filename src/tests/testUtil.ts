@@ -22,11 +22,11 @@ export async function execQuery(
   }
 
   if (!result) {
-    return [];
+    return [] as Array<{ [key: string]: string }>;
   }
 
   if (excludeTimestamps === false) {
-    return result;
+    return result as Array<{ [key: string]: string }>;
   }
 
   for (const row of result) {
@@ -59,7 +59,7 @@ export async function queryMovieObject(id: number, fieldMap: Record<string, stri
   return result;
 }
 
-export async function getRowsCount(tableName: string, where?: string) {
+export async function getRowsCount(tableName: string, where?: string): Promise<number> {
   const whereClause = where ? ' WHERE ' + where : '';
   const result = await sequelize.query<{ count: number }>(
     `SELECT count(*) FROM ${tableName}${whereClause}`,
@@ -69,5 +69,5 @@ export async function getRowsCount(tableName: string, where?: string) {
       plain: false,
     }
   );
-  return result[0].count;
+  return Number(result[0].count);
 }

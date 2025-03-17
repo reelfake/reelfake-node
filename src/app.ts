@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import type { NextFunction, Request, Response } from 'express';
+import { parseQueryStrings } from './middlewares';
 import { AppError } from './utils';
 import {
   genreRoutes,
@@ -31,6 +32,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
   next();
 });
+
+// app.use(parseQueryStrings);
 
 app.get('/api/v1', (req: Request, res: Response) => {
   res.status(200).json({

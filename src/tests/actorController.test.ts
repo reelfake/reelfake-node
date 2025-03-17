@@ -12,6 +12,11 @@ import {
 
 const apiKey = process.env.API_KEY || '';
 
+const requestHeaders = {
+  pageOffset: 'rf-page-offset',
+  idOffset: 'rf-id-offset',
+};
+
 describe('Actor Controller', () => {
   jest.setTimeout(20000);
   afterEach(() => {
@@ -116,6 +121,109 @@ describe('Actor Controller', () => {
       expect(response.status).toBe(400);
       expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
       expect(response.body.message).toBe('Page number should be a valid non-zero positive number');
+    });
+  });
+
+  describe('GET /actors/search', () => {
+    it('GET /actors/search?q=... should return list of actors with name containing the given chars', async () => {
+      const server = supertest(app);
+      let idOffset = '';
+      let pageOffset = '';
+
+      const totalRows = await getRowsCount('actor', "actor_name LIKE '%john%'");
+
+      const pages = [1, 2, 7, 8, 3];
+
+      for (const page of pages) {
+        const url =
+          page > 1
+            ? `/api/v1/actors/search?q=john&pageNumber=${page}`
+            : `/api/v1/actors/search?q=john`;
+
+        const response = await server.get(url).set({
+          'api-key': apiKey,
+          [requestHeaders.idOffset]: idOffset === 'undefined' ? undefined : idOffset,
+          [requestHeaders.pageOffset]: pageOffset === 'undefined' ? undefined : pageOffset,
+        });
+        const expectedActors = await execQuery(
+          `
+          SELECT * FROM actor 
+          WHERE actor_name like '%john%'
+          ORDER BY id ASC
+          LIMIT ${ITEMS_COUNT_PER_PAGE_FOR_TEST}
+          OFFSET ${(page - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST}
+        `,
+          FIELD_MAP.actor
+        );
+
+        expect(response.status).toBe(200);
+        expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
+        expect(response.body).toStrictEqual({
+          items: expectedActors,
+          length: expectedActors.length,
+          totalItems: totalRows,
+          totalPages: Math.ceil(totalRows / ITEMS_COUNT_PER_PAGE_FOR_TEST),
+        });
+
+        idOffset = String(response.get(requestHeaders.idOffset));
+        pageOffset = String(response.get(requestHeaders.pageOffset));
+      }
+    });
+
+    it('GET /actors/search?name=... should return list of actors with the given name', async () => {
+      const server = supertest(app);
+
+      const response = await server.get('/api/v1/actors/search?name=steve smith').set({
+        'api-key': apiKey,
+      });
+      const expectedActors = await execQuery(
+        `
+            SELECT * FROM actor 
+            WHERE actor_name = 'steve smith'
+            ORDER BY id ASC 
+          `,
+        FIELD_MAP.actor
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
+      expect(response.body).toStrictEqual({
+        items: expectedActors,
+        length: expectedActors.length,
+      });
+    });
+  });
+
+  describe('GET /actors/search returning 4xx', () => {
+    it('GET /actors/search?name=... should return 401 when api key is missing in header', async () => {
+      const server = supertest(app);
+
+      const response = await server.get(`/api/v1/actors/search/keanu reeves`);
+
+      expect(response.status).toBe(401);
+      expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
+      expect(response.body.message).toBe('Invalid or missing api key');
+    });
+
+    it('GET /actors/search should return 400 when missing the string to search', async () => {
+      const server = supertest(app);
+
+      const response = await server.get(`/api/v1/actors/search?q=   `).set({ 'api-key': apiKey });
+      expect(response.status).toBe(400);
+      expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
+      expect(response.body.message).toBe('Request is missing the search parameter');
+    });
+
+    it('GET /actors/search?q=... should return 404 when no actors found with the given search string', async () => {
+      const server = supertest(app);
+
+      const response = await server
+        .get(`/api/v1/actors/search?q=blahblahblah`)
+        .set({ 'api-key': apiKey });
+
+      expect(response.status).toBe(404);
+      expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
+      expect(response.body.message).toBe('Resources not found');
     });
   });
 });
