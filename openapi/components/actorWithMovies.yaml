@@ -1,0 +1,44 @@
+type: object
+properties:
+  id:
+    type: integer
+  imdbId:
+    type: string
+  actorName:
+    type: string
+  biography:
+    type: string
+  birthday:
+    type: string
+    format: date
+  deathday:
+    type: string
+    format: date
+  placeOfBirth:
+    type: string
+  popularity:
+    type: number
+    format: float
+  profilePictureUrl:
+    type: string
+  movies:
+    type: array
+    items:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        releaseDate:
+          type: string
+          format: date
+        genres:
+          type: array
+          items:
+            type: string
+        ratingAverage:
+          type: integer
+          format: float
+        ratingCount:
+          type: integer

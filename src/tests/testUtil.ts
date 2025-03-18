@@ -34,6 +34,10 @@ export async function execQuery(
       delete row['rowNumber'];
     }
 
+    if ('tmdbId' in row) {
+      delete row['tmdbId'];
+    }
+
     if ('created_at' in row) {
       delete row['created_at'];
     }

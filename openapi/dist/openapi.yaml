@@ -226,7 +226,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: '#/components/schemas/movie'
+                      $ref: '#/components/schemas/movieSummary'
                   length:
                     type: integer
                   totalPages:
@@ -278,7 +278,7 @@ paths:
             type: boolean
       responses:
         '200':
-          description: Successfully returned a the movie data with or without the actors
+          description: Successfully returned the movie data with or without the actors
           content:
             application/json:
               schema:
@@ -358,7 +358,9 @@ paths:
         - in: path
           name: name
           required: false
-          description: The name of the actor to search for. This will return all the actors with the matching name.
+          description: |
+            The name of the actor to search for. This will return all the actors with the matching name.
+            There may be more than one person with the same name, hence this api returns an array of actors.
           schema:
             type: string
       responses:
@@ -463,6 +465,58 @@ paths:
                     type: string
         '401':
           $ref: '#/components/responses/unauthorized'
+  /actors/{id}:
+    get:
+      summary: Get actor detail using the id
+      security:
+        - ReelFake_ApiKey_Auth: []
+      operationId: getActorById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the actor that is requested
+          schema:
+            type: integer
+        - in: query
+          name: includeMovies
+          required: false
+          description: |
+            Whether or not to include the movies for the actor. Accepted values are true, false, yes, no, 0 and 1.
+            If includeMovies value is truthy then the actor object with the movies are returned.
+            If this is not present in query then it will default to false. If any value other than the accepted ones are
+            given, then 400 is returned.
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Successfully returned an actor data with (schema -> actorWithMovies) or without the movies (schema -> actor)
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/actorWithMovies'
+                  - $ref: '#/components/schemas/actor'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          description: The movie does not exist for the given id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
 components:
   securitySchemes:
     ReelFake_ApiKey_Auth:
@@ -524,21 +578,20 @@ components:
           type: string
         languageCode:
           type: string
-    movie:
+    movieSummary:
       type: object
       properties:
         id:
           type: integer
-        imdbId:
-          type: string
         title:
-          type: string
-        originalTitle:
           type: string
         overview:
           type: string
         runtime:
           type: integer
+        releaseDate:
+          type: string
+          format: date
         genres:
           type: array
           items:
@@ -549,22 +602,19 @@ components:
             type: string
         language:
           type: string
-        movieStatus:
-          type: string
         popularity:
           type: number
-        budget:
-          type: integer
-        revenue:
-          type: integer
+          format: float
         ratingAverage:
           type: integer
+          format: float
         ratingCount:
           type: integer
         posterUrl:
           type: string
         rentalRate:
           type: number
+          format: float
         rentalDuration:
           type: integer
     movieWithActors:
@@ -649,6 +699,51 @@ components:
           format: float
         profilePictureUrl:
           type: string
+    actorWithMovies:
+      type: object
+      properties:
+        id:
+          type: integer
+        imdbId:
+          type: string
+        actorName:
+          type: string
+        biography:
+          type: string
+        birthday:
+          type: string
+          format: date
+        deathday:
+          type: string
+          format: date
+        placeOfBirth:
+          type: string
+        popularity:
+          type: number
+          format: float
+        profilePictureUrl:
+          type: string
+        movies:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              title:
+                type: string
+              releaseDate:
+                type: string
+                format: date
+              genres:
+                type: array
+                items:
+                  type: string
+              ratingAverage:
+                type: integer
+                format: float
+              ratingCount:
+                type: integer
   responses:
     unauthorized:
       description: Api key is missing or invalid

@@ -16,3 +16,5 @@
   $ref: apis/exactSearchActors.yaml
 /actors/search:
   $ref: apis/searchActors.yaml
+/actors/{id}:
+  $ref: apis/actorById.yaml

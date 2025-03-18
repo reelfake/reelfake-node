@@ -1,6 +1,28 @@
-export { default as GenreModel } from './genreModel';
-export { default as CityModel } from './cityModel';
-export { default as CountryModel } from './countryModel';
-export { default as MovieLanguageModel } from './movieLanguageModel';
-export { default as MovieModel } from './movieModel';
-export { default as ActorModel } from './actorModel';
+import GenreModel from './genreModel';
+import CityModel from './cityModel';
+import CountryModel from './countryModel';
+import MovieLanguageModel from './movieLanguageModel';
+import MovieModel from './movieModel';
+import ActorModel from './actorModel';
+import MovieActorModel from './movieActor';
+
+export {
+  GenreModel,
+  CityModel,
+  CountryModel,
+  MovieLanguageModel,
+  MovieModel,
+  ActorModel,
+  MovieActorModel,
+};
+
+MovieModel.belongsToMany(ActorModel, {
+  through: MovieActorModel,
+  foreignKey: 'movie_id',
+  as: 'actors',
+});
+ActorModel.belongsToMany(MovieModel, {
+  through: MovieActorModel,
+  foreignKey: 'actor_id',
+  as: 'movies',
+});

@@ -2,7 +2,7 @@ import type { Request, Response } from 'express';
 import { Op, WhereOptions } from 'sequelize';
 import { Fn } from 'sequelize/lib/utils';
 import { executeQuery, AppError } from '../utils';
-import { MovieModel } from '../models';
+import { MovieModel, ActorModel, MovieActorModel } from '../models';
 import { ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
 import sequelize from '../sequelize.config';
 
@@ -51,9 +51,9 @@ const getMoviesUsingQuery = async (
       SELECT ROW_NUMBER() OVER (ORDER BY ${orderBy} ASC) AS "rowNumber", *
       FROM v_movie ${whereClause}
     )
-    SELECT id, tmdb_id AS "tmdbId", imdb_id AS "imdbId", title, original_title AS "originalTitle", overview, runtime, 
-    release_date AS "releaseDate", genres, country, movie_language AS "language", movie_status AS "movieStatus", 
-    popularity, budget, revenue, rating_average AS "ratingAverage", rating_count AS "ratingCount", 
+    SELECT id, title, overview, runtime, 
+    release_date AS "releaseDate", genres, country, movie_language AS "language", 
+    popularity, rating_average AS "ratingAverage", rating_count AS "ratingCount", 
     poster_url AS "posterUrl", rental_rate AS "rentalRate", rental_duration AS "rentalDuration" 
     from movies_with_row_number WHERE "rowNumber" > ${startingRowNumber} LIMIT ${ITEMS_PER_PAGE_FOR_PAGINATION}
   `;
@@ -128,6 +128,7 @@ export const getMovieById = async (req: Request, res: Response) => {
   const { includeActors: includeActorsText } = req.query;
 
   const id = Number(idText);
+  const includeActors = includeActorsText === 'true';
 
   const attributes: (string | [Fn, string])[] = [
     'id',
@@ -151,7 +152,6 @@ export const getMovieById = async (req: Request, res: Response) => {
     'rentalDuration',
   ];
 
-  const includeActors = includeActorsText === 'true';
   if (includeActors) {
     attributes.push([sequelize.fn('public.get_actors', id), 'actors']);
   }
@@ -162,6 +162,29 @@ export const getMovieById = async (req: Request, res: Response) => {
     },
     attributes,
   });
+
+  // The below one also works but it gives unnecessary nested role object inside every actors.
+  // const movie = await MovieModel.findOne({
+  //   where: {
+  //     id,
+  //   },
+  //   attributes: { exclude: ['tmdbId'] },
+  //   include: includeActors
+  //     ? [
+  //         {
+  //           model: ActorModel,
+  //           as: 'actors',
+  //           attributes: {
+  //             exclude: ['tmdbId', 'biography', 'birthday', 'deathday', 'placeOfBirth'],
+  //           },
+  //           through: {
+  //             as: 'role',
+  //             attributes: ['characterName', 'castOrder'],
+  //           },
+  //         },
+  //       ]
+  //     : undefined,
+  // });
 
   if (!movie) {
     throw new AppError(`Movie with id ${id} does not exist`, 404);

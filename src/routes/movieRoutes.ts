@@ -26,7 +26,7 @@ function validateReleaseDate(releaseDate: string) {
   return isValid;
 }
 
-function validateMovieIdRouteQuery(req: Request, res: Response, next: NextFunction) {
+function validateMovieByIdRouteQuery(req: Request, res: Response, next: NextFunction) {
   const { movieId: idText } = req.params;
   let { includeActors: includeActorsText } = req.query;
   includeActorsText = includeActorsText ? String(includeActorsText).trim().toLowerCase() : '';
@@ -113,6 +113,6 @@ function validateMoviesRouteQuery(req: Request, res: Response, next: NextFunctio
 }
 
 router.get('/', validateMoviesRouteQuery, routeFnWrapper(getMovies));
-router.get('/:movieId', validateMovieIdRouteQuery, routeFnWrapper(getMovieById));
+router.get('/:movieId', validateMovieByIdRouteQuery, routeFnWrapper(getMovieById));
 
 export default router;

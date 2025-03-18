@@ -1,4 +1,4 @@
-import { DataTypes, Op, WhereOptions } from 'sequelize';
+import { DataTypes, WhereOptions } from 'sequelize';
 import BaseModel from './baseModel';
 import sequelize from '../sequelize.config';
 

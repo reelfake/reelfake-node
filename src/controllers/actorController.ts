@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { Op } from 'sequelize';
-import { ActorModel } from '../models';
+import { ActorModel, MovieActorModel, MovieModel } from '../models';
 import { AppError } from '../utils';
 import { ERROR_MESSAGES, ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
 
@@ -16,6 +16,7 @@ const sendFirstPage = async (req: Request, res: Response) => {
         [Op.like]: `%${q}%`,
       },
     },
+    attributes: { exclude: ['tmdbId'] },
     order: [['id', 'ASC']],
     limit: ITEMS_PER_PAGE_FOR_PAGINATION,
   });
@@ -60,6 +61,7 @@ export const getActors = async (req: Request, res: Response) => {
         [Op.gt]: idOffset,
       },
     },
+    attributes: { exclude: ['tmdbId'] },
     order: [['id', 'ASC']],
     limit: ITEMS_PER_PAGE_FOR_PAGINATION,
   });
@@ -87,6 +89,7 @@ export const sendActorsByName = async (req: Request, res: Response) => {
         [Op.eq]: name,
       },
     },
+    attributes: { exclude: ['tmdbId'] },
     order: [['id', 'ASC']],
     limit: ITEMS_PER_PAGE_FOR_PAGINATION,
   });
@@ -166,6 +169,7 @@ export const searchActor = async (req: Request, res: Response) => {
         [Op.like]: `%${q}%`,
       },
     },
+    attributes: { exclude: ['tmdbId'] },
     order: [['id', rowsOrderDirection]],
     limit: maxItemsCount,
   });
@@ -196,4 +200,40 @@ export const searchActor = async (req: Request, res: Response) => {
       totalItems: totalItems,
       totalPages: Math.ceil(totalItems / ITEMS_PER_PAGE_FOR_PAGINATION),
     });
+};
+
+export const getActorById = async (req: Request, res: Response) => {
+  const { id: idText } = req.params;
+  const { includeMovies: includeMoviesText } = req.query;
+
+  const includeMovies = includeMoviesText === 'true';
+
+  const id = Number(idText);
+
+  if (isNaN(id) || id <= 0) {
+    throw new AppError('Invalid actor id', 400);
+  }
+
+  const actor = await ActorModel.findOne({
+    where: {
+      id,
+    },
+    attributes: { exclude: ['tmdbId'] },
+    include: includeMovies
+      ? [
+          {
+            model: MovieModel,
+            as: 'movies',
+            through: { attributes: [] },
+            attributes: ['id', 'title', 'releaseDate', 'genres', 'ratingAverage', 'ratingCount'],
+          },
+        ]
+      : undefined,
+  });
+
+  if (actor === undefined) {
+    throw new AppError(`Actor not found with id ${id}`, 404);
+  }
+
+  res.status(200).json(actor);
 };

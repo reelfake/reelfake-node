@@ -1,10 +1,10 @@
-import { DataTypes, INTEGER } from 'sequelize';
+import { DataTypes } from 'sequelize';
 import BaseModel from './baseModel';
 import sequelize from '../sequelize.config';
 
-class ActorModel extends BaseModel {}
+class Actor extends BaseModel {}
 
-ActorModel.init(
+Actor.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -56,4 +56,4 @@ ActorModel.init(
   }
 );
 
-export default ActorModel;
+export default Actor;
