@@ -88,6 +88,54 @@ describe('Actor Controller', () => {
     });
   });
 
+  describe('GET /actors/:id', () => {
+    it('GET /api/v1/actors/:id should return actor without the movies', async () => {
+      const server = supertest(app);
+
+      const response = await server.get(`/api/v1/actors/928365`).set({
+        'api-key': apiKey,
+      });
+      const expectedActor = await execQuery(
+        `
+          SELECT * FROM actor WHERE id = 928365
+        `,
+        FIELD_MAP.actor
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
+      expect(response.body).toStrictEqual(expectedActor[0]);
+    });
+
+    it('GET /api/v1/actors/:id?includeMovies=true should return actor with the movies', async () => {
+      const server = supertest(app);
+      const actorId = 928365;
+
+      const response = await server.get(`/api/v1/actors/${actorId}?includeMovies=true`).set({
+        'api-key': apiKey,
+      });
+      const expectedActor = await execQuery(
+        `
+          SELECT id, imdb_id as "imdbId", actor_name as "actorName", biography, birthday, deathday, place_of_birth as "placeOfBirth",
+          popularity, profile_picture_url as "profilePictureUrl" FROM actor WHERE id = ${actorId}
+
+        `,
+        FIELD_MAP.actor
+      );
+      const expectedMovies = await execQuery(
+        `
+        SELECT m.id, m.title, m.release_date as "releaseDate", m.genres, m.rating_average as "ratingAverage", m.rating_count as "ratingCount" 
+        FROM v_movie m LEFT JOIN movie_actor ma ON m.id = ma.movie_id WHERE ma.actor_id = ${actorId} ORDER BY id ASC
+      `,
+        FIELD_MAP.movie
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
+      expect(response.body).toStrictEqual({ ...expectedActor[0], movies: [...expectedMovies] });
+    });
+  });
+
   describe('GET /actors returning 4xx', () => {
     it('GET /api/v1/actors should return 401 if api key is missing in header', async () => {
       const server = supertest(app);

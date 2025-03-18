@@ -33,9 +33,10 @@ describe('Movie Controller', () => {
         expect(response.status).toBe(200);
         expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
         const expectedMovies = await execQuery(
-          `SELECT * FROM v_movie ORDER BY id ASC LIMIT 50 OFFSET ${
-            (i - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST
-          }`,
+          `SELECT id, title, overview, runtime, release_date as "releaseDate", genres, country, 
+          movie_language as language, popularity, rating_average as "ratingAverage", rating_count as "ratingCount",
+          poster_url as "posterUrl", rental_rate as "rentalRate", rental_duration as "rentalDuration" 
+          FROM v_movie ORDER BY id ASC LIMIT 50 OFFSET ${(i - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST}`,
           FIELD_MAP.movie
         );
 
@@ -65,7 +66,9 @@ describe('Movie Controller', () => {
         expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
         const expectedMovies = await execQuery(
           `
-            SELECT * FROM v_movie 
+            SELECT id, title, overview, runtime, release_date as "releaseDate", genres, country, 
+            movie_language as language, popularity, rating_average as "ratingAverage", rating_count as "ratingCount",
+            poster_url as "posterUrl", rental_rate as "rentalRate", rental_duration as "rentalDuration" FROM v_movie 
             ORDER BY id ASC 
             LIMIT ${ITEMS_COUNT_PER_PAGE_FOR_TEST} 
             OFFSET ${(page - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST}
@@ -105,7 +108,9 @@ describe('Movie Controller', () => {
         expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
         const expectedMovies = await execQuery(
           `
-            SELECT * FROM v_movie 
+            SELECT id, title, overview, runtime, release_date as "releaseDate", genres, country, 
+            movie_language as language, popularity, rating_average as "ratingAverage", rating_count as "ratingCount",
+            poster_url as "posterUrl", rental_rate as "rentalRate", rental_duration as "rentalDuration" FROM v_movie 
             WHERE release_date BETWEEN '2020-01-01' AND '2020-12-31' 
             ORDER BY release_date, id ASC 
             LIMIT ${ITEMS_COUNT_PER_PAGE_FOR_TEST} OFFSET ${(i - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST}
@@ -139,7 +144,9 @@ describe('Movie Controller', () => {
         expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
         const expectedMovies = await execQuery(
           `
-            SELECT * FROM v_movie
+            SELECT id, title, overview, runtime, release_date as "releaseDate", genres, country, 
+            movie_language as language, popularity, rating_average as "ratingAverage", rating_count as "ratingCount",
+            poster_url as "posterUrl", rental_rate as "rentalRate", rental_duration as "rentalDuration" FROM v_movie
             WHERE release_date BETWEEN '2020-01-01' AND '2020-12-31'
             ORDER BY release_date, id ASC
             LIMIT 50 OFFSET ${(page - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST}
@@ -182,7 +189,9 @@ describe('Movie Controller', () => {
         expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
         const expectedMovies = await execQuery(
           `
-            SELECT * FROM v_movie 
+            SELECT id, title, overview, runtime, release_date as "releaseDate", genres, country, 
+            movie_language as language, popularity, rating_average as "ratingAverage", rating_count as "ratingCount",
+            poster_url as "posterUrl", rental_rate as "rentalRate", rental_duration as "rentalDuration" FROM v_movie 
             WHERE release_date BETWEEN '2020-01-01' AND '2020-12-31' AND genres @> '{Action,Adventure}'
             ORDER BY release_date, id ASC
             LIMIT ${ITEMS_COUNT_PER_PAGE_FOR_TEST}
@@ -221,7 +230,9 @@ describe('Movie Controller', () => {
         expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
         const expectedMovies = await execQuery(
           `
-            SELECT * FROM v_movie 
+            SELECT id, title, overview, runtime, release_date as "releaseDate", genres, country, 
+            movie_language as language, popularity, rating_average as "ratingAverage", rating_count as "ratingCount",
+            poster_url as "posterUrl", rental_rate as "rentalRate", rental_duration as "rentalDuration" FROM v_movie 
             WHERE genres @> '{Action,Adventure,Thriller}'
             ORDER BY id ASC
             LIMIT ${ITEMS_COUNT_PER_PAGE_FOR_TEST}
@@ -265,7 +276,9 @@ describe('Movie Controller', () => {
               SELECT ROW_NUMBER() OVER (ORDER BY id ASC) AS "rowNumber", * FROM v_movie 
               WHERE genres @> '{Action,Adventure,Thriller}'
             )
-            SELECT * FROM movies_with_row_number 
+            SELECT id, title, overview, runtime, release_date as "releaseDate", genres, country, 
+            movie_language as language, popularity, rating_average as "ratingAverage", rating_count as "ratingCount",
+            poster_url as "posterUrl", rental_rate as "rentalRate", rental_duration as "rentalDuration" FROM movies_with_row_number 
             ORDER BY "rowNumber" ASC
             LIMIT ${ITEMS_COUNT_PER_PAGE_FOR_TEST}
             OFFSET ${(page - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST}
@@ -321,7 +334,9 @@ describe('Movie Controller', () => {
           .set('api-key', apiKey);
         const expectedMovies = await execQuery(
           `
-            SELECT * FROM v_movie
+            SELECT id, title, overview, runtime, release_date as "releaseDate", genres, country, 
+            movie_language as language, popularity, rating_average as "ratingAverage", rating_count as "ratingCount",
+            poster_url as "posterUrl", rental_rate as "rentalRate", rental_duration as "rentalDuration" FROM v_movie
             WHERE release_date BETWEEN '2024-03-01' AND '2024-03-04'
             ORDER BY release_date, id ASC
             LIMIT ${ITEMS_COUNT_PER_PAGE_FOR_TEST}
@@ -355,9 +370,12 @@ describe('Movie Controller', () => {
           .get(`/api/v1/movies?releaseFrom=2024-03-01&releaseTo=2024-03-04&pageNumber=${page}`)
           .set('api-key', apiKey);
         const expectedMovies = await execQuery(
-          `SELECT * FROM v_movie WHERE release_date BETWEEN '2024-03-01' AND '2024-03-04' ORDER BY release_date, id ASC LIMIT ${ITEMS_COUNT_PER_PAGE_FOR_TEST} OFFSET ${
-            (page - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST
-          }`,
+          `SELECT id, title, overview, runtime, release_date as "releaseDate", genres, country, 
+            movie_language as language, popularity, rating_average as "ratingAverage", rating_count as "ratingCount",
+            poster_url as "posterUrl", rental_rate as "rentalRate", rental_duration as "rentalDuration" FROM v_movie 
+            WHERE release_date BETWEEN '2024-03-01' AND '2024-03-04' ORDER BY release_date, id ASC 
+            LIMIT ${ITEMS_COUNT_PER_PAGE_FOR_TEST} 
+            OFFSET ${(page - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST}`,
           FIELD_MAP.movie
         );
         expect(response.status).toBe(200);
@@ -395,7 +413,9 @@ describe('Movie Controller', () => {
         expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
         const expectedMovies = await execQuery(
           `
-            SELECT * FROM v_movie 
+            SELECT id, title, overview, runtime, release_date as "releaseDate", genres, country, 
+            movie_language as language, popularity, rating_average as "ratingAverage", rating_count as "ratingCount",
+            poster_url as "posterUrl", rental_rate as "rentalRate", rental_duration as "rentalDuration" FROM v_movie 
             WHERE genres @> '{Action,Adventure}' AND release_date BETWEEN '2024-03-01' AND '2024-10-31'
             ORDER BY release_date, id ASC
             LIMIT ${ITEMS_COUNT_PER_PAGE_FOR_TEST}
@@ -437,7 +457,9 @@ describe('Movie Controller', () => {
               SELECT ROW_NUMBER() OVER (ORDER BY id ASC) AS "rowNumber", * FROM v_movie 
               WHERE genres @> '{Action,Adventure}'
             )
-            SELECT * FROM movies_with_row_number 
+            SELECT id, title, overview, runtime, release_date as "releaseDate", genres, country, 
+            movie_language as language, popularity, rating_average as "ratingAverage", rating_count as "ratingCount",
+            poster_url as "posterUrl", rental_rate as "rentalRate", rental_duration as "rentalDuration" FROM movies_with_row_number 
             ORDER BY "rowNumber" ASC
             LIMIT ${ITEMS_COUNT_PER_PAGE_FOR_TEST}
             OFFSET ${(page - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST}
