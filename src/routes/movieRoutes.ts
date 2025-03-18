@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { Router } from 'express';
 import { routeFnWrapper, AppError } from '../utils';
-import { getMovieById, getMovies } from '../controllers';
+import { getMovieById, getMovies, searchMovies } from '../controllers';
 import { GENRES } from '../constants';
 
 const router = Router();
@@ -113,6 +113,7 @@ function validateMoviesRouteQuery(req: Request, res: Response, next: NextFunctio
 }
 
 router.get('/', validateMoviesRouteQuery, routeFnWrapper(getMovies));
+router.get('/search', routeFnWrapper(searchMovies));
 router.get('/:movieId', validateMovieByIdRouteQuery, routeFnWrapper(getMovieById));
 
 export default router;

@@ -12,11 +12,6 @@ import {
 
 const apiKey = process.env.API_KEY || '';
 
-const requestHeaders = {
-  pageOffset: 'rf-page-offset',
-  idOffset: 'rf-id-offset',
-};
-
 describe('Actor Controller', () => {
   jest.setTimeout(20000);
   afterEach(() => {
@@ -175,8 +170,6 @@ describe('Actor Controller', () => {
   describe('GET /actors/search', () => {
     it('GET /actors/search?q=... should return list of actors with name containing the given chars', async () => {
       const server = supertest(app);
-      let idOffset = '';
-      let pageOffset = '';
 
       const totalRows = await getRowsCount('actor', "actor_name LIKE '%john%'");
 
@@ -188,16 +181,12 @@ describe('Actor Controller', () => {
             ? `/api/v1/actors/search?q=john&pageNumber=${page}`
             : `/api/v1/actors/search?q=john`;
 
-        const response = await server.get(url).set({
-          'api-key': apiKey,
-          [requestHeaders.idOffset]: idOffset === 'undefined' ? undefined : idOffset,
-          [requestHeaders.pageOffset]: pageOffset === 'undefined' ? undefined : pageOffset,
-        });
+        const response = await server.get(url).set('api-key', apiKey);
         const expectedActors = await execQuery(
           `
           SELECT * FROM actor 
           WHERE actor_name like '%john%'
-          ORDER BY id ASC
+          ORDER BY actor_name ASC
           LIMIT ${ITEMS_COUNT_PER_PAGE_FOR_TEST}
           OFFSET ${(page - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST}
         `,
@@ -212,24 +201,21 @@ describe('Actor Controller', () => {
           totalItems: totalRows,
           totalPages: Math.ceil(totalRows / ITEMS_COUNT_PER_PAGE_FOR_TEST),
         });
-
-        idOffset = String(response.get(requestHeaders.idOffset));
-        pageOffset = String(response.get(requestHeaders.pageOffset));
       }
     });
 
     it('GET /actors/search?name=... should return list of actors with the given name', async () => {
       const server = supertest(app);
-
+      const totalRows = await getRowsCount('actor', "actor_name = 'steve smith'");
       const response = await server.get('/api/v1/actors/search?name=steve smith').set({
         'api-key': apiKey,
       });
       const expectedActors = await execQuery(
         `
-            SELECT * FROM actor 
-            WHERE actor_name = 'steve smith'
-            ORDER BY id ASC 
-          `,
+          SELECT * FROM actor 
+          WHERE actor_name = 'steve smith'
+          ORDER BY actor_name ASC 
+        `,
         FIELD_MAP.actor
       );
 
@@ -238,6 +224,8 @@ describe('Actor Controller', () => {
       expect(response.body).toStrictEqual({
         items: expectedActors,
         length: expectedActors.length,
+        totalItems: totalRows,
+        totalPages: Math.ceil(totalRows / ITEMS_COUNT_PER_PAGE_FOR_TEST),
       });
     });
   });

@@ -26,3 +26,8 @@ ActorModel.belongsToMany(MovieModel, {
   foreignKey: 'actor_id',
   as: 'movies',
 });
+
+// MovieActorModel.belongsTo(MovieModel);
+// MovieActorModel.belongsTo(ActorModel);
+// MovieModel.hasMany(MovieActorModel);
+// ActorModel.hasMany(MovieActorModel);

@@ -64,14 +64,19 @@ export async function queryMovieObject(id: number, fieldMap: Record<string, stri
 }
 
 export async function getRowsCount(tableName: string, where?: string): Promise<number> {
-  const whereClause = where ? ' WHERE ' + where : '';
-  const result = await sequelize.query<{ count: number }>(
-    `SELECT count(*) FROM ${tableName}${whereClause}`,
-    {
-      type: QueryTypes.SELECT,
-      raw: false,
-      plain: false,
-    }
-  );
-  return Number(result[0].count);
+  try {
+    const whereClause = where ? ' WHERE ' + where : '';
+    const result = await sequelize.query<{ count: number }>(
+      `SELECT count(*) FROM ${tableName}${whereClause}`,
+      {
+        type: QueryTypes.SELECT,
+        raw: false,
+        plain: false,
+      }
+    );
+    return Number(result[0].count);
+  } catch (err) {
+    console.log('getRowsCount -> ', err);
+    return -1;
+  }
 }
