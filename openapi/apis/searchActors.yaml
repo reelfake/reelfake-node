@@ -16,36 +16,23 @@ get:
     - in: query
       name: q
       required: false
-      description: The sequence of characters to search for in the name of the actors
+      description: |
+        The sequence of characters to search for in the name of the actors.
+        Either this or name must be present in the query.
       schema:
         type: string
-    - in: header
-      name: rf-id-offset
+    - in: query
+      name: name
       required: false
-      description: |
-        The rf-id-offset is required when requesting subsequent pages from the first one.
+      description: The name of the actor to search for
       schema:
-        type: integer
-    - in: header
-      name: rf-page-offset
-      required: false
-      description: |
-        The rf-page-offset is required when requesting subsequent pages from the first one.
-      schema:
-        type: integer
+        type: string
   responses:
     '200':
       description: Successfully returned a list of actors
       headers:
-        rf-page-offset:
-          description: |
-            The page number for the page that is sent. This is needed when navigating between pages.
-          schema:
-            type: integer
-        rf-id-offset:
-          description: |
-            The id of the last record (or the max of ids in page sent) in the page that is sent.
-            This is needed when navigating between pages.
+        rf-page-number:
+          description: The page number for the page that is sent
           schema:
             type: integer
       content:

@@ -12,8 +12,6 @@
   $ref: apis/movie.yaml
 /actors:
   $ref: apis/actors.yaml
-/actors/search/{name}:
-  $ref: apis/exactSearchActors.yaml
 /actors/search:
   $ref: apis/searchActors.yaml
 /actors/{id}:

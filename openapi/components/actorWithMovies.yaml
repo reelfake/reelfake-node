@@ -42,3 +42,5 @@ properties:
           format: float
         ratingCount:
           type: integer
+        posterUrl:
+          type: string
