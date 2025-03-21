@@ -1,0 +1,66 @@
+get:
+  summary: Get in-stock movies in a store page by page
+  security:
+    - ReelFake_ApiKey_Auth: []
+  operationId: getMoviesInStore
+  parameters:
+    - in: path
+      name: id
+      required: true
+      description: The id of the store
+      schema:
+        type: integer
+    - in: query
+      name: pageNumber
+      required: false
+      description: |
+        The page number (which starts with 1) to fetch the set of in-stock movies from.
+        The movies are split into multiple pages with each page having a limited number of items.
+      schema:
+        type: integer
+        default: 1
+  responses:
+    '200':
+      description: Successfully returned in-stock movies in a store for the given page number
+      headers:
+        rf-page-number:
+          description: The page number that the data returned belong to
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  $ref: ../components/movieInStore.yaml
+              length:
+                type: integer
+              totalPages:
+                type: integer
+              totalItems:
+                type: integer
+    '400':
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    '404':
+      description: |
+        The page is out of range meaning the page number provided in the request query 
+        has exceeded the total number of movies present in a store.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    '401':
+      $ref: ../components/unauthorized.yaml

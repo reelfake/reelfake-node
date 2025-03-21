@@ -6,7 +6,7 @@ export const ITEMS_COUNT_PER_PAGE_FOR_TEST = 50;
 
 export async function execQuery(
   queryText: string,
-  fieldMap: Record<string, string>,
+  fieldMap: Record<string, string> = {},
   excludeTimestamps: boolean = true
 ) {
   let result: object[] | undefined = undefined;

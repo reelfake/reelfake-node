@@ -464,6 +464,140 @@ paths:
                 properties:
                   message:
                     type: string
+  /stores:
+    get:
+      summary: Get list of stores
+      security:
+        - ReelFake_ApiKey_Auth: []
+      operationId: getStores
+      responses:
+        '200':
+          description: Successfully returned a list of stores
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/store'
+                  length:
+                    type: integer
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/unauthorized'
+  /stores/{id}/stock:
+    get:
+      summary: Get the number of in-stock movies in a given store
+      security:
+        - ReelFake_ApiKey_Auth: []
+      operationId: getStockCount
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the store
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully returned the number of in-stock movies in a given store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  stockCount:
+                    type: string
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/unauthorized'
+  /stores/{id}/movies:
+    get:
+      summary: Get in-stock movies in a store page by page
+      security:
+        - ReelFake_ApiKey_Auth: []
+      operationId: getMoviesInStore
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the store
+          schema:
+            type: integer
+        - in: query
+          name: pageNumber
+          required: false
+          description: |
+            The page number (which starts with 1) to fetch the set of in-stock movies from.
+            The movies are split into multiple pages with each page having a limited number of items.
+          schema:
+            type: integer
+            default: 1
+      responses:
+        '200':
+          description: Successfully returned in-stock movies in a store for the given page number
+          headers:
+            rf-page-number:
+              description: The page number that the data returned belong to
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/movieInStore'
+                  length:
+                    type: integer
+                  totalPages:
+                    type: integer
+                  totalItems:
+                    type: integer
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          description: |
+            The page is out of range meaning the page number provided in the request query 
+            has exceeded the total number of movies present in a store.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
 components:
   securitySchemes:
     ReelFake_ApiKey_Auth:
@@ -693,6 +827,68 @@ components:
                 type: integer
               posterUrl:
                 type: string
+    store:
+      type: object
+      properties:
+        id:
+          type: integer
+        addressLine:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        country:
+          type: string
+        phoneNumber:
+          type: string
+    movieInStore:
+      type: object
+      properties:
+        id:
+          type: integer
+        imdbId:
+          type: string
+        title:
+          type: string
+        originalTitle:
+          type: string
+        overview:
+          type: string
+        runtime:
+          type: integer
+        releaseDate:
+          type: string
+          format: date
+        genres:
+          type: array
+          items:
+            type: string
+        country:
+          type: array
+          items:
+            type: string
+        language:
+          type: string
+        movieStatus:
+          type: string
+        popularity:
+          type: integer
+          format: float
+        ratingAverage:
+          type: integer
+          format: float
+        ratingCount:
+          type: integer
+        posterUrl:
+          type: string
+        rentalRate:
+          type: integer
+          format: float
+        rentalDuration:
+          type: integer
+        stock:
+          type: integer
   responses:
     unauthorized:
       description: Api key is missing or invalid

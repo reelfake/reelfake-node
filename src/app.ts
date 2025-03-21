@@ -9,6 +9,7 @@ import {
   movieLanguageRoutes,
   movieRoutes,
   actorRoutes,
+  storeRoutes,
 } from './routes';
 import { ERROR_MESSAGES } from './constants';
 
@@ -68,6 +69,8 @@ app.use('/api/v1/cities', cityRoutes);
 app.use('/api/v1/movies', movieRoutes);
 
 app.use('/api/v1/actors', actorRoutes);
+
+app.use('/api/v1/stores', storeRoutes);
 
 app.use('*', (req: Request, res: Response) => {
   res.status(404).json({

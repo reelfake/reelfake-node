@@ -16,3 +16,9 @@
   $ref: apis/searchActors.yaml
 /actors/{id}:
   $ref: apis/actorById.yaml
+/stores:
+  $ref: apis/stores.yaml
+/stores/{id}/stock:
+  $ref: apis/stockCountInStore.yaml
+/stores/{id}/movies:
+  $ref: apis/moviesInStore.yaml

@@ -1,4 +1,13 @@
-type ModelForTest = 'movie' | 'genre' | 'city' | 'country' | 'movieLanguage' | 'actor';
+type ModelForTest =
+  | 'movie'
+  | 'genre'
+  | 'city'
+  | 'country'
+  | 'movieLanguage'
+  | 'actor'
+  | 'address'
+  | 'store'
+  | 'inventory';
 
 export const FIELD_MAP: Record<ModelForTest, Record<string, string>> = {
   movie: {
@@ -54,5 +63,23 @@ export const FIELD_MAP: Record<ModelForTest, Record<string, string>> = {
     place_of_birth: 'placeOfBirth',
     popularity: 'popularity',
     profile_picture_url: 'profilePictureUrl',
+  },
+  address: {
+    id: 'id',
+    addressLine: 'address_line',
+    cityId: 'city_id',
+    postalCode: 'postal_code',
+  },
+  store: {
+    id: 'id',
+    managerStaffId: 'manager_staff_id',
+    addressId: 'address_id',
+    phoneNumber: 'phone_number',
+  },
+  inventory: {
+    id: 'id',
+    movieId: 'movie_id',
+    storeId: 'store_id',
+    stockCount: 'stock_count',
   },
 };

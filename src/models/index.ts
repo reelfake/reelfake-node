@@ -5,6 +5,9 @@ import MovieLanguageModel from './movieLanguageModel';
 import MovieModel from './movieModel';
 import ActorModel from './actorModel';
 import MovieActorModel from './movieActor';
+import AddressModel from './addressModel';
+import StoreModel from './storeModel';
+import InventoryModel from './inventoryModel';
 
 export {
   GenreModel,
@@ -14,20 +17,25 @@ export {
   MovieModel,
   ActorModel,
   MovieActorModel,
+  AddressModel,
+  StoreModel,
+  InventoryModel,
 };
 
 MovieModel.belongsToMany(ActorModel, {
   through: MovieActorModel,
-  foreignKey: 'movie_id',
+  foreignKey: 'movieId',
   as: 'actors',
 });
 ActorModel.belongsToMany(MovieModel, {
   through: MovieActorModel,
-  foreignKey: 'actor_id',
+  foreignKey: 'actorId',
   as: 'movies',
 });
 
-// MovieActorModel.belongsTo(MovieModel);
-// MovieActorModel.belongsTo(ActorModel);
-// MovieModel.hasMany(MovieActorModel);
-// ActorModel.hasMany(MovieActorModel);
+AddressModel.belongsTo(CityModel, { as: 'city', foreignKey: 'cityId' });
+
+StoreModel.belongsTo(AddressModel, { as: 'address', foreignKey: 'addressId' });
+
+InventoryModel.belongsTo(StoreModel, { as: 'stores', foreignKey: 'storeId' });
+InventoryModel.belongsTo(MovieModel, { as: 'movie', foreignKey: 'movieId' });

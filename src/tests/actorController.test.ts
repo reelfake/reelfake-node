@@ -1,14 +1,7 @@
 import supertest from 'supertest';
 
 import app from '../app';
-import * as dbQuery from '../utils/dbQuery';
-import {
-  ITEMS_COUNT_PER_PAGE_FOR_TEST,
-  execQuery,
-  getRowsCount,
-  queryMovieObject,
-  FIELD_MAP,
-} from './testUtil';
+import { ITEMS_COUNT_PER_PAGE_FOR_TEST, execQuery, getRowsCount, FIELD_MAP } from './testUtil';
 
 const apiKey = process.env.API_KEY || '';
 

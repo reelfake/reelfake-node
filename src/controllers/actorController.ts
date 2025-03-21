@@ -101,15 +101,7 @@ export const getActorById = async (req: Request, res: Response) => {
             model: MovieModel,
             as: 'movies',
             through: { attributes: [] },
-            attributes: [
-              'id',
-              'title',
-              'releaseDate',
-              'genres',
-              'ratingAverage',
-              'ratingCount',
-              'posterUrl',
-            ],
+            attributes: ['id', 'title', 'releaseDate', 'genres', 'ratingAverage', 'ratingCount'],
           },
         ]
       : undefined,

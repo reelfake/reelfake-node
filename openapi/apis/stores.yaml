@@ -1,0 +1,30 @@
+get:
+  summary: Get list of stores
+  security:
+    - ReelFake_ApiKey_Auth: []
+  operationId: getStores
+  responses:
+    '200':
+      description: Successfully returned a list of stores
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  $ref: ../components/store.yaml
+              length:
+                type: integer
+    '400':
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    '401':
+      $ref: ../components/unauthorized.yaml
