@@ -29,7 +29,10 @@ describe('Store Controller', () => {
 
       expect(response.status).toBe(200);
       expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
-      expect(response.body).toStrictEqual(expectedStores);
+      expect(response.body).toStrictEqual({
+        items: expectedStores,
+        length: expectedStores.length,
+      });
     });
 
     it('GET /stores/:id/stock should get the stock count for the given store', async () => {
@@ -40,12 +43,12 @@ describe('Store Controller', () => {
       expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
 
       const expectedStockCount = await execQuery(`
-            SELECT SUM(stock_count) AS "stockCount" FROM inventory WHERE store_id = ${id}
+            SELECT SUM(stock_count) AS "stock" FROM inventory WHERE store_id = ${id}
         `);
 
       expect(response.body).toStrictEqual({
         id: 1,
-        stockCount: Number(expectedStockCount[0].stockCount),
+        stockCount: Number(expectedStockCount[0].stock),
       });
     });
 
@@ -66,7 +69,7 @@ describe('Store Controller', () => {
         const expectedMovies = await execQuery(`
                 SELECT i.id AS "inventoryId", m.id, m.imdb_id AS "imdbId", m.title, m.original_title AS "originalTitle",
                 m.overview, m.runtime, m.release_date AS "releaseDate", m.genres, m.country, 
-                m.movie_language AS "language", m.movie_status AS "movieStatus", m.popularity, 
+                m.movie_language AS "language", m.movie_status AS "movieStatus", m.popularity, m.budget, m.revenue,
                 m.rating_average AS "ratingAverage", m.rating_count "ratingCount", m.poster_url AS "posterUrl",
                 m.rental_rate AS "rentalRate", m.rental_duration AS "rentalDuration", i.stock_count AS stock
                 FROM inventory AS i LEFT OUTER JOIN v_movie AS m ON m.id = i.movie_id

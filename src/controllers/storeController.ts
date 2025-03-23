@@ -59,7 +59,7 @@ export const getStockCount = async (req: Request, res: Response) => {
     throw new AppError('Invalid store id', 400);
   }
 
-  const stockCount = await InventoryModel.sum('stockCount', {
+  const stockCount = await InventoryModel.sum('stock', {
     where: {
       storeId,
     },

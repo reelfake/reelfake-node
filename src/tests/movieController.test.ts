@@ -689,12 +689,12 @@ describe('Movie Controller', () => {
       const id = 680;
       const expectedResult = await execQuery(
         `
-        SELECT i.id AS "id", m.id AS "movieId", a.address_line AS "addressLine", c.city_name AS "city",
+        SELECT s.id, i.id AS "inventoryId", m.id AS "movieId", a.address_line AS "addressLine", c.city_name AS "city",
         c.state_name AS "state", a.postal_code AS "postalCode", cy.country_name AS "country", s.phone_number AS "phoneNumber",
-        i.stock_count AS "stockCount" FROM inventory AS i LEFT OUTER JOIN store AS s ON i.store_id = s.id
+        i.stock_count AS "stock" FROM inventory AS i LEFT OUTER JOIN store AS s ON i.store_id = s.id
         LEFT OUTER JOIN v_movie AS m ON i.movie_id = m.id LEFT OUTER JOIN address AS a ON s.address_id = a.id
         LEFT OUTER JOIN city AS c on a.city_id = c.id LEFT OUTER JOIN country AS cy ON c.country_id = cy.id
-        WHERE m.id = ${id} ORDER BY "stockCount" DESC, "id" ASC;
+        WHERE m.id = ${id} ORDER BY "stock" DESC, "id" ASC;
       `,
         {}
       );
