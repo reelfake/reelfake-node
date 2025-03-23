@@ -1,8 +1,10 @@
 import express from 'express';
 import path from 'path';
 import type { NextFunction, Request, Response } from 'express';
+import bodyParser from 'body-parser';
 import { AppError } from './utils';
 import {
+  apiKeyRoutes,
   genreRoutes,
   cityRoutes,
   countryRoutes,
@@ -21,8 +23,13 @@ import { ERROR_MESSAGES } from './constants';
 
 const app = express();
 
+app.use(bodyParser.json());
+
 app.use((req: Request, res: Response, next: NextFunction) => {
-  const skipAuth = new RegExp('/api/v1/(re)?docs/').test(req.path) || req.path === '/openapi/v1';
+  const skipAuth =
+    new RegExp('/api/v1/(re)?docs/').test(req.path) ||
+    req.path === '/openapi/v1' ||
+    req.path === '/api/v1/api_key';
   if (
     !skipAuth &&
     (req.headers['api-key'] === undefined || req.headers['api-key'] !== process.env.API_KEY)
@@ -52,6 +59,8 @@ app.get('/api/v1/docs', (req, res) => {
 app.get('/api/v1/redocs', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'openapi', 'redocs.html'));
 });
+
+app.use('/api/v1/api_key', apiKeyRoutes);
 
 // /api/genres
 app.use('/api/v1/genres', genreRoutes);

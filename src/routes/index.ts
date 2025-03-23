@@ -5,3 +5,4 @@ export { default as movieLanguageRoutes } from './movieLanguageRoutes';
 export { default as movieRoutes } from './movieRoutes';
 export { default as actorRoutes } from './actorRoutes';
 export { default as storeRoutes } from './storeRoutes';
+export { default as apiKeyRoutes } from './apiKeyRoutes';

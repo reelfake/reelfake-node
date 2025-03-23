@@ -1,3 +1,5 @@
+/api_key:
+  $ref: apis/apiKey.yaml
 /genres:
   $ref: apis/genres.yaml
 /cities:

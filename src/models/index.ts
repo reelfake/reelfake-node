@@ -1,3 +1,4 @@
+import ApiKeyModel from './apiKeyModel';
 import GenreModel from './genreModel';
 import CityModel from './cityModel';
 import CountryModel from './countryModel';
@@ -11,6 +12,7 @@ import InventoryModel from './inventoryModel';
 import CustomerModel from './customerModel';
 
 export {
+  ApiKeyModel,
   GenreModel,
   CityModel,
   CountryModel,
