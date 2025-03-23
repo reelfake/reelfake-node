@@ -65,7 +65,7 @@ export const getStockCount = async (req: Request, res: Response) => {
     },
   });
 
-  res.status(200).json({ id: storeId, stockCount });
+  res.status(200).json({ id: storeId, stock: stockCount });
 };
 
 export const getMoviesInStore = async (req: Request, res: Response) => {

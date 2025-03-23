@@ -48,7 +48,7 @@ describe('Store Controller', () => {
 
       expect(response.body).toStrictEqual({
         id: 1,
-        stockCount: Number(expectedStockCount[0].stock),
+        stock: Number(expectedStockCount[0].stock),
       });
     });
 
