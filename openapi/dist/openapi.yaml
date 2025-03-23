@@ -303,6 +303,53 @@ paths:
                 properties:
                   message:
                     type: string
+  /movies/{id}/stores:
+    get:
+      summary: Get stock count of the movie in all the stores
+      security:
+        - ReelFake_ApiKey_Auth: []
+      operationId: findInStores
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the movie
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully returned the stock count in all the stores
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/storeInventory'
+                  length:
+                    type: integer
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          description: No stores has the movie meaning the movie is out stock
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
   /actors:
     get:
       summary: Get the actor list with pagination support
@@ -569,7 +616,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: '#/components/schemas/movieInStore'
+                      $ref: '#/components/schemas/movie'
                   length:
                     type: integer
                   totalPages:
@@ -756,6 +803,29 @@ components:
                 type: integer
               profilePictureUrl:
                 type: string
+    storeInventory:
+      type: object
+      properties:
+        id:
+          type: integer
+        inventoryId:
+          type: integer
+        movieId:
+          type: integer
+        addressLine:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        postalCode:
+          type: string
+        country:
+          type: string
+        phoneNumber:
+          type: string
+        stock:
+          type: integer
     actor:
       type: object
       properties:
@@ -842,8 +912,28 @@ components:
           type: string
         phoneNumber:
           type: string
-    movieInStore:
+    movie:
       type: object
+      required:
+        - id
+        - imdbId
+        - title
+        - originalTitle
+        - overview
+        - runtime
+        - releaseDate
+        - genres
+        - country
+        - language
+        - movieStatus
+        - popularity
+        - budget
+        - revenue
+        - ratingAverage
+        - ratingCount
+        - posterUrl
+        - rentalDuration
+        - rentalRate
       properties:
         id:
           type: integer
@@ -873,18 +963,19 @@ components:
         movieStatus:
           type: string
         popularity:
+          type: number
+        budget:
           type: integer
-          format: float
+        revenue:
+          type: integer
         ratingAverage:
           type: integer
-          format: float
         ratingCount:
           type: integer
         posterUrl:
           type: string
         rentalRate:
-          type: integer
-          format: float
+          type: number
         rentalDuration:
           type: integer
         stock:

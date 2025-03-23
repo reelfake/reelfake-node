@@ -46,7 +46,6 @@ export async function execQuery(
       delete row['updated_at'];
     }
   }
-
   return result as Array<{ [key: string]: string }>;
 }
 

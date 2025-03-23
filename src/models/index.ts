@@ -8,6 +8,7 @@ import MovieActorModel from './movieActor';
 import AddressModel from './addressModel';
 import StoreModel from './storeModel';
 import InventoryModel from './inventoryModel';
+import CustomerModel from './customerModel';
 
 export {
   GenreModel,
@@ -20,6 +21,7 @@ export {
   AddressModel,
   StoreModel,
   InventoryModel,
+  CustomerModel,
 };
 
 MovieModel.belongsToMany(ActorModel, {
@@ -37,5 +39,7 @@ AddressModel.belongsTo(CityModel, { as: 'city', foreignKey: 'cityId' });
 
 StoreModel.belongsTo(AddressModel, { as: 'address', foreignKey: 'addressId' });
 
-InventoryModel.belongsTo(StoreModel, { as: 'stores', foreignKey: 'storeId' });
+InventoryModel.belongsTo(StoreModel, { as: 'store', foreignKey: 'storeId' });
 InventoryModel.belongsTo(MovieModel, { as: 'movie', foreignKey: 'movieId' });
+
+CustomerModel.belongsTo(AddressModel, { as: 'address', foreignKey: 'address_id' });

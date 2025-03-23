@@ -2,7 +2,16 @@ import type { Request, Response } from 'express';
 import { Op, WhereOptions, literal } from 'sequelize';
 import { Fn } from 'sequelize/lib/utils';
 import { executeQuery, AppError } from '../utils';
-import { MovieModel, ActorModel, MovieActorModel } from '../models';
+import {
+  MovieModel,
+  ActorModel,
+  MovieActorModel,
+  InventoryModel,
+  StoreModel,
+  AddressModel,
+  CityModel,
+  CountryModel,
+} from '../models';
 import { ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
 import sequelize from '../sequelize.config';
 
@@ -246,4 +255,93 @@ export const searchMovies = async (req: Request, res: Response) => {
       totalItems: totalRows,
       totalPages: Math.ceil(totalRows / ITEMS_PER_PAGE_FOR_PAGINATION),
     });
+};
+
+export const findInStores = async (req: Request, res: Response) => {
+  const { id: idText } = req.params;
+
+  const id = Number(idText);
+
+  if (isNaN(id)) {
+    throw new AppError('Invalid movie id', 400);
+  }
+
+  // Solution 1
+  const result = await sequelize.query(`
+      SELECT s.id, i.id AS "inventoryId", m.id AS "movieId", a.address_line AS "addressLine", c.city_name AS "city",
+      c.state_name AS "state", a.postal_code AS "postalCode", cy.country_name AS "country", s.phone_number AS "phoneNumber",
+      i.stock_count AS "stock" FROM inventory AS i LEFT OUTER JOIN store AS s ON i.store_id = s.id
+      LEFT OUTER JOIN v_movie AS m ON i.movie_id = m.id LEFT OUTER JOIN address AS a ON s.address_id = a.id
+      LEFT OUTER JOIN city AS c on a.city_id = c.id LEFT OUTER JOIN country AS cy ON c.country_id = cy.id
+      WHERE m.id = ${id} ORDER BY i.stock_count DESC, i.id ASC;
+    `);
+
+  const [inventory] = result;
+
+  // Solution 2 (takes around same time as Solution 1)
+  // const result = await InventoryModel.findAll({
+  //   attributes: ['id', 'stockCount'],
+  //   include: [
+  //     {
+  //       model: StoreModel,
+  //       as: 'store',
+  //       attributes: ['phoneNumber'],
+  //       include: [
+  //         {
+  //           model: AddressModel,
+  //           as: 'address',
+  //           attributes: ['addressLine', 'postalCode'],
+  //           include: [
+  //             {
+  //               model: CityModel,
+  //               as: 'city',
+  //               attributes: ['cityName', 'stateName'],
+  //               include: [
+  //                 {
+  //                   model: CountryModel,
+  //                   as: 'country',
+  //                   attributes: ['countryName'],
+  //                 },
+  //               ],
+  //             },
+  //           ],
+  //         },
+  //       ],
+  //     },
+  //   ],
+  //   where: {
+  //     movieId: id,
+  //   },
+  //   order: [
+  //     ['stockCount', 'DESC'],
+  //     ['id', 'ASC'],
+  //   ],
+  // });
+
+  // const inventory = result.map((inv) => {
+  //   const storeObject = inv.getDataValue('store');
+  //   const storeData = {
+  //     addressLine: storeObject.address.addressLine,
+  //     city: storeObject.address.city.cityName,
+  //     state: storeObject.address.city.stateName,
+  //     country: storeObject.address.city.country.countryName,
+  //     postalCode: storeObject.address.postalCode,
+  //     phoneNumber: storeObject.phoneNumber,
+  //   };
+
+  //   return {
+  //     id: inv.getDataValue('id'),
+  //     ...storeData,
+  //     stockCount: inv.getDataValue('stockCount'),
+  //   };
+  // });
+
+  if (inventory.length === 0) {
+    throw new AppError('Movie is out of stock', 404);
+  }
+
+  res.status(200).json({
+    items: inventory,
+    length: inventory.length,
+  });
 };

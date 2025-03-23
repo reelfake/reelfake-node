@@ -1,0 +1,46 @@
+get:
+  summary: Get stock count of the movie in all the stores
+  security:
+    - ReelFake_ApiKey_Auth: []
+  operationId: findInStores
+  parameters:
+    - in: path
+      name: id
+      required: true
+      description: The id of the movie
+      schema:
+        type: integer
+  responses:
+    '200':
+      description: Successfully returned the stock count in all the stores
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  $ref: ../components/storeInventory.yaml
+              length:
+                type: integer
+    '400':
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    '404':
+      description: No stores has the movie meaning the movie is out stock
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    '401':
+      $ref: ../components/unauthorized.yaml

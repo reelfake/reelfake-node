@@ -1,5 +1,4 @@
 import supertest from 'supertest';
-
 import app from '../app';
 import * as dbQuery from '../utils/dbQuery';
 import {
@@ -685,6 +684,31 @@ describe('Movie Controller', () => {
       }
       expect(response.body).toStrictEqual(expectedMovieData);
     });
+
+    it('GET /movies/:id/stores should return the movie stock count at all stores', async () => {
+      const id = 680;
+      const expectedResult = await execQuery(
+        `
+        SELECT i.id AS "id", m.id AS "movieId", a.address_line AS "addressLine", c.city_name AS "city",
+        c.state_name AS "state", a.postal_code AS "postalCode", cy.country_name AS "country", s.phone_number AS "phoneNumber",
+        i.stock_count AS "stockCount" FROM inventory AS i LEFT OUTER JOIN store AS s ON i.store_id = s.id
+        LEFT OUTER JOIN v_movie AS m ON i.movie_id = m.id LEFT OUTER JOIN address AS a ON s.address_id = a.id
+        LEFT OUTER JOIN city AS c on a.city_id = c.id LEFT OUTER JOIN country AS cy ON c.country_id = cy.id
+        WHERE m.id = ${id} ORDER BY "stockCount" DESC, "id" ASC;
+      `,
+        {}
+      );
+
+      const server = supertest(app);
+      const response = await server.get(`/api/v1/movies/${id}/stores`).set('api-key', apiKey);
+      expect(response.status).toBe(200);
+      expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
+
+      expect(response.body).toStrictEqual({
+        items: expectedResult,
+        length: expectedResult.length,
+      });
+    });
   });
 
   describe('GET /movies/:id returning status code 4xx', () => {
@@ -714,6 +738,20 @@ describe('Movie Controller', () => {
       const response = await server.get(`/api/v1/movies/${id}`).set('api-key', apiKey);
       expect(response.status).toBe(404);
       expect(response.body.message).toBe(`Movie with id ${id} does not exist`);
+    });
+
+    it('GET /movies/:id/stors should return 400 if id is invalid', async () => {
+      const server = supertest(app);
+      const response = await server.get(`/api/v1/movies/blah/stores`).set('api-key', apiKey);
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe('Invalid movie id');
+    });
+
+    it('GET /movies/:id/stors should return 404 if movie is out of stock', async () => {
+      const server = supertest(app);
+      const response = await server.get(`/api/v1/movies/4294292372/stores`).set('api-key', apiKey);
+      expect(response.status).toBe(404);
+      expect(response.body.message).toBe('Movie is out of stock');
     });
   });
 });

@@ -105,10 +105,10 @@ export const getMoviesInStore = async (req: Request, res: Response) => {
       {
         model: MovieModel,
         as: 'movie',
-        attributes: { exclude: ['tmdbId', 'budget', 'revenue'] },
+        attributes: { exclude: ['tmdbId'] },
       },
     ],
-    order: [['stockCount', 'DESC']],
+    order: [['stock', 'DESC']],
     limit: ITEMS_PER_PAGE_FOR_PAGINATION,
     offset: (pageNumber - 1) * ITEMS_PER_PAGE_FOR_PAGINATION,
   });
@@ -119,7 +119,7 @@ export const getMoviesInStore = async (req: Request, res: Response) => {
 
   const moviesStock = pageResult.map((res) => ({
     ...res.getDataValue('movie').dataValues,
-    stock: res.getDataValue('stockCount'),
+    stock: res.getDataValue('stock'),
   }));
 
   res

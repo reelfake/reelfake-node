@@ -35,7 +35,7 @@ get:
               items:
                 type: array
                 items:
-                  $ref: ../components/movieInStore.yaml
+                  $ref: ../components/movie.yaml
               length:
                 type: integer
               totalPages:

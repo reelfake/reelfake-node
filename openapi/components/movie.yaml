@@ -1,4 +1,24 @@
 type: object
+required:
+  - id
+  - imdbId
+  - title
+  - originalTitle
+  - overview
+  - runtime
+  - releaseDate
+  - genres
+  - country
+  - language
+  - movieStatus
+  - popularity
+  - budget
+  - revenue
+  - ratingAverage
+  - ratingCount
+  - posterUrl
+  - rentalDuration
+  - rentalRate
 properties:
   id:
     type: integer
@@ -12,6 +32,9 @@ properties:
     type: string
   runtime:
     type: integer
+  releaseDate:
+    type: string
+    format: date
   genres:
     type: array
     items:
@@ -39,4 +62,6 @@ properties:
   rentalRate:
     type: number
   rentalDuration:
+    type: integer
+  stock:
     type: integer

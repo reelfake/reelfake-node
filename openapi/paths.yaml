@@ -10,6 +10,8 @@
   $ref: apis/movies.yaml
 /movies/{movieId}:
   $ref: apis/movie.yaml
+/movies/{id}/stores:
+  $ref: apis/movieInStores.yaml
 /actors:
   $ref: apis/actors.yaml
 /actors/search:

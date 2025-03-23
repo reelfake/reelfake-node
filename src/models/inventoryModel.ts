@@ -19,7 +19,7 @@ Inventory.init(
       type: DataTypes.INTEGER,
       field: 'store_id',
     },
-    stockCount: {
+    stock: {
       type: DataTypes.INTEGER,
       field: 'stock_count',
     },
