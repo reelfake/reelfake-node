@@ -1,7 +1,8 @@
+import type { NextFunction, Request, Response } from 'express';
 import express from 'express';
 import path from 'path';
-import type { NextFunction, Request, Response } from 'express';
-import bodyParser from 'body-parser';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import { AppError } from './utils';
 import {
   apiKeyRoutes,
@@ -13,7 +14,7 @@ import {
   actorRoutes,
   storeRoutes,
 } from './routes';
-import { ERROR_MESSAGES } from './constants';
+import { validateApiKey } from './middlewares';
 
 // app.use(cors());
 // app.use(helmet());
@@ -23,22 +24,10 @@ import { ERROR_MESSAGES } from './constants';
 
 const app = express();
 
-app.use(bodyParser.json());
-
-app.use((req: Request, res: Response, next: NextFunction) => {
-  const skipAuth =
-    new RegExp('/api/v1/(re)?docs/').test(req.path) ||
-    req.path === '/openapi/v1' ||
-    req.path === '/api/v1/api_key';
-  if (
-    !skipAuth &&
-    (req.headers['api-key'] === undefined || req.headers['api-key'] !== process.env.API_KEY)
-  ) {
-    return next(new AppError(ERROR_MESSAGES.INVALID_MISSING_API_KEY, 401));
-  }
-
-  next();
-});
+app.use(express.json());
+app.use(cors({ credentials: true }));
+app.use(cookieParser());
+app.use(validateApiKey);
 
 app.get('/api/v1', (req: Request, res: Response) => {
   res.status(200).json({

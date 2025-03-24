@@ -30,7 +30,7 @@ export const generateApiKey = async (req: Request, res: Response) => {
   const result = await ApiKeyModel.create(
     {
       emailAddress: email,
-      expiringAt: today.toISOString(),
+      expiringAt: utcToday.toISOString(),
     },
     { fields: ['emailAddress', 'expiringAt'] }
   );
