@@ -1,7 +1,5 @@
 get:
   summary: Get actor detail using the id
-  security:
-    - ReelFake_ApiKey_Auth: []
   operationId: getActorById
   parameters:
     - in: path

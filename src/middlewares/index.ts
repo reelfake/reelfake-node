@@ -1,3 +1,3 @@
 export { default as validateGenresInQuery } from './genreMiddleware';
 export { default as parseQueryStrings } from './parseQueryStrings';
-export { default as validateApiKey } from './apiKeyValidator';
+export { default as validateAuthenticity } from './authMiddleware';

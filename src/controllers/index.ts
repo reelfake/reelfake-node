@@ -6,3 +6,4 @@ export { getMovies, getMovieById, searchMovies, findInStores } from './movieCont
 export { getActors, searchActor, getActorById } from './actorController';
 export { getStores, getStockCount, getMoviesInStore } from './storeController';
 export { generateApiKey } from './apiKeyController';
+export { login, logout, registerUser } from './authController';

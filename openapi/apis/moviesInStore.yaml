@@ -1,7 +1,5 @@
 get:
   summary: Get in-stock movies in a store page by page
-  security:
-    - ReelFake_ApiKey_Auth: []
   operationId: getMoviesInStore
   parameters:
     - in: path

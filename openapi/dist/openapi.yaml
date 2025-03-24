@@ -15,12 +15,14 @@ servers:
   - url: http://127.0.0.1:8000
     description: Local server
 security:
-  - ReelFake_ApiKey_Auth: []
+  - reelFakeApiKey: []
+  - cookieAuth: []
 paths:
   /api_key:
     post:
       summary: Generate the api key
       operationId: generateApiKey
+      security: []
       responses:
         '201':
           description: Successfully generated the api key
@@ -43,11 +45,110 @@ paths:
                 properties:
                   message:
                     type: string
+  /auth/register:
+    post:
+      summary: Create user account
+      operationId: registerUser
+      security: []
+      requestBody:
+        description: Provide the user email and password for registration
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '201':
+          description: Successfully created a new user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /auth/login:
+    post:
+      summary: Login user
+      operationId: login
+      security: []
+      requestBody:
+        description: Provide the user email and password for login
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '201':
+          description: User logged in successfully
+          headers:
+            Set-Cookie:
+              description: The token generated on successful login is sent in a cookie
+              schema:
+                type: string
+                example: auth_token=abcde12345
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /auth/logout:
+    get:
+      summary: Logout user
+      operationId: logout
+      security: []
+      responses:
+        '204':
+          description: User logged out successfully
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '500':
+          $ref: '#/components/responses/internalServerError'
   /genres:
     get:
       summary: Get all available genres
-      security:
-        - ReelFake_ApiKey_Auth: []
       operationId: getGenres
       responses:
         '200':
@@ -77,8 +178,6 @@ paths:
   /cities:
     get:
       summary: Get the list of the cities
-      security:
-        - ReelFake_ApiKey_Auth: []
       operationId: getCities
       parameters:
         - in: query
@@ -124,8 +223,6 @@ paths:
   /countries:
     get:
       summary: Get all the countries
-      security:
-        - ReelFake_ApiKey_Auth: []
       operationId: getCountries
       responses:
         '200':
@@ -155,8 +252,6 @@ paths:
   /movie_languages:
     get:
       summary: Get all available movie languages
-      security:
-        - ReelFake_ApiKey_Auth: []
       operationId: getMovieLanguages
       responses:
         '200':
@@ -186,8 +281,6 @@ paths:
   /movies:
     get:
       summary: Get movies by page
-      security:
-        - ReelFake_ApiKey_Auth: []
       operationId: getMovies
       parameters:
         - in: query
@@ -282,8 +375,6 @@ paths:
   /movies/{movieId}:
     get:
       summary: Get movie detail using the id
-      security:
-        - ReelFake_ApiKey_Auth: []
       operationId: getMovieById
       parameters:
         - in: path
@@ -332,8 +423,6 @@ paths:
   /movies/{id}/stores:
     get:
       summary: Get stock count of the movie in all the stores
-      security:
-        - ReelFake_ApiKey_Auth: []
       operationId: findInStores
       parameters:
         - in: path
@@ -379,8 +468,6 @@ paths:
   /actors:
     get:
       summary: Get the actor list with pagination support
-      security:
-        - ReelFake_ApiKey_Auth: []
       operationId: getActors
       parameters:
         - in: query
@@ -424,8 +511,6 @@ paths:
   /actors/search:
     get:
       summary: Get the actor list with pagination support
-      security:
-        - ReelFake_ApiKey_Auth: []
       operationId: searchActors
       parameters:
         - in: query
@@ -488,8 +573,6 @@ paths:
   /actors/{id}:
     get:
       summary: Get actor detail using the id
-      security:
-        - ReelFake_ApiKey_Auth: []
       operationId: getActorById
       parameters:
         - in: path
@@ -540,8 +623,6 @@ paths:
   /stores:
     get:
       summary: Get list of stores
-      security:
-        - ReelFake_ApiKey_Auth: []
       operationId: getStores
       responses:
         '200':
@@ -571,8 +652,6 @@ paths:
   /stores/{id}/stock:
     get:
       summary: Get the number of in-stock movies in a given store
-      security:
-        - ReelFake_ApiKey_Auth: []
       operationId: getStockCount
       parameters:
         - in: path
@@ -607,8 +686,6 @@ paths:
   /stores/{id}/movies:
     get:
       summary: Get in-stock movies in a store page by page
-      security:
-        - ReelFake_ApiKey_Auth: []
       operationId: getMoviesInStore
       parameters:
         - in: path
@@ -673,10 +750,30 @@ paths:
                     type: string
 components:
   securitySchemes:
-    ReelFake_ApiKey_Auth:
+    reelFakeApiKey:
       type: apiKey
       name: reelfake-api-key
       in: header
+    cookieAuth:
+      type: apiKey
+      name: auth_token
+      in: cookie
+  responses:
+    internalServerError:
+      description: Server encountered unexpeted error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    unauthorized:
+      description: Api key is missing or invalid
+      headers:
+        WWW_Authenticate:
+          schema:
+            type: string
   schemas:
     genre:
       type: object
@@ -1006,10 +1103,3 @@ components:
           type: integer
         stock:
           type: integer
-  responses:
-    unauthorized:
-      description: Api key is missing or invalid
-      headers:
-        WWW_Authenticate:
-          schema:
-            type: string

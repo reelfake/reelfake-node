@@ -1,5 +1,11 @@
 /api_key:
   $ref: apis/apiKey.yaml
+/auth/register:
+  $ref: apis/userRegistration.yaml
+/auth/login:
+  $ref: apis/userLogin.yaml
+/auth/logout:
+  $ref: apis/userLogout.yaml
 /genres:
   $ref: apis/genres.yaml
 /cities:

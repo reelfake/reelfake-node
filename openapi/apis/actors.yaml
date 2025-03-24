@@ -1,7 +1,5 @@
 get:
   summary: Get the actor list with pagination support
-  security:
-    - ReelFake_ApiKey_Auth: []
   operationId: getActors
   parameters:
     - in: query

@@ -1,7 +1,5 @@
 get:
   summary: Get movies by page
-  security:
-    - ReelFake_ApiKey_Auth: []
   operationId: getMovies
   parameters:
     - in: query

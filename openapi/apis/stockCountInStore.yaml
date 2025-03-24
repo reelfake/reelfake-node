@@ -1,7 +1,5 @@
 get:
   summary: Get the number of in-stock movies in a given store
-  security:
-    - ReelFake_ApiKey_Auth: []
   operationId: getStockCount
   parameters:
     - in: path

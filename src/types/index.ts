@@ -1,4 +1,6 @@
-import { DataType, Model, BuildOptions } from 'sequelize';
+import type { Request } from 'express';
+import { DataType } from 'sequelize';
+import { JwtPayload } from 'jsonwebtoken';
 import type { Sequelize } from 'sequelize';
 
 export type ModelField = {
@@ -15,3 +17,7 @@ export type ModelConfig = {
   sequelize: Sequelize;
   fields: ModelField;
 };
+
+export interface RequestWithToken extends Request {
+  token: string | JwtPayload;
+}

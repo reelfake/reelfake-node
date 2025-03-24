@@ -1,7 +1,5 @@
 get:
   summary: Get movie detail using the id
-  security:
-    - ReelFake_ApiKey_Auth: []
   operationId: getMovieById
   parameters:
     - in: path

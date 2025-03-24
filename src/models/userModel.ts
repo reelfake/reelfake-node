@@ -23,6 +23,18 @@ User.init(
       type: DataTypes.INTEGER,
       field: 'manager_staff_id',
     },
+    userUUID: {
+      type: DataTypes.UUID,
+      field: 'user_uuid',
+    },
+    userEmail: {
+      type: DataTypes.STRING(150),
+      field: 'user_email',
+    },
+    userPassword: {
+      type: DataTypes.STRING(10),
+      field: 'user_password',
+    },
   },
   {
     sequelize,

@@ -1,6 +1,7 @@
 post:
   summary: Generate the api key
   operationId: generateApiKey
+  security: []
   responses:
     '201':
       description: Successfully generated the api key

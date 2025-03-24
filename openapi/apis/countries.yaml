@@ -1,7 +1,5 @@
 get:
   summary: Get all the countries
-  security:
-    - ReelFake_ApiKey_Auth: []
   operationId: getCountries
   responses:
     '200':

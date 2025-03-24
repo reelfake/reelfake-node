@@ -6,6 +6,6 @@ export class AppError extends Error {
     super(message);
     this.statusCode = statusCode;
     this.status = statusCode < 500 ? 'error' : 'failed';
-    Error.captureStackTrace(this, this.constructor);
+    if (process.env.NODE_ENV !== 'prod') Error.captureStackTrace(this, this.constructor);
   }
 }

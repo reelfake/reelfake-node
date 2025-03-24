@@ -1,7 +1,5 @@
 get:
   summary: Get list of stores
-  security:
-    - ReelFake_ApiKey_Auth: []
   operationId: getStores
   responses:
     '200':

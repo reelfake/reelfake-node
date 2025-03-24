@@ -5,6 +5,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { AppError } from './utils';
 import {
+  authRoutes,
   apiKeyRoutes,
   genreRoutes,
   cityRoutes,
@@ -14,7 +15,7 @@ import {
   actorRoutes,
   storeRoutes,
 } from './routes';
-import { validateApiKey } from './middlewares';
+import { validateAuthenticity } from './middlewares';
 
 // app.use(cors());
 // app.use(helmet());
@@ -27,7 +28,7 @@ const app = express();
 app.use(express.json());
 app.use(cors({ credentials: true }));
 app.use(cookieParser());
-app.use(validateApiKey);
+app.use(validateAuthenticity);
 
 app.get('/api/v1', (req: Request, res: Response) => {
   res.status(200).json({
@@ -50,6 +51,8 @@ app.get('/api/v1/redocs', (req, res) => {
 });
 
 app.use('/api/v1/api_key', apiKeyRoutes);
+
+app.use('/api/v1/auth', authRoutes);
 
 // /api/genres
 app.use('/api/v1/genres', genreRoutes);

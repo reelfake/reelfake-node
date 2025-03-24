@@ -1,0 +1,18 @@
+get:
+  summary: Logout user
+  operationId: logout
+  security: []
+  responses:
+    '204':
+      description: User logged out successfully
+    '400':
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    '500':
+      $ref: ../components/internalServerError.yaml

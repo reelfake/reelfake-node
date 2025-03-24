@@ -1,7 +1,5 @@
 get:
   summary: Get the list of the cities
-  security:
-    - ReelFake_ApiKey_Auth: []
   operationId: getCities
   parameters:
     - in: query

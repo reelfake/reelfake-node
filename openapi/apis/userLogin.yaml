@@ -1,0 +1,43 @@
+post:
+  summary: Login user
+  operationId: login
+  security: []
+  requestBody:
+    description: Provide the user email and password for login
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            email:
+              type: string
+            password:
+              type: string
+  responses:
+    '201':
+      description: User logged in successfully
+      headers:
+        Set-Cookie:
+          description: The token generated on successful login is sent in a cookie
+          schema:
+            type: string
+            example: auth_token=abcde12345
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    '400':
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    '500':
+      $ref: ../components/internalServerError.yaml
