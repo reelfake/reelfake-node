@@ -3,8 +3,6 @@ import supertest from 'supertest';
 import app from '../app';
 import { ITEMS_COUNT_PER_PAGE_FOR_TEST, execQuery, getRowsCount, FIELD_MAP } from './testUtil';
 
-const apiKey = process.env.API_KEY || '';
-
 describe('Actor Controller', () => {
   jest.setTimeout(20000);
   afterEach(() => {
@@ -20,9 +18,7 @@ describe('Actor Controller', () => {
       const iterations = 3;
 
       for (let i = startingPage; i < iterations + startingPage; i++) {
-        const response = await server.get(`/api/v1/actors?pageNumber=${i}`).set({
-          'api-key': apiKey,
-        });
+        const response = await server.get(`/api/v1/actors?pageNumber=${i}`);
         const expectedActors = await execQuery(
           `
             SELECT * FROM actor 
@@ -51,9 +47,7 @@ describe('Actor Controller', () => {
       const pages = [2, 5, 3];
 
       for (const page of pages) {
-        const response = await server.get(`/api/v1/actors?pageNumber=${page}`).set({
-          'api-key': apiKey,
-        });
+        const response = await server.get(`/api/v1/actors?pageNumber=${page}`);
         const expectedActors = await execQuery(
           `
               SELECT * FROM actor 
@@ -80,9 +74,7 @@ describe('Actor Controller', () => {
     it('GET /api/v1/actors/:id should return actor without the movies', async () => {
       const server = supertest(app);
 
-      const response = await server.get(`/api/v1/actors/928365`).set({
-        'api-key': apiKey,
-      });
+      const response = await server.get(`/api/v1/actors/928365`);
       const expectedActor = await execQuery(
         `
           SELECT * FROM actor WHERE id = 928365
@@ -99,9 +91,7 @@ describe('Actor Controller', () => {
       const server = supertest(app);
       const actorId = 928365;
 
-      const response = await server.get(`/api/v1/actors/${actorId}?includeMovies=true`).set({
-        'api-key': apiKey,
-      });
+      const response = await server.get(`/api/v1/actors/${actorId}?includeMovies=true`);
       const expectedActor = await execQuery(
         `
           SELECT id, imdb_id as "imdbId", actor_name as "actorName", biography, birthday, deathday, place_of_birth as "placeOfBirth",
@@ -125,22 +115,10 @@ describe('Actor Controller', () => {
   });
 
   describe('GET /actors returning 4xx', () => {
-    it('GET /api/v1/actors should return 401 if api key is missing in header', async () => {
-      const server = supertest(app);
-
-      const response = await server.get(`/api/v1/actors?pageNumber=a`);
-
-      expect(response.status).toBe(401);
-      expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
-      expect(response.body.message).toBe('Invalid or missing api key');
-    });
-
     it('GET /api/v1/actors should return 400 when page number is 0', async () => {
       const server = supertest(app);
 
-      const response = await server.get(`/api/v1/actors?pageNumber=0`).set({
-        'api-key': apiKey,
-      });
+      const response = await server.get(`/api/v1/actors?pageNumber=0`);
 
       expect(response.status).toBe(400);
       expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
@@ -150,9 +128,7 @@ describe('Actor Controller', () => {
     it('GET /api/v1/actors should return 400 when page number is not a number', async () => {
       const server = supertest(app);
 
-      const response = await server.get(`/api/v1/actors?pageNumber=a`).set({
-        'api-key': apiKey,
-      });
+      const response = await server.get(`/api/v1/actors?pageNumber=a`);
 
       expect(response.status).toBe(400);
       expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
@@ -174,7 +150,7 @@ describe('Actor Controller', () => {
             ? `/api/v1/actors/search?q=john&pageNumber=${page}`
             : `/api/v1/actors/search?q=john`;
 
-        const response = await server.get(url).set('api-key', apiKey);
+        const response = await server.get(url);
         const expectedActors = await execQuery(
           `
           SELECT * FROM actor 
@@ -200,9 +176,7 @@ describe('Actor Controller', () => {
     it('GET /actors/search?name=... should return list of actors with the given name', async () => {
       const server = supertest(app);
       const totalRows = await getRowsCount('actor', "actor_name = 'steve smith'");
-      const response = await server.get('/api/v1/actors/search?name=steve smith').set({
-        'api-key': apiKey,
-      });
+      const response = await server.get('/api/v1/actors/search?name=steve smith');
       const expectedActors = await execQuery(
         `
           SELECT * FROM actor 
@@ -224,20 +198,10 @@ describe('Actor Controller', () => {
   });
 
   describe('GET /actors/search returning 4xx', () => {
-    it('GET /actors/search?name=... should return 401 when api key is missing in header', async () => {
-      const server = supertest(app);
-
-      const response = await server.get(`/api/v1/actors/search/keanu reeves`);
-
-      expect(response.status).toBe(401);
-      expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
-      expect(response.body.message).toBe('Invalid or missing api key');
-    });
-
     it('GET /actors/search should return 400 when missing the string to search', async () => {
       const server = supertest(app);
 
-      const response = await server.get(`/api/v1/actors/search?q=   `).set({ 'api-key': apiKey });
+      const response = await server.get(`/api/v1/actors/search?q=   `);
       expect(response.status).toBe(400);
       expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
       expect(response.body.message).toBe('Request is missing the search parameter');
@@ -246,10 +210,7 @@ describe('Actor Controller', () => {
     it('GET /actors/search?q=... should return 404 when no actors found with the given search string', async () => {
       const server = supertest(app);
 
-      const response = await server
-        .get(`/api/v1/actors/search?q=blahblahblah`)
-        .set({ 'api-key': apiKey });
-
+      const response = await server.get(`/api/v1/actors/search?q=blahblahblah`);
       expect(response.status).toBe(404);
       expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
       expect(response.body.message).toBe('Resources not found');

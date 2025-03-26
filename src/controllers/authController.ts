@@ -1,9 +1,8 @@
-import type { Request, Response, NextFunction } from 'express';
+import type { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { UserModel } from '../models';
 import { AppError } from '../utils';
-import { ERROR_MESSAGES } from '../constants';
 
 const JWT_SECRET = process.env.JWT_SECRET || '';
 
@@ -17,7 +16,7 @@ export const registerUser = async (req: Request, res: Response) => {
   });
 
   if (user) {
-    throw new AppError('User already exists', 400);
+    throw new AppError('User already exist', 400);
   }
 
   const salt = await bcrypt.genSalt(10);
@@ -47,15 +46,22 @@ export const login = async (req: Request, res: Response) => {
     throw new AppError('Invalid credentials', 401);
   }
 
-  const token = jwt.sign(
-    { id: user.getDataValue('userUUID'), email: user.getDataValue('userEmail') },
+  const auth_token = jwt.sign(
+    {
+      id: user.getDataValue('userUUID'),
+      email: user.getDataValue('userEmail'),
+      createdAt: Date.now(),
+    },
     JWT_SECRET,
     { expiresIn: '1h' }
   );
 
-  res.cookie('auth_token', token, { httpOnly: true }).json({ message: 'Login successful!' });
+  res
+    .status(201)
+    .cookie('auth_token', auth_token, { httpOnly: true, secure: true, sameSite: 'strict' })
+    .json({ message: 'Login successful' });
 };
 
 export const logout = (req: Request, res: Response) => {
-  res.status(204).clearCookie('auth_token');
+  res.clearCookie('auth_token').json({ message: 'Logged out successfully' });
 };

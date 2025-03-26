@@ -4,6 +4,10 @@ export * from './fieldMap';
 
 export const ITEMS_COUNT_PER_PAGE_FOR_TEST = 50;
 
+export async function cleanUserTable() {
+  await sequelize.query('DELETE FROM public.user');
+}
+
 export async function execQuery(
   queryText: string,
   fieldMap: Record<string, string> = {},

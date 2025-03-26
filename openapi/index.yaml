@@ -16,16 +16,11 @@ servers:
     description: Local server
 components:
   securitySchemes:
-    reelFakeApiKey:
-      type: apiKey
-      name: reelfake-api-key
-      in: header
     cookieAuth:
       type: apiKey
       name: auth_token
       in: cookie
 security:
-  - reelFakeApiKey: []
   - cookieAuth: []
 paths:
   $ref: ./paths.yaml

@@ -1,4 +1,3 @@
-import ApiKeyModel from './apiKeyModel';
 import GenreModel from './genreModel';
 import CityModel from './cityModel';
 import CountryModel from './countryModel';
@@ -14,7 +13,6 @@ import StaffModel from './staffModel';
 import UserModel from './userModel';
 
 export {
-  ApiKeyModel,
   GenreModel,
   CityModel,
   CountryModel,

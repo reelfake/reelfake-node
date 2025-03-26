@@ -6,7 +6,7 @@
     "build": "tsc",
     "start": "node --experimental-specifier-resolution=node ./dist/server.js",
     "dev": "NODE_ENV=dev nodemon",
-    "test": "jest --detectOpenHandles --forceExit",
+    "test": "jest --detectOpenHandles --forceExit --collectCoverage=false",
     "create-test-data": "node --loader ts-node/esm src/tests/createTestData.ts",
     "lint-api-specs": "redocly lint openapi/dist/openapi.yaml",
     "generate-api-specs": "redocly bundle openapi/index.yaml --output openapi/dist/openapi.yaml"

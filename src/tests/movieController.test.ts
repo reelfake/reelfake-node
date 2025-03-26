@@ -26,9 +26,7 @@ describe('Movie Controller', () => {
       const iterations = 3;
 
       for (let i = startingPage; i < iterations + startingPage; i++) {
-        const response = await server.get(`/api/v1/movies?pageNumber=${i}`).set({
-          'api-key': apiKey,
-        });
+        const response = await server.get(`/api/v1/movies?pageNumber=${i}`);
         expect(response.status).toBe(200);
         expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
         const expectedMovies = await execQuery(
@@ -58,9 +56,7 @@ describe('Movie Controller', () => {
       const server = supertest(app);
 
       for (const page of pages) {
-        const response = await server.get(`/api/v1/movies?pageNumber=${page}`).set({
-          'api-key': apiKey,
-        });
+        const response = await server.get(`/api/v1/movies?pageNumber=${page}`);
         expect(response.status).toBe(200);
         expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
         const expectedMovies = await execQuery(
@@ -102,7 +98,7 @@ describe('Movie Controller', () => {
             ? `/api/v1/movies?releaseYear=2020&pageNumber=${i}`
             : '/api/v1/movies?releaseYear=2020';
 
-        const response = await server.get(url).set('api-key', apiKey);
+        const response = await server.get(url);
         expect(response.status).toBe(200);
         expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
         const expectedMovies = await execQuery(
@@ -136,9 +132,7 @@ describe('Movie Controller', () => {
       const server = supertest(app);
 
       for (const page of pages) {
-        const response = await server
-          .get(`/api/v1/movies?releaseYear=2020&pageNumber=${page}`)
-          .set('api-key', apiKey);
+        const response = await server.get(`/api/v1/movies?releaseYear=2020&pageNumber=${page}`);
         expect(response.status).toBe(200);
         expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
         const expectedMovies = await execQuery(
@@ -180,9 +174,7 @@ describe('Movie Controller', () => {
             ? `/api/v1/movies?releaseYear=2020&genres=action,adventure&pageNumber=${i}`
             : '/api/v1/movies?releaseYear=2020&genres=action,adventure';
 
-        const response = await server.get(url).set({
-          'api-key': apiKey,
-        });
+        const response = await server.get(url);
 
         expect(response.status).toBe(200);
         expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
@@ -222,9 +214,7 @@ describe('Movie Controller', () => {
             ? `/api/v1/movies?genres=action,adventure,thriller&pageNumber=${i}`
             : '/api/v1/movies?genres=action,adventure,thriller';
 
-        const response = await server.get(url).set({
-          'api-key': apiKey,
-        });
+        const response = await server.get(url);
         expect(response.status).toBe(200);
         expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
         const expectedMovies = await execQuery(
@@ -263,9 +253,7 @@ describe('Movie Controller', () => {
             ? `/api/v1/movies?genres=action,adventure,thriller&pageNumber=${page}`
             : '/api/v1/movies?genres=action,adventure,thriller';
 
-        const response = await server.get(url).set({
-          'api-key': apiKey,
-        });
+        const response = await server.get(url);
 
         expect(response.status).toBe(200);
         expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
@@ -296,10 +284,9 @@ describe('Movie Controller', () => {
     it('GET /api/v1/movies should return 404 when there are no more pages available', async () => {
       const server = supertest(app);
       const rowsCount = await getRowsCount('v_movie');
-      let response = await server.get('/api/v1/movies').set('api-key', apiKey);
+      let response = await server.get('/api/v1/movies');
       const totalPages = Number(response.body.totalPages);
       response = await server.get(`/api/v1/movies?pageNumber=${totalPages + 1}`).set({
-        'api-key': apiKey,
         'rf-last-visited-page': String(totalPages),
         'rf-last-id-last-visited-page': String(rowsCount),
       });
@@ -312,7 +299,7 @@ describe('Movie Controller', () => {
         .spyOn(dbQuery, 'executeQuery')
         .mockRejectedValue({ message: 'unit testing exception for /api/v1/movies' });
       const server = supertest(app);
-      const response = await server.get('/api/v1/movies?pageNumber=1').set('api-key', apiKey);
+      const response = await server.get('/api/v1/movies?pageNumber=1');
       expect(response.status).toBe(500);
       expect(response.body.message).toEqual('unit testing exception for /api/v1/movies');
     });
@@ -328,9 +315,9 @@ describe('Movie Controller', () => {
       const iterations = 3;
 
       for (let i = startingPage; i < iterations + startingPage; i++) {
-        const response = await server
-          .get(`/api/v1/movies?releaseFrom=2024-03-01&releaseTo=2024-03-04&pageNumber=${i}`)
-          .set('api-key', apiKey);
+        const response = await server.get(
+          `/api/v1/movies?releaseFrom=2024-03-01&releaseTo=2024-03-04&pageNumber=${i}`
+        );
         const expectedMovies = await execQuery(
           `
             SELECT id, title, overview, runtime, release_date as "releaseDate", genres, country, 
@@ -365,9 +352,9 @@ describe('Movie Controller', () => {
       const pages = [2, 5, 3];
 
       for (const page of pages) {
-        const response = await server
-          .get(`/api/v1/movies?releaseFrom=2024-03-01&releaseTo=2024-03-04&pageNumber=${page}`)
-          .set('api-key', apiKey);
+        const response = await server.get(
+          `/api/v1/movies?releaseFrom=2024-03-01&releaseTo=2024-03-04&pageNumber=${page}`
+        );
         const expectedMovies = await execQuery(
           `SELECT id, title, overview, runtime, release_date as "releaseDate", genres, country, 
             movie_language as language, popularity, rating_average as "ratingAverage", rating_count as "ratingCount",
@@ -405,9 +392,7 @@ describe('Movie Controller', () => {
             ? `/api/v1/movies?releaseFrom=2024-03-01&releaseTo=2024-10-31&genres=action,adventure&pageNumber=${i}`
             : '/api/v1/movies?releaseFrom=2024-03-01&releaseTo=2024-10-31&genres=action,adventure';
 
-        const response = await server.get(url).set({
-          'api-key': apiKey,
-        });
+        const response = await server.get(url);
         expect(response.status).toBe(200);
         expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
         const expectedMovies = await execQuery(
@@ -444,9 +429,7 @@ describe('Movie Controller', () => {
             ? `/api/v1/movies?genres=action,adventure&pageNumber=${page}`
             : '/api/v1/movies?genres=action,adventure';
 
-        const response = await server.get(url).set({
-          'api-key': apiKey,
-        });
+        const response = await server.get(url);
 
         expect(response.status).toBe(200);
         expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
@@ -479,9 +462,7 @@ describe('Movie Controller', () => {
     it('GET /api/v1/movies should return 400 for invalid pageNumber', async () => {
       const pageNumber = 'x';
       const server = supertest(app);
-      const response = await server
-        .get(`/api/v1/movies?pageNumber=${pageNumber}`)
-        .set('api-key', apiKey);
+      const response = await server.get(`/api/v1/movies?pageNumber=${pageNumber}`);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('Page number should be a valid non-zero positive number');
     });
@@ -489,9 +470,7 @@ describe('Movie Controller', () => {
     it('GET /api/v1/movies should return 400 when pageNumber is 0', async () => {
       const pageNumber = 0;
       const server = supertest(app);
-      const response = await server
-        .get(`/api/v1/movies?pageNumber=${pageNumber}`)
-        .set('api-key', apiKey);
+      const response = await server.get(`/api/v1/movies?pageNumber=${pageNumber}`);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('Page number should be a valid non-zero positive number');
     });
@@ -499,9 +478,7 @@ describe('Movie Controller', () => {
     it('GET /movies should return 400 when releaseYear in query is invalid', async () => {
       const releaseYear = 49829;
       const server = supertest(app);
-      const response = await server
-        .get(`/api/v1/movies?releaseYear=${releaseYear}`)
-        .set('api-key', apiKey);
+      const response = await server.get(`/api/v1/movies?releaseYear=${releaseYear}`);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('Release year must be between 1970 and 2050');
     });
@@ -509,18 +486,14 @@ describe('Movie Controller', () => {
     it('GET /movies should return 400 when genres in query is invalid', async () => {
       const invalidGenres = 'action,drama,invalid_genre';
       const server = supertest(app);
-      const response = await server
-        .get(`/api/v1/movies?genres=${invalidGenres}`)
-        .set('api-key', apiKey);
+      const response = await server.get(`/api/v1/movies?genres=${invalidGenres}`);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('[invalid_genre] are invalid genres');
     });
 
     it('GET /movies should return 400 when releaseFrom is in query but releaseTo is missing', async () => {
       const server = supertest(app);
-      const response = await server
-        .get(`/api/v1/movies?releaseFrom=2024-05-01`)
-        .set('api-key', apiKey);
+      const response = await server.get(`/api/v1/movies?releaseFrom=2024-05-01`);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
         'To filter by release dates, release date from and to are required.'
@@ -529,9 +502,7 @@ describe('Movie Controller', () => {
 
     it('GET /movies should return 400 when releaseTo is in query but releaseFrom is missing', async () => {
       const server = supertest(app);
-      const response = await server
-        .get(`/api/v1/movies?releaseTo=2024-05-01`)
-        .set('api-key', apiKey);
+      const response = await server.get(`/api/v1/movies?releaseTo=2024-05-01`);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
         'To filter by release dates, release date from and to are required.'
@@ -540,18 +511,18 @@ describe('Movie Controller', () => {
 
     it('GET /movies should return 400 when releaseYear and release dates both are in query', async () => {
       const server = supertest(app);
-      const response = await server
-        .get(`/api/v1/movies?releaseYear=2024&releaseFrom=2024-04-01&releaseTo=2024-05-01`)
-        .set('api-key', apiKey);
+      const response = await server.get(
+        `/api/v1/movies?releaseYear=2024&releaseFrom=2024-04-01&releaseTo=2024-05-01`
+      );
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('Release year and release dates cannot be used together');
     });
 
     it('GET /movies should return 400 when releaseFrom has invalid format in query', async () => {
       const server = supertest(app);
-      const response = await server
-        .get(`/api/v1/movies?releaseFrom=2024-04-xx&releaseTo=2024-05-01`)
-        .set('api-key', apiKey);
+      const response = await server.get(
+        `/api/v1/movies?releaseFrom=2024-04-xx&releaseTo=2024-05-01`
+      );
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
         'Invalid release date. Please refer to api specs for more information.'
@@ -560,9 +531,9 @@ describe('Movie Controller', () => {
 
     it('GET /movies should return 400 when releaseTo has invalid format in query', async () => {
       const server = supertest(app);
-      const response = await server
-        .get(`/api/v1/movies?releaseFrom=2024-04-01&releaseTo=2024-xx-01`)
-        .set('api-key', apiKey);
+      const response = await server.get(
+        `/api/v1/movies?releaseFrom=2024-04-01&releaseTo=2024-xx-01`
+      );
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
         'Invalid release date. Please refer to api specs for more information.'
@@ -573,7 +544,7 @@ describe('Movie Controller', () => {
   describe('GET /movies/:id', () => {
     it('GET /movies/100 should return movie object for id 100', async () => {
       const server = supertest(app);
-      const response = await server.get(`/api/v1/movies/100`).set('api-key', apiKey);
+      const response = await server.get(`/api/v1/movies/100`);
       expect(response.status).toBe(200);
       expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
       const expectedMovieData = await queryMovieObject(100, FIELD_MAP.movie);
@@ -585,9 +556,7 @@ describe('Movie Controller', () => {
 
     it('GET /movies/100?includeActors=false should return movie object without the actors', async () => {
       const server = supertest(app);
-      const response = await server
-        .get(`/api/v1/movies/100?includeActors=false`)
-        .set('api-key', apiKey);
+      const response = await server.get(`/api/v1/movies/100?includeActors=false`);
       expect(response.status).toBe(200);
       expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
       const expectedMovieData = await queryMovieObject(100, FIELD_MAP.movie);
@@ -599,9 +568,7 @@ describe('Movie Controller', () => {
 
     it('GET /movies/100?includeActors=no should return movie object without the actors', async () => {
       const server = supertest(app);
-      const response = await server
-        .get(`/api/v1/movies/100?includeActors=no`)
-        .set('api-key', apiKey);
+      const response = await server.get(`/api/v1/movies/100?includeActors=no`);
       expect(response.status).toBe(200);
       expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
       const expectedMovieData = await queryMovieObject(100, FIELD_MAP.movie);
@@ -613,9 +580,7 @@ describe('Movie Controller', () => {
 
     it('GET /movies/100?includeActors=0 should return movie object without the actors', async () => {
       const server = supertest(app);
-      const response = await server
-        .get(`/api/v1/movies/100?includeActors=0`)
-        .set('api-key', apiKey);
+      const response = await server.get(`/api/v1/movies/100?includeActors=0`);
       expect(response.status).toBe(200);
       expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
       const expectedMovieData = await queryMovieObject(100, FIELD_MAP.movie);
@@ -627,9 +592,7 @@ describe('Movie Controller', () => {
 
     it('GET /movies/100?includeActors=true should return movie object with the actors', async () => {
       const server = supertest(app);
-      const response = await server
-        .get(`/api/v1/movies/100?includeActors=true`)
-        .set('api-key', apiKey);
+      const response = await server.get(`/api/v1/movies/100?includeActors=true`);
       expect(response.status).toBe(200);
       expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
       let queryResult = await execQuery(
@@ -647,9 +610,7 @@ describe('Movie Controller', () => {
 
     it('GET /movies/100?includeActors=yes should return movie object with the actors', async () => {
       const server = supertest(app);
-      const response = await server
-        .get(`/api/v1/movies/100?includeActors=yes`)
-        .set('api-key', apiKey);
+      const response = await server.get(`/api/v1/movies/100?includeActors=yes`);
       expect(response.status).toBe(200);
       expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
       let queryResult = await execQuery(
@@ -667,9 +628,7 @@ describe('Movie Controller', () => {
 
     it('GET /movies/100?includeActors=1 should return movie object with the actors', async () => {
       const server = supertest(app);
-      const response = await server
-        .get(`/api/v1/movies/100?includeActors=1`)
-        .set('api-key', apiKey);
+      const response = await server.get(`/api/v1/movies/100?includeActors=1`);
       expect(response.status).toBe(200);
       expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
       let queryResult = await execQuery(
@@ -700,7 +659,7 @@ describe('Movie Controller', () => {
       );
 
       const server = supertest(app);
-      const response = await server.get(`/api/v1/movies/${id}/stores`).set('api-key', apiKey);
+      const response = await server.get(`/api/v1/movies/${id}/stores`);
       expect(response.status).toBe(200);
       expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
 
@@ -714,7 +673,7 @@ describe('Movie Controller', () => {
   describe('GET /movies/:id returning status code 4xx', () => {
     it('GET /movie/abc should return 400 since the movie id is not valid', async () => {
       const server = supertest(app);
-      const response = await server.get(`/api/v1/movies/abc`).set('api-key', apiKey);
+      const response = await server.get(`/api/v1/movies/abc`);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
         'Invalid movie id. Movie id must be a non-zero positive number.'
@@ -723,9 +682,7 @@ describe('Movie Controller', () => {
 
     it('GET /movies/100?includeActors=blahblah should return 400 since the includeActors flag has invalid value', async () => {
       const server = supertest(app);
-      const response = await server
-        .get(`/api/v1/movies/100?includeActors=blahblahck`)
-        .set('api-key', apiKey);
+      const response = await server.get(`/api/v1/movies/100?includeActors=blahblahck`);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
         'Invalid value for includeActors in query. Please refer to api specs for more information.'
@@ -735,21 +692,21 @@ describe('Movie Controller', () => {
     it('GET /movies/10394829 should return 404 since movie with the given id does not exist', async () => {
       const id = 10394829;
       const server = supertest(app);
-      const response = await server.get(`/api/v1/movies/${id}`).set('api-key', apiKey);
+      const response = await server.get(`/api/v1/movies/${id}`);
       expect(response.status).toBe(404);
       expect(response.body.message).toBe(`Movie with id ${id} does not exist`);
     });
 
     it('GET /movies/:id/stors should return 400 if id is invalid', async () => {
       const server = supertest(app);
-      const response = await server.get(`/api/v1/movies/blah/stores`).set('api-key', apiKey);
+      const response = await server.get(`/api/v1/movies/blah/stores`);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('Invalid movie id');
     });
 
     it('GET /movies/:id/stors should return 404 if movie is out of stock', async () => {
       const server = supertest(app);
-      const response = await server.get(`/api/v1/movies/4294292372/stores`).set('api-key', apiKey);
+      const response = await server.get(`/api/v1/movies/4294292372/stores`);
       expect(response.status).toBe(404);
       expect(response.body.message).toBe('Movie is out of stock');
     });

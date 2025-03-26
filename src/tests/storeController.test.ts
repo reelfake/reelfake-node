@@ -15,7 +15,7 @@ describe('Store Controller', () => {
     it('GET /stores should all the stores', async () => {
       const server = supertest(app);
 
-      const response = await server.get('/api/v1/stores').set('api-key', apiKey);
+      const response = await server.get('/api/v1/stores');
       const expectedStores = await execQuery(
         `
           SELECT s.id AS "id", a.address_line AS "addressLine", c.city_name AS "city", c.state_name AS "state", a.postal_code AS "postalCode", cy.country_name AS "country", s.phone_number AS "phoneNumber"
@@ -38,7 +38,7 @@ describe('Store Controller', () => {
     it('GET /stores/:id/stock should get the stock count for the given store', async () => {
       const id = 1;
       const server = supertest(app);
-      const response = await server.get('/api/v1/stores/1/stock').set('api-key', apiKey);
+      const response = await server.get('/api/v1/stores/1/stock');
       expect(response.status).toBe(200);
       expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
 
@@ -60,9 +60,7 @@ describe('Store Controller', () => {
       const pages = [1, 3, 5, 2];
 
       for (const page of pages) {
-        const response = await server
-          .get(`/api/v1/stores/${storeId}/movies?pageNumber=${page}`)
-          .set('api-key', apiKey);
+        const response = await server.get(`/api/v1/stores/${storeId}/movies?pageNumber=${page}`);
         expect(response.status).toBe(200);
         expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
 
@@ -97,7 +95,7 @@ describe('Store Controller', () => {
     it('GET /stores/:id/stock should return 400 when the id is not a valid number', async () => {
       const server = supertest(app);
 
-      const response = await server.get('/api/v1/stores/blah/stock').set('api-key', apiKey);
+      const response = await server.get('/api/v1/stores/blah/stock');
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('Invalid store id');
     });
@@ -105,7 +103,7 @@ describe('Store Controller', () => {
     it('GET /stores/:id/movies should return 400 when the id is not a valid number', async () => {
       const server = supertest(app);
 
-      const response = await server.get('/api/v1/stores/blah/movies').set('api-key', apiKey);
+      const response = await server.get('/api/v1/stores/blah/movies');
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('Invalid store id');
     });
@@ -113,9 +111,7 @@ describe('Store Controller', () => {
     it('GET /stores/:id/movies should return 400 when the page number is not a valid number', async () => {
       const server = supertest(app);
 
-      const response = await server
-        .get('/api/v1/stores/1/movies?pageNumber=blah')
-        .set('api-key', apiKey);
+      const response = await server.get('/api/v1/stores/1/movies?pageNumber=blah');
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('Invalid page number');
     });

@@ -7,7 +7,8 @@ type ModelForTest =
   | 'actor'
   | 'address'
   | 'store'
-  | 'inventory';
+  | 'inventory'
+  | 'user';
 
 export const FIELD_MAP: Record<ModelForTest, Record<string, string>> = {
   movie: {
@@ -81,5 +82,14 @@ export const FIELD_MAP: Record<ModelForTest, Record<string, string>> = {
     movieId: 'movie_id',
     storeId: 'store_id',
     stockCount: 'stock_count',
+  },
+  user: {
+    id: 'id',
+    customerId: 'customer_id',
+    staffId: 'staff_id',
+    managerStaffId: 'manager_staff_id',
+    userUUID: 'user_uuid',
+    userEmail: 'user_email',
+    userPassword: 'user_password',
   },
 };

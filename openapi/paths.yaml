@@ -1,5 +1,3 @@
-/api_key:
-  $ref: apis/apiKey.yaml
 /auth/register:
   $ref: apis/userRegistration.yaml
 /auth/login:
