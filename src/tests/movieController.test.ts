@@ -476,11 +476,11 @@ describe('Movie Controller', () => {
     });
 
     it('GET /movies should return 400 when releaseYear in query is invalid', async () => {
-      const releaseYear = 49829;
+      const releaseYear = 'invalid';
       const server = supertest(app);
       const response = await server.get(`/api/v1/movies?releaseYear=${releaseYear}`);
       expect(response.status).toBe(400);
-      expect(response.body.message).toBe('Release year must be between 1970 and 2050');
+      expect(response.body.message).toBe('Invalid release year');
     });
 
     it('GET /movies should return 400 when genres in query is invalid', async () => {
@@ -524,9 +524,7 @@ describe('Movie Controller', () => {
         `/api/v1/movies?releaseFrom=2024-04-xx&releaseTo=2024-05-01`
       );
       expect(response.status).toBe(400);
-      expect(response.body.message).toBe(
-        'Invalid release date. Please refer to api specs for more information.'
-      );
+      expect(response.body.message).toBe('Invalid release date');
     });
 
     it('GET /movies should return 400 when releaseTo has invalid format in query', async () => {
@@ -535,9 +533,7 @@ describe('Movie Controller', () => {
         `/api/v1/movies?releaseFrom=2024-04-01&releaseTo=2024-xx-01`
       );
       expect(response.status).toBe(400);
-      expect(response.body.message).toBe(
-        'Invalid release date. Please refer to api specs for more information.'
-      );
+      expect(response.body.message).toBe('Invalid release date');
     });
   });
 

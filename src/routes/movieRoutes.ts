@@ -15,8 +15,6 @@ function validateReleaseDate(releaseDate: string) {
 
   const isValid =
     !isNaN(year) && // Valid number
-    year >= 1950 && // Year is between 1970 and 2050
-    year <= 2050 &&
     !isNaN(month) && // Valid number
     month > 0 && // month between 01 and 12
     month < 13 &&
@@ -85,8 +83,8 @@ function validateMoviesRouteQuery(req: Request, res: Response, next: NextFunctio
   }
 
   const releaseYear = Number(releaseYearText);
-  if (releaseYearText && (isNaN(releaseYear) || releaseYear < 1970 || releaseYear > 2050)) {
-    throw new AppError('Release year must be between 1970 and 2050', 400);
+  if (releaseYearText && isNaN(releaseYear)) {
+    throw new AppError('Invalid release year', 400);
   }
 
   if ((releaseFrom && !releaseTo) || (!releaseFrom && releaseTo)) {
@@ -101,10 +99,7 @@ function validateMoviesRouteQuery(req: Request, res: Response, next: NextFunctio
     (releaseFrom && !validateReleaseDate(String(releaseFrom))) ||
     (releaseTo && !validateReleaseDate(String(releaseTo)))
   ) {
-    throw new AppError(
-      'Invalid release date. Please refer to api specs for more information.',
-      400
-    );
+    throw new AppError('Invalid release date', 400);
   }
 
   req.query.genres = updatedGenres.join(',');

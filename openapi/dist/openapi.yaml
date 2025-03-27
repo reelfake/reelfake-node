@@ -277,8 +277,7 @@ paths:
           name: releaseYear
           required: false
           description: |
-            The release year to use for filtering the movies by release date. 
-            The release year must be between 1970 and 2050 inclusively.
+            The release year to use for filtering the movies by release date.
           schema:
             type: integer
         - in: query
@@ -286,7 +285,7 @@ paths:
           required: false
           description: |
             The release date as the starting point of date range to filter the movies by release date.
-            The release year must be between 1970 and 2050 inclusively. The date format is yyy-mm-dd.
+            The date format is yyy-mm-dd.
             For example, 2024-01-01 for January 1st 2024 or 2024-12-31 for December 31st 2024.
           schema:
             type: string
@@ -296,7 +295,7 @@ paths:
           required: false
           description: |
             The release date as the ending point of date range to filter the movies by release date.
-            The release year must be between 1970 and 2050 inclusively. The date format is yyy-mm-dd.
+            The date format is yyy-mm-dd.
             For example, 2024-01-01 for January 1st 2024 or 2024-12-31 for December 31st 2024.
           schema:
             type: string
