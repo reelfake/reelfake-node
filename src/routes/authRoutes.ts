@@ -1,4 +1,3 @@
-import type { Request, Response, NextFunction } from 'express';
 import { Router } from 'express';
 import { registerUser, login, logout } from '../controllers';
 import { routeFnWrapper } from '../utils';

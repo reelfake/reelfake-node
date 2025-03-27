@@ -15,7 +15,7 @@ function validateReleaseDate(releaseDate: string) {
 
   const isValid =
     !isNaN(year) && // Valid number
-    year >= 1970 && // Year is between 1970 and 2050
+    year >= 1950 && // Year is between 1970 and 2050
     year <= 2050 &&
     !isNaN(month) && // Valid number
     month > 0 && // month between 01 and 12

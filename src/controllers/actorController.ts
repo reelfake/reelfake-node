@@ -2,7 +2,7 @@ import type { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import { ActorModel, MovieModel } from '../models';
 import { AppError } from '../utils';
-import { ERROR_MESSAGES, ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
+import { ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
 
 export const getActors = async (req: Request, res: Response) => {
   const { pageNumber: pageNumberText = '1' } = req.query;

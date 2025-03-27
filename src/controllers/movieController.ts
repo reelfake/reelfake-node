@@ -1,17 +1,8 @@
 import type { Request, Response } from 'express';
-import { Op, WhereOptions, literal } from 'sequelize';
+import { Op, WhereOptions } from 'sequelize';
 import { Fn } from 'sequelize/lib/utils';
 import { executeQuery, AppError } from '../utils';
-import {
-  MovieModel,
-  ActorModel,
-  MovieActorModel,
-  InventoryModel,
-  StoreModel,
-  AddressModel,
-  CityModel,
-  CountryModel,
-} from '../models';
+import { MovieModel } from '../models';
 import { ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
 import sequelize from '../sequelize.config';
 
