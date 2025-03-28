@@ -67,7 +67,7 @@ describe('Store Controller', () => {
         const expectedMovies = await execQuery(`
                 SELECT i.id AS "inventoryId", m.id, m.imdb_id AS "imdbId", m.title, m.original_title AS "originalTitle",
                 m.overview, m.runtime, m.release_date AS "releaseDate", m.genres, m.country, 
-                m.movie_language AS "language", m.movie_status AS "movieStatus", m.popularity, m.budget, m.revenue,
+                m.language_name AS "language", m.movie_status AS "movieStatus", m.popularity, m.budget, m.revenue,
                 m.rating_average AS "ratingAverage", m.rating_count "ratingCount", m.poster_url AS "posterUrl",
                 m.rental_rate AS "rentalRate", m.rental_duration AS "rentalDuration", i.stock_count AS stock
                 FROM inventory AS i LEFT OUTER JOIN v_movie AS m ON m.id = i.movie_id

@@ -22,7 +22,7 @@ export const FIELD_MAP: Record<ModelForTest, Record<string, string>> = {
     release_date: 'releaseDate',
     genres: 'genres',
     country: 'country',
-    movie_language: 'language',
+    language_name: 'language',
     movie_status: 'movieStatus',
     popularity: 'popularity',
     budget: 'budget',

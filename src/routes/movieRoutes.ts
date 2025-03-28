@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { Router } from 'express';
 import { routeFnWrapper, AppError } from '../utils';
-import { findInStores, getMovieById, getMovies, searchMovies } from '../controllers';
+import { findInStores, getMovieById, getMovies, searchMovies, addMovie } from '../controllers';
 import { GENRES } from '../constants';
 
 const router = Router();
@@ -108,6 +108,7 @@ function validateMoviesRouteQuery(req: Request, res: Response, next: NextFunctio
 }
 
 router.get('/', validateMoviesRouteQuery, routeFnWrapper(getMovies));
+router.post('/', routeFnWrapper(addMovie));
 router.get('/search', routeFnWrapper(searchMovies));
 router.get('/:movieId', validateMovieByIdRouteQuery, routeFnWrapper(getMovieById));
 router.get('/:id/stores', routeFnWrapper(findInStores));

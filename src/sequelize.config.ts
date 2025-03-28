@@ -25,6 +25,7 @@ const sequelize = new Sequelize(db, user, password, {
     acquire: 30000,
     idle: 10000,
   },
+  sync: { alter: false, force: false },
   logging: enableLogs,
 });
 

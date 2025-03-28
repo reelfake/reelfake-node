@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { Op } from 'sequelize';
-import { ActorModel, MovieModel } from '../models';
+import { ActorModel, MovieViewModel } from '../models';
 import { AppError } from '../utils';
 import { ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
 
@@ -98,7 +98,7 @@ export const getActorById = async (req: Request, res: Response) => {
     include: includeMovies
       ? [
           {
-            model: MovieModel,
+            model: MovieViewModel,
             as: 'movies',
             through: { attributes: [] },
             attributes: ['id', 'title', 'releaseDate', 'genres', 'ratingAverage', 'ratingCount'],

@@ -1,31 +1,22 @@
-import { DataTypes, CreationOptional } from 'sequelize';
+import { DataTypes, WhereOptions } from 'sequelize';
 import BaseModel from './baseModel';
 import sequelize from '../sequelize.config';
 
-class Movie extends BaseModel {
-  declare id: CreationOptional<number>;
-  declare tmdbId: number;
-  declare imdbId: number;
-  declare title: string;
-  declare originalTitle: string;
-  declare overview: string;
-  declare runtime: number;
-  declare releaseDate: string;
-  declare genreIds: number[];
-  declare originCountryIds: number[];
-  declare languageId: number;
-  declare movieStatus: string;
-  declare popularity: number;
-  declare budget: bigint;
-  declare revenue: bigint;
-  declare ratingAverage: number;
-  declare ratingCount: number;
-  declare posterUrl: string;
-  declare rentalRate: number;
-  declare rentalDuration: number;
+class MovieView extends BaseModel {
+  public static async getRowsCountWhere(conditions: WhereOptions[]) {
+    const where = conditions.reduce<WhereOptions>((acc, curr) => {
+      acc = { ...acc, ...curr };
+      return acc;
+    }, {});
+
+    const countOfRows = await MovieView.count({
+      where: conditions.length > 0 ? where : undefined,
+    });
+    return countOfRows;
+  }
 }
 
-Movie.init(
+MovieView.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -60,17 +51,17 @@ Movie.init(
       type: DataTypes.DATEONLY,
       field: 'release_date',
     },
-    genreIds: {
-      type: DataTypes.ARRAY(DataTypes.INTEGER),
-      field: 'genre_ids',
+    genres: {
+      type: DataTypes.ARRAY(DataTypes.STRING(25)),
+      field: 'genres',
     },
-    originCountryIds: {
-      type: DataTypes.ARRAY(DataTypes.INTEGER),
-      field: 'origin_country_ids',
+    country: {
+      type: DataTypes.ARRAY(DataTypes.STRING(60)),
+      field: 'country',
     },
-    languageId: {
-      type: DataTypes.INTEGER,
-      field: 'language_id',
+    language: {
+      type: DataTypes.STRING(60),
+      field: 'language_name',
     },
     movieStatus: {
       type: DataTypes.STRING(20),
@@ -112,15 +103,9 @@ Movie.init(
   {
     sequelize,
     modelName: 'Movie',
-    tableName: 'movie',
+    tableName: 'v_movie',
     timestamps: false,
-    // hooks: {
-    //   beforeSave(instance, options) {
-    //     console.log('New id', instance.getDataValue('id'));
-    //   },
-    //   beforeValidate(instance, options) {},
-    // },
   }
 );
 
-export default Movie;
+export default MovieView;

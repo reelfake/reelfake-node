@@ -1,8 +1,8 @@
 import type { Request, Response } from 'express';
-import { Op, WhereOptions } from 'sequelize';
+import { Op, WhereOptions, InferCreationAttributes, Optional } from 'sequelize';
 import { Fn } from 'sequelize/lib/utils';
 import { executeQuery, AppError } from '../utils';
-import { MovieModel } from '../models';
+import { MovieModel, MovieViewModel } from '../models';
 import { ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
 import sequelize from '../sequelize.config';
 
@@ -27,7 +27,7 @@ const getMoviesUsingQuery = async (
   orderBy: string,
   filter: string = ''
 ) => {
-  if (!MovieModel.sequelize) {
+  if (!MovieViewModel.sequelize) {
     throw new AppError('Server encoutered unhandled exception', 500);
   }
 
@@ -52,19 +52,19 @@ const getMoviesUsingQuery = async (
       FROM v_movie ${whereClause}
     )
     SELECT id, title, overview, runtime, 
-    release_date AS "releaseDate", genres, country, movie_language AS "language", 
+    release_date AS "releaseDate", genres, country, language_name AS "language", 
     popularity, rating_average AS "ratingAverage", rating_count AS "ratingCount", 
     poster_url AS "posterUrl", rental_rate AS "rentalRate", rental_duration AS "rentalDuration" 
     from movies_with_row_number WHERE "rowNumber" > ${startingRowNumber} LIMIT ${ITEMS_PER_PAGE_FOR_PAGINATION}
   `;
 
-  const movies = await executeQuery(MovieModel.sequelize, queryText);
+  const movies = await executeQuery(MovieViewModel.sequelize, queryText);
 
   return movies;
 };
 
 export const getMovies = async (req: Request, res: Response) => {
-  if (!MovieModel.sequelize) {
+  if (!MovieViewModel.sequelize) {
     throw new AppError('Server encoutered unhandled exception', 500);
   }
 
@@ -96,7 +96,7 @@ export const getMovies = async (req: Request, res: Response) => {
     });
   }
 
-  const totalMovies = await MovieModel.getRowsCountWhere(conditions);
+  const totalMovies = await MovieViewModel.getRowsCountWhere(conditions);
 
   const movies = await getMoviesUsingQuery(
     pageNumber,
@@ -156,7 +156,7 @@ export const getMovieById = async (req: Request, res: Response) => {
     attributes.push([sequelize.fn('public.get_actors', id), 'actors']);
   }
 
-  const movie = await MovieModel.findOne({
+  const movie = await MovieViewModel.findOne({
     where: {
       id,
     },
@@ -164,7 +164,7 @@ export const getMovieById = async (req: Request, res: Response) => {
   });
 
   // The below one also works but it gives unnecessary nested role object inside every actors.
-  // const movie = await MovieModel.findOne({
+  // const movie = await MovieViewModel.findOne({
   //   where: {
   //     id,
   //   },
@@ -201,7 +201,7 @@ export const searchMovies = async (req: Request, res: Response) => {
 
   const pageNumber = Number(pageNumberText);
 
-  const totalRows = await MovieModel.getRowsCountWhere([
+  const totalRows = await MovieViewModel.getRowsCountWhere([
     {
       title: {
         [Op.like]: `%${q}%`,
@@ -225,7 +225,7 @@ export const searchMovies = async (req: Request, res: Response) => {
     'rentalDuration',
   ];
 
-  const result = await MovieModel.findAll({
+  const result = await MovieViewModel.findAll({
     attributes: attributesToInclude,
     where: {
       title: {
@@ -335,4 +335,40 @@ export const findInStores = async (req: Request, res: Response) => {
     items: inventory,
     length: inventory.length,
   });
+};
+
+export const addMovie = async (req: Request, res: Response) => {
+  try {
+    const result = await MovieModel.create(
+      { ...req.body },
+      {
+        fields: [
+          'tmdbId',
+          'imdbId',
+          'title',
+          'originalTitle',
+          'overview',
+          'runtime',
+          'releaseDate',
+          'genreIds',
+          'originCountryIds',
+          'languageId',
+          'movieStatus',
+          'popularity',
+          'budget',
+          'revenue',
+          'ratingAverage',
+          'ratingCount',
+          'posterUrl',
+          'rentalRate',
+          'rentalDuration',
+        ],
+        raw: true,
+      }
+    );
+    res.status(201).json({ ...result });
+  } catch (err: unknown) {
+    console.log(err);
+    throw new AppError((err as Error).message, 500);
+  }
 };

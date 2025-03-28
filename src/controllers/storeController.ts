@@ -5,7 +5,7 @@ import {
   CityModel,
   CountryModel,
   InventoryModel,
-  MovieModel,
+  MovieViewModel,
 } from '../models';
 import { ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
 import { AppError } from '../utils';
@@ -90,7 +90,7 @@ export const getMoviesInStore = async (req: Request, res: Response) => {
     },
     include: [
       {
-        model: MovieModel,
+        model: MovieViewModel,
         as: 'movie',
       },
     ],
@@ -103,7 +103,7 @@ export const getMoviesInStore = async (req: Request, res: Response) => {
     attributes: { exclude: ['movieId', 'storeId'] },
     include: [
       {
-        model: MovieModel,
+        model: MovieViewModel,
         as: 'movie',
         attributes: { exclude: ['tmdbId'] },
       },
