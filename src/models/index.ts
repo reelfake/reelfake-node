@@ -5,7 +5,7 @@ import MovieLanguageModel from './movieLanguageModel';
 import MovieModel from './movieModel';
 import MovieViewModel from './movieViewModel';
 import ActorModel from './actorModel';
-import MovieActorModel from './movieActor';
+import MovieActorModel from './movieActorModel';
 import AddressModel from './addressModel';
 import StoreModel from './storeModel';
 import InventoryModel from './inventoryModel';
@@ -34,11 +34,22 @@ MovieViewModel.belongsToMany(ActorModel, {
   foreignKey: 'movieId',
   as: 'actors',
 });
+
 ActorModel.belongsToMany(MovieViewModel, {
   through: MovieActorModel,
   foreignKey: 'actorId',
   as: 'movies',
 });
+
+// MovieActorModel.belongsTo(MovieViewModel, {
+//   foreignKey: 'movieId',
+//   as: 'movies',
+// });
+
+// MovieActorModel.belongsTo(ActorModel, {
+//   foreignKey: 'actorId',
+//   as: 'actor',
+// });
 
 AddressModel.belongsTo(CityModel, { as: 'city', foreignKey: 'cityId' });
 

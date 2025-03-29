@@ -44,3 +44,11 @@ properties:
           type: integer
         posterUrl:
           type: string
+        credit:
+          type: object
+          properties:
+            characterName:
+              type: string
+            castOrder:
+              type: integer
+              format: number

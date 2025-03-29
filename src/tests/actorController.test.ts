@@ -94,23 +94,24 @@ describe('Actor Controller', () => {
       const response = await server.get(`/api/v1/actors/${actorId}?includeMovies=true`);
       const expectedActor = await execQuery(
         `
-          SELECT id, imdb_id as "imdbId", actor_name as "actorName", biography, birthday, deathday, place_of_birth as "placeOfBirth",
-          popularity, profile_picture_url as "profilePictureUrl" FROM actor WHERE id = ${actorId}
-
+          SELECT jsonb_build_object(
+          'id', a.id, 'imdbId', a.imdb_id, 'actorName', a.actor_name, 'biography', a.biography, 
+          'birthday', a.birthday, 'deathday', a.deathday, 'placeOfBirth', a.place_of_birth,
+          'popularity', a.popularity, 'profilePictureUrl', a.profile_picture_url, 'movies', (
+              SELECT jsonb_agg(jsonb_build_object('id', m.id, 'title', m.title, 'releaseDate', m.release_date, 'genres', m.genres, 'runtime', m.runtime,
+              'ratingAverage', m.rating_average, 'ratingCount', m.rating_count, 'posterUrl', m.poster_url,
+              'credit', jsonb_build_object('characterName', ma.character_name, 'castOrder', ma.cast_order))) 
+              FROM movie_actor AS ma LEFT OUTER JOIN v_movie AS m ON ma.movie_id = m.id 
+              WHERE ma.actor_id = ${actorId}
+            )
+          ) FROM actor a WHERE a.id = ${actorId};
         `,
         FIELD_MAP.actor
-      );
-      const expectedMovies = await execQuery(
-        `
-        SELECT m.id, m.title, m.release_date as "releaseDate", m.genres, m.rating_average as "ratingAverage", m.rating_count as "ratingCount" 
-        FROM v_movie m LEFT JOIN movie_actor ma ON m.id = ma.movie_id WHERE ma.actor_id = ${actorId} ORDER BY id ASC
-      `,
-        FIELD_MAP.movie
       );
 
       expect(response.status).toBe(200);
       expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
-      expect(response.body).toStrictEqual({ ...expectedActor[0], movies: [...expectedMovies] });
+      expect(response.body).toStrictEqual(expectedActor[0]['jsonb_build_object']);
     });
   });
 
