@@ -7,16 +7,16 @@ class MovieActor extends BaseModel {}
 MovieActor.init(
   {
     id: {
-      type: DataTypes.BIGINT,
+      type: DataTypes.INTEGER,
       primaryKey: true,
       field: 'id',
     },
     movieId: {
-      type: DataTypes.BIGINT,
+      type: DataTypes.INTEGER,
       field: 'movie_id',
     },
     actorId: {
-      type: DataTypes.BIGINT,
+      type: DataTypes.INTEGER,
       field: 'actor_id',
     },
     characterName: {

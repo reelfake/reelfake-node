@@ -4,6 +4,14 @@ export * from './fieldMap';
 
 export const ITEMS_COUNT_PER_PAGE_FOR_TEST = 50;
 
+export function getRandomNumber(digits: number) {
+  if (digits <= 0) {
+    throw new Error('Digits must be greater than 0');
+  }
+
+  return Math.floor(Math.random() * Number('9'.padEnd(digits + 1, '0'))) + 10000;
+}
+
 export async function cleanUserTable() {
   await sequelize.query('DELETE FROM public.user');
 }

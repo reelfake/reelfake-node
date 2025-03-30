@@ -364,11 +364,19 @@ export const addMovie = async (req: Request, res: Response) => {
           'rentalDuration',
         ],
         raw: true,
+        returning: true,
       }
     );
-    res.status(201).json({ ...result });
+
+    const movie = {
+      ...result.dataValues,
+      rentalRate: Number(result.rentalRate),
+      rentalDuration: Number(result.rentalDuration),
+    };
+    res.status(201).json(movie);
   } catch (err: unknown) {
     console.log(err);
     throw new AppError((err as Error).message, 500);
   }
 };
+// 200000000,2264162353

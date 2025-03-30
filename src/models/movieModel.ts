@@ -5,12 +5,12 @@ import sequelize from '../sequelize.config';
 class Movie extends BaseModel {
   declare id: CreationOptional<number>;
   declare tmdbId: number;
-  declare imdbId: number;
+  declare imdbId: string;
   declare title: string;
   declare originalTitle: string;
   declare overview: string;
   declare runtime: number;
-  declare releaseDate: string;
+  declare releaseDate: Date;
   declare genreIds: number[];
   declare originCountryIds: number[];
   declare languageId: number;
@@ -101,7 +101,7 @@ Movie.init(
       field: 'poster_url',
     },
     rentalRate: {
-      type: DataTypes.DECIMAL(4, 2),
+      type: DataTypes.DECIMAL({ precision: 4, scale: 2 }),
       field: 'rental_rate',
     },
     rentalDuration: {

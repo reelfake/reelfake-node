@@ -7,17 +7,20 @@ import {
   getRowsCount,
   queryMovieObject,
   FIELD_MAP,
+  getRandomNumber,
 } from './testUtil';
 
 const apiKey = process.env.API_KEY || '';
 
 describe('Movie Controller', () => {
+  let movieIdOffest: number;
   jest.setTimeout(20000);
+
   afterEach(() => {
     jest.restoreAllMocks();
   });
 
-  describe('GET movies', () => {
+  describe('GET /movies', () => {
     it('GET /api/v1/movies should return movies page by page', async () => {
       const startingPage = 1;
       const server = supertest(app);
@@ -456,6 +459,81 @@ describe('Movie Controller', () => {
         });
       }
     });
+  });
+
+  describe('POST /movies', () => {
+    beforeAll(async () => {
+      const rows = await execQuery('SELECT id FROM movie ORDER BY id DESC LIMIT 1');
+      const id = rows[0]['id'];
+      movieIdOffest = Number(id);
+    });
+
+    afterAll(async () => {
+      await execQuery(`DELETE FROM movie WHERE id > ${movieIdOffest}`);
+    });
+
+    it('POST /movies should create movie with the data in request body and token in cookie', async () => {
+      const email = 'test@example.com';
+      const password = 'test@12345';
+      const tmdbId = getRandomNumber(5);
+      const imdbId = `tt${getRandomNumber(4)}`;
+
+      const newMovieData = {
+        tmdbId: tmdbId,
+        imdbId: imdbId,
+        title: `Fast & Furious - ${getRandomNumber(5)}`,
+        originalTitle: `Fast & Furious - ${getRandomNumber(5)}`,
+        overview: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry',
+        runtime: 0,
+        releaseDate: '2025-05-21',
+        genreIds: [1, 2, 17],
+        originCountryIds: [239],
+        languageId: 40,
+        movieStatus: 'Post Production',
+        popularity: 11.6313,
+        budget: '400000000',
+        revenue: '0',
+        ratingAverage: 0,
+        ratingCount: 0,
+        posterUrl: 'https://image.tmdb.org/t/p/w500/z53D72EAOxGRqdr7KXXWp9dJiDe.jpg',
+        rentalRate: 15.99,
+        rentalDuration: 2,
+      };
+
+      const server = supertest(app);
+
+      await server
+        .post('/api/v1/auth/register')
+        .send({
+          email: email,
+          password: password,
+        })
+        .set('Content-Type', 'application/json')
+        .set('Accept', 'application/json');
+
+      const loginResponse = await server
+        .post('/api/v1/auth/login')
+        .send({
+          email: email,
+          password: password,
+        })
+        .set('Content-Type', 'application/json')
+        .set('Accept', 'application/json');
+
+      const cookie = loginResponse.get('Set-Cookie');
+
+      const response = await server
+        .post('/api/v1/movies')
+        .send(newMovieData)
+        .set('Cookie', cookie?.at(0) || '')
+        .set('Content-Type', 'application/json')
+        .set('Accept', 'application/json');
+
+      expect(response.statusCode).toBe(201);
+      expect(response.body).toStrictEqual({ id: response.body.id, ...newMovieData });
+    });
+
+    it('POST /movies should return 401 when adding movie but the token cookie is missing', async () => {});
   });
 
   describe('GET /movies returning status code 400', () => {

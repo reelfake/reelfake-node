@@ -7,7 +7,7 @@ class Inventory extends BaseModel {}
 Inventory.init(
   {
     id: {
-      type: DataTypes.BIGINT,
+      type: DataTypes.INTEGER,
       primaryKey: true,
       field: 'id',
     },
