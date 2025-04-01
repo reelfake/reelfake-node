@@ -5,4 +5,4 @@ export { getMovieLanguages } from './movieLanguageController';
 export { getMovies, getMovieById, searchMovies, findInStores, addMovie } from './movieController';
 export { getActors, searchActor, getActorById } from './actorController';
 export { getStores, getStockCount, getMoviesInStore } from './storeController';
-export { login, logout, registerUser } from './authController';
+export { login, logout, registerUser, getUser, updateUser } from './userController';

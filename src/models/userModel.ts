@@ -2,7 +2,11 @@ import { DataTypes } from 'sequelize';
 import BaseModel from './baseModel';
 import sequelize from '../sequelize.config';
 
-class User extends BaseModel {}
+class User extends BaseModel {
+  declare customerId: number;
+  declare staffId: number;
+  declare managerStaffId: number;
+}
 
 User.init(
   {
@@ -22,6 +26,7 @@ User.init(
     managerStaffId: {
       type: DataTypes.INTEGER,
       field: 'manager_staff_id',
+      allowNull: false,
     },
     userUUID: {
       type: DataTypes.UUID,

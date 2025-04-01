@@ -1,9 +1,17 @@
+import { Op } from 'sequelize';
 import { Request, Response, NextFunction } from 'express';
 import { Router } from 'express';
 import { routeFnWrapper, AppError } from '../utils';
 import { findInStores, getMovieById, getMovies, searchMovies, addMovie } from '../controllers';
 import { validateAuthToken } from '../middlewares';
 import { GENRES } from '../constants';
+import { CustomRequest } from '../types';
+
+const validGenres = Object.entries(GENRES).reduce<{ [key: string]: string }>((acc, curr) => {
+  const [key, value] = curr;
+  acc[key] = value;
+  return acc;
+}, {});
 
 const router = Router();
 
@@ -54,7 +62,7 @@ function validateMovieByIdRouteQuery(req: Request, res: Response, next: NextFunc
   next();
 }
 
-function validateMoviesRouteQuery(req: Request, res: Response, next: NextFunction) {
+function validateMoviesRouteQuery(req: CustomRequest, res: Response, next: NextFunction) {
   const {
     pageNumber: pageNumberText = '1',
     releaseYear: releaseYearText,
@@ -64,14 +72,14 @@ function validateMoviesRouteQuery(req: Request, res: Response, next: NextFunctio
   const genresText = (req.query.genres as string) || '';
 
   if (isNaN(Number(pageNumberText)) || Number(pageNumberText) < 1) {
-    throw new AppError('Page number should be a valid non-zero positive number', 400);
+    return next(new AppError('Page number should be a valid non-zero positive number', 400));
   }
 
   const updatedGenres = [];
   const invalidGenres = [];
   const requestedGenres = genresText ? genresText.split(',') : [];
   for (const g of requestedGenres) {
-    const genreName = GENRES[g.toLowerCase()];
+    const genreName = validGenres[g.toUpperCase()];
     if (genreName) {
       updatedGenres.push(genreName);
     } else {
@@ -80,27 +88,29 @@ function validateMoviesRouteQuery(req: Request, res: Response, next: NextFunctio
   }
 
   if (invalidGenres.length > 0) {
-    throw new AppError(`[${invalidGenres.join(',')}] are invalid genres`, 400);
+    return next(new AppError(`[${invalidGenres.join(',')}] are invalid genres`, 400));
   }
 
   const releaseYear = Number(releaseYearText);
   if (releaseYearText && isNaN(releaseYear)) {
-    throw new AppError('Invalid release year', 400);
+    return next(new AppError('Invalid release year', 400));
   }
 
   if ((releaseFrom && !releaseTo) || (!releaseFrom && releaseTo)) {
-    throw new AppError('To filter by release dates, release date from and to are required.', 400);
+    return next(
+      new AppError('To filter by release dates, release date from and to are required.', 400)
+    );
   }
 
   if (releaseYear && releaseFrom && releaseTo) {
-    throw new AppError('Release year and release dates cannot be used together', 400);
+    return next(new AppError('Release year and release dates cannot be used together', 400));
   }
 
   if (
     (releaseFrom && !validateReleaseDate(String(releaseFrom))) ||
     (releaseTo && !validateReleaseDate(String(releaseTo)))
   ) {
-    throw new AppError('Invalid release date', 400);
+    return next(new AppError('Invalid release date', 400));
   }
 
   req.query.genres = updatedGenres.join(',');

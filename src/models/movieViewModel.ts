@@ -55,13 +55,13 @@ MovieView.init(
       type: DataTypes.ARRAY(DataTypes.STRING(25)),
       field: 'genres',
     },
-    country: {
+    countriesOfOrigin: {
       type: DataTypes.ARRAY(DataTypes.STRING(60)),
-      field: 'country',
+      field: 'countries_of_origin',
     },
     language: {
       type: DataTypes.STRING(60),
-      field: 'language_name',
+      field: 'language_code',
     },
     movieStatus: {
       type: DataTypes.STRING(20),

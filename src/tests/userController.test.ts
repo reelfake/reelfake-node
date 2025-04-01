@@ -15,13 +15,13 @@ describe('Auth Controller', () => {
   });
 
   describe('/auth', () => {
-    it('POST /auth/register should create a new user account', async () => {
+    it('POST /user/register should create a new user account', async () => {
       const email = 'test@example.com';
       const password = 'test@12345';
       const server = supertest(app);
 
       const response = await server
-        .post('/api/v1/auth/register')
+        .post('/api/v1/user/register')
         .send({
           email: email,
           password: password,
@@ -41,13 +41,13 @@ describe('Auth Controller', () => {
       expect(isPasswordMatch).toBeTruthy();
     });
 
-    it('POST /auth/register should return 400 if user already exist', async () => {
+    it('POST /user/register should return 400 if user already exist', async () => {
       const email = 'test@example.com';
       const password = 'test@12345';
       const server = supertest(app);
 
       await server
-        .post('/api/v1/auth/register')
+        .post('/api/v1/user/register')
         .send({
           email: email,
           password: password,
@@ -56,7 +56,7 @@ describe('Auth Controller', () => {
         .set('Accept', 'application/json');
 
       const response = await server
-        .post('/api/v1/auth/register')
+        .post('/api/v1/user/register')
         .send({
           email: email,
           password: password,
@@ -71,13 +71,13 @@ describe('Auth Controller', () => {
       });
     });
 
-    it('POST /auth/login should log in the user send the token in cookie', async () => {
+    it('POST /user/login should log in the user send the token in cookie', async () => {
       const email = 'test@example.com';
       const password = 'test@12345';
       const server = supertest(app);
 
       await server
-        .post('/api/v1/auth/register')
+        .post('/api/v1/user/register')
         .send({
           email: email,
           password: password,
@@ -86,7 +86,7 @@ describe('Auth Controller', () => {
         .set('Accept', 'application/json');
 
       const response = await server
-        .post('/api/v1/auth/login')
+        .post('/api/v1/user/login')
         .send({
           email: email,
           password: password,
@@ -105,13 +105,13 @@ describe('Auth Controller', () => {
       );
     });
 
-    it('POST /auth/login should return 401 when user try to login with invalid email', async () => {
+    it('POST /user/login should return 401 when user try to login with invalid email', async () => {
       const email = 'test@example.com';
       const password = 'test@12345';
       const server = supertest(app);
 
       await server
-        .post('/api/v1/auth/register')
+        .post('/api/v1/user/register')
         .send({
           email: email,
           password: password,
@@ -120,7 +120,7 @@ describe('Auth Controller', () => {
         .set('Accept', 'application/json');
 
       const response = await server
-        .post('/api/v1/auth/login')
+        .post('/api/v1/user/login')
         .send({
           email: 'doesnotexist@example.com',
           password: password,
@@ -134,13 +134,13 @@ describe('Auth Controller', () => {
       });
     });
 
-    it('POST /auth/login should return 401 when user try to login with invalid password', async () => {
+    it('POST /user/login should return 401 when user try to login with invalid password', async () => {
       const email = 'test@example.com';
       const password = 'test@12345';
       const server = supertest(app);
 
       await server
-        .post('/api/v1/auth/register')
+        .post('/api/v1/user/register')
         .send({
           email: email,
           password: password,
@@ -149,7 +149,7 @@ describe('Auth Controller', () => {
         .set('Accept', 'application/json');
 
       const response = await server
-        .post('/api/v1/auth/login')
+        .post('/api/v1/user/login')
         .send({
           email: email,
           password: 'blah@12345',
@@ -163,13 +163,13 @@ describe('Auth Controller', () => {
       });
     });
 
-    it('GET /auth/logout should log out the user by using the cookie in the request', async () => {
+    it('GET /user/logout should log out the user by using the cookie in the request', async () => {
       const email = 'test@example.com';
       const password = 'test@12345';
       const server = supertest(app);
 
       await server
-        .post('/api/v1/auth/register')
+        .post('/api/v1/user/register')
         .send({
           email: email,
           password: password,
@@ -178,7 +178,7 @@ describe('Auth Controller', () => {
         .set('Accept', 'application/json');
 
       let response = await server
-        .post('/api/v1/auth/login')
+        .post('/api/v1/user/login')
         .send({
           email: email,
           password: password,
@@ -188,7 +188,7 @@ describe('Auth Controller', () => {
 
       const cookie = response.get('Set-Cookie')?.at(0);
 
-      response = await server.get('/api/v1/auth/logout').set('Cookie', cookie || '');
+      response = await server.get('/api/v1/user/logout').set('Cookie', cookie || '');
       expect(response.body).toStrictEqual({
         message: 'Logged out successfully',
       });

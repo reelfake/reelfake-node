@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { Op, WhereOptions, InferCreationAttributes, Optional } from 'sequelize';
+import { Op, WhereOptions, InferCreationAttributes } from 'sequelize';
 import { Fn } from 'sequelize/lib/utils';
 import { executeQuery, AppError } from '../utils';
 import { MovieModel, MovieViewModel } from '../models';
@@ -52,7 +52,7 @@ const getMoviesUsingQuery = async (
       FROM v_movie ${whereClause}
     )
     SELECT id, title, overview, runtime, 
-    release_date AS "releaseDate", genres, country, language_name AS "language", 
+    release_date AS "releaseDate", genres, countries_of_origin as "countriesOfOrigin", language_code AS "language", 
     popularity, rating_average AS "ratingAverage", rating_count AS "ratingCount", 
     poster_url AS "posterUrl", rental_rate AS "rentalRate", rental_duration AS "rentalDuration" 
     from movies_with_row_number WHERE "rowNumber" > ${startingRowNumber} LIMIT ${ITEMS_PER_PAGE_FOR_PAGINATION}
@@ -139,7 +139,7 @@ export const getMovieById = async (req: Request, res: Response) => {
     'runtime',
     'releaseDate',
     'genres',
-    'country',
+    'countriesOfOrigin',
     'language',
     'movieStatus',
     'popularity',
@@ -215,7 +215,7 @@ export const searchMovies = async (req: Request, res: Response) => {
     'runtime',
     'releaseDate',
     'genres',
-    'country',
+    'countriesOfOrigin',
     'language',
     'popularity',
     'ratingAverage',
@@ -337,46 +337,44 @@ export const findInStores = async (req: Request, res: Response) => {
   });
 };
 
-export const addMovie = async (req: Request, res: Response) => {
+export const addMovie = async (
+  req: Request<{}, {}, InferCreationAttributes<MovieModel>>,
+  res: Response
+) => {
   try {
-    const result = await MovieModel.create(
-      { ...req.body },
-      {
-        fields: [
-          'tmdbId',
-          'imdbId',
-          'title',
-          'originalTitle',
-          'overview',
-          'runtime',
-          'releaseDate',
-          'genreIds',
-          'originCountryIds',
-          'languageId',
-          'movieStatus',
-          'popularity',
-          'budget',
-          'revenue',
-          'ratingAverage',
-          'ratingCount',
-          'posterUrl',
-          'rentalRate',
-          'rentalDuration',
-        ],
-        raw: true,
-        returning: true,
-      }
-    );
+    const movieInstance = MovieModel.build({ ...req.body });
+    const newMovie = await movieInstance.save({
+      fields: [
+        'tmdbId',
+        'imdbId',
+        'title',
+        'originalTitle',
+        'overview',
+        'runtime',
+        'releaseDate',
+        'genreIds',
+        'originCountryIds',
+        'languageId',
+        'movieStatus',
+        'popularity',
+        'budget',
+        'revenue',
+        'ratingAverage',
+        'ratingCount',
+        'posterUrl',
+        'rentalRate',
+        'rentalDuration',
+      ],
+    });
 
-    const movie = {
-      ...result.dataValues,
-      rentalRate: Number(result.rentalRate),
-      rentalDuration: Number(result.rentalDuration),
-    };
-    res.status(201).json(movie);
+    newMovie.setDataValue('genreIds', undefined);
+    newMovie.setDataValue('originCountryIds', undefined);
+    newMovie.setDataValue('languageId', undefined);
+    newMovie.setDataValue('rentalRate', Number(newMovie.getDataValue('rentalRate')));
+
+    res.status(201).json(newMovie);
   } catch (err: unknown) {
     console.log(err);
     throw new AppError((err as Error).message, 500);
   }
 };
-// 200000000,2264162353

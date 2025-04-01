@@ -18,29 +18,37 @@ export type ModelConfig = {
   fields: ModelField;
 };
 
-export interface RequestWithToken extends Request {
-  token: string | JwtPayload;
+export interface CustomRequest extends Request {
+  user?: {
+    userUUID: string;
+    userEmail: string;
+    customerId?: number;
+    staffId?: number;
+    managerStaffId?: number;
+  };
+  genres?: string[];
+  languages?: string[];
+  languageIds?: number[];
 }
 
-export type NewMovieData = {
-  // id INT,
-  // tmdb_id INT,
-  // imdb_id CHARACTER VARYING(60),
-  // title CHARACTER VARYING(255),
-  // original_title CHARACTER VARYING(255),
-  // overview TEXT,
-  // runtime INT,
-  // release_date DATE,
-  // genres CHARACTER VARYING(25)[],
-  // country CHARACTER VARYING(60)[],
-  // movie_language CHARACTER VARYING(60),
-  // movie_status CHARACTER VARYING(20),
-  // popularity REAL,
-  // budget INTEGER,
-  // revenue INTEGER,
-  // rating_average REAL,
-  // rating_count INT,
-  // poster_url CHARACTER VARYING(90),
-  // rental_rate NUMERIC(4,2),
-  // rental_duration SMALLINT
+export type IncomingMovie = {
+  tmdbId: number;
+  imdbId: string;
+  title: string;
+  originalTitle: string;
+  overview: string;
+  runtime: number;
+  releaseDate: Date;
+  genres: string[];
+  countriesOfOrigin: string[];
+  language: string;
+  movieStatus: string;
+  popularity: number;
+  budget: bigint;
+  revenue: bigint;
+  ratingAverage: number;
+  ratingCount: number;
+  posterUrl: string;
+  rentalRate: number;
+  rentalDuration: number;
 };

@@ -5,7 +5,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { AppError } from './utils';
 import {
-  authRoutes,
+  userRoutes,
   genreRoutes,
   cityRoutes,
   countryRoutes,
@@ -47,7 +47,7 @@ app.get('/api/v1/redocs', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'openapi', 'redocs.html'));
 });
 
-app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/user', userRoutes);
 
 // /api/genres
 app.use('/api/v1/genres', genreRoutes);
