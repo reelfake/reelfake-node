@@ -22,7 +22,7 @@ export const getUser = async (req: CustomRequest, res: Response) => {
       userUUID,
       userEmail,
     },
-    attributes: ['userUUID', 'userEmail', 'customerId', 'staffId', 'managerStaffId'],
+    attributes: ['userUUID', 'userEmail', 'customerId', 'staffId', 'storeManagerId'],
   });
 
   res.status(200).json(existingUser);
@@ -30,11 +30,15 @@ export const getUser = async (req: CustomRequest, res: Response) => {
 
 export const updateUser = async (req: CustomRequest, res: Response) => {
   const currentUser = req.user;
-  const { customerId, staffId, managerStaffId } = req.body as {
+  const { customerId, staffId, storeManagerId } = req.body as {
     customerId?: number;
     staffId?: number;
-    managerStaffId?: number;
+    storeManagerId?: number;
   };
+
+  if (!customerId && !staffId && !storeManagerId) {
+    throw new AppError('Either of customer, staff or manager staff id is required', 400);
+  }
 
   if (!currentUser) {
     throw new AppError('Invalid token', 401);
@@ -53,7 +57,7 @@ export const updateUser = async (req: CustomRequest, res: Response) => {
   }
 
   const conditions = [];
-  const changes: { customerId?: number; staffId?: number; managerStaffId?: number } = {};
+  const changes: { customerId?: number; staffId?: number; storeManagerId?: number } = {};
 
   if (customerId) {
     conditions.push({ customerId });
@@ -65,19 +69,24 @@ export const updateUser = async (req: CustomRequest, res: Response) => {
     changes.staffId = staffId;
   }
 
-  if (managerStaffId) {
-    conditions.push({ managerStaffId });
-    changes.managerStaffId = managerStaffId;
+  if (storeManagerId) {
+    conditions.push({ storeManagerId });
+    changes.storeManagerId = storeManagerId;
   }
 
   const usersWithDuplicateSetup = await UserModel.count({
     where: {
-      [Op.or]: conditions,
+      [Op.and]: {
+        [Op.or]: conditions,
+        [Op.not]: {
+          userUUID,
+        },
+      },
     },
   });
 
   if (usersWithDuplicateSetup > 0) {
-    throw new AppError(`Either of the given customer, staff or manager is already taken.`, 400);
+    throw new AppError(`Another user with the same config already exist.`, 400);
   }
 
   user.set({ ...changes });
@@ -85,7 +94,7 @@ export const updateUser = async (req: CustomRequest, res: Response) => {
 
   res.status(200).json({
     message:
-      'User data is updated successfully. You will need to log out and log back in for the changes to take effect.',
+      'User data is updated successfully. You will need to log in again for the changes to take effect.',
   });
 };
 
@@ -135,7 +144,7 @@ export const login = async (req: Request, res: Response) => {
       userEmail: user.getDataValue('userEmail'),
       customerId: user.getDataValue('customerId'),
       staffId: user.getDataValue('staffId'),
-      managerStaffId: user.getDataValue('managerStaffId'),
+      storeManagerId: user.getDataValue('storeManagerId'),
       createdAt: Date.now(),
     },
     JWT_SECRET,

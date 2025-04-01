@@ -11,9 +11,9 @@ Store.init(
       primaryKey: true,
       field: 'id',
     },
-    managerStaffId: {
+    storeManagerId: {
       type: DataTypes.INTEGER,
-      field: 'manager_staff_id',
+      field: 'store_manager_id',
     },
     addressId: {
       type: DataTypes.INTEGER,

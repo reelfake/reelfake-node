@@ -62,4 +62,4 @@ CustomerModel.belongsTo(AddressModel, { as: 'address', foreignKey: 'address_id' 
 
 UserModel.belongsTo(CustomerModel, { as: 'customer', foreignKey: 'customer_id' });
 UserModel.belongsTo(StaffModel, { as: 'staff', foreignKey: 'staff_id' });
-UserModel.belongsTo(StaffModel, { as: 'storeManager', foreignKey: 'manager_staff_id' });
+UserModel.belongsTo(StaffModel, { as: 'storeManager', foreignKey: 'storeManagerId' });

@@ -24,7 +24,7 @@ export interface CustomRequest extends Request {
     userEmail: string;
     customerId?: number;
     staffId?: number;
-    managerStaffId?: number;
+    storeManagerId?: number;
   };
   genres?: string[];
   languages?: string[];

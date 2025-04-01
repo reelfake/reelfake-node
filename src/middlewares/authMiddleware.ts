@@ -20,13 +20,13 @@ export default async function (req: Request, res: Response, next: NextFunction) 
     const userEmail = (decodedToken as { [key: string]: string })['userEmail'];
     const customerId = (decodedToken as { [key: string]: string })['customerId'];
     const staffId = (decodedToken as { [key: string]: string })['staffId'];
-    const managerStaffId = (decodedToken as { [key: string]: string })['managerStaffId'];
+    const storeManagerId = (decodedToken as { [key: string]: string })['storeManagerId'];
     (req as CustomRequest).user = {
       userUUID,
       userEmail,
       customerId: Number(customerId),
       staffId: Number(staffId),
-      managerStaffId: Number(managerStaffId),
+      storeManagerId: Number(storeManagerId),
     };
     next();
   } catch (err: unknown) {
@@ -54,7 +54,7 @@ export default async function (req: Request, res: Response, next: NextFunction) 
 //         userEmail,
 //       },
 //     });
-//     if (user && user.getDataValue('managerStaffId')) {
+//     if (user && user.getDataValue('storeManagerId')) {
 //       return next();
 //     }
 //     next(new AppError('You are not authorized to perform this operation', 403));

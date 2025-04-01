@@ -5,7 +5,7 @@ import sequelize from '../sequelize.config';
 class User extends BaseModel {
   declare customerId: number;
   declare staffId: number;
-  declare managerStaffId: number;
+  declare storeManagerId: number;
 }
 
 User.init(
@@ -23,9 +23,9 @@ User.init(
       type: DataTypes.INTEGER,
       field: 'staff_id',
     },
-    managerStaffId: {
+    storeManagerId: {
       type: DataTypes.INTEGER,
-      field: 'manager_staff_id',
+      field: 'store_manager_id',
       allowNull: false,
     },
     userUUID: {

@@ -73,7 +73,7 @@ export const FIELD_MAP: Record<ModelForTest, Record<string, string>> = {
   },
   store: {
     id: 'id',
-    managerStaffId: 'manager_staff_id',
+    storeManagerId: 'store_manager_id',
     addressId: 'address_id',
     phoneNumber: 'phone_number',
   },
@@ -87,7 +87,7 @@ export const FIELD_MAP: Record<ModelForTest, Record<string, string>> = {
     id: 'id',
     customerId: 'customer_id',
     staffId: 'staff_id',
-    managerStaffId: 'manager_staff_id',
+    storeManagerId: 'store_manager_id',
     userUUID: 'user_uuid',
     userEmail: 'user_email',
     userPassword: 'user_password',
