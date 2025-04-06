@@ -3,7 +3,6 @@ import CityModel from './cityModel';
 import CountryModel from './countryModel';
 import MovieLanguageModel from './movieLanguageModel';
 import MovieModel from './movieModel';
-import MovieViewModel from './movieViewModel';
 import ActorModel from './actorModel';
 import MovieActorModel from './movieActorModel';
 import AddressModel from './addressModel';
@@ -19,7 +18,6 @@ export {
   CountryModel,
   MovieLanguageModel,
   MovieModel,
-  MovieViewModel,
   ActorModel,
   MovieActorModel,
   AddressModel,
@@ -27,39 +25,36 @@ export {
   InventoryModel,
   CustomerModel,
   UserModel,
+  StaffModel,
 };
 
-MovieViewModel.belongsToMany(ActorModel, {
+MovieModel.belongsToMany(ActorModel, {
   through: MovieActorModel,
   foreignKey: 'movieId',
   as: 'actors',
 });
 
-ActorModel.belongsToMany(MovieViewModel, {
+ActorModel.belongsToMany(MovieModel, {
   through: MovieActorModel,
   foreignKey: 'actorId',
   as: 'movies',
 });
 
-// MovieActorModel.belongsTo(MovieViewModel, {
-//   foreignKey: 'movieId',
-//   as: 'movies',
-// });
-
-// MovieActorModel.belongsTo(ActorModel, {
-//   foreignKey: 'actorId',
-//   as: 'actor',
-// });
+MovieModel.belongsTo(GenreModel, { as: 'genre', foreignKey: 'genreIds' });
 
 AddressModel.belongsTo(CityModel, { as: 'city', foreignKey: 'cityId' });
 
-StoreModel.belongsTo(AddressModel, { as: 'address', foreignKey: 'addressId' });
+StoreModel.belongsTo(AddressModel, { as: 'storeAddress', foreignKey: 'addressId' });
 
 InventoryModel.belongsTo(StoreModel, { as: 'store', foreignKey: 'storeId' });
-InventoryModel.belongsTo(MovieViewModel, { as: 'movie', foreignKey: 'movieId' });
+InventoryModel.belongsTo(MovieModel, { as: 'movie', foreignKey: 'movieId' });
 
-CustomerModel.belongsTo(AddressModel, { as: 'address', foreignKey: 'address_id' });
+CustomerModel.belongsTo(AddressModel, { as: 'address', foreignKey: 'addressId' });
 
-UserModel.belongsTo(CustomerModel, { as: 'customer', foreignKey: 'customer_id' });
-UserModel.belongsTo(StaffModel, { as: 'staff', foreignKey: 'staff_id' });
+StaffModel.belongsTo(AddressModel, { as: 'address', foreignKey: 'addressId' });
+StaffModel.belongsTo(StoreModel, { as: 'store', foreignKey: 'storeId' });
+StoreModel.hasMany(StaffModel, { as: 'staff', foreignKey: 'storeId' });
+
+UserModel.belongsTo(CustomerModel, { as: 'customer', foreignKey: 'customerId' });
+UserModel.belongsTo(StaffModel, { as: 'staff', foreignKey: 'staffId' });
 UserModel.belongsTo(StaffModel, { as: 'storeManager', foreignKey: 'storeManagerId' });

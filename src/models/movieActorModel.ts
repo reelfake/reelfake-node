@@ -1,8 +1,14 @@
-import { DataTypes } from 'sequelize';
+import { DataTypes, CreationOptional } from 'sequelize';
 import BaseModel from './baseModel';
 import sequelize from '../sequelize.config';
 
-class MovieActor extends BaseModel {}
+class MovieActor extends BaseModel {
+  declare id: CreationOptional<number>;
+  declare movieId: number;
+  declare actorId: number;
+  declare characterName: string;
+  declare castOrder: number;
+}
 
 MovieActor.init(
   {

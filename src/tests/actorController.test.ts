@@ -98,10 +98,12 @@ describe('Actor Controller', () => {
           'id', a.id, 'imdbId', a.imdb_id, 'actorName', a.actor_name, 'biography', a.biography, 
           'birthday', a.birthday, 'deathday', a.deathday, 'placeOfBirth', a.place_of_birth,
           'popularity', a.popularity, 'profilePictureUrl', a.profile_picture_url, 'movies', (
-              SELECT jsonb_agg(jsonb_build_object('id', m.id, 'title', m.title, 'releaseDate', m.release_date, 'genres', m.genres, 'runtime', m.runtime,
-              'ratingAverage', m.rating_average, 'ratingCount', m.rating_count, 'posterUrl', m.poster_url,
-              'credit', jsonb_build_object('characterName', ma.character_name, 'castOrder', ma.cast_order))) 
-              FROM movie_actor AS ma LEFT OUTER JOIN v_movie AS m ON ma.movie_id = m.id 
+              SELECT jsonb_agg(jsonb_build_object('id', m.id, 'title', m.title, 'releaseDate', m.release_date, 
+              'genres', (SELECT ARRAY_AGG(g.genre_name) FROM genre AS g JOIN UNNEST(m.genre_ids) AS gid ON g.id = gid), 
+              'runtime', m.runtime, 'ratingAverage', m.rating_average, 'ratingCount', m.rating_count, 
+              'posterUrl', m.poster_url, 'credit', jsonb_build_object('characterName', ma.character_name, 
+              'castOrder', ma.cast_order))) 
+              FROM movie_actor AS ma LEFT OUTER JOIN movie AS m ON ma.movie_id = m.id 
               WHERE ma.actor_id = ${actorId}
             )
           ) FROM actor a WHERE a.id = ${actorId};
@@ -146,10 +148,7 @@ describe('Actor Controller', () => {
       const pages = [1, 2, 7, 8, 3];
 
       for (const page of pages) {
-        const url =
-          page > 1
-            ? `/api/v1/actors/search?q=john&pageNumber=${page}`
-            : `/api/v1/actors/search?q=john`;
+        const url = page > 1 ? `/api/v1/actors/search?q=john&pageNumber=${page}` : `/api/v1/actors/search?q=john`;
 
         const response = await server.get(url);
         const expectedActors = await execQuery(

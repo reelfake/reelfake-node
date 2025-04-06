@@ -1,8 +1,19 @@
-import { DataTypes } from 'sequelize';
+import { DataTypes, CreationOptional } from 'sequelize';
 import BaseModel from './baseModel';
 import sequelize from '../sequelize.config';
 
-class Actor extends BaseModel {}
+class Actor extends BaseModel {
+  declare id: CreationOptional<number>;
+  declare tmdbId: number;
+  declare imdbId: string;
+  declare actorName: string;
+  declare biography: string;
+  declare birthday: Date;
+  declare deathday: Date;
+  declare placeOfBirth: string;
+  declare popularity: number;
+  declare profilePictureUrl: string;
+}
 
 Actor.init(
   {
@@ -14,10 +25,13 @@ Actor.init(
     tmdbId: {
       type: DataTypes.INTEGER,
       field: 'tmdb_id',
+      unique: true,
     },
     imdbId: {
       type: DataTypes.INTEGER,
       field: 'imdb_id',
+      allowNull: true,
+      unique: true,
     },
     actorName: {
       type: DataTypes.STRING,

@@ -1,7 +1,8 @@
-import { DataTypes, Op, CreationOptional } from 'sequelize';
+import { DataTypes, Op, CreationOptional, WhereOptions } from 'sequelize';
 import BaseModel from './baseModel';
 import GenreModel from './genreModel';
 import CountryModel from './countryModel';
+import ActorModel from './actorModel';
 import MovieLanguageModel from './movieLanguageModel';
 import sequelize from '../sequelize.config';
 
@@ -26,6 +27,18 @@ class Movie extends BaseModel {
   declare posterUrl: string;
   declare rentalRate: number;
   declare rentalDuration: number;
+
+  public static async getRowsCountWhere(conditions: WhereOptions[]) {
+    const where = conditions.reduce<WhereOptions>((acc, curr) => {
+      acc = { ...acc, ...curr };
+      return acc;
+    }, {});
+
+    const countOfRows = await Movie.count({
+      where: conditions.length > 0 ? where : undefined,
+    });
+    return countOfRows;
+  }
 }
 
 Movie.init(
@@ -39,6 +52,7 @@ Movie.init(
       type: DataTypes.INTEGER,
       field: 'tmdb_id',
       allowNull: false,
+      unique: true,
       validate: {
         isNumeric: { msg: 'Tmdb id must be a number' },
         notNull: { msg: 'Tmdb id cannot be empty or null' },
@@ -47,6 +61,8 @@ Movie.init(
     imdbId: {
       type: DataTypes.STRING(60),
       field: 'imdb_id',
+      allowNull: true,
+      unique: true,
     },
     title: {
       type: DataTypes.STRING(255),

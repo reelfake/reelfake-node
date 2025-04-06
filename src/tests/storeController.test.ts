@@ -66,11 +66,14 @@ describe('Store Controller', () => {
 
         const expectedMovies = await execQuery(`
                 SELECT i.id AS "inventoryId", m.id, m.imdb_id AS "imdbId", m.title, m.original_title AS "originalTitle",
-                m.overview, m.runtime, m.release_date AS "releaseDate", m.genres, m.countries_of_origin as "countriesOfOrigin", 
-                m.language_code AS "language", m.movie_status AS "movieStatus", m.popularity, m.budget, m.revenue,
+                m.overview, m.runtime, m.release_date AS "releaseDate", 
+                (SELECT ARRAY_AGG(g.genre_name) FROM genre AS g JOIN UNNEST(m.genre_ids) AS gid ON g.id = gid) AS genres,
+                (SELECT ARRAY_AGG(c.iso_country_code) FROM country AS c JOIN UNNEST(m.origin_country_ids) AS cid ON c.id = cid) AS "countriesOfOrigin", 
+                (SELECT l.iso_language_code FROM movie_language AS l WHERE l.id = language_id) AS language,
+                m.movie_status AS "movieStatus", m.popularity, m.budget, m.revenue,
                 m.rating_average AS "ratingAverage", m.rating_count "ratingCount", m.poster_url AS "posterUrl",
                 m.rental_rate AS "rentalRate", m.rental_duration AS "rentalDuration", i.stock_count AS stock
-                FROM inventory AS i LEFT OUTER JOIN v_movie AS m ON m.id = i.movie_id
+                FROM inventory AS i LEFT OUTER JOIN movie AS m ON m.id = i.movie_id
                 WHERE i.store_id = ${storeId}
                 ORDER BY i.stock_count DESC
                 LIMIT ${ITEMS_COUNT_PER_PAGE_FOR_TEST}

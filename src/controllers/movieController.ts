@@ -1,10 +1,38 @@
 import type { Request, Response } from 'express';
-import { Op, WhereOptions, InferCreationAttributes } from 'sequelize';
-import { Fn } from 'sequelize/lib/utils';
+import { Op, WhereOptions, fn, literal } from 'sequelize';
+import { Literal } from 'sequelize/lib/utils';
 import { executeQuery, AppError } from '../utils';
-import { MovieModel, MovieViewModel } from '../models';
-import { ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
+import { ActorModel, MovieActorModel, MovieModel } from '../models';
+import { ITEMS_PER_PAGE_FOR_PAGINATION, availableGenres } from '../constants';
+import { CustomRequestWithBody, IncomingMovie } from '../types';
 import sequelize from '../sequelize.config';
+
+const movieModelAttributes: (string | [Literal, string])[] = [
+  'id',
+  'imdbId',
+  'title',
+  'originalTitle',
+  'overview',
+  'runtime',
+  'releaseDate',
+  [literal(`(SELECT ARRAY_AGG(g.genre_name) FROM genre AS g JOIN UNNEST(genre_ids) AS gid ON g.id = gid)`), 'genres'],
+  [
+    literal(
+      `(SELECT ARRAY_AGG(c.iso_country_code) FROM country AS c JOIN UNNEST(origin_country_ids) AS cid ON c.id = cid)`
+    ),
+    'countriesOfOrigin',
+  ],
+  [literal(`(SELECT l.iso_language_code FROM movie_language AS l WHERE l.id = language_id)`), 'language'],
+  'movieStatus',
+  'popularity',
+  'budget',
+  'revenue',
+  'ratingAverage',
+  'ratingCount',
+  'posterUrl',
+  'rentalRate',
+  'rentalDuration',
+];
 
 function getReleaseDatesRangeFromQuery(req: Request) {
   const { releaseYear: releaseYearText, releaseFrom, releaseTo } = req.query;
@@ -21,22 +49,16 @@ function getReleaseDatesRangeFromQuery(req: Request) {
   return [];
 }
 
-const getMoviesUsingQuery = async (
-  pageNumber: number,
-  genres: string[],
-  orderBy: string,
-  filter: string = ''
-) => {
-  if (!MovieViewModel.sequelize) {
+const getMoviesUsingQuery = async (pageNumber: number, genresIds: number[], orderBy: string, filter: string = '') => {
+  if (!MovieModel.sequelize) {
     throw new AppError('Server encoutered unhandled exception', 500);
   }
 
-  const startingRowNumber =
-    pageNumber * ITEMS_PER_PAGE_FOR_PAGINATION - ITEMS_PER_PAGE_FOR_PAGINATION;
+  const startingRowNumber = pageNumber * ITEMS_PER_PAGE_FOR_PAGINATION - ITEMS_PER_PAGE_FOR_PAGINATION;
 
   const filters: string[] = [];
-  if (genres.length > 0) {
-    const genresQuery = `genres @> '{${genres.map((g) => `"${g}"`).join(',')}}'`;
+  if (genresIds.length > 0) {
+    const genresQuery = `m.genre_ids @> '{${genresIds.map((gId) => `${gId}`).join(',')}}'`;
     filters.push(genresQuery);
   }
   if (filter) {
@@ -44,27 +66,36 @@ const getMoviesUsingQuery = async (
   }
 
   let filterText = filters.length > 1 ? filters.join(' AND ').trim() : filters[0];
-  const whereClause = filterText ? `WHERE ${filterText}` : '';
+  const whereClause = filterText ? `HAVING ${filterText}` : '';
+  const orderByFields = orderBy
+    .split(',')
+    .map((field) => `m.${field.trim()}`)
+    .join(',');
 
   const queryText = `
-    WITH movies_with_row_number AS (
-      SELECT ROW_NUMBER() OVER (ORDER BY ${orderBy} ASC) AS "rowNumber", *
-      FROM v_movie ${whereClause}
+    WITH exppanded_movies AS (
+      SELECT ROW_NUMBER() OVER (ORDER BY ${orderByFields} ASC) AS "rowNumber", m.id, 
+      m.title, m.overview, m.runtime, m.release_date AS "releaseDate", ARRAY_AGG(distinct g.genre_name) AS genres,
+      ARRAY_AGG(distinct c.iso_country_code) AS "countriesOfOrigin", ml.iso_language_code as language,
+      m.popularity, m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl",
+      m.rental_rate AS "rentalRate", m.rental_duration AS "rentalDuration"
+      FROM movie AS m LEFT JOIN country AS c ON c.id = ANY(m.origin_country_ids)
+      LEFT JOIN genre AS g ON g.id = ANY(m.genre_ids)
+      LEFT JOIN movie_language ml ON m.language_id = ml.id
+      GROUP BY m.id, ml.iso_language_code ${whereClause}
+      ORDER BY ${orderByFields}
     )
-    SELECT id, title, overview, runtime, 
-    release_date AS "releaseDate", genres, countries_of_origin as "countriesOfOrigin", language_code AS "language", 
-    popularity, rating_average AS "ratingAverage", rating_count AS "ratingCount", 
-    poster_url AS "posterUrl", rental_rate AS "rentalRate", rental_duration AS "rentalDuration" 
-    from movies_with_row_number WHERE "rowNumber" > ${startingRowNumber} LIMIT ${ITEMS_PER_PAGE_FOR_PAGINATION}
+    SELECT id, title, overview, runtime, "releaseDate", genres, "countriesOfOrigin", language,
+    popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate", "rentalDuration" 
+    FROM exppanded_movies WHERE "rowNumber" > ${startingRowNumber} LIMIT ${ITEMS_PER_PAGE_FOR_PAGINATION}
   `;
 
-  const movies = await executeQuery(MovieViewModel.sequelize, queryText);
-
+  const movies = await executeQuery(MovieModel.sequelize, queryText);
   return movies;
 };
 
 export const getMovies = async (req: Request, res: Response) => {
-  if (!MovieViewModel.sequelize) {
+  if (!MovieModel.sequelize) {
     throw new AppError('Server encoutered unhandled exception', 500);
   }
 
@@ -74,12 +105,16 @@ export const getMovies = async (req: Request, res: Response) => {
   const genres = genresText ? genresText.toString().split(',') : [];
   const limitPerPage = ITEMS_PER_PAGE_FOR_PAGINATION;
 
+  const genreIds = Object.entries(availableGenres)
+    .filter(([key, value]) => genres.includes(value))
+    .map(([key]) => Number(key));
+
   const conditions: WhereOptions[] = [];
 
   if (genres.length > 0) {
     conditions.push({
-      genres: {
-        [Op.contains]: genres,
+      genreIds: {
+        [Op.contains]: genreIds,
       },
     });
   }
@@ -96,11 +131,11 @@ export const getMovies = async (req: Request, res: Response) => {
     });
   }
 
-  const totalMovies = await MovieViewModel.getRowsCountWhere(conditions);
+  const totalMovies = await MovieModel.getRowsCountWhere(conditions);
 
   const movies = await getMoviesUsingQuery(
     pageNumber,
-    genres,
+    genreIds,
     queryHasReleaseDates ? 'release_date, id' : 'id',
     queryHasReleaseDates ? `release_date BETWEEN '${startDate}' AND '${endDate}'` : ''
   );
@@ -130,45 +165,23 @@ export const getMovieById = async (req: Request, res: Response) => {
   const id = Number(idText);
   const includeActors = includeActorsText === 'true';
 
-  const attributes: (string | [Fn, string])[] = [
-    'id',
-    'imdbId',
-    'title',
-    'originalTitle',
-    'overview',
-    'runtime',
-    'releaseDate',
-    'genres',
-    'countriesOfOrigin',
-    'language',
-    'movieStatus',
-    'popularity',
-    'budget',
-    'revenue',
-    'ratingAverage',
-    'ratingCount',
-    'posterUrl',
-    'rentalRate',
-    'rentalDuration',
-  ];
-
-  if (includeActors) {
-    attributes.push([sequelize.fn('public.get_actors', id), 'actors']);
-  }
-
-  const movie = await MovieViewModel.findOne({
+  const movie = await MovieModel.findOne({
     where: {
       id,
     },
-    attributes,
+    attributes: includeActors
+      ? [...movieModelAttributes, [fn('public.get_actors', id), 'actors']]
+      : [...movieModelAttributes],
   });
 
   // The below one also works but it gives unnecessary nested role object inside every actors.
-  // const movie = await MovieViewModel.findOne({
+  // const movie = await MovieModel.findOne({
   //   where: {
   //     id,
   //   },
-  //   attributes: { exclude: ['tmdbId'] },
+  //   attributes: {
+  //     exclude: ['tmdbId'],
+  //   },
   //   include: includeActors
   //     ? [
   //         {
@@ -201,7 +214,7 @@ export const searchMovies = async (req: Request, res: Response) => {
 
   const pageNumber = Number(pageNumberText);
 
-  const totalRows = await MovieViewModel.getRowsCountWhere([
+  const totalRows = await MovieModel.getRowsCountWhere([
     {
       title: {
         [Op.like]: `%${q}%`,
@@ -209,24 +222,8 @@ export const searchMovies = async (req: Request, res: Response) => {
     },
   ]);
 
-  const attributesToInclude = [
-    'id',
-    'title',
-    'runtime',
-    'releaseDate',
-    'genres',
-    'countriesOfOrigin',
-    'language',
-    'popularity',
-    'ratingAverage',
-    'ratingCount',
-    'posterUrl',
-    'rentalRate',
-    'rentalDuration',
-  ];
-
-  const result = await MovieViewModel.findAll({
-    attributes: attributesToInclude,
+  const result = await MovieModel.findAll({
+    attributes: movieModelAttributes,
     where: {
       title: {
         [Op.like]: `%${q}%`,
@@ -262,7 +259,7 @@ export const findInStores = async (req: Request, res: Response) => {
       SELECT s.id, i.id AS "inventoryId", m.id AS "movieId", a.address_line AS "addressLine", c.city_name AS "city",
       c.state_name AS "state", a.postal_code AS "postalCode", cy.country_name AS "country", s.phone_number AS "phoneNumber",
       i.stock_count AS "stock" FROM inventory AS i LEFT OUTER JOIN store AS s ON i.store_id = s.id
-      LEFT OUTER JOIN v_movie AS m ON i.movie_id = m.id LEFT OUTER JOIN address AS a ON s.address_id = a.id
+      LEFT OUTER JOIN movie AS m ON i.movie_id = m.id LEFT OUTER JOIN address AS a ON s.address_id = a.id
       LEFT OUTER JOIN city AS c on a.city_id = c.id LEFT OUTER JOIN country AS cy ON c.country_id = cy.id
       WHERE m.id = ${id} ORDER BY i.stock_count DESC, i.id ASC;
     `);
@@ -337,44 +334,170 @@ export const findInStores = async (req: Request, res: Response) => {
   });
 };
 
-export const addMovie = async (
-  req: Request<{}, {}, InferCreationAttributes<MovieModel>>,
-  res: Response
-) => {
+export const addMovie = async (req: CustomRequestWithBody<IncomingMovie>, res: Response) => {
+  const { user } = req;
+  if (!user) {
+    throw new AppError('Invalid token', 401);
+  }
+
+  if (!user.staffId && !user.storeManagerId) {
+    throw new AppError('Unauthorized access', 403);
+  }
+
+  const newMovieFields = [
+    'tmdbId',
+    'imdbId',
+    'title',
+    'originalTitle',
+    'overview',
+    'runtime',
+    'releaseDate',
+    'genreIds',
+    'originCountryIds',
+    'languageId',
+    'movieStatus',
+    'popularity',
+    'budget',
+    'revenue',
+    'ratingAverage',
+    'ratingCount',
+    'posterUrl',
+    'rentalRate',
+    'rentalDuration',
+  ];
+
+  const newActorFields = [
+    'tmdbId',
+    'imdbId',
+    'actorName',
+    'biography',
+    'birthday',
+    'deathday',
+    'placeOfBirth',
+    'popularity',
+    'profilePictureUrl',
+  ];
+
+  const actors = req.body.actors;
+  const hasActors = actors && actors.length > 0;
+
   try {
-    const movieInstance = MovieModel.build({ ...req.body });
-    const newMovie = await movieInstance.save({
-      fields: [
-        'tmdbId',
-        'imdbId',
-        'title',
-        'originalTitle',
-        'overview',
-        'runtime',
-        'releaseDate',
-        'genreIds',
-        'originCountryIds',
-        'languageId',
-        'movieStatus',
-        'popularity',
-        'budget',
-        'revenue',
-        'ratingAverage',
-        'ratingCount',
-        'posterUrl',
-        'rentalRate',
-        'rentalDuration',
-      ],
+    const movieId = await sequelize.transaction(async (t) => {
+      const movieInstance = MovieModel.build({ ...req.body });
+      const newMovie = await movieInstance.save({
+        fields: newMovieFields,
+        transaction: t,
+      });
+
+      newMovie.setDataValue('genreIds', undefined);
+      newMovie.setDataValue('originCountryIds', undefined);
+      newMovie.setDataValue('languageId', undefined);
+      newMovie.setDataValue('rentalRate', Number(newMovie.getDataValue('rentalRate')));
+
+      if (hasActors) {
+        const createdActors = await ActorModel.bulkCreate(
+          actors.map((actor) => ({
+            tmdbId: actor.tmdbId,
+            imdbId: actor.imdbId,
+            actorName: actor.actorName,
+            biography: actor.biography,
+            birthday: actor.birthday,
+            deathday: actor.deathday,
+            placeOfBirth: actor.placeOfBirth,
+            popularity: actor.popularity,
+            profilePictureUrl: actor.profilePictureUrl,
+          })),
+          {
+            fields: newActorFields,
+            ignoreDuplicates: true,
+            transaction: t,
+          }
+        );
+
+        const newActorIdsAndTmdbIds = await ActorModel.findAll({
+          attributes: ['id', 'tmdbId'],
+          where: {
+            tmdbId: {
+              [Op.in]: createdActors.map((actor) => actor.getDataValue('tmdbId')),
+            },
+          },
+          transaction: t,
+        });
+
+        const newMovieActorRecords: Array<{
+          actorId: number;
+          characterName: string;
+          castOrder: number;
+        }> = [];
+
+        for (const idAndTmdbId of newActorIdsAndTmdbIds) {
+          const actorId = idAndTmdbId.getDataValue('id');
+          const tmdbId = idAndTmdbId.getDataValue('tmdbId');
+          const newMovieActorData = actors.find((a) => a.tmdbId === tmdbId);
+
+          if (!newMovieActorData) {
+            throw new AppError(`There was an error adding actor with tmdbId ${tmdbId}`, 500);
+          }
+
+          const characterName = newMovieActorData.characterName;
+          const castOrder = newMovieActorData.castOrder;
+
+          newMovieActorRecords.push({
+            actorId,
+            characterName,
+            castOrder,
+          });
+        }
+
+        await MovieActorModel.bulkCreate(
+          newMovieActorRecords.map((movieActor) => ({
+            movieId: newMovie.getDataValue('id'),
+            actorId: movieActor.actorId,
+            characterName: movieActor.characterName,
+            castOrder: movieActor.castOrder,
+          })),
+          {
+            fields: ['movieId', 'actorId', 'characterName', 'castOrder'],
+            ignoreDuplicates: false,
+            transaction: t,
+          }
+        );
+      }
+
+      const createdMovieId = newMovie.getDataValue('id');
+
+      if (!createdMovieId) {
+        throw new AppError('There was an error adding the movie', 500);
+      }
+
+      return createdMovieId;
     });
 
-    newMovie.setDataValue('genreIds', undefined);
-    newMovie.setDataValue('originCountryIds', undefined);
-    newMovie.setDataValue('languageId', undefined);
-    newMovie.setDataValue('rentalRate', Number(newMovie.getDataValue('rentalRate')));
+    const createdMovieDetail = await MovieModel.findOne({
+      where: {
+        id: movieId,
+      },
+      attributes: hasActors
+        ? [
+            ...movieModelAttributes,
+            [
+              literal(`(SELECT ARRAY_AGG(g.genre_name) FROM genre AS g JOIN UNNEST(genre_ids) AS gid ON g.id = gid)`),
+              'genres',
+            ],
+            [
+              literal(
+                `(SELECT ARRAY_AGG(c.iso_country_code) FROM country AS c JOIN UNNEST(origin_country_ids) AS cid ON c.id = cid)`
+              ),
+              'countriesOfOrigin',
+            ],
+            [literal(`(SELECT l.iso_language_code FROM movie_language AS l WHERE l.id = language_id)`), 'language'],
+            [sequelize.fn('public.get_actors', movieId), 'actors'],
+          ]
+        : movieModelAttributes,
+    });
 
-    res.status(201).json(newMovie);
+    res.status(201).json(createdMovieDetail);
   } catch (err: unknown) {
-    console.log(err);
     throw new AppError((err as Error).message, 500);
   }
 };

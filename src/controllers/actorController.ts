@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
-import { Op } from 'sequelize';
-import { ActorModel, MovieViewModel } from '../models';
+import { Op, literal } from 'sequelize';
+import { ActorModel, MovieModel } from '../models';
 import { AppError } from '../utils';
 import { ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
 
@@ -98,14 +98,17 @@ export const getActorById = async (req: Request, res: Response) => {
     include: includeMovies
       ? [
           {
-            model: MovieViewModel,
+            model: MovieModel,
             as: 'movies',
             through: { as: 'credit', attributes: ['characterName', 'castOrder'] },
             attributes: [
               'id',
               'title',
               'releaseDate',
-              'genres',
+              [
+                literal(`(SELECT ARRAY_AGG(g.genre_name) FROM genre AS g JOIN UNNEST(genre_ids) AS gid ON g.id = gid)`),
+                'genres',
+              ],
               'runtime',
               'ratingAverage',
               'ratingCount',

@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import express from 'express';
+import compression from 'compression';
 import path from 'path';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
@@ -13,11 +14,11 @@ import {
   movieRoutes,
   actorRoutes,
   storeRoutes,
+  staffRoutes,
 } from './routes';
 
 // app.use(cors());
 // app.use(helmet());
-// app.use(compression());
 // app.use(morgan('tiny', { stream: logStream }));
 // app.use(bodyParser.json());
 
@@ -26,6 +27,7 @@ const app = express();
 app.use(express.json());
 app.use(cors({ credentials: true }));
 app.use(cookieParser());
+app.use(compression());
 
 app.get('/api/v1', (req: Request, res: Response) => {
   res.status(200).json({
@@ -67,6 +69,8 @@ app.use('/api/v1/movies', movieRoutes);
 app.use('/api/v1/actors', actorRoutes);
 
 app.use('/api/v1/stores', storeRoutes);
+
+app.use('/api/v1/staff', staffRoutes);
 
 app.use('*', (req: Request, res: Response) => {
   res.status(404).json({

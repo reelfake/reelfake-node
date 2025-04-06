@@ -33,6 +33,6 @@ City.init(
   }
 );
 
-City.belongsTo(Country, { as: 'country', foreignKey: 'country_id' });
+City.belongsTo(Country, { as: 'country', foreignKey: 'countryId' });
 
 export default City;

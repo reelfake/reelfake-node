@@ -93,8 +93,7 @@ export const updateUser = async (req: CustomRequest, res: Response) => {
   await user.save();
 
   res.status(200).json({
-    message:
-      'User data is updated successfully. You will need to log in again for the changes to take effect.',
+    message: 'User data is updated successfully. You will need to log in again for the changes to take effect.',
   });
 };
 
@@ -113,10 +112,7 @@ export const registerUser = async (req: Request, res: Response) => {
 
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
-  await UserModel.create(
-    { userEmail: email, userPassword: hashedPassword },
-    { fields: ['userEmail', 'userPassword'] }
-  );
+  await UserModel.create({ userEmail: email, userPassword: hashedPassword }, { fields: ['userEmail', 'userPassword'] });
   res.status(201).json({ message: 'User is registered successfully' });
 };
 

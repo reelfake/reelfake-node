@@ -61,13 +61,22 @@ export async function execQuery(
   return result as Array<{ [key: string]: string }>;
 }
 
-export async function queryMovieObject(id: number, fieldMap: Record<string, string>) {
-  const result = await sequelize.query(`SELECT * FROM v_movie WHERE id = ${id}`, {
-    type: QueryTypes.SELECT,
-    raw: true,
-    plain: false,
-    fieldMap,
-  });
+export async function queryMovieObject(id: number) {
+  const result = await sequelize.query(
+    `SELECT id, imdb_id AS "imdbId", title, original_title AS "originalTitle", 
+    overview, runtime, release_date AS "releaseDate",
+    (SELECT ARRAY_AGG(g.genre_name) FROM genre AS g JOIN UNNEST(genre_ids) AS gid ON g.id = gid) AS genres,
+    (SELECT ARRAY_AGG(c.iso_country_code) FROM country AS c JOIN UNNEST(origin_country_ids) AS cid ON c.id = cid) AS "countriesOfOrigin",
+    (SELECT l.iso_language_code FROM movie_language AS l WHERE l.id = language_id) AS language,
+    movie_status AS "movieStatus", popularity, budget, revenue, rating_average AS "ratingAverage", rating_count AS "ratingCount", 
+    poster_url AS "posterUrl", rental_rate AS "rentalRate", rental_duration AS "rentalDuration"
+    FROM movie WHERE id = ${id}`,
+    {
+      type: QueryTypes.SELECT,
+      raw: true,
+      plain: false,
+    }
+  );
   if (result.length > 0) {
     return result[0];
   }
@@ -77,14 +86,11 @@ export async function queryMovieObject(id: number, fieldMap: Record<string, stri
 export async function getRowsCount(tableName: string, where?: string): Promise<number> {
   try {
     const whereClause = where ? ' WHERE ' + where : '';
-    const result = await sequelize.query<{ count: number }>(
-      `SELECT count(*) FROM ${tableName}${whereClause}`,
-      {
-        type: QueryTypes.SELECT,
-        raw: false,
-        plain: false,
-      }
-    );
+    const result = await sequelize.query<{ count: number }>(`SELECT count(*) FROM ${tableName}${whereClause}`, {
+      type: QueryTypes.SELECT,
+      raw: false,
+      plain: false,
+    });
     return Number(result[0].count);
   } catch (err) {
     console.log('getRowsCount -> ', err);

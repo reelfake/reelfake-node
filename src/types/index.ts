@@ -1,6 +1,5 @@
 import type { Request } from 'express';
-import { DataType } from 'sequelize';
-import { JwtPayload } from 'jsonwebtoken';
+import { DataType, Model } from 'sequelize';
 import type { Sequelize } from 'sequelize';
 
 export type ModelField = {
@@ -18,7 +17,26 @@ export type ModelConfig = {
   fields: ModelField;
 };
 
+export type TransactionResult = {
+  status: 'success' | 'error';
+  errorMessage: string;
+  data: Model;
+};
+
 export interface CustomRequest extends Request {
+  user?: {
+    userUUID: string;
+    userEmail: string;
+    customerId?: number;
+    staffId?: number;
+    storeManagerId?: number;
+  };
+  genres?: string[];
+  languages?: string[];
+  languageIds?: number[];
+}
+
+export interface CustomRequestWithBody<T> extends Request<{}, {}, T> {
   user?: {
     userUUID: string;
     userEmail: string;
@@ -49,6 +67,21 @@ export type IncomingMovie = {
   ratingAverage: number;
   ratingCount: number;
   posterUrl: string;
-  rentalRate: number;
-  rentalDuration: number;
+  rentalRate?: number;
+  rentalDuration?: number;
+  actors?: NewMovieActorPayload[];
+};
+
+export type NewMovieActorPayload = {
+  tmdbId: number;
+  imdbId: string;
+  actorName: string;
+  biography: string;
+  birthday: Date;
+  deathday: Date;
+  placeOfBirth: string;
+  popularity: number;
+  profilePictureUrl: string;
+  characterName: string;
+  castOrder: number;
 };
