@@ -3,7 +3,7 @@ get:
   operationId: getMovieById
   parameters:
     - in: path
-      name: movieId
+      name: id
       required: true
       description: The id of the move that is requested
       schema:
@@ -18,30 +18,17 @@ get:
         given, then 400 is returned.
       schema:
         type: boolean
+        default: false
   responses:
     '200':
       description: Successfully returned the movie data with or without the actors
       content:
         application/json:
           schema:
-            $ref: ../components/movieWithActors.yaml
+            $ref: ../components/movieDetail.yaml
     '400':
-      description: Bad request
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
+      $ref: ../components/badRequest.yaml
     '404':
-      description: The movie does not exist for the given id
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-    '401':
-      $ref: ../components/unauthorized.yaml
+      $ref: ../components/notFound.yaml
+    '500':
+      $ref: ../components/internalServerError.yaml

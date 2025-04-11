@@ -13,7 +13,7 @@ get:
         default: 1
   responses:
     '200':
-      description: Successfully returned a list of actors
+      description: Successfully returned an array of actorItem
       content:
         application/json:
           schema:
@@ -22,7 +22,7 @@ get:
               items:
                 type: array
                 items:
-                  $ref: ../components/actor.yaml
+                  $ref: ../components/actorItem.yaml
               length:
                 type: integer
               totalPages:
@@ -30,13 +30,74 @@ get:
               totalItems:
                 type: integer
     '400':
-      description: Bad request
+      $ref: ../components/badRequest.yaml
+    '500':
+      $ref: ../components/internalServerError.yaml
+post:
+  summary: Add new actor
+  operationId: addActor
+  requestBody:
+    description: Payload for the new actor
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            tmdbId:
+              type: string
+            imdbId:
+              type: string
+            actorName:
+              type: string
+            biography:
+              type: string
+            birthday:
+              type: string
+              format: date
+            deathday:
+              type: string
+              format: date
+            placeOfBirth:
+              type: string
+            popularity:
+              type: number
+              format: float
+            profilePictureUrl:
+              type: string
+              format: uri
+  responses:
+    '201':
+      description: Successfully added new actor
       content:
         application/json:
           schema:
             type: object
             properties:
-              message:
+              id:
+                type: integer
+              imdbId:
                 type: string
+              actorName:
+                type: string
+              biography:
+                type: string
+              birthday:
+                type: string
+                format: date
+              deathday:
+                type: string
+                format: date
+              placeOfBirth:
+                type: string
+              popularity:
+                type: number
+                format: float
+              profilePictureUrl:
+                type: string
+    '400':
+      $ref: ../components/badRequest.yaml
     '401':
       $ref: ../components/unauthorized.yaml
+    '500':
+      $ref: ../components/internalServerError.yaml

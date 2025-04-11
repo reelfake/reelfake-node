@@ -27,7 +27,7 @@ get:
         type: string
   responses:
     '200':
-      description: Successfully returned a list of actors
+      description: Successfully returned an array of actorItem
       headers:
         rf-page-number:
           description: The page number for the page that is sent
@@ -41,7 +41,7 @@ get:
               items:
                 type: array
                 items:
-                  $ref: ../components/actor.yaml
+                  $ref: ../components/actorItem.yaml
               length:
                 type: integer
               totalPages:

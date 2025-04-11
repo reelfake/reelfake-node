@@ -1,9 +1,11 @@
-/auth/register:
+/user/register:
   $ref: apis/userRegistration.yaml
-/auth/login:
+/user/login:
   $ref: apis/userLogin.yaml
-/auth/logout:
+/user/logout:
   $ref: apis/userLogout.yaml
+/user/me:
+  $ref: apis/user.yaml
 /genres:
   $ref: apis/genres.yaml
 /cities:
@@ -14,8 +16,12 @@
   $ref: apis/movieLanguages.yaml
 /movies:
   $ref: apis/movies.yaml
-/movies/{movieId}:
-  $ref: apis/movie.yaml
+/movies/{id}:
+  $ref: apis/movieById.yaml
+/movies/{id}/add_actors:
+  $ref: apis/addActorsToMovie.yaml
+/movies/search:
+  $ref: apis/searchMovies.yaml
 /movies/{id}/stores:
   $ref: apis/movieInStores.yaml
 /actors:
@@ -26,7 +32,11 @@
   $ref: apis/actorById.yaml
 /stores:
   $ref: apis/stores.yaml
+/stores/{id}:
+  $ref: apis/storeById.yaml
 /stores/{id}/stock:
   $ref: apis/stockCountInStore.yaml
 /stores/{id}/movies:
   $ref: apis/moviesInStore.yaml
+/store/{id}/staff:
+  $ref: apis/staffInStore.yaml

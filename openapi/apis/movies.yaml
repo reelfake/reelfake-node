@@ -24,7 +24,7 @@ get:
       name: releaseYear
       required: false
       description: |
-        The release year to use for filtering the movies by release date.
+        The release year to use for filtering the movies by release date. If release year is specified then release from and release to are ignored.
       schema:
         type: integer
     - in: query
@@ -32,6 +32,7 @@ get:
       required: false
       description: |
         The release date as the starting point of date range to filter the movies by release date.
+        Use either release from / to or release year. If release year is specified then release from and release to are ignored.
         The date format is yyy-mm-dd.
         For example, 2024-01-01 for January 1st 2024 or 2024-12-31 for December 31st 2024.
       schema:
@@ -49,7 +50,7 @@ get:
         format: date
   responses:
     '200':
-      description: Successfully returned a list of movies for the given page
+      description: Successfully returned an array of movieItem for the given page
       headers:
         rf-page-number:
           description: The page number that the list of movies returned belong to
@@ -63,7 +64,7 @@ get:
               items:
                 type: array
                 items:
-                  $ref: ../components/movieSummary.yaml
+                  $ref: ../components/movieItem.yaml
               length:
                 type: integer
               totalPages:
@@ -71,16 +72,9 @@ get:
               totalItems:
                 type: integer
     '400':
-      description: Bad request
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
+      $ref: ../components/badRequest.yaml
     '404':
-      description: The page is out of range meaning the page number provided in the request query has exceeded the total number of movies present.
+      description: The page number provided is out of range.
       content:
         application/json:
           schema:
@@ -88,5 +82,162 @@ get:
             properties:
               message:
                 type: string
+    '500':
+      $ref: ../components/internalServerError.yaml
+post:
+  summary: Add new movie
+  operationId: addMovie
+  requestBody:
+    description: Payload for the new movie
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            tmdbId:
+              type: integer
+            imdbId:
+              type: string
+            title:
+              type: string
+            originalTitle:
+              type: string
+            overview:
+              type: string
+            runtime:
+              type: integer
+            releaseDate:
+              type: string
+              format: date
+            genres:
+              type: array
+              items:
+                type: string
+            countriesOfOrigin:
+              type: array
+              items:
+                type: string
+            language:
+              type: string
+            movieStatus:
+              type: string
+            popularity:
+              type: number
+              format: float
+            budget:
+              type: integer
+              format: int64
+            revenue:
+              type: integer
+              format: int64
+            ratingAverage:
+              type: number
+              format: float
+            ratingCount:
+              type: integer
+            posterUrl:
+              type: string
+              format: uri
+            rentalRate:
+              type: number
+              format: double
+            rentalDuration:
+              type: integer
+              format: int32
+            actors:
+              type: array
+              items:
+                type: object
+                properties:
+                  tmdbId:
+                    type: integer
+                  imdbId:
+                    type: string
+                  actorName:
+                    type: string
+                  biography:
+                    type: string
+                  birthday:
+                    type: string
+                    format: date
+                  deathday:
+                    type: string
+                    format: date
+                  placeOfBirth:
+                    type: string
+                  popularity:
+                    type: number
+                    format: float
+                  profilePictureUrl:
+                    type: string
+                    format: uri
+                  characterName:
+                    type: string
+                  castOrder:
+                    type: integer
+  responses:
+    '201':
+      description: Successfully add new movie
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              id:
+                type: integer
+              imdbId:
+                type: integer
+              title:
+                type: string
+              originalTitle:
+                type: string
+              overview:
+                type: string
+              runtime:
+                type: integer
+              releaseDate:
+                type: string
+                format: date
+              genres:
+                type: array
+                items:
+                  type: string
+              countriesOfOrigin:
+                type: array
+                items:
+                  type: string
+              language:
+                type: string
+              movieStatus:
+                type: string
+              popularity:
+                type: number
+                format: float
+              budget:
+                type: integer
+                format: int64
+              revenue:
+                type: integer
+                format: int64
+              ratingAverage:
+                type: number
+                format: float
+              ratingCount:
+                type: integer
+              posterUrl:
+                type: string
+                format: uri
+              rentalRate:
+                type: number
+                format: double
+              rentalDuration:
+                type: integer
+    '400':
+      $ref: ../components/badRequest.yaml
     '401':
       $ref: ../components/unauthorized.yaml
+    '404':
+      $ref: ../components/notFound.yaml
+    '500':
+      $ref: ../components/internalServerError.yaml

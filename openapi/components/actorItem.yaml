@@ -2,11 +2,7 @@ type: object
 properties:
   id:
     type: integer
-  imdbId:
-    type: string
   actorName:
-    type: string
-  biography:
     type: string
   birthday:
     type: string

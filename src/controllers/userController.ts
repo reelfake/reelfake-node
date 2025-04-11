@@ -8,6 +8,34 @@ import { Op, WhereOptions } from 'sequelize';
 
 const JWT_SECRET = process.env.JWT_SECRET || '';
 
+function generateAuthToken(user: UserModel) {
+  const auth_token = jwt.sign(
+    {
+      id: user.getDataValue('userUUID'),
+      userEmail: user.getDataValue('userEmail'),
+      customerId: user.getDataValue('customerId'),
+      staffId: user.getDataValue('staffId'),
+      storeManagerId: user.getDataValue('storeManagerId'),
+      createdAt: Date.now(),
+    },
+    JWT_SECRET,
+    { expiresIn: '1h' }
+  );
+
+  return auth_token;
+}
+
+async function findUser(userUUID: string, userEmail: string) {
+  const user = await UserModel.findOne({
+    where: {
+      userUUID,
+      userEmail,
+    },
+  });
+
+  return user;
+}
+
 export const getUser = async (req: CustomRequest, res: Response) => {
   const userFromToken = req.user;
 
@@ -45,14 +73,9 @@ export const updateUser = async (req: CustomRequest, res: Response) => {
   }
 
   const { userUUID, userEmail } = currentUser;
-  const user = await UserModel.findOne({
-    where: {
-      userUUID,
-      userEmail,
-    },
-  });
+  const userToUpdate = await findUser(userUUID, userEmail);
 
-  if (!user) {
+  if (!userToUpdate) {
     throw new AppError('Error finding user with the given user remail', 500);
   }
 
@@ -89,12 +112,18 @@ export const updateUser = async (req: CustomRequest, res: Response) => {
     throw new AppError(`Another user with the same config already exist.`, 400);
   }
 
-  user.set({ ...changes });
-  await user.save();
+  userToUpdate.set({ ...changes });
+  await userToUpdate.save();
 
-  res.status(200).json({
-    message: 'User data is updated successfully. You will need to log in again for the changes to take effect.',
-  });
+  const updatedUser = await findUser(userUUID, userEmail);
+
+  if (!updatedUser) {
+    throw new AppError('Error updating the user details', 500);
+  }
+
+  const newAuthToken = generateAuthToken(updatedUser);
+
+  res.status(204).cookie('auth_token', newAuthToken, { httpOnly: true, secure: true, sameSite: 'strict' }).send();
 };
 
 export const registerUser = async (req: Request, res: Response) => {
@@ -134,22 +163,11 @@ export const login = async (req: Request, res: Response) => {
     throw new AppError('Invalid credentials', 401);
   }
 
-  const auth_token = jwt.sign(
-    {
-      id: user.getDataValue('userUUID'),
-      userEmail: user.getDataValue('userEmail'),
-      customerId: user.getDataValue('customerId'),
-      staffId: user.getDataValue('staffId'),
-      storeManagerId: user.getDataValue('storeManagerId'),
-      createdAt: Date.now(),
-    },
-    JWT_SECRET,
-    { expiresIn: '1h' }
-  );
+  const authToken = generateAuthToken(user);
 
   res
     .status(201)
-    .cookie('auth_token', auth_token, { httpOnly: true, secure: true, sameSite: 'strict' })
+    .cookie('auth_token', authToken, { httpOnly: true, secure: true, sameSite: 'strict' })
     .json({ message: 'Login successful' });
 };
 

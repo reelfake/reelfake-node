@@ -102,9 +102,7 @@ describe('User Controller', () => {
       });
 
       const cookie = response.get('Set-Cookie')?.at(0);
-      expect(cookie).toMatch(
-        /^auth_token=([a-zA-Z0-9._-]*); Path=\/; HttpOnly; Secure; SameSite=Strict$/
-      );
+      expect(cookie).toMatch(/^auth_token=([a-zA-Z0-9._-]*); Path=\/; HttpOnly; Secure; SameSite=Strict$/);
     });
 
     it('POST /user/login should return 401 when user try to login with invalid email', async () => {
@@ -179,11 +177,7 @@ describe('User Controller', () => {
       return cookie;
     };
 
-    const verifyPatch = async (payload: {
-      customerId?: number;
-      staffId?: number;
-      storeManagerId?: number;
-    }) => {
+    const verifyPatch = async (payload: { customerId?: number; staffId?: number; storeManagerId?: number }) => {
       const cookie = await login(email, password);
 
       const getUserResponseBefore = await server.get('/api/v1/user/me').set('Cookie', cookie);
@@ -201,17 +195,11 @@ describe('User Controller', () => {
         .send({
           ...payload,
         });
-      expect(patchResponse.status).toBe(200);
-      expect(patchResponse.body).toStrictEqual({
-        message:
-          'User data is updated successfully. You will need to log in again for the changes to take effect.',
-      });
+      expect(patchResponse.status).toBe(204);
 
       const getUserResponseAfter = await server.get('/api/v1/user/me').set('Cookie', cookie);
       expect(getUserResponseAfter.body).toStrictEqual({
-        userUUID: expect.stringMatching(
-          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
-        ),
+        userUUID: expect.stringMatching(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/),
         userEmail: email,
         customerId: payload.customerId || null,
         staffId: payload.staffId || null,

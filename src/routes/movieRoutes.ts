@@ -1,8 +1,7 @@
-import { Op } from 'sequelize';
 import { Request, Response, NextFunction } from 'express';
 import { Router } from 'express';
 import { routeFnWrapper, AppError } from '../utils';
-import { findInStores, getMovieById, getMovies, searchMovies, addMovie } from '../controllers';
+import { findInStores, getMovieById, getMovies, searchMovies, addMovie, addActors } from '../controllers';
 import { validateAuthToken } from '../middlewares';
 import { GENRES } from '../constants';
 import { CustomRequest } from '../types';
@@ -47,10 +46,7 @@ function validateMovieByIdRouteQuery(req: Request, res: Response, next: NextFunc
   const includeActorsTruthies = ['true', 'yes', '1'];
   const includeActorsFalsies = ['false', 'no', '0'];
 
-  if (
-    includeActorsText &&
-    ![...includeActorsTruthies, ...includeActorsFalsies].includes(includeActorsText)
-  ) {
+  if (includeActorsText && ![...includeActorsTruthies, ...includeActorsFalsies].includes(includeActorsText)) {
     throw new AppError(
       'Invalid value for includeActors in query. Please refer to api specs for more information.',
       400
@@ -63,12 +59,7 @@ function validateMovieByIdRouteQuery(req: Request, res: Response, next: NextFunc
 }
 
 function validateMoviesRouteQuery(req: CustomRequest, res: Response, next: NextFunction) {
-  const {
-    pageNumber: pageNumberText = '1',
-    releaseYear: releaseYearText,
-    releaseFrom,
-    releaseTo,
-  } = req.query;
+  const { pageNumber: pageNumberText = '1', releaseYear: releaseYearText, releaseFrom, releaseTo } = req.query;
   const genresText = (req.query.genres as string) || '';
 
   if (isNaN(Number(pageNumberText)) || Number(pageNumberText) < 1) {
@@ -97,9 +88,7 @@ function validateMoviesRouteQuery(req: CustomRequest, res: Response, next: NextF
   }
 
   if ((releaseFrom && !releaseTo) || (!releaseFrom && releaseTo)) {
-    return next(
-      new AppError('To filter by release dates, release date from and to are required.', 400)
-    );
+    return next(new AppError('To filter by release dates, release date from and to are required.', 400));
   }
 
   if (releaseYear && releaseFrom && releaseTo) {
@@ -120,8 +109,9 @@ function validateMoviesRouteQuery(req: CustomRequest, res: Response, next: NextF
 
 router.get('/', validateMoviesRouteQuery, routeFnWrapper(getMovies));
 router.post('/', validateAuthToken, routeFnWrapper(addMovie));
+router.post('/:id/add_actors', validateAuthToken, routeFnWrapper(addActors));
 router.get('/search', routeFnWrapper(searchMovies));
-router.get('/:movieId', validateMovieByIdRouteQuery, routeFnWrapper(getMovieById));
+router.get('/:id', validateMovieByIdRouteQuery, routeFnWrapper(getMovieById));
 router.get('/:id/stores', routeFnWrapper(findInStores));
 
 export default router;

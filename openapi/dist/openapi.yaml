@@ -17,7 +17,7 @@ servers:
 security:
   - cookieAuth: []
 paths:
-  /auth/register:
+  /user/register:
     post:
       summary: Create user account
       operationId: registerUser
@@ -34,6 +34,7 @@ paths:
                   type: string
                 password:
                   type: string
+                  format: password
       responses:
         '201':
           description: Successfully created a new user
@@ -42,20 +43,20 @@ paths:
               schema:
                 type: object
                 properties:
-                  message:
+                  userEmail:
                     type: string
+                    format: email
+                  customerId:
+                    type: integer
+                  staffId:
+                    type: integer
+                  storeManagerId:
+                    type: integer
         '400':
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
+          $ref: '#/components/responses/badRequest'
         '500':
           $ref: '#/components/responses/internalServerError'
-  /auth/login:
+  /user/login:
     post:
       summary: Login user
       operationId: login
@@ -70,10 +71,12 @@ paths:
               properties:
                 email:
                   type: string
+                  format: email
                 password:
                   type: string
+                  format: password
       responses:
-        '201':
+        '204':
           description: User logged in successfully
           headers:
             Set-Cookie:
@@ -81,15 +84,10 @@ paths:
               schema:
                 type: string
                 example: auth_token=abcde12345
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
         '400':
-          description: Bad request
+          $ref: '#/components/responses/badRequest'
+        '401':
+          description: Invalid credentials
           content:
             application/json:
               schema:
@@ -99,7 +97,7 @@ paths:
                     type: string
         '500':
           $ref: '#/components/responses/internalServerError'
-  /auth/logout:
+  /user/logout:
     get:
       summary: Logout user
       operationId: logout
@@ -116,6 +114,47 @@ paths:
                 properties:
                   message:
                     type: string
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /user/me:
+    get:
+      summary: Get the user detail
+      operationId: getUser
+      responses:
+        '200':
+          description: Successfully updated the user data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    patch:
+      summary: Update customer id, staff and/or store manager id
+      operationId: updateUser
+      requestBody:
+        description: Provide customer id, staff and/or store manager id
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customerId:
+                  type: integer
+                staffId:
+                  type: integer
+                storeManagerId:
+                  type: integer
+      responses:
+        '204':
+          description: Successfully updated the user
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
         '500':
           $ref: '#/components/responses/internalServerError'
   /genres:
@@ -277,7 +316,7 @@ paths:
           name: releaseYear
           required: false
           description: |
-            The release year to use for filtering the movies by release date.
+            The release year to use for filtering the movies by release date. If release year is specified then release from and release to are ignored.
           schema:
             type: integer
         - in: query
@@ -285,6 +324,7 @@ paths:
           required: false
           description: |
             The release date as the starting point of date range to filter the movies by release date.
+            Use either release from / to or release year. If release year is specified then release from and release to are ignored.
             The date format is yyy-mm-dd.
             For example, 2024-01-01 for January 1st 2024 or 2024-12-31 for December 31st 2024.
           schema:
@@ -302,7 +342,7 @@ paths:
             format: date
       responses:
         '200':
-          description: Successfully returned a list of movies for the given page
+          description: Successfully returned an array of movieItem for the given page
           headers:
             rf-page-number:
               description: The page number that the list of movies returned belong to
@@ -316,7 +356,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: '#/components/schemas/movieSummary'
+                      $ref: '#/components/schemas/movieItem'
                   length:
                     type: integer
                   totalPages:
@@ -324,7 +364,9 @@ paths:
                   totalItems:
                     type: integer
         '400':
-          description: Bad request
+          $ref: '#/components/responses/badRequest'
+        '404':
+          description: The page number provided is out of range.
           content:
             application/json:
               schema:
@@ -332,24 +374,172 @@ paths:
                 properties:
                   message:
                     type: string
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    post:
+      summary: Add new movie
+      operationId: addMovie
+      requestBody:
+        description: Payload for the new movie
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tmdbId:
+                  type: integer
+                imdbId:
+                  type: string
+                title:
+                  type: string
+                originalTitle:
+                  type: string
+                overview:
+                  type: string
+                runtime:
+                  type: integer
+                releaseDate:
+                  type: string
+                  format: date
+                genres:
+                  type: array
+                  items:
+                    type: string
+                countriesOfOrigin:
+                  type: array
+                  items:
+                    type: string
+                language:
+                  type: string
+                movieStatus:
+                  type: string
+                popularity:
+                  type: number
+                  format: float
+                budget:
+                  type: integer
+                  format: int64
+                revenue:
+                  type: integer
+                  format: int64
+                ratingAverage:
+                  type: number
+                  format: float
+                ratingCount:
+                  type: integer
+                posterUrl:
+                  type: string
+                  format: uri
+                rentalRate:
+                  type: number
+                  format: double
+                rentalDuration:
+                  type: integer
+                  format: int32
+                actors:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      tmdbId:
+                        type: integer
+                      imdbId:
+                        type: string
+                      actorName:
+                        type: string
+                      biography:
+                        type: string
+                      birthday:
+                        type: string
+                        format: date
+                      deathday:
+                        type: string
+                        format: date
+                      placeOfBirth:
+                        type: string
+                      popularity:
+                        type: number
+                        format: float
+                      profilePictureUrl:
+                        type: string
+                        format: uri
+                      characterName:
+                        type: string
+                      castOrder:
+                        type: integer
+      responses:
+        '201':
+          description: Successfully add new movie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  imdbId:
+                    type: integer
+                  title:
+                    type: string
+                  originalTitle:
+                    type: string
+                  overview:
+                    type: string
+                  runtime:
+                    type: integer
+                  releaseDate:
+                    type: string
+                    format: date
+                  genres:
+                    type: array
+                    items:
+                      type: string
+                  countriesOfOrigin:
+                    type: array
+                    items:
+                      type: string
+                  language:
+                    type: string
+                  movieStatus:
+                    type: string
+                  popularity:
+                    type: number
+                    format: float
+                  budget:
+                    type: integer
+                    format: int64
+                  revenue:
+                    type: integer
+                    format: int64
+                  ratingAverage:
+                    type: number
+                    format: float
+                  ratingCount:
+                    type: integer
+                  posterUrl:
+                    type: string
+                    format: uri
+                  rentalRate:
+                    type: number
+                    format: double
+                  rentalDuration:
+                    type: integer
+        '400':
+          $ref: '#/components/responses/badRequest'
         '401':
           $ref: '#/components/responses/unauthorized'
         '404':
-          description: The page is out of range meaning the page number provided in the request query has exceeded the total number of movies present.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-  /movies/{movieId}:
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /movies/{id}:
     get:
       summary: Get movie detail using the id
       operationId: getMovieById
       parameters:
         - in: path
-          name: movieId
+          name: id
           required: true
           description: The id of the move that is requested
           schema:
@@ -364,26 +554,158 @@ paths:
             given, then 400 is returned.
           schema:
             type: boolean
+            default: false
       responses:
         '200':
           description: Successfully returned the movie data with or without the actors
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/movieWithActors'
+                $ref: '#/components/schemas/movieDetail'
         '400':
-          description: Bad request
+          $ref: '#/components/responses/badRequest'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /movies/{id}/add_actors:
+    post:
+      summary: Add actors to movie
+      operationId: addActors
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Id of the movie
+          schema:
+            type: integer
+      requestBody:
+        description: Payload for the new actors
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  tmdbId:
+                    type: integer
+                  imdbId:
+                    type: string
+                  actorName:
+                    type: string
+                  biography:
+                    type: string
+                  birthday:
+                    type: string
+                    format: date
+                  deathday:
+                    type: string
+                    format: date
+                  placeOfBirth:
+                    type: string
+                  popularity:
+                    type: number
+                    format: float
+                  profilePictureUrl:
+                    type: string
+                    format: uri
+                  characterName:
+                    type: string
+                  castOrder:
+                    type: integer
+      responses:
+        '201':
+          description: Successfully add actors to the movie
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    imdbId:
+                      type: integer
+                    actorName:
+                      type: string
+                    biography:
+                      type: string
+                    birthday:
+                      type: string
+                      format: date
+                    deathday:
+                      type: string
+                      format: date
+                    placeOfBirth:
+                      type: string
+                    popularity:
+                      type: number
+                      format: float
+                    profilePictureUrl:
+                      type: string
+                      format: uri
+                    characterName:
+                      type: string
+                    castOrder:
+                      type: integer
+        '400':
+          $ref: '#/components/responses/badRequest'
         '401':
           $ref: '#/components/responses/unauthorized'
         '404':
-          description: The movie does not exist for the given id
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /movies/search:
+    get:
+      summary: Search for the movie using query
+      operationId: searchMovies
+      parameters:
+        - in: query
+          name: pageNumber
+          required: false
+          description: |
+            The page number (which starts with 1) to fetch the set of movies from.
+            The movies are split into multiple pages with each page having a limited number of movies.
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: q
+          required: true
+          description: The query for searching
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully returned a list of movies matching the given query
+          headers:
+            rf-page-number:
+              description: The page number that the list of movies returned belong to
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/movieItem'
+                  length:
+                    type: integer
+                  totalPages:
+                    type: integer
+                  totalItems:
+                    type: integer
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '404':
+          description: The page number provided is out of range.
           content:
             application/json:
               schema:
@@ -391,6 +713,8 @@ paths:
                 properties:
                   message:
                     type: string
+        '500':
+          $ref: '#/components/responses/internalServerError'
   /movies/{id}/stores:
     get:
       summary: Get stock count of the movie in all the stores
@@ -413,29 +737,15 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: '#/components/schemas/storeInventory'
+                      $ref: '#/components/schemas/movieStock'
                   length:
                     type: integer
         '400':
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        '401':
-          $ref: '#/components/responses/unauthorized'
+          $ref: '#/components/responses/badRequest'
         '404':
-          description: No stores has the movie meaning the movie is out stock
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
   /actors:
     get:
       summary: Get the actor list with pagination support
@@ -452,7 +762,7 @@ paths:
             default: 1
       responses:
         '200':
-          description: Successfully returned a list of actors
+          description: Successfully returned an array of actorItem
           content:
             application/json:
               schema:
@@ -461,7 +771,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: '#/components/schemas/actor'
+                      $ref: '#/components/schemas/actorItem'
                   length:
                     type: integer
                   totalPages:
@@ -469,16 +779,77 @@ paths:
                   totalItems:
                     type: integer
         '400':
-          description: Bad request
+          $ref: '#/components/responses/badRequest'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    post:
+      summary: Add new actor
+      operationId: addActor
+      requestBody:
+        description: Payload for the new actor
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tmdbId:
+                  type: string
+                imdbId:
+                  type: string
+                actorName:
+                  type: string
+                biography:
+                  type: string
+                birthday:
+                  type: string
+                  format: date
+                deathday:
+                  type: string
+                  format: date
+                placeOfBirth:
+                  type: string
+                popularity:
+                  type: number
+                  format: float
+                profilePictureUrl:
+                  type: string
+                  format: uri
+      responses:
+        '201':
+          description: Successfully added new actor
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  message:
+                  id:
+                    type: integer
+                  imdbId:
                     type: string
+                  actorName:
+                    type: string
+                  biography:
+                    type: string
+                  birthday:
+                    type: string
+                    format: date
+                  deathday:
+                    type: string
+                    format: date
+                  placeOfBirth:
+                    type: string
+                  popularity:
+                    type: number
+                    format: float
+                  profilePictureUrl:
+                    type: string
+        '400':
+          $ref: '#/components/responses/badRequest'
         '401':
           $ref: '#/components/responses/unauthorized'
+        '500':
+          $ref: '#/components/responses/internalServerError'
   /actors/search:
     get:
       summary: Get the actor list with pagination support
@@ -509,7 +880,7 @@ paths:
             type: string
       responses:
         '200':
-          description: Successfully returned a list of actors
+          description: Successfully returned an array of actorItem
           headers:
             rf-page-number:
               description: The page number for the page that is sent
@@ -523,7 +894,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: '#/components/schemas/actor'
+                      $ref: '#/components/schemas/actorItem'
                   length:
                     type: integer
                   totalPages:
@@ -562,42 +933,27 @@ paths:
             given, then 400 is returned.
           schema:
             type: boolean
+            default: false
       responses:
         '200':
-          description: Successfully returned an actor data with (schema -> actorWithMovies) or without the movies (schema -> actor)
+          description: Successfully returned actorDetail object
           content:
             application/json:
               schema:
-                oneOf:
-                  - $ref: '#/components/schemas/actorWithMovies'
-                  - $ref: '#/components/schemas/actor'
+                $ref: '#/components/schemas/actorDetail'
         '400':
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        '401':
-          $ref: '#/components/responses/unauthorized'
+          $ref: '#/components/responses/badRequest'
         '404':
-          description: The movie does not exist for the given id
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
   /stores:
     get:
       summary: Get list of stores
       operationId: getStores
       responses:
         '200':
-          description: Successfully returned a list of stores
+          description: Successfully returned an array of storeItem
           content:
             application/json:
               schema:
@@ -606,20 +962,104 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: '#/components/schemas/store'
+                      $ref: '#/components/schemas/storeItem'
                   length:
                     type: integer
         '400':
-          description: Bad request
+          $ref: '#/components/responses/badRequest'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    post:
+      summary: Create a store
+      operationId: addStore
+      requestBody:
+        description: Payload for the new store
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                managerId:
+                  type: integer
+                phoneNumber:
+                  type: string
+                addressLine:
+                  type: string
+                city:
+                  type: string
+                state:
+                  type: string
+                country:
+                  type: string
+                postalCode:
+                  type: string
+      responses:
+        '201':
+          description: Successfully added new store
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  message:
+                  managerId:
+                    type: integer
+                  phoneNumber:
                     type: string
+                  address:
+                    type: object
+                    properties:
+                      addressLine:
+                        type: string
+                      city:
+                        type: string
+                      state:
+                        type: string
+                      country:
+                        type: string
+                      postalCode:
+                        type: string
+        '400':
+          $ref: '#/components/responses/badRequest'
         '401':
           $ref: '#/components/responses/unauthorized'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /stores/{id}:
+    get:
+      summary: Get store detail using the id
+      operationId: getStoreById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the store
+          schema:
+            type: integer
+        - in: query
+          name: includeStaff
+          required: false
+          description: |
+            Whether or not to include the staff employed at the store. Accepted values are true, false, yes, no, 0 and 1.
+            If includeStaff value is truthy then the store object will contain staff array.
+            If this is not present in query then it will default to false. If any value other than the accepted ones are
+            given, then 400 is returned.
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Successfully returned the store data with or without the staff
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/storeDetail'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
   /stores/{id}/stock:
     get:
       summary: Get the number of in-stock movies in a given store
@@ -690,7 +1130,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: '#/components/schemas/movie'
+                      $ref: '#/components/schemas/movieItem'
                   length:
                     type: integer
                   totalPages:
@@ -698,27 +1138,42 @@ paths:
                   totalItems:
                     type: integer
         '400':
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        '401':
-          $ref: '#/components/responses/unauthorized'
+          $ref: '#/components/responses/badRequest'
         '404':
-          description: |
-            The page is out of range meaning the page number provided in the request query 
-            has exceeded the total number of movies present in a store.
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /store/{id}/staff:
+    get:
+      summary: Get staff employed in a store
+      operationId: getStaffInStore
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the store
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully returned staff employed in a store
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  message:
-                    type: string
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/staffItem'
+                  length:
+                    type: integer
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
 components:
   securitySchemes:
     cookieAuth:
@@ -726,6 +1181,15 @@ components:
       name: auth_token
       in: cookie
   responses:
+    badRequest:
+      description: The request does not have the data that api needed
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
     internalServerError:
       description: Server encountered unexpeted error
       content:
@@ -741,7 +1205,31 @@ components:
         WWW_Authenticate:
           schema:
             type: string
+    notFound:
+      description: Requested resource does not exist
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
   schemas:
+    user:
+      type: object
+      properties:
+        userUUID:
+          type: string
+          format: uuid
+        userEmail:
+          type: string
+          format: email
+        customerId:
+          type: integer
+        staffId:
+          type: integer
+        storeManagerId:
+          type: integer
     genre:
       type: object
       properties:
@@ -796,88 +1284,135 @@ components:
           type: string
         languageCode:
           type: string
-    movieSummary:
+    movieItem:
       type: object
       properties:
         id:
           type: integer
+          description: Unique id of the resource
         title:
           type: string
+          description: The title of the movie
         overview:
           type: string
+          description: A brief summary of the movie
         runtime:
           type: integer
+          description: The length of the movie
         releaseDate:
           type: string
+          description: Date on which the movie is or will be released
           format: date
         genres:
           type: array
+          description: |
+            The genres that the movie belongs to. The valid genres are action, adventure, animation, 
+            comedy, crime, documentary, drama, family, fantasy, history, horror, music , mystery, romance, 
+            science fiction, thriller, war and western.
           items:
             type: string
-        country:
+        countriesOfOrigin:
           type: array
+          description: The countries of origin of the movie
           items:
             type: string
         language:
           type: string
+          description: The language that the movie is in
         popularity:
           type: number
+          description: A number indicating how popular the movie is
           format: float
         ratingAverage:
-          type: integer
+          type: number
+          description: The average rating of the movie
           format: float
         ratingCount:
           type: integer
+          description: The number of ratings that the movie has got
         posterUrl:
           type: string
+          description: Link to the movie poster
+          format: uri
         rentalRate:
           type: number
+          description: The rental rate of the movie
           format: float
         rentalDuration:
           type: integer
-    movieWithActors:
+          description: The number of days that the movie can be rented
+    movieDetail:
       type: object
       properties:
         id:
           type: integer
+          description: Unique id of the resource
         imdbId:
           type: string
+          description: Imdb id of the movie (using imdb id, we can visit imdb website using www.imdb.com/title/:imdb_id)
         title:
           type: string
+          description: The title of the movie
         originalTitle:
           type: string
+          description: The original title of the movie (if the movie is not in english then this might be different than title)
         overview:
           type: string
+          description: A brief summary of the movie
         runtime:
           type: integer
+          description: The length of the movie
+        releaseDate:
+          type: string
+          description: Date on which the movie is or will be released
+          format: date
         genres:
           type: array
+          description: |
+            The genres that the movie belongs to. The valid genres are action, adventure, animation, 
+            comedy, crime, documentary, drama, family, fantasy, history, horror, music , mystery, romance, 
+            science fiction, thriller, war and western.
           items:
             type: string
-        country:
+        countriesOfOrigin:
           type: array
+          description: The countries of origin of the movie
           items:
             type: string
         language:
           type: string
+          description: The language that the movie is in
         movieStatus:
           type: string
+          description: Status of the movie like Released, Post-Production, etc.
         popularity:
           type: number
+          description: A number indicating how popular the movie is
+          format: float
         budget:
           type: integer
+          description: The budget of the movie
         revenue:
           type: integer
+          description: The revenue that the movie has generated
         ratingAverage:
-          type: integer
+          type: number
+          description: The average rating of the movie
+          format: float
         ratingCount:
           type: integer
+          description: The number of ratings that the movie has got
         posterUrl:
           type: string
+          description: Link to the movie poster
+          format: uri
         rentalRate:
           type: number
+          description: The rental rate of the movie
+          format: float
         rentalDuration:
           type: integer
+          description: The number of days that the movie can be rented
         actors:
           type: array
           items:
@@ -885,47 +1420,59 @@ components:
             properties:
               id:
                 type: integer
+                description: Unique id of the resource
               actorName:
                 type: string
+                description: Name of the actor
               characterNAme:
                 type: string
+                description: The name of the character that the actor has played in the movie
               castOrder:
                 type: integer
+                description: The order of character appearance in the movie
               profilePictureUrl:
                 type: string
-    storeInventory:
+                description: Link to the profile picture of the actor
+                format: uri
+    movieStock:
       type: object
       properties:
         id:
           type: integer
+          description: Unique id of the resource
         inventoryId:
           type: integer
+          description: Unique id of the invetory
         movieId:
           type: integer
+          description: Unique id of the movie
         addressLine:
           type: string
+          description: This is typically street number and name (for e.g. 11 Reel Avenue)
         city:
           type: string
+          description: City name
         state:
           type: string
+          description: State name
         postalCode:
           type: string
+          description: Postal code
         country:
           type: string
+          description: Country name
         phoneNumber:
           type: string
+          description: The phone number of the store
         stock:
           type: integer
-    actor:
+          description: The number of stock of the movie in the store
+    actorItem:
       type: object
       properties:
         id:
           type: integer
-        imdbId:
-          type: string
         actorName:
-          type: string
-        biography:
           type: string
         birthday:
           type: string
@@ -940,7 +1487,7 @@ components:
           format: float
         profilePictureUrl:
           type: string
-    actorWithMovies:
+    actorDetail:
       type: object
       properties:
         id:
@@ -981,13 +1528,21 @@ components:
                 items:
                   type: string
               ratingAverage:
-                type: integer
+                type: number
                 format: float
               ratingCount:
                 type: integer
               posterUrl:
                 type: string
-    store:
+              cast:
+                type: object
+                properties:
+                  characterName:
+                    type: string
+                  castOrder:
+                    type: integer
+                    format: number
+    storeItem:
       type: object
       properties:
         id:
@@ -1002,71 +1557,54 @@ components:
           type: string
         phoneNumber:
           type: string
-    movie:
+    staffItem:
       type: object
-      required:
-        - id
-        - imdbId
-        - title
-        - originalTitle
-        - overview
-        - runtime
-        - releaseDate
-        - genres
-        - country
-        - language
-        - movieStatus
-        - popularity
-        - budget
-        - revenue
-        - ratingAverage
-        - ratingCount
-        - posterUrl
-        - rentalDuration
-        - rentalRate
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        isStoreManager:
+          type: boolean
+        isActive:
+          type: boolean
+        phoneNumber:
+          type: string
+        avatar:
+          type: string
+          format: uri
+        address:
+          type: object
+          properties:
+            addressLine:
+              type: string
+            city:
+              type: string
+            state:
+              type: string
+            country:
+              type: string
+            postalCode:
+              type: string
+    storeDetail:
+      type: object
       properties:
         id:
           type: integer
-        imdbId:
+        addressLine:
           type: string
-        title:
+        city:
           type: string
-        originalTitle:
+        state:
           type: string
-        overview:
-          type: string
-        runtime:
-          type: integer
-        releaseDate:
-          type: string
-          format: date
-        genres:
-          type: array
-          items:
-            type: string
         country:
+          type: string
+        phoneNumber:
+          type: string
+        staff:
           type: array
           items:
-            type: string
-        language:
-          type: string
-        movieStatus:
-          type: string
-        popularity:
-          type: number
-        budget:
-          type: integer
-        revenue:
-          type: integer
-        ratingAverage:
-          type: integer
-        ratingCount:
-          type: integer
-        posterUrl:
-          type: string
-        rentalRate:
-          type: number
-        rentalDuration:
-          type: integer
-        stock:
-          type: integer
+            $ref: '#/components/schemas/staffItem'

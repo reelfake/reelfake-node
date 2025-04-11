@@ -1,0 +1,90 @@
+post:
+  summary: Add actors to movie
+  operationId: addActors
+  parameters:
+    - in: path
+      name: id
+      required: true
+      description: Id of the movie
+      schema:
+        type: integer
+  requestBody:
+    description: Payload for the new actors
+    required: true
+    content:
+      application/json:
+        schema:
+          type: array
+          items:
+            type: object
+            properties:
+              tmdbId:
+                type: integer
+              imdbId:
+                type: string
+              actorName:
+                type: string
+              biography:
+                type: string
+              birthday:
+                type: string
+                format: date
+              deathday:
+                type: string
+                format: date
+              placeOfBirth:
+                type: string
+              popularity:
+                type: number
+                format: float
+              profilePictureUrl:
+                type: string
+                format: uri
+              characterName:
+                type: string
+              castOrder:
+                type: integer
+  responses:
+    '201':
+      description: Successfully add actors to the movie
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                id:
+                  type: integer
+                imdbId:
+                  type: integer
+                actorName:
+                  type: string
+                biography:
+                  type: string
+                birthday:
+                  type: string
+                  format: date
+                deathday:
+                  type: string
+                  format: date
+                placeOfBirth:
+                  type: string
+                popularity:
+                  type: number
+                  format: float
+                profilePictureUrl:
+                  type: string
+                  format: uri
+                characterName:
+                  type: string
+                castOrder:
+                  type: integer
+    '400':
+      $ref: ../components/badRequest.yaml
+    '401':
+      $ref: ../components/unauthorized.yaml
+    '404':
+      $ref: ../components/notFound.yaml
+    '500':
+      $ref: ../components/internalServerError.yaml

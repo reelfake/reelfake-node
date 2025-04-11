@@ -40,7 +40,7 @@ ActorModel.belongsToMany(MovieModel, {
   as: 'movies',
 });
 
-MovieModel.belongsTo(GenreModel, { as: 'genre', foreignKey: 'genreIds' });
+MovieActorModel.hasMany(ActorModel, { as: 'actors', foreignKey: 'id' });
 
 AddressModel.belongsTo(CityModel, { as: 'city', foreignKey: 'cityId' });
 

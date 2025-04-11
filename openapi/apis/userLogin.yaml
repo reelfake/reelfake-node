@@ -12,10 +12,12 @@ post:
           properties:
             email:
               type: string
+              format: email
             password:
               type: string
+              format: password
   responses:
-    '201':
+    '204':
       description: User logged in successfully
       headers:
         Set-Cookie:
@@ -23,6 +25,8 @@ post:
           schema:
             type: string
             example: auth_token=abcde12345
+    '401':
+      description: Invalid credentials
       content:
         application/json:
           schema:
@@ -31,13 +35,6 @@ post:
               message:
                 type: string
     '400':
-      description: Bad request
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
+      $ref: ../components/badRequest.yaml
     '500':
       $ref: ../components/internalServerError.yaml

@@ -1,0 +1,92 @@
+type: object
+properties:
+  id:
+    type: integer
+    description: Unique id of the resource
+  imdbId:
+    type: string
+    description: Imdb id of the movie (using imdb id, we can visit imdb website using www.imdb.com/title/:imdb_id)
+  title:
+    type: string
+    description: The title of the movie
+  originalTitle:
+    type: string
+    description: The original title of the movie (if the movie is not in english then this might be different than title)
+  overview:
+    type: string
+    description: A brief summary of the movie
+  runtime:
+    type: integer
+    description: The length of the movie
+  releaseDate:
+    type: string
+    description: Date on which the movie is or will be released
+    format: date
+  genres:
+    type: array
+    description: |
+      The genres that the movie belongs to. The valid genres are action, adventure, animation, 
+      comedy, crime, documentary, drama, family, fantasy, history, horror, music , mystery, romance, 
+      science fiction, thriller, war and western.
+    items:
+      type: string
+  countriesOfOrigin:
+    type: array
+    description: The countries of origin of the movie
+    items:
+      type: string
+  language:
+    type: string
+    description: The language that the movie is in
+  movieStatus:
+    type: string
+    description: Status of the movie like Released, Post-Production, etc.
+  popularity:
+    type: number
+    description: A number indicating how popular the movie is
+    format: float
+  budget:
+    type: integer
+    description: The budget of the movie
+  revenue:
+    type: integer
+    description: The revenue that the movie has generated
+  ratingAverage:
+    type: number
+    description: The average rating of the movie
+    format: float
+  ratingCount:
+    type: integer
+    description: The number of ratings that the movie has got
+  posterUrl:
+    type: string
+    description: Link to the movie poster
+    format: uri
+  rentalRate:
+    type: number
+    description: The rental rate of the movie
+    format: float
+  rentalDuration:
+    type: integer
+    description: The number of days that the movie can be rented
+  actors:
+    type: array
+    items:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique id of the resource
+        actorName:
+          type: string
+          description: Name of the actor
+        characterNAme:
+          type: string
+          description: The name of the character that the actor has played in the movie
+        castOrder:
+          type: integer
+          description: The order of character appearance in the movie
+        profilePictureUrl:
+          type: string
+          description: Link to the profile picture of the actor
+          format: uri

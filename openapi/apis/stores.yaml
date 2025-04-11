@@ -3,7 +3,7 @@ get:
   operationId: getStores
   responses:
     '200':
-      description: Successfully returned a list of stores
+      description: Successfully returned an array of storeItem
       content:
         application/json:
           schema:
@@ -12,17 +12,66 @@ get:
               items:
                 type: array
                 items:
-                  $ref: ../components/store.yaml
+                  $ref: ../components/storeItem.yaml
               length:
                 type: integer
     '400':
-      description: Bad request
+      $ref: ../components/badRequest.yaml
+    '500':
+      $ref: ../components/internalServerError.yaml
+post:
+  summary: Create a store
+  operationId: addStore
+  requestBody:
+    description: Payload for the new store
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            managerId:
+              type: integer
+            phoneNumber:
+              type: string
+            addressLine:
+              type: string
+            city:
+              type: string
+            state:
+              type: string
+            country:
+              type: string
+            postalCode:
+              type: string
+  responses:
+    '201':
+      description: Successfully added new store
       content:
         application/json:
           schema:
             type: object
             properties:
-              message:
+              managerId:
+                type: integer
+              phoneNumber:
                 type: string
+              address:
+                type: object
+                properties:
+                  addressLine:
+                    type: string
+                  city:
+                    type: string
+                  state:
+                    type: string
+                  country:
+                    type: string
+                  postalCode:
+                    type: string
+    '400':
+      $ref: ../components/badRequest.yaml
     '401':
       $ref: ../components/unauthorized.yaml
+    '500':
+      $ref: ../components/internalServerError.yaml

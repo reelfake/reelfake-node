@@ -1,0 +1,14 @@
+type: object
+properties:
+  userUUID:
+    type: string
+    format: uuid
+  userEmail:
+    type: string
+    format: email
+  customerId:
+    type: integer
+  staffId:
+    type: integer
+  storeManagerId:
+    type: integer

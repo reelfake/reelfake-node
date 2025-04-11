@@ -1,16 +1,16 @@
 get:
-  summary: Get stock count of the movie in all the stores
-  operationId: findInStores
+  summary: Get staff employed in a store
+  operationId: getStaffInStore
   parameters:
     - in: path
       name: id
       required: true
-      description: The id of the movie
+      description: The id of the store
       schema:
         type: integer
   responses:
     '200':
-      description: Successfully returned the stock count in all the stores
+      description: Successfully returned staff employed in a store
       content:
         application/json:
           schema:
@@ -19,7 +19,7 @@ get:
               items:
                 type: array
                 items:
-                  $ref: ../components/movieStock.yaml
+                  $ref: ../components/staffItem.yaml
               length:
                 type: integer
     '400':

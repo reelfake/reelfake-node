@@ -1,10 +1,10 @@
 import type { Request, Response } from 'express';
-import { Op, WhereOptions, fn, literal } from 'sequelize';
+import { Op, Transaction, WhereOptions, col, fn, literal } from 'sequelize';
 import { Literal } from 'sequelize/lib/utils';
 import { executeQuery, AppError } from '../utils';
 import { ActorModel, MovieActorModel, MovieModel } from '../models';
 import { ITEMS_PER_PAGE_FOR_PAGINATION, availableGenres } from '../constants';
-import { CustomRequestWithBody, IncomingMovie } from '../types';
+import { CustomRequestWithBody, IncomingMovie, NewMovieActorPayload } from '../types';
 import sequelize from '../sequelize.config';
 
 const movieModelAttributes: (string | [Literal, string])[] = [
@@ -34,6 +34,40 @@ const movieModelAttributes: (string | [Literal, string])[] = [
   'rentalDuration',
 ];
 
+const newMovieFields = [
+  'tmdbId',
+  'imdbId',
+  'title',
+  'originalTitle',
+  'overview',
+  'runtime',
+  'releaseDate',
+  'genreIds',
+  'originCountryIds',
+  'languageId',
+  'movieStatus',
+  'popularity',
+  'budget',
+  'revenue',
+  'ratingAverage',
+  'ratingCount',
+  'posterUrl',
+  'rentalRate',
+  'rentalDuration',
+];
+
+const newActorFields = [
+  'tmdbId',
+  'imdbId',
+  'actorName',
+  'biography',
+  'birthday',
+  'deathday',
+  'placeOfBirth',
+  'popularity',
+  'profilePictureUrl',
+];
+
 function getReleaseDatesRangeFromQuery(req: Request) {
   const { releaseYear: releaseYearText, releaseFrom, releaseTo } = req.query;
   const releaseYear = Number(releaseYearText);
@@ -49,7 +83,7 @@ function getReleaseDatesRangeFromQuery(req: Request) {
   return [];
 }
 
-const getMoviesUsingQuery = async (pageNumber: number, genresIds: number[], orderBy: string, filter: string = '') => {
+async function getMoviesUsingQuery(pageNumber: number, genresIds: number[], orderBy: string, filter: string = '') {
   if (!MovieModel.sequelize) {
     throw new AppError('Server encoutered unhandled exception', 500);
   }
@@ -92,7 +126,79 @@ const getMoviesUsingQuery = async (pageNumber: number, genresIds: number[], orde
 
   const movies = await executeQuery(MovieModel.sequelize, queryText);
   return movies;
-};
+}
+
+async function createActors(transaction: Transaction, actors: NewMovieActorPayload[], movieId?: number) {
+  const createdActors = await ActorModel.bulkCreate(
+    actors.map((actor) => ({
+      tmdbId: actor.tmdbId,
+      imdbId: actor.imdbId,
+      actorName: actor.actorName,
+      biography: actor.biography,
+      birthday: actor.birthday,
+      deathday: actor.deathday,
+      placeOfBirth: actor.placeOfBirth,
+      popularity: actor.popularity,
+      profilePictureUrl: actor.profilePictureUrl,
+    })),
+    {
+      fields: newActorFields,
+      ignoreDuplicates: true,
+      transaction: transaction,
+    }
+  );
+
+  const newActorIdsAndTmdbIds = await ActorModel.findAll({
+    attributes: ['id', 'tmdbId'],
+    where: {
+      tmdbId: {
+        [Op.in]: createdActors.map((actor) => actor.getDataValue('tmdbId')),
+      },
+    },
+    transaction: transaction,
+  });
+
+  const newMovieActorRecords: Array<{
+    actorId: number;
+    characterName: string;
+    castOrder: number;
+  }> = [];
+
+  for (const idAndTmdbId of newActorIdsAndTmdbIds) {
+    const actorId = idAndTmdbId.getDataValue('id');
+    const tmdbId = idAndTmdbId.getDataValue('tmdbId');
+    const newMovieActorData = actors.find((a) => a.tmdbId === tmdbId);
+
+    if (!newMovieActorData) {
+      throw new AppError(`There was an error adding actor with tmdbId ${tmdbId}`, 500);
+    }
+
+    const characterName = newMovieActorData.characterName;
+    const castOrder = newMovieActorData.castOrder;
+
+    newMovieActorRecords.push({
+      actorId,
+      characterName,
+      castOrder,
+    });
+  }
+
+  if (movieId) {
+    await MovieActorModel.bulkCreate(
+      newMovieActorRecords.map((movieActor) => ({
+        movieId: movieId,
+        actorId: movieActor.actorId,
+        characterName: movieActor.characterName,
+        castOrder: movieActor.castOrder,
+      })),
+      {
+        fields: ['movieId', 'actorId', 'characterName', 'castOrder'],
+        ignoreDuplicates: false,
+        transaction: transaction,
+      }
+    );
+  }
+}
 
 export const getMovies = async (req: Request, res: Response) => {
   if (!MovieModel.sequelize) {
@@ -159,7 +265,7 @@ export const getMovies = async (req: Request, res: Response) => {
 };
 
 export const getMovieById = async (req: Request, res: Response) => {
-  const { movieId: idText } = req.params;
+  const { id: idText } = req.params;
   const { includeActors: includeActorsText } = req.query;
 
   const id = Number(idText);
@@ -344,40 +450,6 @@ export const addMovie = async (req: CustomRequestWithBody<IncomingMovie>, res: R
     throw new AppError('Unauthorized access', 403);
   }
 
-  const newMovieFields = [
-    'tmdbId',
-    'imdbId',
-    'title',
-    'originalTitle',
-    'overview',
-    'runtime',
-    'releaseDate',
-    'genreIds',
-    'originCountryIds',
-    'languageId',
-    'movieStatus',
-    'popularity',
-    'budget',
-    'revenue',
-    'ratingAverage',
-    'ratingCount',
-    'posterUrl',
-    'rentalRate',
-    'rentalDuration',
-  ];
-
-  const newActorFields = [
-    'tmdbId',
-    'imdbId',
-    'actorName',
-    'biography',
-    'birthday',
-    'deathday',
-    'placeOfBirth',
-    'popularity',
-    'profilePictureUrl',
-  ];
-
   const actors = req.body.actors;
   const hasActors = actors && actors.length > 0;
 
@@ -394,77 +466,12 @@ export const addMovie = async (req: CustomRequestWithBody<IncomingMovie>, res: R
       newMovie.setDataValue('languageId', undefined);
       newMovie.setDataValue('rentalRate', Number(newMovie.getDataValue('rentalRate')));
 
+      const newMovieId = newMovie.getDataValue('id');
       if (hasActors) {
-        const createdActors = await ActorModel.bulkCreate(
-          actors.map((actor) => ({
-            tmdbId: actor.tmdbId,
-            imdbId: actor.imdbId,
-            actorName: actor.actorName,
-            biography: actor.biography,
-            birthday: actor.birthday,
-            deathday: actor.deathday,
-            placeOfBirth: actor.placeOfBirth,
-            popularity: actor.popularity,
-            profilePictureUrl: actor.profilePictureUrl,
-          })),
-          {
-            fields: newActorFields,
-            ignoreDuplicates: true,
-            transaction: t,
-          }
-        );
-
-        const newActorIdsAndTmdbIds = await ActorModel.findAll({
-          attributes: ['id', 'tmdbId'],
-          where: {
-            tmdbId: {
-              [Op.in]: createdActors.map((actor) => actor.getDataValue('tmdbId')),
-            },
-          },
-          transaction: t,
-        });
-
-        const newMovieActorRecords: Array<{
-          actorId: number;
-          characterName: string;
-          castOrder: number;
-        }> = [];
-
-        for (const idAndTmdbId of newActorIdsAndTmdbIds) {
-          const actorId = idAndTmdbId.getDataValue('id');
-          const tmdbId = idAndTmdbId.getDataValue('tmdbId');
-          const newMovieActorData = actors.find((a) => a.tmdbId === tmdbId);
-
-          if (!newMovieActorData) {
-            throw new AppError(`There was an error adding actor with tmdbId ${tmdbId}`, 500);
-          }
-
-          const characterName = newMovieActorData.characterName;
-          const castOrder = newMovieActorData.castOrder;
-
-          newMovieActorRecords.push({
-            actorId,
-            characterName,
-            castOrder,
-          });
-        }
-
-        await MovieActorModel.bulkCreate(
-          newMovieActorRecords.map((movieActor) => ({
-            movieId: newMovie.getDataValue('id'),
-            actorId: movieActor.actorId,
-            characterName: movieActor.characterName,
-            castOrder: movieActor.castOrder,
-          })),
-          {
-            fields: ['movieId', 'actorId', 'characterName', 'castOrder'],
-            ignoreDuplicates: false,
-            transaction: t,
-          }
-        );
+        await createActors(t, actors, newMovieId);
       }
 
-      const createdMovieId = newMovie.getDataValue('id');
+      const createdMovieId = newMovieId;
 
       if (!createdMovieId) {
         throw new AppError('There was an error adding the movie', 500);
@@ -497,6 +504,64 @@ export const addMovie = async (req: CustomRequestWithBody<IncomingMovie>, res: R
     });
 
     res.status(201).json(createdMovieDetail);
+  } catch (err: unknown) {
+    throw new AppError((err as Error).message, 500);
+  }
+};
+
+export const addActors = async (req: CustomRequestWithBody<NewMovieActorPayload[]>, res: Response) => {
+  const { user } = req;
+  if (!user) {
+    throw new AppError('Invalid token', 401);
+  }
+
+  if (!user.staffId && !user.storeManagerId) {
+    throw new AppError('Unauthorized access', 403);
+  }
+
+  const { id: idText } = req.params;
+  const movieId = Number(idText);
+
+  if (isNaN(movieId)) {
+    throw new AppError('Invalid movie id', 400);
+  }
+
+  const actors = req.body;
+
+  try {
+    await sequelize.transaction(async (t) => {
+      await createActors(t, actors);
+    });
+
+    const actorTmdbIds = actors.map((actor) => actor.tmdbId);
+    const createdActors = await MovieActorModel.findAll({
+      attributes: [
+        [col(`"actors"."id"`), 'id'],
+        [col(`"actors"."imdb_id"`), 'imdbId'],
+        [col(`"actors"."actor_name"`), 'actorName'],
+        [col(`"actors"."biography"`), 'biography'],
+        [col(`"actors"."birthday"`), 'birthday'],
+        [col(`"actors"."deathday"`), 'deathday'],
+        [col(`"actors"."place_of_birth"`), 'placeOfBirth'],
+        [col(`"actors"."popularity"`), 'popularity'],
+        [col(`"actors"."profile_picture_url"`), 'profilePictureUrl'],
+        'characterName',
+        'castOrder',
+      ],
+      include: [
+        {
+          model: ActorModel,
+          as: 'actors',
+          attributes: [],
+          where: {
+            tmdbId: {
+              [Op.in]: actorTmdbIds,
+            },
+          },
+        },
+      ],
+    });
+    res.status(200).json(createdActors);
   } catch (err: unknown) {
     throw new AppError((err as Error).message, 500);
   }

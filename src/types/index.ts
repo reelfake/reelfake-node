@@ -1,4 +1,4 @@
-import type { Request } from 'express';
+import type { Locals, Request } from 'express';
 import { DataType, Model } from 'sequelize';
 import type { Sequelize } from 'sequelize';
 
@@ -36,7 +36,7 @@ export interface CustomRequest extends Request {
   languageIds?: number[];
 }
 
-export interface CustomRequestWithBody<T> extends Request<{}, {}, T> {
+export interface CustomRequestWithBody<M> extends Request<{ [key: string]: string }, {}, M> {
   user?: {
     userUUID: string;
     userEmail: string;
@@ -84,4 +84,16 @@ export type NewMovieActorPayload = {
   profilePictureUrl: string;
   characterName: string;
   castOrder: number;
+};
+
+export type StorePayload = {
+  storeManagerId: number;
+  phoneNumber: string;
+  address: {
+    addressLine: string;
+    city: string;
+    state: string;
+    country: string;
+    postalCode: string;
+  };
 };

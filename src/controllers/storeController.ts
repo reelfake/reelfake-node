@@ -2,11 +2,9 @@ import type { Request, Response } from 'express';
 import { literal, col, fn, where } from 'sequelize';
 import { Literal } from 'sequelize/lib/utils';
 import { StoreModel, AddressModel, CityModel, CountryModel, InventoryModel, MovieModel, StaffModel } from '../models';
-import { ITEMS_PER_PAGE_FOR_PAGINATION, availableGenres } from '../constants';
+import { ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
 import { AppError } from '../utils';
-import { CustomRequest } from '../types';
-
-const genreIds = Object.keys(availableGenres);
+import { StorePayload, CustomRequest, CustomRequestWithBody } from '../types';
 
 const movieModelAttributes: (string | [Literal, string])[] = [
   'id',
@@ -268,4 +266,49 @@ export const getMoviesInStore = async (req: Request, res: Response) => {
       totalItems: totalRows,
       totalPages: Math.ceil(totalRows / ITEMS_PER_PAGE_FOR_PAGINATION),
     });
+};
+
+export const addStore = async (req: CustomRequestWithBody<StorePayload>, res: Response) => {
+  const { user } = req;
+  if (!user) {
+    throw new AppError('Invalid token', 401);
+  }
+
+  if (!user.storeManagerId) {
+    throw new AppError('Only store managers can create store', 403);
+  }
+
+  // const {
+  //   storeManagerId,
+  //   phoneNumber,
+  //   address: { addressLine, city, state, country, postalCode },
+  // } = req.body;
+
+  const createdStore = await StoreModel.create(
+    {
+      ...req.body,
+    },
+    {
+      include: [
+        {
+          model: AddressModel,
+          as: 'storeAddress',
+          include: [
+            {
+              model: CityModel,
+              as: 'city',
+              include: [
+                {
+                  model: CountryModel,
+                  as: 'country',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    }
+  );
+
+  res.status(201).json(createdStore);
 };

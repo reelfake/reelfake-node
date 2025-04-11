@@ -14,6 +14,7 @@ post:
               type: string
             password:
               type: string
+              format: password
   responses:
     '201':
       description: Successfully created a new user
@@ -22,16 +23,16 @@ post:
           schema:
             type: object
             properties:
-              message:
+              userEmail:
                 type: string
+                format: email
+              customerId:
+                type: integer
+              staffId:
+                type: integer
+              storeManagerId:
+                type: integer
     '400':
-      description: Bad request
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
+      $ref: ../components/badRequest.yaml
     '500':
       $ref: ../components/internalServerError.yaml

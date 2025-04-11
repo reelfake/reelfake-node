@@ -21,6 +21,7 @@ properties:
     format: float
   profilePictureUrl:
     type: string
+    format: uri
   movies:
     type: array
     items:
@@ -38,13 +39,13 @@ properties:
           items:
             type: string
         ratingAverage:
-          type: integer
+          type: number
           format: float
         ratingCount:
           type: integer
         posterUrl:
           type: string
-        credit:
+        cast:
           type: object
           properties:
             characterName:
