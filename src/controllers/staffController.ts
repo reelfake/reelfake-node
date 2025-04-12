@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { col, literal } from 'sequelize';
+import { col, literal, fn } from 'sequelize';
 import { StaffModel, AddressModel, CityModel, CountryModel, StoreModel } from '../models';
 import { AppError } from '../utils';
 import sequelize from '../sequelize.config';
@@ -13,49 +13,52 @@ export const getStaff = async (req: CustomRequest, res: Response) => {
     throw new AppError('Invalid token', 401);
   }
 
-  //   const staff = await StaffModel.findAll({
-  //     include: [
-  //       {
-  //         model: AddressModel,
-  //         as: 'address',
-  //         attributes: {
-  //           exclude: ['id', 'cityId'],
-  //         },
-  //         include: [
-  //           {
-  //             model: CityModel,
-  //             as: 'city',
-  //             attributes: { exclude: ['id', 'countryId'] },
-  //             include: [
-  //               {
-  //                 model: CountryModel,
-  //                 as: 'country',
-  //                 attributes: { exclude: ['id', 'countryCode'] },
-  //               },
-  //             ],
-  //           },
-  //         ],
-  //       },
-  //     ],
-  //   });
-
-  const [queryResult] = await sequelize.query(`
-          SELECT staff.id AS "id", staff.first_name AS "firstName", staff.last_name as "lastName",
-          json_build_object(
-              'addressLine', address.address_line,
-              'cityName', city.city_name,
-              'stateName', city.state_name,
-              'countryName', country.country_name,
-              'postalCode', address.postal_code
-          ) AS "address"
-          FROM staff LEFT JOIN address ON staff.address_id = address.id
-          LEFT JOIN city ON address.city_id = city.id
-          LEFT JOIN country ON city.country_id = country.id ORDER BY staff.id ASC;
-      `);
+  const updatedStaff = await StaffModel.findAll({
+    attributes: {
+      exclude: ['addressId', 'storeId'],
+      include: [
+        [
+          fn(
+            'json_build_object',
+            'addressLine',
+            col(`"staffAddress"."address_line"`),
+            'city',
+            col(`"staffAddress"."city"."city_name"`),
+            'state',
+            col(`"staffAddress"."city"."state_name"`),
+            'country',
+            col(`"staffAddress"."city"."country"."country_name"`),
+            'postalCode',
+            col(`"staffAddress"."postal_code"`)
+          ),
+          'address',
+        ],
+      ],
+    },
+    include: [
+      {
+        model: AddressModel,
+        as: 'staffAddress',
+        attributes: [],
+        include: [
+          {
+            model: CityModel,
+            as: 'city',
+            include: [
+              {
+                model: CountryModel,
+                as: 'country',
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  });
 
   res.status(200).json({
-    items: queryResult,
-    length: queryResult.length,
+    items: updatedStaff,
+    length: updatedStaff.length,
   });
 };
 
