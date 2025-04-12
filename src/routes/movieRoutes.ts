@@ -33,7 +33,7 @@ function validateReleaseDate(releaseDate: string) {
 }
 
 function validateMovieByIdRouteQuery(req: Request, res: Response, next: NextFunction) {
-  const { movieId: idText } = req.params;
+  const { id: idText } = req.params;
   let { includeActors: includeActorsText } = req.query;
   includeActorsText = includeActorsText ? String(includeActorsText).trim().toLowerCase() : '';
 

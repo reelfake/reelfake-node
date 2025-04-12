@@ -112,12 +112,12 @@ export const getStoreById = async (req: Request, res: Response) => {
       },
       {
         model: AddressModel,
-        as: 'storeAddress',
+        as: 'address',
         attributes: [
           'addressLine',
-          [literal(`"storeAddress->city"."city_name"`), 'cityName'],
-          [literal(`"storeAddress->city"."state_name"`), 'stateName'],
-          [literal(`"storeAddress->city->country"."country_name"`), 'countryName'],
+          [literal(`"address->city"."city_name"`), 'cityName'],
+          [literal(`"address->city"."state_name"`), 'stateName'],
+          [literal(`"address->city->country"."country_name"`), 'countryName'],
           'postalCode',
         ],
         include: [
@@ -139,7 +139,7 @@ export const getStoreById = async (req: Request, res: Response) => {
     where: {
       id: storeId,
     },
-    group: ['Store.id', 'storeAddress.id', 'storeAddress->city.id', 'storeAddress->city->country.id'],
+    group: ['Store.id', 'address.id', 'address->city.id', 'address->city->country.id'],
   });
 
   res.status(200).json(store);
@@ -147,22 +147,30 @@ export const getStoreById = async (req: Request, res: Response) => {
 
 export const getStores = async (req: Request, res: Response) => {
   const stores = await StoreModel.findAll({
-    attributes: ['id', 'phoneNumber'],
+    attributes: [
+      'id',
+      'phoneNumber',
+      [col(`"address"."address_line"`), 'addressLine'],
+      [col(`"address"."city"."city_name"`), 'city'],
+      [col(`"address"."city"."state_name"`), 'state'],
+      [col(`"address"."city"."country"."country_name"`), 'country'],
+      [col(`"address"."postal_code"`), 'postalCode'],
+    ],
     include: [
       {
         model: AddressModel,
-        as: 'storeAddress',
-        attributes: ['addressLine', 'postalCode'],
+        as: 'address',
+        attributes: [],
         include: [
           {
             model: CityModel,
             as: 'city',
-            attributes: ['cityName', 'stateName'],
+            attributes: [],
             include: [
               {
                 model: CountryModel,
                 as: 'country',
-                attributes: ['countryName'],
+                attributes: [],
               },
             ],
           },
@@ -171,19 +179,9 @@ export const getStores = async (req: Request, res: Response) => {
     ],
   });
 
-  const flattened = stores.map((s) => ({
-    id: s.getDataValue('id'),
-    addressLine: s.getDataValue('storeAddress').addressLine,
-    city: s.getDataValue('storeAddress').city.cityName,
-    state: s.getDataValue('storeAddress').city.stateName,
-    country: s.getDataValue('storeAddress').city.country.countryName,
-    postalCode: s.getDataValue('storeAddress').postalCode,
-    phoneNumber: s.getDataValue('phoneNumber'),
-  }));
-
   res.status(200).json({
-    items: flattened,
-    length: flattened.length,
+    items: stores,
+    length: stores.length,
   });
 };
 
@@ -292,7 +290,7 @@ export const addStore = async (req: CustomRequestWithBody<StorePayload>, res: Re
       include: [
         {
           model: AddressModel,
-          as: 'storeAddress',
+          as: 'address',
           include: [
             {
               model: CityModel,

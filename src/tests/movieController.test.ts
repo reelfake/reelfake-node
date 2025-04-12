@@ -10,8 +10,6 @@ import {
   getRandomNumber,
 } from './testUtil';
 
-const apiKey = process.env.API_KEY || '';
-
 describe('Movie Controller', () => {
   let movieIdOffest: number;
   jest.setTimeout(20000);
@@ -758,22 +756,30 @@ describe('Movie Controller', () => {
 
     it('GET /movies/:id/stores should return the movie stock count at all stores', async () => {
       const id = 680;
-      const expectedResult = await execQuery(
-        `
-        SELECT s.id, i.id AS "inventoryId", m.id AS "movieId", a.address_line AS "addressLine", c.city_name AS "city",
-        c.state_name AS "state", a.postal_code AS "postalCode", cy.country_name AS "country", s.phone_number AS "phoneNumber",
-        i.stock_count AS "stock" FROM inventory AS i LEFT OUTER JOIN store AS s ON i.store_id = s.id
-        LEFT OUTER JOIN movie AS m ON i.movie_id = m.id LEFT OUTER JOIN address AS a ON s.address_id = a.id
-        LEFT OUTER JOIN city AS c on a.city_id = c.id LEFT OUTER JOIN country AS cy ON c.country_id = cy.id
-        WHERE m.id = ${id} ORDER BY "stock" DESC, "id" ASC;
-      `,
-        {}
-      );
 
       const server = supertest(app);
       const response = await server.get(`/api/v1/movies/${id}/stores`);
       expect(response.status).toBe(200);
       expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
+
+      const expectedResult = await execQuery(
+        `
+          SELECT i.id AS "inventoryId", i.stock_count AS stock, 
+          json_build_object(
+            'id', s.id,
+            'managerId', s.store_manager_id,
+            'phoneNumber', s.phone_number, 
+            'addressLine', a.address_line, 
+            'city', c.city_name, 
+            'state', c.state_name, 
+            'country', cy.country_name, 
+            'postalCode', a.postal_code
+          ) as "store" FROM inventory AS i LEFT OUTER JOIN store AS s ON i.store_id = s.id
+          LEFT OUTER JOIN address AS a ON s.address_id = a.id
+          LEFT OUTER JOIN city AS c on a.city_id = c.id LEFT OUTER JOIN country AS cy ON c.country_id = cy.id
+          WHERE i.movie_id = ${id} ORDER BY stock DESC, "inventoryId" ASC;
+      `
+      );
 
       expect(response.body).toStrictEqual({
         items: expectedResult,

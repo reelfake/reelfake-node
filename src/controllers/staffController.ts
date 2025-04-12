@@ -16,37 +16,27 @@ export const getStaff = async (req: CustomRequest, res: Response) => {
   const updatedStaff = await StaffModel.findAll({
     attributes: {
       exclude: ['addressId', 'storeId'],
-      include: [
-        [
-          fn(
-            'json_build_object',
-            'addressLine',
-            col(`"staffAddress"."address_line"`),
-            'city',
-            col(`"staffAddress"."city"."city_name"`),
-            'state',
-            col(`"staffAddress"."city"."state_name"`),
-            'country',
-            col(`"staffAddress"."city"."country"."country_name"`),
-            'postalCode',
-            col(`"staffAddress"."postal_code"`)
-          ),
-          'address',
-        ],
-      ],
     },
     include: [
       {
         model: AddressModel,
-        as: 'staffAddress',
-        attributes: [],
+        as: 'address',
+        attributes: [
+          'addressLine',
+          [literal(`"address->city"."city_name"`), 'cityName'],
+          [literal(`"address->city"."state_name"`), 'stateName'],
+          [literal(`"address->city->country"."country_name"`), 'countryName'],
+          [literal(`"address"."postal_code"`), 'postalCode'],
+        ],
         include: [
           {
             model: CityModel,
             as: 'city',
+            attributes: [],
             include: [
               {
                 model: CountryModel,
+                attributes: [],
                 as: 'country',
               },
             ],

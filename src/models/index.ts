@@ -44,14 +44,14 @@ MovieActorModel.hasMany(ActorModel, { as: 'actors', foreignKey: 'id' });
 
 AddressModel.belongsTo(CityModel, { as: 'city', foreignKey: 'cityId' });
 
-StoreModel.belongsTo(AddressModel, { as: 'storeAddress', foreignKey: 'addressId' });
+StoreModel.belongsTo(AddressModel, { as: 'address', foreignKey: 'addressId' });
 
 InventoryModel.belongsTo(StoreModel, { as: 'store', foreignKey: 'storeId' });
 InventoryModel.belongsTo(MovieModel, { as: 'movie', foreignKey: 'movieId' });
 
 CustomerModel.belongsTo(AddressModel, { as: 'address', foreignKey: 'addressId' });
 
-StaffModel.belongsTo(AddressModel, { as: 'staffAddress', foreignKey: 'addressId' });
+StaffModel.belongsTo(AddressModel, { as: 'address', foreignKey: 'addressId' });
 StaffModel.belongsTo(StoreModel, { as: 'store', foreignKey: 'storeId' });
 StoreModel.hasMany(StaffModel, { as: 'staff', foreignKey: 'storeId' });
 

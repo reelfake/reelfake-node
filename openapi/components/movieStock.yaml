@@ -1,32 +1,29 @@
 type: object
 properties:
-  id:
-    type: integer
-    description: Unique id of the resource
   inventoryId:
     type: integer
     description: Unique id of the invetory
-  movieId:
-    type: integer
-    description: Unique id of the movie
-  addressLine:
-    type: string
-    description: This is typically street number and name (for e.g. 11 Reel Avenue)
-  city:
-    type: string
-    description: City name
-  state:
-    type: string
-    description: State name
-  postalCode:
-    type: string
-    description: Postal code
-  country:
-    type: string
-    description: Country name
-  phoneNumber:
-    type: string
-    description: The phone number of the store
   stock:
     type: integer
     description: The number of stock of the movie in the store
+  store:
+    type: object
+    properties:
+      addressLine:
+        type: string
+        description: This is typically street number and name (for e.g. 11 Reel Avenue)
+      city:
+        type: string
+        description: City name
+      state:
+        type: string
+        description: State name
+      postalCode:
+        type: string
+        description: Postal code
+      country:
+        type: string
+        description: Country name
+      phoneNumber:
+        type: string
+        description: The phone number of the store

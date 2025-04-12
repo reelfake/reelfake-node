@@ -2,7 +2,16 @@ import type { Request, Response } from 'express';
 import { Op, Transaction, WhereOptions, col, fn, literal } from 'sequelize';
 import { Literal } from 'sequelize/lib/utils';
 import { executeQuery, AppError } from '../utils';
-import { ActorModel, MovieActorModel, MovieModel } from '../models';
+import {
+  ActorModel,
+  MovieActorModel,
+  MovieModel,
+  StoreModel,
+  InventoryModel,
+  AddressModel,
+  CityModel,
+  CountryModel,
+} from '../models';
 import { ITEMS_PER_PAGE_FOR_PAGINATION, availableGenres } from '../constants';
 import { CustomRequestWithBody, IncomingMovie, NewMovieActorPayload } from '../types';
 import sequelize from '../sequelize.config';
@@ -280,31 +289,6 @@ export const getMovieById = async (req: Request, res: Response) => {
       : [...movieModelAttributes],
   });
 
-  // The below one also works but it gives unnecessary nested role object inside every actors.
-  // const movie = await MovieModel.findOne({
-  //   where: {
-  //     id,
-  //   },
-  //   attributes: {
-  //     exclude: ['tmdbId'],
-  //   },
-  //   include: includeActors
-  //     ? [
-  //         {
-  //           model: ActorModel,
-  //           as: 'actors',
-  //           attributes: {
-  //             exclude: ['tmdbId', 'biography', 'birthday', 'deathday', 'placeOfBirth'],
-  //           },
-  //           through: {
-  //             as: 'role',
-  //             attributes: ['characterName', 'castOrder'],
-  //           },
-  //         },
-  //       ]
-  //     : undefined,
-  // });
-
   if (!movie) {
     throw new AppError(`Movie with id ${id} does not exist`, 404);
   }
@@ -360,75 +344,53 @@ export const findInStores = async (req: Request, res: Response) => {
     throw new AppError('Invalid movie id', 400);
   }
 
-  // Solution 1
-  const result = await sequelize.query(`
-      SELECT s.id, i.id AS "inventoryId", m.id AS "movieId", a.address_line AS "addressLine", c.city_name AS "city",
-      c.state_name AS "state", a.postal_code AS "postalCode", cy.country_name AS "country", s.phone_number AS "phoneNumber",
-      i.stock_count AS "stock" FROM inventory AS i LEFT OUTER JOIN store AS s ON i.store_id = s.id
-      LEFT OUTER JOIN movie AS m ON i.movie_id = m.id LEFT OUTER JOIN address AS a ON s.address_id = a.id
-      LEFT OUTER JOIN city AS c on a.city_id = c.id LEFT OUTER JOIN country AS cy ON c.country_id = cy.id
-      WHERE m.id = ${id} ORDER BY i.stock_count DESC, i.id ASC;
-    `);
-
-  const [inventory] = result;
-
-  // Solution 2 (takes around same time as Solution 1)
-  // const result = await InventoryModel.findAll({
-  //   attributes: ['id', 'stockCount'],
-  //   include: [
-  //     {
-  //       model: StoreModel,
-  //       as: 'store',
-  //       attributes: ['phoneNumber'],
-  //       include: [
-  //         {
-  //           model: AddressModel,
-  //           as: 'address',
-  //           attributes: ['addressLine', 'postalCode'],
-  //           include: [
-  //             {
-  //               model: CityModel,
-  //               as: 'city',
-  //               attributes: ['cityName', 'stateName'],
-  //               include: [
-  //                 {
-  //                   model: CountryModel,
-  //                   as: 'country',
-  //                   attributes: ['countryName'],
-  //                 },
-  //               ],
-  //             },
-  //           ],
-  //         },
-  //       ],
-  //     },
-  //   ],
-  //   where: {
-  //     movieId: id,
-  //   },
-  //   order: [
-  //     ['stockCount', 'DESC'],
-  //     ['id', 'ASC'],
-  //   ],
-  // });
-
-  // const inventory = result.map((inv) => {
-  //   const storeObject = inv.getDataValue('store');
-  //   const storeData = {
-  //     addressLine: storeObject.address.addressLine,
-  //     city: storeObject.address.city.cityName,
-  //     state: storeObject.address.city.stateName,
-  //     country: storeObject.address.city.country.countryName,
-  //     postalCode: storeObject.address.postalCode,
-  //     phoneNumber: storeObject.phoneNumber,
-  //   };
-
-  //   return {
-  //     id: inv.getDataValue('id'),
-  //     ...storeData,
-  //     stockCount: inv.getDataValue('stockCount'),
-  //   };
-  // });
+  const inventory = await InventoryModel.findAll({
+    attributes: [['id', 'inventoryId'], 'stock'],
+    include: [
+      {
+        model: StoreModel,
+        as: 'store',
+        attributes: [
+          'id',
+          ['store_manager_id', 'managerId'],
+          'phoneNumber',
+          [literal(`"store->address"."address_line"`), 'addressLine'],
+          [literal(`"store->address->city"."city_name"`), 'city'],
+          [literal(`"store->address->city"."state_name"`), 'state'],
+          [literal(`"store->address->city->country"."country_name"`), 'country'],
+          [literal(`"store->address"."postal_code"`), 'postalCode'],
+        ],
+        include: [
+          {
+            model: AddressModel,
+            as: 'address',
+            attributes: [],
+            include: [
+              {
+                model: CityModel,
+                as: 'city',
+                attributes: [],
+                include: [
+                  {
+                    model: CountryModel,
+                    as: 'country',
+                    attributes: [],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    where: {
+      movieId: id,
+    },
+    order: [
+      ['stock', 'DESC'],
+      ['inventoryId', 'ASC'],
+    ],
+  });
 
   if (inventory.length === 0) {
     throw new AppError('Movie is out of stock', 404);
