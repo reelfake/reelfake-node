@@ -69,7 +69,6 @@ export type IncomingMovie = {
   posterUrl: string;
   rentalRate?: number;
   rentalDuration?: number;
-  actors?: NewMovieActorPayload[];
 };
 
 export type NewMovieActorPayload = {

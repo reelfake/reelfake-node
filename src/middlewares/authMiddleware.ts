@@ -1,6 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { UserModel } from '../models';
 import { AppError } from '../utils';
 import { ERROR_MESSAGES } from '../constants';
 import { CustomRequest } from '../types';

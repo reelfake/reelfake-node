@@ -12,8 +12,8 @@ import {
   CityModel,
   CountryModel,
 } from '../models';
-import { ITEMS_PER_PAGE_FOR_PAGINATION, availableGenres } from '../constants';
-import { CustomRequestWithBody, IncomingMovie, NewMovieActorPayload } from '../types';
+import { ITEMS_PER_PAGE_FOR_PAGINATION, availableGenres, ERROR_MESSAGES } from '../constants';
+import { CustomRequest, CustomRequestWithBody, IncomingMovie, NewMovieActorPayload } from '../types';
 import sequelize from '../sequelize.config';
 
 const movieModelAttributes: (string | [Literal, string])[] = [
@@ -402,7 +402,10 @@ export const findInStores = async (req: Request, res: Response) => {
   });
 };
 
-export const addMovie = async (req: CustomRequestWithBody<IncomingMovie>, res: Response) => {
+export const addMovie = async (
+  req: CustomRequestWithBody<IncomingMovie & { actors: NewMovieActorPayload[] }>,
+  res: Response
+) => {
   const { user } = req;
   if (!user) {
     throw new AppError('Invalid token', 401);
@@ -527,4 +530,80 @@ export const addActors = async (req: CustomRequestWithBody<NewMovieActorPayload[
   } catch (err: unknown) {
     throw new AppError((err as Error).message, 500);
   }
+};
+
+export const updateMovie = async (req: CustomRequestWithBody<Partial<IncomingMovie>>, res: Response) => {
+  const { user } = req;
+  if (!user) {
+    throw new AppError('Invalid token', 401);
+  }
+
+  if (!user.storeManagerId) {
+    throw new AppError('Unauthorized access', 403);
+  }
+
+  const { id: idText } = req.params;
+
+  const id = Number(idText);
+
+  if (isNaN(id)) {
+    throw new AppError('Invalid movie id', 400);
+  }
+
+  const moviePayload = req.body;
+
+  const instance = await MovieModel.findByPk(id);
+
+  if (!instance) {
+    throw new AppError(ERROR_MESSAGES.RESOURCES_NOT_FOUND, 404);
+  }
+
+  await instance.update({ ...moviePayload });
+
+  res.status(204).send();
+};
+
+export const deleteMovie = async (req: CustomRequest, res: Response) => {
+  const { user } = req;
+  if (!user) {
+    throw new AppError('Invalid token', 401);
+  }
+
+  if (!user.storeManagerId) {
+    throw new AppError('Unauthorized access', 403);
+  }
+
+  const { id: idText } = req.params;
+
+  const id = Number(idText);
+
+  if (isNaN(id)) {
+    throw new AppError('Invalid movie id', 400);
+  }
+
+  await sequelize.transaction(async (t) => {
+    const instance = await MovieModel.findByPk(id, { transaction: t });
+
+    if (!instance) {
+      throw new AppError(ERROR_MESSAGES.RESOURCES_NOT_FOUND, 404);
+    }
+
+    await instance.destroy({ transaction: t });
+
+    await MovieActorModel.destroy({
+      where: {
+        movieId: id,
+      },
+      transaction: t,
+    });
+
+    await InventoryModel.destroy({
+      where: {
+        movieId: id,
+      },
+      transaction: t,
+    });
+  });
+
+  res.status(204).send();
 };

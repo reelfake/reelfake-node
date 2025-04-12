@@ -7,7 +7,7 @@ get:
     - in: path
       name: id
       required: true
-      description: The id of the move that is requested
+      description: The id of the movie that is requested
       schema:
         type: integer
     - in: query
@@ -30,6 +30,112 @@ get:
             $ref: ../components/movieDetail.yaml
     '400':
       $ref: ../components/badRequest.yaml
+    '404':
+      $ref: ../components/notFound.yaml
+    '500':
+      $ref: ../components/internalServerError.yaml
+put:
+  summary: Update movie (only staff with manager role can perform this operation)
+  operationId: updateMovie
+  tags:
+    - movie
+  parameters:
+    - in: path
+      name: id
+      required: true
+      description: The id of the movie
+      schema:
+        type: integer
+  requestBody:
+    description: Payload of the movie to update
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            tmdbId:
+              type: integer
+            imdbId:
+              type: string
+            title:
+              type: string
+            originalTitle:
+              type: string
+            overview:
+              type: string
+            runtime:
+              type: integer
+            releaseDate:
+              type: string
+              format: date
+            genres:
+              type: array
+              items:
+                type: string
+            countriesOfOrigin:
+              type: array
+              items:
+                type: string
+            language:
+              type: string
+            movieStatus:
+              type: string
+            popularity:
+              type: number
+              format: float
+            budget:
+              type: integer
+              format: int64
+            revenue:
+              type: integer
+              format: int64
+            ratingAverage:
+              type: number
+              format: float
+            ratingCount:
+              type: integer
+            posterUrl:
+              type: string
+              format: uri
+            rentalRate:
+              type: number
+              format: double
+            rentalDuration:
+              type: integer
+              format: int32
+  responses:
+    '204':
+      description: Successfully updated the movie
+    '400':
+      $ref: ../components/badRequest.yaml
+    '401':
+      $ref: ../components/unauthorized.yaml
+    '404':
+      $ref: ../components/notFound.yaml
+    '500':
+      $ref: ../components/internalServerError.yaml
+delete:
+  summary: |
+    Delete movie (only staff with manager role can perform this operation).
+    Note: This operation will delete movie actors and inventory for the movie as well.
+  operationId: deleteMovie
+  tags:
+    - movie
+  parameters:
+    - in: path
+      name: id
+      required: true
+      description: The id of the movie
+      schema:
+        type: integer
+  responses:
+    '204':
+      description: Successfully updated the movie
+    '400':
+      $ref: ../components/badRequest.yaml
+    '401':
+      $ref: ../components/unauthorized.yaml
     '404':
       $ref: ../components/notFound.yaml
     '500':

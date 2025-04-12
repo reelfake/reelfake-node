@@ -53,10 +53,6 @@ Movie.init(
       field: 'tmdb_id',
       allowNull: false,
       unique: true,
-      validate: {
-        isNumeric: { msg: 'Tmdb id must be a number' },
-        notNull: { msg: 'Tmdb id cannot be empty or null' },
-      },
     },
     imdbId: {
       type: DataTypes.STRING(60),
@@ -68,20 +64,11 @@ Movie.init(
       type: DataTypes.STRING(255),
       field: 'title',
       allowNull: false,
-      validate: {
-        notEmpty: { msg: 'Title cannot be empty or null' },
-        notNull: { msg: 'Title cannot be empty or null' },
-      },
     },
     originalTitle: {
       type: DataTypes.STRING(255),
       field: 'original_title',
       allowNull: false,
-      validate: {
-        notEmpty: { msg: 'Original title cannot be empty or null' },
-
-        notNull: { msg: 'Original title cannot be empty or null' },
-      },
     },
     overview: {
       type: DataTypes.TEXT,
@@ -91,21 +78,11 @@ Movie.init(
       type: DataTypes.SMALLINT,
       field: 'runtime',
       allowNull: false,
-      validate: {
-        notEmpty: { msg: 'Runtime cannot be empty or null' },
-        notNull: { msg: 'Runtime cannot be empty or null' },
-        isNumeric: { msg: 'Runtime must be a number' },
-      },
     },
     releaseDate: {
       type: DataTypes.DATEONLY,
       field: 'release_date',
       allowNull: false,
-      validate: {
-        notEmpty: { msg: 'Release date cannot be empty or null' },
-        notNull: { msg: 'Release date cannot be empty or null' },
-        isDate: { msg: 'Release date must be a date in format MM-DD-YYYY', args: true },
-      },
     },
     genres: {
       type: DataTypes.VIRTUAL,
@@ -113,9 +90,6 @@ Movie.init(
     genreIds: {
       type: DataTypes.ARRAY(DataTypes.INTEGER),
       field: 'genre_ids',
-      validate: {
-        isArray: true,
-      },
     },
     countriesOfOrigin: {
       type: DataTypes.VIRTUAL,
@@ -123,9 +97,6 @@ Movie.init(
     originCountryIds: {
       type: DataTypes.ARRAY(DataTypes.INTEGER),
       field: 'origin_country_ids',
-      validate: {
-        isArray: true,
-      },
     },
     language: {
       type: DataTypes.VIRTUAL,
@@ -133,25 +104,15 @@ Movie.init(
     languageId: {
       type: DataTypes.INTEGER,
       field: 'language_id',
-      validate: {
-        isNumeric: true,
-      },
     },
     movieStatus: {
       type: DataTypes.STRING(20),
       field: 'movie_status',
       allowNull: false,
-      validate: {
-        notEmpty: { msg: 'Movie status cannot be empty or null' },
-        notNull: { msg: 'Movie status cannot be empty or null' },
-      },
     },
     popularity: {
       type: DataTypes.REAL,
       field: 'popularity',
-      validate: {
-        isFloat: { msg: 'Popularity must be a floating type number' },
-      },
     },
     budget: {
       type: DataTypes.BIGINT,
@@ -172,23 +133,14 @@ Movie.init(
     posterUrl: {
       type: DataTypes.STRING(90),
       field: 'poster_url',
-      validate: {
-        isUrl: { msg: 'Poster url must be a valid url' },
-      },
     },
     rentalRate: {
       type: DataTypes.DECIMAL({ precision: 4, scale: 2 }),
       field: 'rental_rate',
-      validate: {
-        isFloat: { msg: 'Rental rate must be a floating type numer' },
-      },
     },
     rentalDuration: {
       type: DataTypes.SMALLINT,
       field: 'rental_duration',
-      validate: {
-        isNumeric: { msg: 'Rental duration must be a valid number' },
-      },
     },
   },
   {
@@ -196,47 +148,52 @@ Movie.init(
     modelName: 'Movie',
     tableName: 'movie',
     timestamps: false,
-    hooks: {
-      async beforeSave(instance) {
-        let genreIds = await GenreModel.findAll({
-          where: {
-            genreName: {
-              [Op.in]: instance.getDataValue('genres'),
-            },
-          },
-          attributes: ['id'],
-        });
-
-        genreIds = genreIds.map((g) => g.getDataValue('id'));
-
-        let countryIds = await CountryModel.findAll({
-          where: {
-            countryCode: {
-              [Op.in]: instance
-                .getDataValue('countriesOfOrigin')
-                .map((countryCode: string) => countryCode.toUpperCase()),
-            },
-          },
-          attributes: ['id'],
-        });
-
-        countryIds = countryIds.map((c) => c.getDataValue('id'));
-
-        let languageId = await MovieLanguageModel.findOne({
-          where: {
-            languageCode: instance.getDataValue('language'),
-          },
-          attributes: ['id'],
-        });
-
-        languageId = languageId?.getDataValue('id');
-
-        instance.setDataValue('genreIds', genreIds);
-        instance.setDataValue('originCountryIds', countryIds);
-        instance.setDataValue('languageId', languageId);
-      },
-    },
   }
 );
+
+Movie.addHook('beforeSave', async (instance, options) => {
+  const genres = instance.getDataValue('genres');
+  const countries = instance.getDataValue('countriesOfOrigin');
+  const language = instance.getDataValue('language');
+
+  if (genres && genres.length > 0) {
+    let genreIds = await GenreModel.findAll({
+      where: {
+        genreName: {
+          [Op.in]: instance.getDataValue('genres'),
+        },
+      },
+      attributes: ['id'],
+    });
+    genreIds = genreIds.map((g) => g.getDataValue('id'));
+    instance.setDataValue('genreIds', genreIds);
+  }
+
+  if (countries && countries.length > 0) {
+    let countryIds = await CountryModel.findAll({
+      where: {
+        countryCode: {
+          [Op.in]: instance.getDataValue('countriesOfOrigin').map((countryCode: string) => countryCode.toUpperCase()),
+        },
+      },
+      attributes: ['id'],
+    });
+
+    countryIds = countryIds.map((c) => c.getDataValue('id'));
+    instance.setDataValue('originCountryIds', countryIds);
+  }
+
+  if (language) {
+    let languageId = await MovieLanguageModel.findOne({
+      where: {
+        languageCode: instance.getDataValue('language'),
+      },
+      attributes: ['id'],
+    });
+
+    languageId = languageId?.getDataValue('id');
+    instance.setDataValue('languageId', languageId);
+  }
+});
 
 export default Movie;

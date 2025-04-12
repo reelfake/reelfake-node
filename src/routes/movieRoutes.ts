@@ -1,7 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
 import { Router } from 'express';
 import { routeFnWrapper, AppError } from '../utils';
-import { findInStores, getMovieById, getMovies, searchMovies, addMovie, addActors } from '../controllers';
+import {
+  findInStores,
+  getMovieById,
+  getMovies,
+  searchMovies,
+  addMovie,
+  addActors,
+  updateMovie,
+  deleteMovie,
+} from '../controllers';
 import { validateAuthToken } from '../middlewares';
 import { GENRES } from '../constants';
 import { CustomRequest } from '../types';
@@ -109,9 +118,11 @@ function validateMoviesRouteQuery(req: CustomRequest, res: Response, next: NextF
 
 router.get('/', validateMoviesRouteQuery, routeFnWrapper(getMovies));
 router.post('/', validateAuthToken, routeFnWrapper(addMovie));
+router.get('/:id', validateMovieByIdRouteQuery, routeFnWrapper(getMovieById));
+router.put('/:id', validateAuthToken, routeFnWrapper(updateMovie));
+router.delete('/:id', validateAuthToken, routeFnWrapper(deleteMovie));
 router.post('/:id/add_actors', validateAuthToken, routeFnWrapper(addActors));
 router.get('/search', routeFnWrapper(searchMovies));
-router.get('/:id', validateMovieByIdRouteQuery, routeFnWrapper(getMovieById));
 router.get('/:id/stores', routeFnWrapper(findInStores));
 
 export default router;
