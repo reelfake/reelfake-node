@@ -6,4 +6,4 @@ export { getMovies, getMovieById, searchMovies, findInStores, addMovie, addActor
 export { getActors, searchActor, getActorById } from './actorController';
 export { getStores, getStockCount, getMoviesInStore, getStaffInStore, getStoreById, addStore } from './storeController';
 export { login, logout, registerUser, getUser, updateUser } from './userController';
-export { getStaff, getStaffByState } from './staffController';
+export { getStaff, getStaffByState, getStoreManagers } from './staffController';

@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { col, literal, fn } from 'sequelize';
+import { col, literal, fn, Op } from 'sequelize';
 import { StaffModel, AddressModel, CityModel, CountryModel, StoreModel } from '../models';
 import { AppError } from '../utils';
 import sequelize from '../sequelize.config';
@@ -25,7 +25,7 @@ export const getStaff = async (req: CustomRequest, res: Response) => {
           'addressLine',
           [literal(`"address->city"."city_name"`), 'cityName'],
           [literal(`"address->city"."state_name"`), 'stateName'],
-          [literal(`"address->city->country"."country_name"`), 'countryName'],
+          [literal(`"address->city->country"."country_name"`), 'country'],
           [literal(`"address"."postal_code"`), 'postalCode'],
         ],
         include: [
@@ -49,6 +49,64 @@ export const getStaff = async (req: CustomRequest, res: Response) => {
   res.status(200).json({
     items: updatedStaff,
     length: updatedStaff.length,
+  });
+};
+
+export const getStoreManagers = async (req: CustomRequest, res: Response) => {
+  const { user } = req;
+
+  if (!user) {
+    throw new AppError('Invalid token', 401);
+  }
+
+  const storeManagers = await StaffModel.findAll({
+    attributes: { exclude: ['addressId', 'storeId'] },
+    include: [
+      {
+        model: StoreModel,
+        as: 'store',
+        attributes: [
+          'phoneNumber',
+          [literal(`"store->address"."address_line"`), 'addressLine'],
+          [literal(`"store->address->city"."city_name"`), 'cityName'],
+          [literal(`"store->address->city"."state_name"`), 'stateName'],
+          [literal(`"store->address->city->country"."country_name"`), 'country'],
+          [literal(`"store->address"."postal_code"`), 'postalCode'],
+        ],
+        include: [
+          {
+            model: AddressModel,
+            as: 'address',
+            attributes: [],
+            include: [
+              {
+                model: CityModel,
+                as: 'city',
+                attributes: [],
+                include: [
+                  {
+                    model: CountryModel,
+                    as: 'country',
+                    attributes: [],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        order: [['id', 'ASC']],
+      },
+    ],
+    where: {
+      id: {
+        [Op.eq]: col(`"store"."store_manager_id`),
+      },
+    },
+  });
+
+  res.status(200).json({
+    items: storeManagers,
+    lenggth: storeManagers.length,
   });
 };
 

@@ -38,5 +38,5 @@
   $ref: apis/stockCountInStore.yaml
 /stores/{id}/movies:
   $ref: apis/moviesInStore.yaml
-/store/{id}/staff:
+/stores/{id}/staff:
   $ref: apis/staffInStore.yaml
