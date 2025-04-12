@@ -1,6 +1,8 @@
 post:
   summary: Add actors to movie
   operationId: addActors
+  tags:
+    - movie
   parameters:
     - in: path
       name: id

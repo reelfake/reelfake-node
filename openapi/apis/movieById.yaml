@@ -1,6 +1,8 @@
 get:
   summary: Get movie detail using the id
   operationId: getMovieById
+  tags:
+    - movie
   parameters:
     - in: path
       name: id

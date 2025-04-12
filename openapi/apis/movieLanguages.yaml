@@ -1,6 +1,8 @@
 get:
   summary: Get all available movie languages
   operationId: getMovieLanguages
+  tags:
+    - movie_language
   responses:
     '200':
       description: Successfully returned a list of available movie languages

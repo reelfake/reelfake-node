@@ -1,6 +1,8 @@
 post:
   summary: Create user account
   operationId: registerUser
+  tags:
+    - user
   security: []
   requestBody:
     description: Provide the user email and password for registration

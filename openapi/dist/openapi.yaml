@@ -21,6 +21,8 @@ paths:
     post:
       summary: Create user account
       operationId: registerUser
+      tags:
+        - user
       security: []
       requestBody:
         description: Provide the user email and password for registration
@@ -60,6 +62,8 @@ paths:
     post:
       summary: Login user
       operationId: login
+      tags:
+        - user
       security: []
       requestBody:
         description: Provide the user email and password for login
@@ -101,6 +105,8 @@ paths:
     get:
       summary: Logout user
       operationId: logout
+      tags:
+        - user
       security: []
       responses:
         '204':
@@ -120,6 +126,8 @@ paths:
     get:
       summary: Get the user detail
       operationId: getUser
+      tags:
+        - user
       responses:
         '200':
           description: Successfully updated the user data
@@ -134,6 +142,8 @@ paths:
     patch:
       summary: Update customer id, staff and/or store manager id
       operationId: updateUser
+      tags:
+        - user
       requestBody:
         description: Provide customer id, staff and/or store manager id
         required: true
@@ -161,6 +171,8 @@ paths:
     get:
       summary: Get all available genres
       operationId: getGenres
+      tags:
+        - genre
       responses:
         '200':
           description: Successfully returned a list of available movie genres
@@ -190,6 +202,8 @@ paths:
     get:
       summary: Get the list of the cities
       operationId: getCities
+      tags:
+        - city
       parameters:
         - in: query
           name: includeCountry
@@ -235,6 +249,8 @@ paths:
     get:
       summary: Get all the countries
       operationId: getCountries
+      tags:
+        - country
       responses:
         '200':
           description: Successfully returned a list of countries
@@ -264,6 +280,8 @@ paths:
     get:
       summary: Get all available movie languages
       operationId: getMovieLanguages
+      tags:
+        - movie_language
       responses:
         '200':
           description: Successfully returned a list of available movie languages
@@ -293,6 +311,8 @@ paths:
     get:
       summary: Get movies by page
       operationId: getMovies
+      tags:
+        - movie
       parameters:
         - in: query
           name: pageNumber
@@ -379,6 +399,8 @@ paths:
     post:
       summary: Add new movie
       operationId: addMovie
+      tags:
+        - movie
       requestBody:
         description: Payload for the new movie
         required: true
@@ -537,6 +559,8 @@ paths:
     get:
       summary: Get movie detail using the id
       operationId: getMovieById
+      tags:
+        - movie
       parameters:
         - in: path
           name: id
@@ -572,6 +596,8 @@ paths:
     post:
       summary: Add actors to movie
       operationId: addActors
+      tags:
+        - movie
       parameters:
         - in: path
           name: id
@@ -663,6 +689,8 @@ paths:
     get:
       summary: Search for the movie using query
       operationId: searchMovies
+      tags:
+        - movie
       parameters:
         - in: query
           name: pageNumber
@@ -719,6 +747,8 @@ paths:
     get:
       summary: Get stock count of the movie in all the stores
       operationId: findInStores
+      tags:
+        - movie
       parameters:
         - in: path
           name: id
@@ -750,6 +780,8 @@ paths:
     get:
       summary: Get the actor list with pagination support
       operationId: getActors
+      tags:
+        - actor
       parameters:
         - in: query
           name: pageNumber
@@ -785,6 +817,8 @@ paths:
     post:
       summary: Add new actor
       operationId: addActor
+      tags:
+        - actor
       requestBody:
         description: Payload for the new actor
         required: true
@@ -854,6 +888,8 @@ paths:
     get:
       summary: Get the actor list with pagination support
       operationId: searchActors
+      tags:
+        - actor
       parameters:
         - in: query
           name: pageNumber
@@ -916,6 +952,8 @@ paths:
     get:
       summary: Get actor detail using the id
       operationId: getActorById
+      tags:
+        - actor
       parameters:
         - in: path
           name: id
@@ -951,6 +989,8 @@ paths:
     get:
       summary: Get list of stores
       operationId: getStores
+      tags:
+        - store
       responses:
         '200':
           description: Successfully returned an array of storeItem
@@ -972,6 +1012,8 @@ paths:
     post:
       summary: Create a store
       operationId: addStore
+      tags:
+        - store
       requestBody:
         description: Payload for the new store
         required: true
@@ -1029,6 +1071,8 @@ paths:
     get:
       summary: Get store detail using the id
       operationId: getStoreById
+      tags:
+        - store
       parameters:
         - in: path
           name: id
@@ -1064,6 +1108,8 @@ paths:
     get:
       summary: Get the number of in-stock movies in a given store
       operationId: getStockCount
+      tags:
+        - store
       parameters:
         - in: path
           name: id
@@ -1098,6 +1144,8 @@ paths:
     get:
       summary: Get in-stock movies in a store page by page
       operationId: getMoviesInStore
+      tags:
+        - store
       parameters:
         - in: path
           name: id
@@ -1143,10 +1191,12 @@ paths:
           $ref: '#/components/responses/notFound'
         '500':
           $ref: '#/components/responses/internalServerError'
-  /store/{id}/staff:
+  /stores/{id}/staff:
     get:
       summary: Get staff employed in a store
       operationId: getStaffInStore
+      tags:
+        - store
       parameters:
         - in: path
           name: id
@@ -1437,36 +1487,33 @@ components:
     movieStock:
       type: object
       properties:
-        id:
-          type: integer
-          description: Unique id of the resource
         inventoryId:
           type: integer
           description: Unique id of the invetory
-        movieId:
-          type: integer
-          description: Unique id of the movie
-        addressLine:
-          type: string
-          description: This is typically street number and name (for e.g. 11 Reel Avenue)
-        city:
-          type: string
-          description: City name
-        state:
-          type: string
-          description: State name
-        postalCode:
-          type: string
-          description: Postal code
-        country:
-          type: string
-          description: Country name
-        phoneNumber:
-          type: string
-          description: The phone number of the store
         stock:
           type: integer
           description: The number of stock of the movie in the store
+        store:
+          type: object
+          properties:
+            addressLine:
+              type: string
+              description: This is typically street number and name (for e.g. 11 Reel Avenue)
+            city:
+              type: string
+              description: City name
+            state:
+              type: string
+              description: State name
+            postalCode:
+              type: string
+              description: Postal code
+            country:
+              type: string
+              description: Country name
+            phoneNumber:
+              type: string
+              description: The phone number of the store
     actorItem:
       type: object
       properties:
@@ -1511,6 +1558,7 @@ components:
           format: float
         profilePictureUrl:
           type: string
+          format: uri
         movies:
           type: array
           items:

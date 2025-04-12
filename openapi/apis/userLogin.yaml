@@ -1,6 +1,8 @@
 post:
   summary: Login user
   operationId: login
+  tags:
+    - user
   security: []
   requestBody:
     description: Provide the user email and password for login

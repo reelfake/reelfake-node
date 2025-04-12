@@ -1,6 +1,8 @@
 get:
   summary: Get movies by page
   operationId: getMovies
+  tags:
+    - movie
   parameters:
     - in: query
       name: pageNumber
@@ -87,6 +89,8 @@ get:
 post:
   summary: Add new movie
   operationId: addMovie
+  tags:
+    - movie
   requestBody:
     description: Payload for the new movie
     required: true

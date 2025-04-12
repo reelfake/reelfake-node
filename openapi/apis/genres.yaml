@@ -1,6 +1,8 @@
 get:
   summary: Get all available genres
   operationId: getGenres
+  tags:
+    - genre
   responses:
     '200':
       description: Successfully returned a list of available movie genres

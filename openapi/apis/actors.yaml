@@ -1,6 +1,8 @@
 get:
   summary: Get the actor list with pagination support
   operationId: getActors
+  tags:
+    - actor
   parameters:
     - in: query
       name: pageNumber
@@ -36,6 +38,8 @@ get:
 post:
   summary: Add new actor
   operationId: addActor
+  tags:
+    - actor
   requestBody:
     description: Payload for the new actor
     required: true

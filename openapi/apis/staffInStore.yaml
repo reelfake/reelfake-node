@@ -1,6 +1,8 @@
 get:
   summary: Get staff employed in a store
   operationId: getStaffInStore
+  tags:
+    - store
   parameters:
     - in: path
       name: id

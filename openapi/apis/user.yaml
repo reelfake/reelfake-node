@@ -1,6 +1,8 @@
 get:
   summary: Get the user detail
   operationId: getUser
+  tags:
+    - user
   responses:
     '200':
       description: Successfully updated the user data
@@ -15,6 +17,8 @@ get:
 patch:
   summary: Update customer id, staff and/or store manager id
   operationId: updateUser
+  tags:
+    - user
   requestBody:
     description: Provide customer id, staff and/or store manager id
     required: true

@@ -1,6 +1,8 @@
 get:
   summary: Get stock count of the movie in all the stores
   operationId: findInStores
+  tags:
+    - movie
   parameters:
     - in: path
       name: id

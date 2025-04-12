@@ -1,6 +1,8 @@
 get:
   summary: Logout user
   operationId: logout
+  tags:
+    - user
   security: []
   responses:
     '204':

@@ -1,6 +1,8 @@
 get:
   summary: Get in-stock movies in a store page by page
   operationId: getMoviesInStore
+  tags:
+    - store
   parameters:
     - in: path
       name: id

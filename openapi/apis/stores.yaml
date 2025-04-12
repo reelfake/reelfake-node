@@ -1,6 +1,8 @@
 get:
   summary: Get list of stores
   operationId: getStores
+  tags:
+    - store
   responses:
     '200':
       description: Successfully returned an array of storeItem
@@ -22,6 +24,8 @@ get:
 post:
   summary: Create a store
   operationId: addStore
+  tags:
+    - store
   requestBody:
     description: Payload for the new store
     required: true

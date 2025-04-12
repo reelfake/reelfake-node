@@ -1,6 +1,8 @@
 get:
   summary: Search for the movie using query
   operationId: searchMovies
+  tags:
+    - movie
   parameters:
     - in: query
       name: pageNumber

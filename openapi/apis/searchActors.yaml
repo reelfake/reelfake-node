@@ -1,6 +1,8 @@
 get:
   summary: Get the actor list with pagination support
   operationId: searchActors
+  tags:
+    - actor
   parameters:
     - in: query
       name: pageNumber

@@ -1,6 +1,8 @@
 get:
   summary: Get store detail using the id
   operationId: getStoreById
+  tags:
+    - store
   parameters:
     - in: path
       name: id

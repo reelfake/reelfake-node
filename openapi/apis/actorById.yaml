@@ -1,6 +1,8 @@
 get:
   summary: Get actor detail using the id
   operationId: getActorById
+  tags:
+    - actor
   parameters:
     - in: path
       name: id
