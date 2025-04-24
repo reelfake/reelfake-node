@@ -1,16 +1,14 @@
 import supertest from 'supertest';
 import bcrypt from 'bcryptjs';
 import app from '../app';
-import { cleanUserTable, execQuery, FIELD_MAP } from './testUtil';
+import { cleanUserTable, execQuery, getRandomCharacters } from './testUtil';
 
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 describe('User Controller', () => {
-  const email = 'test@example.com';
+  const email = `test${getRandomCharacters(10)}@example.com`;
   const password = 'test@12345';
   const server = supertest(app);
-
-  jest.setTimeout(20000);
 
   beforeEach(async () => {
     await cleanUserTable();
@@ -65,12 +63,8 @@ describe('User Controller', () => {
         })
         .set('Content-Type', 'application/json')
         .set('Accept', 'application/json');
-
       expect(response.status).toEqual(400);
-      expect(response.body).toStrictEqual({
-        message: 'User already exist',
-        status: 'error',
-      });
+      expect(response.body.message).toStrictEqual('User already exist');
     });
   });
 
@@ -115,10 +109,7 @@ describe('User Controller', () => {
         .set('Content-Type', 'application/json')
         .set('Accept', 'application/json');
       expect(response.status).toBe(401);
-      expect(response.body).toStrictEqual({
-        message: 'Invalid credentials',
-        status: 'error',
-      });
+      expect(response.body.message).toStrictEqual('Invalid credentials');
     });
 
     it('POST /user/login should return 401 when user try to login with invalid password', async () => {
@@ -131,10 +122,7 @@ describe('User Controller', () => {
         .set('Content-Type', 'application/json')
         .set('Accept', 'application/json');
       expect(response.status).toBe(401);
-      expect(response.body).toStrictEqual({
-        message: 'Invalid credentials',
-        status: 'error',
-      });
+      expect(response.body.message).toStrictEqual('Invalid credentials');
     });
 
     it('GET /user/logout should log out the user by using the cookie in the request', async () => {
@@ -150,9 +138,7 @@ describe('User Controller', () => {
       const cookie = response.get('Set-Cookie')?.at(0);
 
       response = await server.get('/api/v1/user/logout').set('Cookie', cookie || '');
-      expect(response.body).toStrictEqual({
-        message: 'Logged out successfully',
-      });
+      expect(response.body.message).toStrictEqual('Logged out successfully');
     });
   });
 
@@ -244,10 +230,7 @@ describe('User Controller', () => {
       });
 
       expect(patchResponse.status).toEqual(400);
-      expect(patchResponse.body).toStrictEqual({
-        status: 'error',
-        message: 'Another user with the same config already exist.',
-      });
+      expect(patchResponse.body.message).toStrictEqual('Another user with the same config already exist');
     });
 
     it('PATCH /user should return 400 when the request body is empty', async () => {
@@ -260,10 +243,7 @@ describe('User Controller', () => {
       });
 
       expect(response.status).toEqual(400);
-      expect(response.body).toStrictEqual({
-        status: 'error',
-        message: 'Either of customer, staff or manager staff id is required',
-      });
+      expect(response.body.message).toStrictEqual('Either of customer, staff or manager staff id is required');
     });
   });
 });

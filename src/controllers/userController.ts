@@ -109,7 +109,7 @@ export const updateUser = async (req: CustomRequest, res: Response) => {
   });
 
   if (usersWithDuplicateSetup > 0) {
-    throw new AppError(`Another user with the same config already exist.`, 400);
+    throw new AppError(`Another user with the same config already exist`, 400);
   }
 
   userToUpdate.set({ ...changes });

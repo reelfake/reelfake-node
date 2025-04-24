@@ -2,6 +2,10 @@ import type { Locals, Request } from 'express';
 import { DataType, Model } from 'sequelize';
 import type { Sequelize } from 'sequelize';
 
+export type KeyValuePair = {
+  [key: string]: string | number | boolean | KeyValuePair;
+};
+
 export type ModelField = {
   [key: string]: {
     type: DataType;
@@ -31,6 +35,7 @@ export interface CustomRequest extends Request {
     staffId?: number;
     storeManagerId?: number;
   };
+  validateUserRole?: (fn: () => boolean) => void;
   genres?: string[];
   languages?: string[];
   languageIds?: number[];
@@ -44,6 +49,7 @@ export interface CustomRequestWithBody<M> extends Request<{ [key: string]: strin
     staffId?: number;
     storeManagerId?: number;
   };
+  validateUserRole?: (fn: () => boolean) => void;
   genres?: string[];
   languages?: string[];
   languageIds?: number[];
@@ -71,28 +77,45 @@ export type IncomingMovie = {
   rentalDuration?: number;
 };
 
-export type NewMovieActorPayload = {
+export type Address = {
+  addressLine: string;
+  cityName: string;
+  stateName: string;
+  country: string;
+  postalCode: string;
+};
+
+export type ActorPayload = {
   tmdbId: number;
-  imdbId: string;
+  imdbId?: string;
   actorName: string;
-  biography: string;
-  birthday: Date;
-  deathday: Date;
-  placeOfBirth: string;
-  popularity: number;
-  profilePictureUrl: string;
+  biography?: string;
+  birthday?: Date;
+  deathday?: Date;
+  placeOfBirth?: string;
+  popularity?: number;
+  profilePictureUrl?: string;
+};
+
+export type MovieActorPayload = ActorPayload & {
   characterName: string;
   castOrder: number;
 };
 
-export type StorePayload = {
-  storeManagerId: number;
+export type StaffPayload = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  address: Address;
+  storeId: number;
+  active: boolean;
   phoneNumber: string;
-  address: {
-    addressLine: string;
-    city: string;
-    state: string;
-    country: string;
-    postalCode: string;
-  };
+  avatar: string;
+};
+
+export type StorePayload = {
+  storeManagerId?: number;
+  storeManager?: StaffPayload;
+  phoneNumber: string;
+  address: Address;
 };

@@ -6,6 +6,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { AppError } from './utils';
 import {
+  addressRoutes,
   userRoutes,
   genreRoutes,
   cityRoutes,
@@ -48,6 +49,8 @@ app.get('/api/v1/docs', (req, res) => {
 app.get('/api/v1/redocs', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'openapi', 'redocs.html'));
 });
+
+app.use('/api/v1/addresses', addressRoutes);
 
 app.use('/api/v1/user', userRoutes);
 

@@ -6,11 +6,9 @@ import { CustomRequest } from '../types';
 
 export default async function (req: Request, res: Response, next: NextFunction) {
   const token = req.cookies.auth_token;
-
   if (!token) {
     return next(new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401));
   }
-
   try {
     const decodedToken = jwt.verify(token, process.env.JWT_SECRET || '', {
       ignoreExpiration: false, // default
@@ -20,12 +18,18 @@ export default async function (req: Request, res: Response, next: NextFunction) 
     const customerId = (decodedToken as { [key: string]: string })['customerId'];
     const staffId = (decodedToken as { [key: string]: string })['staffId'];
     const storeManagerId = (decodedToken as { [key: string]: string })['storeManagerId'];
+
     (req as CustomRequest).user = {
       userUUID,
       userEmail,
       customerId: Number(customerId),
       staffId: Number(staffId),
       storeManagerId: Number(storeManagerId),
+    };
+    (req as CustomRequest).validateUserRole = (fn: () => boolean) => {
+      if (!fn()) {
+        throw new AppError(ERROR_MESSAGES.FORBIDDEN, 403);
+      }
     };
     next();
   } catch (err: unknown) {

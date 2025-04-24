@@ -3,7 +3,19 @@ import BaseModel from './baseModel';
 import Country from './countryModel';
 import sequelize from '../sequelize.config';
 
-class City extends BaseModel {}
+class City extends BaseModel {
+  public static async isCityInState(cityName: string, stateName: string) {
+    const cityInstance = await City.findAll({
+      where: {
+        stateName,
+      },
+    });
+
+    const cities = cityInstance.map((c) => c.getDataValue('cityName'));
+    const cityExist = cities.includes(cityName);
+    return cityExist;
+  }
+}
 
 City.init(
   {

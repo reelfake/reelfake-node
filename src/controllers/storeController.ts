@@ -1,37 +1,10 @@
 import type { Request, Response } from 'express';
-import { literal, col, fn, where } from 'sequelize';
-import { Literal } from 'sequelize/lib/utils';
+import { literal, col, Op } from 'sequelize';
+import sequelize from '../sequelize.config';
 import { StoreModel, AddressModel, CityModel, CountryModel, InventoryModel, MovieModel, StaffModel } from '../models';
-import { ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
+import { ITEMS_PER_PAGE_FOR_PAGINATION, movieModelAttributes } from '../constants';
 import { AppError } from '../utils';
-import { StorePayload, CustomRequest, CustomRequestWithBody } from '../types';
-
-const movieModelAttributes: (string | [Literal, string])[] = [
-  'id',
-  'imdbId',
-  'title',
-  'originalTitle',
-  'overview',
-  'runtime',
-  'releaseDate',
-  [literal(`(SELECT ARRAY_AGG(g.genre_name) FROM genre AS g JOIN UNNEST(genre_ids) AS gid ON g.id = gid)`), 'genres'],
-  [
-    literal(
-      `(SELECT ARRAY_AGG(c.iso_country_code) FROM country AS c JOIN UNNEST(origin_country_ids) AS cid ON c.id = cid)`
-    ),
-    'countriesOfOrigin',
-  ],
-  [literal(`(SELECT l.iso_language_code FROM movie_language AS l WHERE l.id = language_id)`), 'language'],
-  'movieStatus',
-  'popularity',
-  'budget',
-  'revenue',
-  'ratingAverage',
-  'ratingCount',
-  'posterUrl',
-  'rentalRate',
-  'rentalDuration',
-];
+import { StorePayload, CustomRequest, CustomRequestWithBody, KeyValuePair, Address } from '../types';
 
 export const getStaffInStore = async (req: CustomRequest, res: Response) => {
   const { user } = req;
@@ -77,90 +50,25 @@ export const getStoreById = async (req: Request, res: Response) => {
     throw new AppError('Invalid store id', 400);
   }
 
-  const store = await StoreModel.findOne({
-    attributes: [
-      'id',
-      'phoneNumber',
-      [fn('COUNT', `"staff"."id"`), 'staffCount'],
-      [
-        literal(`(
-          SELECT jsonb_build_object(
-            'firstName', first_name,
-            'lastName', last_name,
-            'email', email,
-            'phoneNumber', phone_number,
-            'address', jsonb_build_object(
-              'addressLine', address.address_line,
-              'cityName', city.city_name,
-              'stateName', city.state_name,
-              'countryName', country.country_name,
-              'postalCode', address.postal_code
-            )
-          ) FROM staff LEFT JOIN address ON staff.address_id = address.id
-            LEFT JOIN city ON address.city_id = city.id
-            LEFT JOIN country ON city.country_id = country.id
-            WHERE staff.id = "Store"."store_manager_id"
-        )`),
-        'storeManager',
-      ],
-    ],
-    include: [
-      {
-        model: StaffModel,
-        as: 'staff',
-        attributes: [],
-      },
-      {
-        model: AddressModel,
-        as: 'address',
-        attributes: [
-          'addressLine',
-          [literal(`"address->city"."city_name"`), 'cityName'],
-          [literal(`"address->city"."state_name"`), 'stateName'],
-          [literal(`"address->city->country"."country_name"`), 'countryName'],
-          'postalCode',
-        ],
-        include: [
-          {
-            model: CityModel,
-            as: 'city',
-            attributes: [],
-            include: [
-              {
-                model: CountryModel,
-                as: 'country',
-                attributes: [],
-              },
-            ],
-          },
-        ],
-      },
-    ],
-    where: {
-      id: storeId,
-    },
-    group: ['Store.id', 'address.id', 'address->city.id', 'address->city->country.id'],
-  });
+  const storeInstance = await StoreModel.getExpandedData(storeId);
 
-  res.status(200).json(store);
+  res.status(200).json(storeInstance);
 };
 
 export const getStores = async (req: Request, res: Response) => {
   const stores = await StoreModel.findAll({
-    attributes: [
-      'id',
-      'phoneNumber',
-      [col(`"address"."address_line"`), 'addressLine'],
-      [col(`"address"."city"."city_name"`), 'city'],
-      [col(`"address"."city"."state_name"`), 'state'],
-      [col(`"address"."city"."country"."country_name"`), 'country'],
-      [col(`"address"."postal_code"`), 'postalCode'],
-    ],
+    attributes: ['id', 'storeManagerId', 'phoneNumber'],
     include: [
       {
         model: AddressModel,
         as: 'address',
-        attributes: [],
+        attributes: [
+          [col(`"address_line"`), 'addressLine'],
+          [literal(`"address->city"."city_name"`), 'cityName'],
+          [literal(`"address->city"."state_name"`), 'stateName'],
+          [literal(`"address->city->country"."country_name"`), 'country'],
+          [col(`"postal_code"`), 'postalCode'],
+        ],
         include: [
           {
             model: CityModel,
@@ -177,6 +85,7 @@ export const getStores = async (req: Request, res: Response) => {
         ],
       },
     ],
+    order: [['id', 'ASC']],
   });
 
   res.status(200).json({
@@ -266,47 +175,353 @@ export const getMoviesInStore = async (req: Request, res: Response) => {
     });
 };
 
-export const addStore = async (req: CustomRequestWithBody<StorePayload>, res: Response) => {
-  const { user } = req;
-  if (!user) {
-    throw new AppError('Invalid token', 401);
+export const updateStore = async (req: CustomRequestWithBody<Partial<StorePayload>>, res: Response) => {
+  const { user, validateUserRole } = req;
+  validateUserRole?.(() => !!(user && user.storeManagerId));
+
+  const { id: idText } = req.params;
+
+  const storeId = Number(idText);
+  if (isNaN(storeId)) {
+    throw new AppError('Invalid store id', 400);
   }
 
-  if (!user.storeManagerId) {
-    throw new AppError('Only store managers can create store', 403);
+  const { phoneNumber, address } = req.body;
+
+  if (
+    address &&
+    (!address.addressLine || !address.cityName || !address.stateName || !address.country || !address.postalCode)
+  ) {
+    throw new AppError('Incomplete address', 400);
   }
 
-  // const {
-  //   storeManagerId,
-  //   phoneNumber,
-  //   address: { addressLine, city, state, country, postalCode },
-  // } = req.body;
+  if (req.body.storeManagerId && req.body.storeManager) {
+    throw new AppError('Duplicate store manager data in request', 400);
+  }
 
-  const createdStore = await StoreModel.create(
-    {
-      ...req.body,
-    },
-    {
-      include: [
-        {
-          model: AddressModel,
-          as: 'address',
-          include: [
-            {
-              model: CityModel,
-              as: 'city',
-              include: [
-                {
-                  model: CountryModel,
-                  as: 'country',
-                },
-              ],
-            },
-          ],
-        },
-      ],
+  if (address) {
+    if (await StoreModel.isAddressInUse(address, storeId)) {
+      throw new AppError('The address is in use by other store', 400);
     }
-  );
+  }
 
-  res.status(201).json(createdStore);
+  if (phoneNumber) {
+    const otherStoreUsingPhoneNumber = await StoreModel.findOne({
+      where: {
+        phoneNumber,
+        id: {
+          [Op.not]: storeId,
+        },
+      },
+    });
+
+    if (otherStoreUsingPhoneNumber) {
+      throw new AppError('The phone number is in use by other store', 400);
+    }
+  }
+
+  let { id: storeManagerId, address: storeManagerAddress } = req.body.storeManagerId
+    ? {
+        id: req.body.storeManagerId,
+        address: await StaffModel.getAddress(req.body.storeManagerId),
+      }
+    : await StoreModel.getStoreManagerId(storeId, true);
+
+  const originalStoreAddress = await StoreModel.getAddress(storeId);
+  if (address && address.stateName && address.stateName !== originalStoreAddress.stateName)
+    throw new AppError('Changing state of the store is not allowed', 400);
+  if (address && address.country && address.country !== originalStoreAddress.country)
+    throw new AppError('Changing country of the store is not allowed', 400);
+
+  const newStoreAddress = {
+    addressLine: address?.addressLine ?? originalStoreAddress.addressLine,
+    cityName: address?.cityName ?? originalStoreAddress.cityName,
+    stateName: address?.stateName ?? originalStoreAddress.stateName,
+    country: address?.country ?? originalStoreAddress.country,
+    postalCode: address?.postalCode ?? originalStoreAddress.postalCode,
+  };
+
+  const isCityInState = await CityModel.isCityInState(newStoreAddress.cityName, newStoreAddress.stateName);
+  if (!isCityInState) {
+    throw new AppError('City belongs to a different state', 400);
+  }
+
+  if (storeManagerId) {
+    const isManagerOfOtherStore = await StoreModel.isStoreManager(storeManagerId, storeId);
+    if (isManagerOfOtherStore) {
+      throw new AppError('Store manager is assigned to existing store', 400);
+    }
+  }
+
+  StoreModel.validateAddressAgainstManagerAddress(newStoreAddress, storeManagerAddress);
+
+  await sequelize.transaction(async (t) => {
+    const storeData: { [key: string]: string | number } = {};
+
+    if (storeManagerId) {
+      storeData['storeManagerId'] = storeManagerId;
+    }
+
+    if (phoneNumber) {
+      storeData['phoneNumber'] = phoneNumber;
+    }
+
+    if (address) {
+      const addressId = await AddressModel.findOrCreateAddress(newStoreAddress, t);
+      storeData['addressId'] = Number(addressId);
+    }
+
+    await StoreModel.update(
+      { ...storeData },
+      {
+        where: {
+          id: storeId,
+        },
+        fields: Object.keys(storeData),
+        transaction: t,
+      }
+    );
+  });
+
+  res.status(204).send();
+};
+
+export const createStore = async (req: CustomRequestWithBody<StorePayload>, res: Response) => {
+  const { user, validateUserRole } = req;
+  validateUserRole?.(() => !!(user && user.storeManagerId));
+
+  const { storeManagerId, storeManager, phoneNumber, address } = req.body;
+  let newStoreManagerId = storeManagerId;
+
+  // if (!storeManagerId && !storeManager) {
+  //   throw new AppError('Store manager data is required', 400);
+  // }
+
+  if (storeManagerId && storeManager) {
+    throw new AppError('Duplicate store manager data in request', 400);
+  }
+
+  if (!phoneNumber || !address) {
+    throw new AppError('Missing required data', 400);
+  }
+
+  if (
+    address &&
+    (!address.addressLine || !address.cityName || !address.stateName || !address.country || !address.postalCode)
+  ) {
+    throw new AppError('Incomplete address', 400);
+  }
+
+  if (await StoreModel.isAddressInUse(address)) {
+    throw new AppError('The address is in use by other store', 400);
+  }
+
+  if (await StaffModel.isAddressInUse(address)) {
+    throw new AppError('The address is in use by other staff', 400);
+  }
+
+  if (await StoreModel.isPhoneNumberInUse(phoneNumber)) {
+    throw new AppError('The phone number is in use by other store', 400);
+  }
+
+  if (await StaffModel.isPhoneNumberInUse(phoneNumber)) {
+    throw new AppError('The phone number is in use by staff', 400);
+  }
+
+  let storeManagerAddress: Address | undefined = undefined;
+
+  if (storeManagerId) {
+    const isAssignedToDifferentStore = await StoreModel.isStoreManager(storeManagerId);
+    if (isAssignedToDifferentStore) {
+      throw new AppError('Store manager is assigned to existing store', 400);
+    }
+    storeManagerAddress = await StaffModel.getAddress(storeManagerId);
+  }
+
+  if (storeManager) {
+    storeManagerAddress = storeManager.address;
+  }
+
+  // if (!storeManagerAddress) {
+  //   throw new AppError('Store manager address is missing', 400);
+  // }
+
+  if (storeManagerAddress) {
+    StoreModel.validateAddressAgainstManagerAddress(address, storeManagerAddress);
+
+    if (await StoreModel.isAddressInUse(storeManagerAddress)) {
+      throw new AppError('Store manager address cannot be same as other store', 400);
+    }
+  }
+
+  const newStoreId = await sequelize.transaction(async (t) => {
+    if (storeManager) {
+      const addressId = await AddressModel.findOrCreateAddress(storeManager.address, t);
+      const newStaffInstance = await StaffModel.create(
+        {
+          firstName: storeManager.firstName,
+          lastName: storeManager.lastName,
+          email: storeManager.email,
+          addressId,
+          active: true,
+          phoneNumber: storeManager.phoneNumber,
+          avatar: storeManager.avatar,
+        },
+        {
+          fields: ['firstName', 'lastName', 'email', 'addressId', 'active', 'phoneNumber', 'avatar'],
+          returning: ['id'],
+          transaction: t,
+        }
+      );
+      newStoreManagerId = Number(newStaffInstance.getDataValue('id'));
+    }
+
+    const addressId = await AddressModel.findOrCreateAddress(address, t);
+
+    const newStoreData: KeyValuePair = {};
+    if (newStoreManagerId) {
+      newStoreData.storeManagerId = newStoreManagerId;
+    }
+
+    if (phoneNumber) {
+      newStoreData.phoneNumber = phoneNumber;
+    }
+
+    if (addressId) {
+      newStoreData.addressId = addressId;
+    }
+
+    const [newStore, isCreated] = await StoreModel.findOrCreate({
+      where: {
+        addressId,
+      },
+      defaults: newStoreData,
+      fields: Object.keys(newStoreData),
+      returning: ['id'],
+      transaction: t,
+    });
+
+    if (!isCreated) {
+      throw new AppError('Store with the given paylaod already exist', 400);
+    }
+
+    const newStoreId = newStore.getDataValue('id');
+
+    if (newStoreManagerId) {
+      await StaffModel.update(
+        {
+          storeId: newStoreId,
+        },
+        {
+          where: {
+            id: newStoreManagerId,
+          },
+          transaction: t,
+        }
+      );
+    }
+
+    return newStoreId;
+  });
+
+  const storeInstance = await StoreModel.getExpandedData(newStoreId);
+  if (!storeInstance) {
+    throw new AppError(`Failed to get new store data for ${newStoreId}`, 500);
+  }
+  storeInstance.setDataValue('staffCount', undefined);
+  res.status(201).json(storeInstance);
+};
+
+export const deleteStore = async (req: CustomRequest, res: Response) => {
+  const { user, validateUserRole } = req;
+  validateUserRole?.(() => !!(user && user.storeManagerId));
+
+  const { id: idText } = req.params;
+  const storeId = Number(idText);
+
+  if (isNaN(storeId)) {
+    throw new AppError('Invalid store id', 400);
+  }
+
+  const { forceDelete: forceDeleteQueryString } = req.query;
+  const forceDelete =
+    forceDeleteQueryString?.toString().toLowerCase() === 'true' ||
+    forceDeleteQueryString?.toString().toLowerCase() === 'yes';
+
+  const storeData = await StoreModel.findByPk(storeId);
+
+  if (!storeData) {
+    throw new AppError('Resource not found', 404);
+  }
+
+  if (!forceDelete) {
+    const staffCount = await StaffModel.count({
+      where: {
+        storeId,
+      },
+    });
+
+    if (staffCount > 0) {
+      throw new AppError('There are staff employed at the given store', 400);
+    }
+  }
+
+  await sequelize.transaction(async (t) => {
+    if (forceDelete) {
+      await StoreModel.update(
+        {
+          storeManagerId: null,
+        },
+        {
+          where: {
+            id: storeId,
+          },
+        }
+      );
+
+      const staffAddressIdsInstance = await StaffModel.findAll({
+        attributes: ['addressId'],
+        where: {
+          storeId,
+        },
+        transaction: t,
+      });
+
+      const staffAddressIds = staffAddressIdsInstance.map((addrId) => addrId.getDataValue('addressId'));
+
+      await StaffModel.destroy({
+        where: {
+          storeId,
+        },
+        transaction: t,
+      });
+
+      await AddressModel.destroy({
+        where: {
+          id: {
+            [Op.in]: staffAddressIds,
+          },
+        },
+        transaction: t,
+      });
+    }
+
+    const storeAddressId = storeData.getDataValue('addressId');
+
+    await StoreModel.destroy({
+      where: {
+        id: storeId,
+      },
+      transaction: t,
+    });
+
+    await AddressModel.destroy({
+      where: {
+        id: storeAddressId,
+      },
+      transaction: t,
+    });
+  });
+
+  res.status(204).send();
 };

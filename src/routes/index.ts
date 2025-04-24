@@ -1,3 +1,4 @@
+export { default as addressRoutes } from './addressRoute';
 export { default as genreRoutes } from './genreRoutes';
 export { default as cityRoutes } from './cityRoutes';
 export { default as countryRoutes } from './countryRoutes';

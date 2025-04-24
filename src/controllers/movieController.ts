@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
-import { Op, Transaction, WhereOptions, col, fn, literal } from 'sequelize';
-import { Literal } from 'sequelize/lib/utils';
+import { Includeable, Op, Transaction, WhereOptions, col, fn, literal } from 'sequelize';
+import sequelize from '../sequelize.config';
 import { executeQuery, AppError } from '../utils';
 import {
   ActorModel,
@@ -11,37 +11,10 @@ import {
   AddressModel,
   CityModel,
   CountryModel,
+  MovieLanguageModel,
 } from '../models';
-import { ITEMS_PER_PAGE_FOR_PAGINATION, availableGenres, ERROR_MESSAGES } from '../constants';
-import { CustomRequest, CustomRequestWithBody, IncomingMovie, NewMovieActorPayload } from '../types';
-import sequelize from '../sequelize.config';
-
-const movieModelAttributes: (string | [Literal, string])[] = [
-  'id',
-  'imdbId',
-  'title',
-  'originalTitle',
-  'overview',
-  'runtime',
-  'releaseDate',
-  [literal(`(SELECT ARRAY_AGG(g.genre_name) FROM genre AS g JOIN UNNEST(genre_ids) AS gid ON g.id = gid)`), 'genres'],
-  [
-    literal(
-      `(SELECT ARRAY_AGG(c.iso_country_code) FROM country AS c JOIN UNNEST(origin_country_ids) AS cid ON c.id = cid)`
-    ),
-    'countriesOfOrigin',
-  ],
-  [literal(`(SELECT l.iso_language_code FROM movie_language AS l WHERE l.id = language_id)`), 'language'],
-  'movieStatus',
-  'popularity',
-  'budget',
-  'revenue',
-  'ratingAverage',
-  'ratingCount',
-  'posterUrl',
-  'rentalRate',
-  'rentalDuration',
-];
+import { ITEMS_PER_PAGE_FOR_PAGINATION, availableGenres, ERROR_MESSAGES, movieModelAttributes } from '../constants';
+import { CustomRequest, CustomRequestWithBody, IncomingMovie, MovieActorPayload } from '../types';
 
 const newMovieFields = [
   'tmdbId',
@@ -137,7 +110,7 @@ async function getMoviesUsingQuery(pageNumber: number, genresIds: number[], orde
   return movies;
 }
 
-async function createActors(transaction: Transaction, actors: NewMovieActorPayload[], movieId?: number) {
+async function createActors(t: Transaction, actors: MovieActorPayload[], movieId?: number) {
   const createdActors = await ActorModel.bulkCreate(
     actors.map((actor) => ({
       tmdbId: actor.tmdbId,
@@ -153,19 +126,14 @@ async function createActors(transaction: Transaction, actors: NewMovieActorPaylo
     {
       fields: newActorFields,
       ignoreDuplicates: true,
-      transaction: transaction,
+      transaction: t,
     }
   );
 
-  const newActorIdsAndTmdbIds = await ActorModel.findAll({
-    attributes: ['id', 'tmdbId'],
-    where: {
-      tmdbId: {
-        [Op.in]: createdActors.map((actor) => actor.getDataValue('tmdbId')),
-      },
-    },
-    transaction: transaction,
-  });
+  const createdActorIds = createdActors.map((actorItem) => ({
+    id: actorItem.getDataValue('id'),
+    tmdbId: actorItem.getDataValue('tmdbId'),
+  }));
 
   const newMovieActorRecords: Array<{
     actorId: number;
@@ -173,20 +141,19 @@ async function createActors(transaction: Transaction, actors: NewMovieActorPaylo
     castOrder: number;
   }> = [];
 
-  for (const idAndTmdbId of newActorIdsAndTmdbIds) {
-    const actorId = idAndTmdbId.getDataValue('id');
-    const tmdbId = idAndTmdbId.getDataValue('tmdbId');
-    const newMovieActorData = actors.find((a) => a.tmdbId === tmdbId);
+  for (const idAndTmdbId of createdActorIds) {
+    const { id, tmdbId } = idAndTmdbId;
+    const movieCredit = actors.find((a) => a.tmdbId === tmdbId);
 
-    if (!newMovieActorData) {
+    if (!movieCredit) {
       throw new AppError(`There was an error adding actor with tmdbId ${tmdbId}`, 500);
     }
 
-    const characterName = newMovieActorData.characterName;
-    const castOrder = newMovieActorData.castOrder;
+    const characterName = movieCredit.characterName;
+    const castOrder = movieCredit.castOrder;
 
     newMovieActorRecords.push({
-      actorId,
+      actorId: id,
       characterName,
       castOrder,
     });
@@ -203,7 +170,7 @@ async function createActors(transaction: Transaction, actors: NewMovieActorPaylo
       {
         fields: ['movieId', 'actorId', 'characterName', 'castOrder'],
         ignoreDuplicates: false,
-        transaction: transaction,
+        transaction: t,
       }
     );
   }
@@ -280,13 +247,38 @@ export const getMovieById = async (req: Request, res: Response) => {
   const id = Number(idText);
   const includeActors = includeActorsText === 'true';
 
+  const associations: Includeable[] = [
+    {
+      model: MovieLanguageModel,
+      as: 'movieLanguage',
+      attributes: [],
+    },
+  ];
+
+  if (includeActors) {
+    associations.push({
+      model: ActorModel,
+      as: 'actors',
+      attributes: [
+        'id',
+        'actorName',
+        [literal(`"actors->movieActor"."character_name"`), 'characterName'],
+        [literal(`"actors->movieActor"."cast_order"`), 'castOrder'],
+        'profilePictureUrl',
+      ],
+      through: {
+        as: 'movieActor',
+        attributes: [],
+      },
+    });
+  }
+
   const movie = await MovieModel.findOne({
+    attributes: movieModelAttributes,
     where: {
       id,
     },
-    attributes: includeActors
-      ? [...movieModelAttributes, [fn('public.get_actors', id), 'actors']]
-      : [...movieModelAttributes],
+    include: associations,
   });
 
   if (!movie) {
@@ -402,87 +394,80 @@ export const findInStores = async (req: Request, res: Response) => {
   });
 };
 
-export const addMovie = async (
-  req: CustomRequestWithBody<IncomingMovie & { actors: NewMovieActorPayload[] }>,
+export const createMovie = async (
+  req: CustomRequestWithBody<IncomingMovie & { actors: MovieActorPayload[] }>,
   res: Response
 ) => {
-  const { user } = req;
-  if (!user) {
-    throw new AppError('Invalid token', 401);
-  }
-
-  if (!user.staffId && !user.storeManagerId) {
-    throw new AppError('Unauthorized access', 403);
-  }
-
+  const { user, validateUserRole } = req;
+  validateUserRole?.(() => !!(user && (user.staffId || user.storeManagerId)));
   const actors = req.body.actors;
   const hasActors = actors && actors.length > 0;
 
-  try {
-    const movieId = await sequelize.transaction(async (t) => {
-      const movieInstance = MovieModel.build({ ...req.body });
-      const newMovie = await movieInstance.save({
-        fields: newMovieFields,
-        transaction: t,
-      });
-
-      newMovie.setDataValue('genreIds', undefined);
-      newMovie.setDataValue('originCountryIds', undefined);
-      newMovie.setDataValue('languageId', undefined);
-      newMovie.setDataValue('rentalRate', Number(newMovie.getDataValue('rentalRate')));
-
-      const newMovieId = newMovie.getDataValue('id');
-      if (hasActors) {
-        await createActors(t, actors, newMovieId);
-      }
-
-      const createdMovieId = newMovieId;
-
-      if (!createdMovieId) {
-        throw new AppError('There was an error adding the movie', 500);
-      }
-
-      return createdMovieId;
+  const movieId = await sequelize.transaction(async (t) => {
+    const movieInstance = MovieModel.build({ ...req.body });
+    const newMovie = await movieInstance.save({
+      fields: newMovieFields,
+      transaction: t,
     });
 
-    const createdMovieDetail = await MovieModel.findOne({
-      where: {
-        id: movieId,
+    newMovie.setDataValue('genreIds', undefined);
+    newMovie.setDataValue('originCountryIds', undefined);
+    newMovie.setDataValue('languageId', undefined);
+    newMovie.setDataValue('rentalRate', Number(newMovie.getDataValue('rentalRate')));
+
+    const newMovieId = newMovie.getDataValue('id');
+
+    if (!newMovieId) {
+      throw new AppError('There was an error adding the movie', 500);
+    }
+
+    if (hasActors) {
+      await createActors(t, actors, newMovieId);
+    }
+
+    return newMovieId;
+  });
+
+  const associations: Includeable[] = [
+    {
+      model: MovieLanguageModel,
+      as: 'movieLanguage',
+      attributes: [],
+    },
+  ];
+
+  if (hasActors) {
+    associations.push({
+      model: ActorModel,
+      as: 'actors',
+      attributes: [
+        'id',
+        'actorName',
+        [literal(`"actors->movieActor"."character_name"`), 'characterName'],
+        [literal(`"actors->movieActor"."cast_order"`), 'castOrder'],
+        'profilePictureUrl',
+      ],
+      through: {
+        as: 'movieActor',
+        attributes: [],
       },
-      attributes: hasActors
-        ? [
-            ...movieModelAttributes,
-            [
-              literal(`(SELECT ARRAY_AGG(g.genre_name) FROM genre AS g JOIN UNNEST(genre_ids) AS gid ON g.id = gid)`),
-              'genres',
-            ],
-            [
-              literal(
-                `(SELECT ARRAY_AGG(c.iso_country_code) FROM country AS c JOIN UNNEST(origin_country_ids) AS cid ON c.id = cid)`
-              ),
-              'countriesOfOrigin',
-            ],
-            [literal(`(SELECT l.iso_language_code FROM movie_language AS l WHERE l.id = language_id)`), 'language'],
-            [sequelize.fn('public.get_actors', movieId), 'actors'],
-          ]
-        : movieModelAttributes,
     });
-
-    res.status(201).json(createdMovieDetail);
-  } catch (err: unknown) {
-    throw new AppError((err as Error).message, 500);
   }
+
+  const createdMovieDetail = await MovieModel.findOne({
+    attributes: movieModelAttributes,
+    where: {
+      id: movieId,
+    },
+    include: associations,
+  });
+
+  res.status(201).json(createdMovieDetail);
 };
 
-export const addActors = async (req: CustomRequestWithBody<NewMovieActorPayload[]>, res: Response) => {
-  const { user } = req;
-  if (!user) {
-    throw new AppError('Invalid token', 401);
-  }
-
-  if (!user.staffId && !user.storeManagerId) {
-    throw new AppError('Unauthorized access', 403);
-  }
+export const addActors = async (req: CustomRequestWithBody<MovieActorPayload[]>, res: Response) => {
+  const { user, validateUserRole } = req;
+  validateUserRole?.(() => !!(user && (user.staffId || user.storeManagerId)));
 
   const { id: idText } = req.params;
   const movieId = Number(idText);
@@ -533,14 +518,8 @@ export const addActors = async (req: CustomRequestWithBody<NewMovieActorPayload[
 };
 
 export const updateMovie = async (req: CustomRequestWithBody<Partial<IncomingMovie>>, res: Response) => {
-  const { user } = req;
-  if (!user) {
-    throw new AppError('Invalid token', 401);
-  }
-
-  if (!user.storeManagerId) {
-    throw new AppError('Unauthorized access', 403);
-  }
+  const { user, validateUserRole } = req;
+  validateUserRole?.(() => !!(user && user.storeManagerId));
 
   const { id: idText } = req.params;
 
@@ -564,14 +543,8 @@ export const updateMovie = async (req: CustomRequestWithBody<Partial<IncomingMov
 };
 
 export const deleteMovie = async (req: CustomRequest, res: Response) => {
-  const { user } = req;
-  if (!user) {
-    throw new AppError('Invalid token', 401);
-  }
-
-  if (!user.storeManagerId) {
-    throw new AppError('Unauthorized access', 403);
-  }
+  const { user, validateUserRole } = req;
+  validateUserRole?.(() => !!(user && user.storeManagerId));
 
   const { id: idText } = req.params;
 

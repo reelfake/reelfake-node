@@ -6,7 +6,7 @@ import {
   getMovieById,
   getMovies,
   searchMovies,
-  addMovie,
+  createMovie,
   addActors,
   updateMovie,
   deleteMovie,
@@ -117,7 +117,7 @@ function validateMoviesRouteQuery(req: CustomRequest, res: Response, next: NextF
 }
 
 router.get('/', validateMoviesRouteQuery, routeFnWrapper(getMovies));
-router.post('/', validateAuthToken, routeFnWrapper(addMovie));
+router.post('/', validateAuthToken, routeFnWrapper(createMovie));
 router.get('/:id', validateMovieByIdRouteQuery, routeFnWrapper(getMovieById));
 router.put('/:id', validateAuthToken, routeFnWrapper(updateMovie));
 router.delete('/:id', validateAuthToken, routeFnWrapper(deleteMovie));

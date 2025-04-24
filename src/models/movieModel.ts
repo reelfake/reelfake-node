@@ -2,9 +2,9 @@ import { DataTypes, Op, CreationOptional, WhereOptions } from 'sequelize';
 import BaseModel from './baseModel';
 import GenreModel from './genreModel';
 import CountryModel from './countryModel';
-import ActorModel from './actorModel';
 import MovieLanguageModel from './movieLanguageModel';
 import sequelize from '../sequelize.config';
+import { capitalize } from '../utils';
 
 class Movie extends BaseModel {
   declare id: CreationOptional<number>;
@@ -51,24 +51,18 @@ Movie.init(
     tmdbId: {
       type: DataTypes.INTEGER,
       field: 'tmdb_id',
-      allowNull: false,
-      unique: true,
     },
     imdbId: {
       type: DataTypes.STRING(60),
       field: 'imdb_id',
-      allowNull: true,
-      unique: true,
     },
     title: {
       type: DataTypes.STRING(255),
       field: 'title',
-      allowNull: false,
     },
     originalTitle: {
       type: DataTypes.STRING(255),
       field: 'original_title',
-      allowNull: false,
     },
     overview: {
       type: DataTypes.TEXT,
@@ -77,12 +71,10 @@ Movie.init(
     runtime: {
       type: DataTypes.SMALLINT,
       field: 'runtime',
-      allowNull: false,
     },
     releaseDate: {
       type: DataTypes.DATEONLY,
       field: 'release_date',
-      allowNull: false,
     },
     genres: {
       type: DataTypes.VIRTUAL,
@@ -108,7 +100,6 @@ Movie.init(
     movieStatus: {
       type: DataTypes.STRING(20),
       field: 'movie_status',
-      allowNull: false,
     },
     popularity: {
       type: DataTypes.REAL,
@@ -157,10 +148,11 @@ Movie.addHook('beforeSave', async (instance, options) => {
   const language = instance.getDataValue('language');
 
   if (genres && genres.length > 0) {
+    const capitalizedGenres = genres.map((g: string) => `${capitalize(g)}`);
     let genreIds = await GenreModel.findAll({
       where: {
         genreName: {
-          [Op.in]: instance.getDataValue('genres'),
+          [Op.in]: capitalizedGenres,
         },
       },
       attributes: ['id'],
@@ -173,7 +165,7 @@ Movie.addHook('beforeSave', async (instance, options) => {
     let countryIds = await CountryModel.findAll({
       where: {
         countryCode: {
-          [Op.in]: instance.getDataValue('countriesOfOrigin').map((countryCode: string) => countryCode.toUpperCase()),
+          [Op.in]: countries.map((countryCode: string) => countryCode.toUpperCase()),
         },
       },
       attributes: ['id'],
@@ -186,7 +178,7 @@ Movie.addHook('beforeSave', async (instance, options) => {
   if (language) {
     let languageId = await MovieLanguageModel.findOne({
       where: {
-        languageCode: instance.getDataValue('language'),
+        languageCode: language.toLowerCase(),
       },
       attributes: ['id'],
     });

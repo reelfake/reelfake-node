@@ -1,10 +1,45 @@
 import supertest from 'supertest';
 
 import app from '../app';
-import { ITEMS_COUNT_PER_PAGE_FOR_TEST, execQuery, getRowsCount, FIELD_MAP } from './testUtil';
+import {
+  ITEMS_COUNT_PER_PAGE_FOR_TEST,
+  execQuery,
+  getRowsCount,
+  getRandomActors,
+  getRandomCharacters,
+  FIELD_MAP,
+} from './testUtil';
 
 describe('Actor Controller', () => {
-  jest.setTimeout(20000);
+  const email = `test${getRandomCharacters(10)}@example.com`;
+  const password = 'test@12345';
+  let cookie: string;
+  const server = supertest(app);
+
+  beforeAll(async () => {
+    await server.post('/api/v1/user/register').send({
+      email,
+      password,
+    });
+
+    let response = await server.post('/api/v1/user/login').send({
+      email,
+      password,
+    });
+
+    cookie = response.get('Set-Cookie')?.at(0) || '';
+
+    response = await server.patch('/api/v1/user/me').set('Cookie', cookie).send({
+      storeManagerId: 2,
+    });
+
+    cookie = response.get('Set-Cookie')?.at(0) || '';
+  });
+
+  afterAll(async () => {
+    await execQuery(`DELETE FROM public.user`);
+  });
+
   afterEach(() => {
     jest.restoreAllMocks();
   });
@@ -12,7 +47,6 @@ describe('Actor Controller', () => {
   describe('GET /actors', () => {
     it('GET /api/v1/actors should return actors page by page', async () => {
       const startingPage = 1;
-      const server = supertest(app);
       const totalRows = await getRowsCount('actor');
 
       const iterations = 3;
@@ -41,9 +75,7 @@ describe('Actor Controller', () => {
     });
 
     it('GET /api/v1/actors should return correct actor list when jumping between pages', async () => {
-      const server = supertest(app);
       const totalRows = await getRowsCount('actor');
-
       const pages = [2, 5, 3];
 
       for (const page of pages) {
@@ -68,12 +100,26 @@ describe('Actor Controller', () => {
         });
       }
     });
+
+    it('GET /api/v1/actors should return 400 when page number is 0', async () => {
+      const response = await server.get(`/api/v1/actors?pageNumber=0`);
+
+      expect(response.status).toBe(400);
+      expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
+      expect(response.body.message).toBe('Page number should be a valid non-zero positive number');
+    });
+
+    it('GET /api/v1/actors should return 400 when page number is not a number', async () => {
+      const response = await server.get(`/api/v1/actors?pageNumber=a`);
+
+      expect(response.status).toBe(400);
+      expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
+      expect(response.body.message).toBe('Page number should be a valid non-zero positive number');
+    });
   });
 
   describe('GET /actors/:id', () => {
     it('GET /api/v1/actors/:id should return actor without the movies', async () => {
-      const server = supertest(app);
-
       const response = await server.get(`/api/v1/actors/928365`);
       const expectedActor = await execQuery(
         `
@@ -88,7 +134,6 @@ describe('Actor Controller', () => {
     });
 
     it('GET /api/v1/actors/:id?includeMovies=true should return actor with the movies', async () => {
-      const server = supertest(app);
       const actorId = 928365;
 
       const response = await server.get(`/api/v1/actors/${actorId}?includeMovies=true`);
@@ -117,32 +162,8 @@ describe('Actor Controller', () => {
     });
   });
 
-  describe('GET /actors returning 4xx', () => {
-    it('GET /api/v1/actors should return 400 when page number is 0', async () => {
-      const server = supertest(app);
-
-      const response = await server.get(`/api/v1/actors?pageNumber=0`);
-
-      expect(response.status).toBe(400);
-      expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
-      expect(response.body.message).toBe('Page number should be a valid non-zero positive number');
-    });
-
-    it('GET /api/v1/actors should return 400 when page number is not a number', async () => {
-      const server = supertest(app);
-
-      const response = await server.get(`/api/v1/actors?pageNumber=a`);
-
-      expect(response.status).toBe(400);
-      expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
-      expect(response.body.message).toBe('Page number should be a valid non-zero positive number');
-    });
-  });
-
   describe('GET /actors/search', () => {
     it('GET /actors/search?q=... should return list of actors with name containing the given chars', async () => {
-      const server = supertest(app);
-
       const totalRows = await getRowsCount('actor', "actor_name LIKE '%john%'");
 
       const pages = [1, 2, 7, 8, 3];
@@ -174,7 +195,6 @@ describe('Actor Controller', () => {
     });
 
     it('GET /actors/search?name=... should return list of actors with the given name', async () => {
-      const server = supertest(app);
       const totalRows = await getRowsCount('actor', "actor_name = 'steve smith'");
       const response = await server.get('/api/v1/actors/search?name=steve smith');
       const expectedActors = await execQuery(
@@ -195,12 +215,8 @@ describe('Actor Controller', () => {
         totalPages: Math.ceil(totalRows / ITEMS_COUNT_PER_PAGE_FOR_TEST),
       });
     });
-  });
 
-  describe('GET /actors/search returning 4xx', () => {
     it('GET /actors/search should return 400 when missing the string to search', async () => {
-      const server = supertest(app);
-
       const response = await server.get(`/api/v1/actors/search?q=   `);
       expect(response.status).toBe(400);
       expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
@@ -208,12 +224,167 @@ describe('Actor Controller', () => {
     });
 
     it('GET /actors/search?q=... should return 404 when no actors found with the given search string', async () => {
-      const server = supertest(app);
-
       const response = await server.get(`/api/v1/actors/search?q=blahblahblah`);
       expect(response.status).toBe(404);
       expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
       expect(response.body.message).toBe('Resources not found');
+    });
+  });
+
+  describe('POST /actors', () => {
+    it('should add new actor', async () => {
+      const [payload] = await getRandomActors(1);
+
+      const response = await server
+        .post('/api/v1/actors')
+        .set('Cookie', cookie)
+        .send({
+          ...payload,
+          characterName: undefined,
+          castOrder: undefined,
+        });
+      expect(response.status).toEqual(201);
+      const newActorId = response.body.id;
+
+      const [actorQueryResult] = await execQuery(`
+        SELECT id, imdb_id AS "imdbId",
+        actor_name AS "actorName", biography, birthday, deathday,
+        place_of_birth AS "placeOfBirth", popularity, profile_picture_url AS "profilePictureUrl"
+        FROM actor WHERE id = ${newActorId}  
+      `);
+      expect(response.body).toEqual(actorQueryResult);
+    });
+
+    it('should not create actor if there exist an actor with the same name', async () => {
+      const [payload1] = await getRandomActors(1);
+      const [payload2] = await getRandomActors(1);
+
+      await execQuery(`
+        INSERT INTO actor (
+          tmdb_id, imdb_id, actor_name, biography, birthday, deathday, 
+          place_of_birth, popularity, profile_picture_url
+        )
+        VALUES (
+          ${payload1.tmdbId},
+          ${payload1.imdbId ? `'${payload1.imdbId}'` : null},
+          '${payload1.actorName}',
+          ${payload1.biography ? `'${payload1.biography}'` : null},
+          '${payload1.birthday?.toISOString().split('T')[0]}',
+          ${payload1.deathday ? `'${payload1.deathday}'` : null},
+          ${payload1.placeOfBirth ? `'${payload1.placeOfBirth}'` : null},
+          ${payload1.popularity},
+          '${payload1.profilePictureUrl}'
+        )
+      `);
+
+      const response = await server
+        .post('/api/v1/actors')
+        .set('Cookie', cookie)
+        .send({
+          ...payload2,
+          actorName: payload1.actorName,
+        });
+      expect(response.status).toEqual(400);
+      expect(response.body.message).toEqual(`Actor with name ${payload1.actorName} already exist`);
+    });
+  });
+
+  describe('PUT /actors/:id', () => {
+    it('should update the actor', async () => {
+      const [payload1] = await getRandomActors(1);
+      const [payload2] = await getRandomActors(1);
+
+      const [newActorQueryResult] = await execQuery(`
+        INSERT INTO actor (
+          tmdb_id, imdb_id, actor_name, biography, birthday, deathday, 
+          place_of_birth, popularity, profile_picture_url
+        )
+        VALUES (
+          ${payload1.tmdbId},
+          ${payload1.imdbId ? `'${payload1.imdbId}'` : null},
+          '${payload1.actorName}',
+          ${payload1.biography ? `'${payload1.biography}'` : null},
+          '${payload1.birthday?.toISOString().split('T')[0]}',
+          ${payload1.deathday ? `'${payload1.deathday}'` : null},
+          ${payload1.placeOfBirth ? `'${payload1.placeOfBirth}'` : null},
+          ${payload1.popularity},
+          '${payload1.profilePictureUrl}'
+        )
+        RETURNING id;
+      `);
+      const newActorId = newActorQueryResult.id;
+
+      const response = await server
+        .put(`/api/v1/actors/${newActorId}`)
+        .set('Cookie', cookie)
+        .send({
+          ...payload2,
+          birthday: payload2.birthday?.toISOString().split('T')[0],
+          characterName: undefined,
+          castOrder: undefined,
+        });
+      expect(response.status).toEqual(204);
+
+      const [actorQueryResult] = await execQuery(
+        `
+        SELECT tmdb_id AS "tmdbId", imdb_id AS "imdbId", actor_name AS "actorName",
+        biography, birthday, deathday, place_of_birth AS "placeOfBirth", popularity,
+        profile_picture_url AS "profilePictureUrl"
+        FROM actor
+        WHERE id = ${newActorId}
+      `,
+        {},
+        true,
+        false
+      );
+
+      expect(actorQueryResult).toEqual({
+        tmdbId: payload2.tmdbId,
+        imdbId: payload2.imdbId || null,
+        actorName: payload2.actorName,
+        biography: payload2.biography || '',
+        birthday: payload2.birthday?.toISOString().split('T')[0] || null,
+        deathday: payload2.deathday ? payload2.deathday : null,
+        placeOfBirth: payload2.placeOfBirth || null,
+        popularity: payload2.popularity,
+        profilePictureUrl: payload2.profilePictureUrl,
+      });
+    });
+
+    it('should return 404 if the actor with the given id does not exist', async () => {
+      const payload = await getRandomActors(1);
+      const [actorQueryResult] = await execQuery(`SELECT MAX(id) AS id FROM actor`);
+      const response = await server
+        .put(`/api/v1/actors/${Number(actorQueryResult.id) + 1}`)
+        .set('Cookie', cookie)
+        .send(payload);
+      expect(response.status).toEqual(404);
+      expect(response.body.message).toEqual('Resources not found');
+    });
+  });
+
+  describe('DELETE /actors/:id', () => {
+    it('should delete the actor with the given id', async () => {
+      const [payload] = await getRandomActors(1);
+
+      const newActorResponse = await server.post('/api/v1/actors').set('Cookie', cookie).send(payload);
+      const newActorId = Number(newActorResponse.body.id);
+
+      let [actorQueryResult] = await execQuery(`SELECT COUNT(*) AS count FROM actor WHERE id = ${newActorId}`);
+      expect(Number(actorQueryResult.count)).toEqual(1);
+
+      const response = await server.delete(`/api/v1/actors/${newActorId}`).set('Cookie', cookie);
+      expect(response.status).toEqual(204);
+
+      [actorQueryResult] = await execQuery(`SELECT COUNT(*) AS count FROM actor WHERE id = ${newActorId}`);
+      expect(Number(actorQueryResult.count)).toEqual(0);
+    });
+
+    it('should return 404 when deleting the actor with the id that does not exist', async () => {
+      const [actorQueryResult] = await execQuery(`SELECT MAX(id) AS id FROM actor`);
+      const response = await server.delete(`/api/v1/actors/${Number(actorQueryResult.id) + 1}`).set('Cookie', cookie);
+      expect(response.status).toEqual(404);
+      expect(response.body.message).toEqual('Resources not found');
     });
   });
 });

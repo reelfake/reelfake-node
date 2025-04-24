@@ -1,9 +1,10 @@
 import type { Request, Response } from 'express';
 import { Op, literal } from 'sequelize';
+import sequelize from '../sequelize.config';
 import { ActorModel, MovieActorModel, MovieModel } from '../models';
 import { AppError } from '../utils';
-import { ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
-import { CustomRequestWithBody, CustomRequest } from '../types';
+import { ERROR_MESSAGES, ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
+import { CustomRequestWithBody, CustomRequest, MovieActorPayload, ActorPayload } from '../types';
 
 export const getActors = async (req: Request, res: Response) => {
   const { pageNumber: pageNumberText = '1' } = req.query;
@@ -128,7 +129,7 @@ export const getActorById = async (req: Request, res: Response) => {
 };
 
 export const addToMovie = async (
-  req: CustomRequestWithBody<{ movieId: number; characterName: string; castOrder: number }>,
+  req: CustomRequestWithBody<MovieActorPayload & { movieId: number }>,
   res: Response
 ) => {
   const { user } = req;
@@ -156,35 +157,172 @@ export const addToMovie = async (
   const actor = await ActorModel.findByPk(actorId);
 
   if (actor === null) {
-    throw new AppError(`Actor not found with id ${actorId}`, 404);
+    throw new AppError(ERROR_MESSAGES.RESOURCES_NOT_FOUND, 404);
   }
 
   const movie = await MovieModel.findByPk(movieId);
 
   if (movie === null) {
-    throw new AppError(`Movie not found with id ${movieId}`, 404);
+    throw new AppError('Movie not found', 404);
   }
 
-  const [result, isCreated] = await MovieActorModel.findOrCreate({
-    defaults: {
-      actorId,
-      movieId,
-      characterName,
-      castOrder,
-    },
+  const result = await sequelize.transaction(async (t) => {
+    const [result, isCreated] = await MovieActorModel.findOrCreate({
+      defaults: {
+        actorId,
+        movieId,
+        characterName,
+        castOrder,
+      },
+      fields: ['actorId', 'movieId', 'characterName', 'castOrder'],
+      where: {
+        actorId,
+        movieId,
+      },
+      transaction: t,
+    });
+
+    if (!isCreated) {
+      throw new AppError('Actor already exists for the given movie', 400);
+    }
+
+    if (!result) {
+      throw new AppError('Failed to add actor to movie', 500);
+    }
+
+    return result;
+  });
+
+  res.status(201).json(result);
+};
+
+export const addActor = async (req: CustomRequestWithBody<ActorPayload>, res: Response) => {
+  const { user, validateUserRole } = req;
+  validateUserRole?.(() => !!(user && (user.staffId || user.storeManagerId)));
+
+  const similarActorCount = await ActorModel.count({
     where: {
-      actorId,
-      movieId,
+      actorName: req.body.actorName,
     },
   });
 
-  if (!isCreated) {
-    throw new AppError('Actor already exists for the given movie', 400);
+  if (similarActorCount > 0) {
+    throw new AppError(`Actor with name ${req.body.actorName} already exist`, 400);
   }
 
-  if (!result) {
-    throw new AppError('Failed to add actor to movie', 500);
+  const newActorInstance = await sequelize.transaction(async (t) => {
+    const newActorInstance = await ActorModel.create(
+      { ...req.body },
+      {
+        fields: [
+          'tmdbId',
+          'imdbId',
+          'actorName',
+          'biography',
+          'birthday',
+          'deathday',
+          'placeOfBirth',
+          'popularity',
+          'profilePictureUrl',
+        ],
+        transaction: t,
+      }
+    );
+
+    if (!newActorInstance) {
+      throw new AppError('Failed to add new actor', 500);
+    }
+
+    return newActorInstance;
+  });
+
+  const id = newActorInstance.getDataValue('id');
+  const actorInstance = await ActorModel.findByPk(id, {
+    attributes: [
+      'id',
+      'imdbId',
+      'actorName',
+      'biography',
+      'birthday',
+      'deathday',
+      'placeOfBirth',
+      'popularity',
+      'profilePictureUrl',
+    ],
+  });
+
+  if (!actorInstance) {
+    throw new AppError('Failed to add new actor', 500);
   }
 
-  res.status(201).json(result);
+  const newActor = actorInstance.toJSON();
+
+  res.status(201).json(newActor);
+};
+
+export const updateActor = async (req: CustomRequestWithBody<ActorPayload>, res: Response) => {
+  const { user } = req;
+  if (!user) {
+    throw new AppError('Invalid token', 401);
+  }
+
+  if (!user.storeManagerId) {
+    throw new AppError('Unauthorized access', 403);
+  }
+
+  const { id: idText } = req.params;
+
+  const id = Number(idText);
+
+  if (isNaN(id)) {
+    throw new AppError('Invalid actor id', 400);
+  }
+
+  const instance = await ActorModel.findByPk(id);
+
+  if (!instance) {
+    throw new AppError(ERROR_MESSAGES.RESOURCES_NOT_FOUND, 404);
+  }
+
+  await instance.update({ ...req.body });
+
+  res.status(204).send();
+};
+
+export const deleteActor = async (req: CustomRequest, res: Response) => {
+  const { user } = req;
+  if (!user) {
+    throw new AppError('Invalid token', 401);
+  }
+
+  if (!user.storeManagerId) {
+    throw new AppError('Unauthorized access', 403);
+  }
+
+  const { id: idText } = req.params;
+
+  const id = Number(idText);
+
+  if (isNaN(id)) {
+    throw new AppError('Invalid actor id', 400);
+  }
+
+  await sequelize.transaction(async (t) => {
+    const instance = await ActorModel.findByPk(id, { transaction: t });
+
+    if (!instance) {
+      throw new AppError(ERROR_MESSAGES.RESOURCES_NOT_FOUND, 404);
+    }
+
+    await instance.destroy({ transaction: t });
+
+    await MovieActorModel.destroy({
+      where: {
+        actorId: id,
+      },
+      transaction: t,
+    });
+  });
+
+  res.status(204).send();
 };

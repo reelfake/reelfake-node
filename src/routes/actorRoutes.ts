@@ -1,7 +1,8 @@
 import type { Request, Response, NextFunction } from 'express';
 import { Router } from 'express';
+import { validateAuthToken } from '../middlewares';
+import { getActors, searchActor, getActorById, updateActor, deleteActor, addActor, addToMovie } from '../controllers';
 import { routeFnWrapper, AppError } from '../utils';
-import { getActors, searchActor, getActorById } from '../controllers';
 
 const router = Router();
 
@@ -43,10 +44,7 @@ function validateActorByIdRouteQuery(req: Request, res: Response, next: NextFunc
   const includeMoviesTruthies = ['true', 'yes', '1'];
   const includeMoviesFalsies = ['false', 'no', '0'];
 
-  if (
-    includeMoviesText &&
-    ![...includeMoviesTruthies, ...includeMoviesFalsies].includes(includeMoviesText)
-  ) {
+  if (includeMoviesText && ![...includeMoviesTruthies, ...includeMoviesFalsies].includes(includeMoviesText)) {
     throw new AppError(
       'Invalid value for includeMovies in query. Please refer to api specs for more information.',
       400
@@ -59,7 +57,11 @@ function validateActorByIdRouteQuery(req: Request, res: Response, next: NextFunc
 }
 
 router.get('/', validateActorsRouteQuery, routeFnWrapper(getActors));
+router.post('/', validateAuthToken, routeFnWrapper(addActor));
+router.post('/:id/add_to_movie', validateAuthToken, routeFnWrapper(addToMovie));
 router.get('/search', validateSearchRouteQuery, routeFnWrapper(searchActor));
-router.get('/:id', validateActorByIdRouteQuery, getActorById);
+router.get('/:id', validateActorByIdRouteQuery, routeFnWrapper(getActorById));
+router.put('/:id', validateAuthToken, routeFnWrapper(updateActor));
+router.delete('/:id', validateAuthToken, routeFnWrapper(deleteActor));
 
 export default router;
