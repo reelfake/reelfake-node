@@ -122,7 +122,7 @@ describe('Store Controller', () => {
   });
 
   describe('GET /stores', () => {
-    it('GET /stores should all the stores', async () => {
+    it('should all the stores', async () => {
       const response = await server.get('/api/v1/stores');
       const expectedStores = await execQuery(
         `
@@ -147,8 +147,10 @@ describe('Store Controller', () => {
         length: expectedStores.length,
       });
     });
+  });
 
-    it('GET /stores/:id/stock should get the stock count for the given store', async () => {
+  describe('GET /stores/:id', () => {
+    it('should get the stock count for the given store', async () => {
       const id = 1;
       const response = await server.get('/api/v1/stores/1/stock');
       expect(response.status).toBe(200);
@@ -164,7 +166,7 @@ describe('Store Controller', () => {
       });
     });
 
-    it('GET /stores/:id/movies should return the movies page by page', async () => {
+    it('should return the movies in a store page by page', async () => {
       const storeId = 1;
       const totalRows = await getRowsCount('inventory', `store_id = ${storeId}`);
 
@@ -204,7 +206,7 @@ describe('Store Controller', () => {
       }
     });
 
-    it('GET /stores/:id/staff should return the staff employed at the store', async () => {
+    it('should return the staff employed at the store', async () => {
       const storeId = 1;
       const response = await server.get(`/api/v1/stores/${storeId}/staff`).set('Cookie', cookie);
       expect(response.status).toEqual(200);
@@ -229,19 +231,19 @@ describe('Store Controller', () => {
       });
     });
 
-    it('GET /stores/:id/stock should return 400 when the id is not a valid number', async () => {
+    it('should return 400 when getting stock count but id is not a valid number', async () => {
       const response = await server.get('/api/v1/stores/blah/stock');
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('Invalid store id');
     });
 
-    it('GET /stores/:id/movies should return 400 when the id is not a valid number', async () => {
+    it('should return 400 when getting movies in a store but id is not a valid number', async () => {
       const response = await server.get('/api/v1/stores/blah/movies');
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('Invalid store id');
     });
 
-    it('GET /stores/:id/movies should return 400 when the page number is not a valid number', async () => {
+    it('should return 400 when getting movies in a store but page number is not valid', async () => {
       const response = await server.get('/api/v1/stores/1/movies?pageNumber=blah');
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('Invalid page number');

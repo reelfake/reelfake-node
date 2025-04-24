@@ -19,7 +19,6 @@ export const movieModelAttributes: (string | [Literal, string])[] = [
     ),
     'countriesOfOrigin',
   ],
-  [literal(`"movieLanguage"."iso_language_code"`), 'language'],
   'movieStatus',
   'popularity',
   'budget',

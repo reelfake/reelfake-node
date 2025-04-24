@@ -1,7 +1,16 @@
 import type { Request, Response } from 'express';
 import { literal, col, Op } from 'sequelize';
 import sequelize from '../sequelize.config';
-import { StoreModel, AddressModel, CityModel, CountryModel, InventoryModel, MovieModel, StaffModel } from '../models';
+import {
+  StoreModel,
+  AddressModel,
+  CityModel,
+  CountryModel,
+  InventoryModel,
+  MovieModel,
+  StaffModel,
+  MovieLanguageModel,
+} from '../models';
 import { ITEMS_PER_PAGE_FOR_PAGINATION, movieModelAttributes } from '../constants';
 import { AppError } from '../utils';
 import { StorePayload, CustomRequest, CustomRequestWithBody, KeyValuePair, Address } from '../types';
@@ -147,7 +156,14 @@ export const getMoviesInStore = async (req: Request, res: Response) => {
       {
         model: MovieModel,
         as: 'movie',
-        attributes: movieModelAttributes,
+        attributes: [...movieModelAttributes, [literal(`"movie->movieLanguage"."iso_language_code"`), 'language']],
+        include: [
+          {
+            model: MovieLanguageModel,
+            as: 'movieLanguage',
+            attributes: [],
+          },
+        ],
       },
     ],
     order: [['stock', 'DESC']],

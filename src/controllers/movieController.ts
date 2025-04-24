@@ -274,7 +274,7 @@ export const getMovieById = async (req: Request, res: Response) => {
   }
 
   const movie = await MovieModel.findOne({
-    attributes: movieModelAttributes,
+    attributes: [...movieModelAttributes, [literal(`"movieLanguage"."iso_language_code"`), 'language']],
     where: {
       id,
     },
@@ -305,7 +305,7 @@ export const searchMovies = async (req: Request, res: Response) => {
   ]);
 
   const result = await MovieModel.findAll({
-    attributes: movieModelAttributes,
+    attributes: [...movieModelAttributes, [literal(`"movieLanguage"."iso_language_code"`), 'language']],
     where: {
       title: {
         [Op.like]: `%${q}%`,
@@ -455,7 +455,7 @@ export const createMovie = async (
   }
 
   const createdMovieDetail = await MovieModel.findOne({
-    attributes: movieModelAttributes,
+    attributes: [...movieModelAttributes, [literal(`"movieLanguage"."iso_language_code"`), 'language']],
     where: {
       id: movieId,
     },
