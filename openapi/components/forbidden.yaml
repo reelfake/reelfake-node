@@ -1,0 +1,8 @@
+description: User do not have permission to perform the operation
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        message:
+          type: string

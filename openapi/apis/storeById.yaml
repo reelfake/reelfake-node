@@ -34,3 +34,75 @@ get:
       $ref: ../components/notFound.yaml
     '500':
       $ref: ../components/internalServerError.yaml
+put:
+  summary: Update store
+  operationId: updateStore
+  tags:
+    - store
+  parameters:
+    - in: path
+      name: id
+      required: true
+      description: Id of the store
+      schema:
+        type: integer
+  requestBody:
+    description: Payload for the new store
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            storeManagerId:
+              type: integer
+              format: number
+            phoneNumber:
+              type: string
+            address:
+              $ref: ../components/address.yaml
+  responses:
+    '204':
+      description: Successfully updated the store
+    '400':
+      $ref: ../components/badRequest.yaml
+    '401':
+      $ref: ../components/unauthorized.yaml
+    '403':
+      $ref: ../components/forbidden.yaml
+    '500':
+      $ref: ../components/internalServerError.yaml
+delete:
+  summary: Delete the store
+  operationId: deleteStore
+  tags:
+    - store
+  parameters:
+    - in: path
+      name: id
+      required: true
+      description: The id of the store
+      schema:
+        type: integer
+    - in: query
+      name: forceDelete
+      required: false
+      description: |
+        A boolean flag to indicate whether or not to delete the staff associated with the store.
+        Default is false.
+      schema:
+        type: boolean
+        default: false
+  responses:
+    '204':
+      description: Successfully deleted the store
+    '400':
+      $ref: ../components/badRequest.yaml
+    '401':
+      $ref: ../components/unauthorized.yaml
+    '403':
+      $ref: ../components/forbidden.yaml
+    '404':
+      $ref: ../components/notFound.yaml
+    '500':
+      $ref: ../components/internalServerError.yaml

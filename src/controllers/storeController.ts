@@ -309,10 +309,6 @@ export const createStore = async (req: CustomRequestWithBody<StorePayload>, res:
   const { storeManagerId, storeManager, phoneNumber, address } = req.body;
   let newStoreManagerId = storeManagerId;
 
-  // if (!storeManagerId && !storeManager) {
-  //   throw new AppError('Store manager data is required', 400);
-  // }
-
   if (storeManagerId && storeManager) {
     throw new AppError('Duplicate store manager data in request', 400);
   }

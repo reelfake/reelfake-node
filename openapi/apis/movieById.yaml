@@ -35,7 +35,7 @@ get:
     '500':
       $ref: ../components/internalServerError.yaml
 put:
-  summary: Update movie (only staff with manager role can perform this operation)
+  summary: Update movie
   operationId: updateMovie
   tags:
     - movie
@@ -117,7 +117,7 @@ put:
       $ref: ../components/internalServerError.yaml
 delete:
   summary: |
-    Delete movie (only staff with manager role can perform this operation).
+    Delete the movie.
     Note: This operation will delete movie actors and inventory for the movie as well.
   operationId: deleteMovie
   tags:
@@ -131,11 +131,13 @@ delete:
         type: integer
   responses:
     '204':
-      description: Successfully updated the movie
+      description: Successfully deleted the movie
     '400':
       $ref: ../components/badRequest.yaml
     '401':
       $ref: ../components/unauthorized.yaml
+    '403':
+      $ref: ../components/forbidden.yaml
     '404':
       $ref: ../components/notFound.yaml
     '500':

@@ -132,14 +132,8 @@ export const addToMovie = async (
   req: CustomRequestWithBody<MovieActorPayload & { movieId: number }>,
   res: Response
 ) => {
-  const { user } = req;
-  if (!user) {
-    throw new AppError('Invalid token', 401);
-  }
-
-  if (!user.staffId && !user.storeManagerId) {
-    throw new AppError('Unauthorized access', 403);
-  }
+  const { user, validateUserRole } = req;
+  validateUserRole?.(() => !!(user && (user.staffId || user.storeManagerId)));
 
   const { id: idText } = req.params;
   const actorId = Number(idText);

@@ -32,22 +32,38 @@ post:
     content:
       application/json:
         schema:
-          type: object
-          properties:
-            managerId:
-              type: integer
-            phoneNumber:
-              type: string
-            addressLine:
-              type: string
-            city:
-              type: string
-            state:
-              type: string
-            country:
-              type: string
-            postalCode:
-              type: string
+          oneOf:
+            - type: object
+              properties:
+                storeManagerId:
+                  type: integer
+                  format: number
+                phoneNumber:
+                  type: string
+                address:
+                  $ref: ../components/address.yaml
+            - type: object
+              properties:
+                phoneNumber:
+                  type: string
+                address:
+                  $ref: ../components/address.yaml
+                storeManager:
+                  type: object
+                  properties:
+                    firstName:
+                      type: string
+                    lastName:
+                      type: string
+                    email:
+                      type: string
+                      format: email
+                    phoneNumber:
+                      type: string
+                    avatar:
+                      type: string
+                    address:
+                      $ref: ../components/address.yaml
   responses:
     '201':
       description: Successfully added new store
@@ -56,26 +72,37 @@ post:
           schema:
             type: object
             properties:
-              managerId:
+              id:
                 type: integer
+                format: number
+              storeManager:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    format: number
+                  firstName:
+                    type: string
+                  lastName:
+                    type: string
+                  email:
+                    type: string
+                    format: email
+                  active:
+                    type: boolean
+                  avatar:
+                    type: string
+                  address:
+                    $ref: ../components/address.yaml
               phoneNumber:
                 type: string
               address:
-                type: object
-                properties:
-                  addressLine:
-                    type: string
-                  city:
-                    type: string
-                  state:
-                    type: string
-                  country:
-                    type: string
-                  postalCode:
-                    type: string
+                $ref: ../components/address.yaml
     '400':
       $ref: ../components/badRequest.yaml
     '401':
       $ref: ../components/unauthorized.yaml
+    '403':
+      $ref: ../components/forbidden.yaml
     '500':
       $ref: ../components/internalServerError.yaml

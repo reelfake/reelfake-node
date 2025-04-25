@@ -45,9 +45,6 @@ MovieModel.belongsTo(MovieLanguageModel, {
   foreignKey: 'languageId',
 });
 
-// MovieActorModel.hasMany(ActorModel, { as: 'actors', foreignKey: 'id' });
-// MovieActorModel.hasMany(MovieModel, { as: 'movies', foreignKey: 'id' });
-
 AddressModel.belongsTo(CityModel, { as: 'city', foreignKey: 'cityId' });
 
 StoreModel.belongsTo(AddressModel, { as: 'address', foreignKey: 'addressId' });

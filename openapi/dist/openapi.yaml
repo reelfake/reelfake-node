@@ -10,9 +10,9 @@ info:
     name: Pratap Reddy
     email: pratapreddy15@gmail.com
 servers:
-  - url: http://reelfake.com
+  - url: http://reelfake.com/api/v1
     description: Production server
-  - url: http://127.0.0.1:8000
+  - url: http://127.0.0.1:8000/api/v1
     description: Local server
 security:
   - cookieAuth: []
@@ -309,7 +309,7 @@ paths:
           $ref: '#/components/responses/unauthorized'
   /movies:
     get:
-      summary: Get movies by page
+      summary: Get the movies list with the pagination support
       operationId: getMovies
       tags:
         - movie
@@ -593,7 +593,7 @@ paths:
         '500':
           $ref: '#/components/responses/internalServerError'
     put:
-      summary: Update movie (only staff with manager role can perform this operation)
+      summary: Update movie
       operationId: updateMovie
       tags:
         - movie
@@ -675,7 +675,7 @@ paths:
           $ref: '#/components/responses/internalServerError'
     delete:
       summary: |
-        Delete movie (only staff with manager role can perform this operation).
+        Delete the movie.
         Note: This operation will delete movie actors and inventory for the movie as well.
       operationId: deleteMovie
       tags:
@@ -689,11 +689,13 @@ paths:
             type: integer
       responses:
         '204':
-          description: Successfully updated the movie
+          description: Successfully deleted the movie
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
           $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
         '404':
           $ref: '#/components/responses/notFound'
         '500':
@@ -1091,6 +1093,152 @@ paths:
           $ref: '#/components/responses/notFound'
         '500':
           $ref: '#/components/responses/internalServerError'
+    post:
+      summary: Add the actor to the movie
+      operationId: addToMovie
+      tags:
+        - actor
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the actor
+          schema:
+            type: integer
+      requestBody:
+        description: Payload for the actor to add to the movie
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                movieId:
+                  type: integer
+                  format: number
+                characterName:
+                  type: string
+                castOrder:
+                  type: integer
+                  format: number
+      responses:
+        '201':
+          description: Successfully added the actor the movie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  actorId:
+                    type: integer
+                  movieId:
+                    type: integer
+                  characterName:
+                    type: string
+                  castOrder:
+                    type: integer
+                    format: number
+                required:
+                  - Id
+                  - actorId
+                  - movieId
+                  - characterName
+                  - castOrder
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    put:
+      summary: Update actor
+      operationId: updateActor
+      tags:
+        - actor
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Id of the actor
+          schema:
+            type: integer
+      requestBody:
+        description: Payload of the actor to update
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tmdbId:
+                  type: integer
+                  format: number
+                imdbId:
+                  type: integer
+                  format: number
+                actorName:
+                  type: string
+                biography:
+                  type: string
+                birthday:
+                  type: string
+                  format: date
+                deathday:
+                  type: string
+                  format: date
+                placeOfBirth:
+                  type: string
+                popularity:
+                  type: string
+                profilePictureUrl:
+                  type: string
+                  format: uri
+      responses:
+        '204':
+          description: Successfully updated actor
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    delete:
+      summary: |
+        Delete the actor.
+        Note: This operation will delete movie actors for the movie as well.
+      operationId: deleteActor
+      tags:
+        - actor
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the actor
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Successfully deleted the movie
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
   /stores:
     get:
       summary: Get list of stores
@@ -1126,22 +1274,38 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                managerId:
-                  type: integer
-                phoneNumber:
-                  type: string
-                addressLine:
-                  type: string
-                city:
-                  type: string
-                state:
-                  type: string
-                country:
-                  type: string
-                postalCode:
-                  type: string
+              oneOf:
+                - type: object
+                  properties:
+                    storeManagerId:
+                      type: integer
+                      format: number
+                    phoneNumber:
+                      type: string
+                    address:
+                      $ref: '#/components/schemas/address'
+                - type: object
+                  properties:
+                    phoneNumber:
+                      type: string
+                    address:
+                      $ref: '#/components/schemas/address'
+                    storeManager:
+                      type: object
+                      properties:
+                        firstName:
+                          type: string
+                        lastName:
+                          type: string
+                        email:
+                          type: string
+                          format: email
+                        phoneNumber:
+                          type: string
+                        avatar:
+                          type: string
+                        address:
+                          $ref: '#/components/schemas/address'
       responses:
         '201':
           description: Successfully added new store
@@ -1150,27 +1314,38 @@ paths:
               schema:
                 type: object
                 properties:
-                  managerId:
+                  id:
                     type: integer
+                    format: number
+                  storeManager:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        format: number
+                      firstName:
+                        type: string
+                      lastName:
+                        type: string
+                      email:
+                        type: string
+                        format: email
+                      active:
+                        type: boolean
+                      avatar:
+                        type: string
+                      address:
+                        $ref: '#/components/schemas/address'
                   phoneNumber:
                     type: string
                   address:
-                    type: object
-                    properties:
-                      addressLine:
-                        type: string
-                      city:
-                        type: string
-                      state:
-                        type: string
-                      country:
-                        type: string
-                      postalCode:
-                        type: string
+                    $ref: '#/components/schemas/address'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
           $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
         '500':
           $ref: '#/components/responses/internalServerError'
   /stores/{id}:
@@ -1206,6 +1381,78 @@ paths:
                 $ref: '#/components/schemas/storeDetail'
         '400':
           $ref: '#/components/responses/badRequest'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    put:
+      summary: Update store
+      operationId: updateStore
+      tags:
+        - store
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Id of the store
+          schema:
+            type: integer
+      requestBody:
+        description: Payload for the new store
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                storeManagerId:
+                  type: integer
+                  format: number
+                phoneNumber:
+                  type: string
+                address:
+                  $ref: '#/components/schemas/address'
+      responses:
+        '204':
+          description: Successfully updated the store
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    delete:
+      summary: Delete the store
+      operationId: deleteStore
+      tags:
+        - store
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the store
+          schema:
+            type: integer
+        - in: query
+          name: forceDelete
+          required: false
+          description: |
+            A boolean flag to indicate whether or not to delete the staff associated with the store.
+            Default is false.
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '204':
+          description: Successfully deleted the store
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
         '404':
           $ref: '#/components/responses/notFound'
         '500':
@@ -1330,6 +1577,115 @@ paths:
           $ref: '#/components/responses/notFound'
         '500':
           $ref: '#/components/responses/internalServerError'
+  /staff:
+    get:
+      summary: Get list of all staff
+      operationId: getStaff
+      tags:
+        - staff
+      responses:
+        '200':
+          description: Successfully returned list of all staff
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/staffItem'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /staff/managers:
+    get:
+      summary: Get list of store managers
+      operationId: getStoreManagers
+      tags:
+        - staff
+      responses:
+        '200':
+          description: Successfully returned list of store managers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          format: number
+                        firstName:
+                          type: string
+                        lastName:
+                          type: string
+                        email:
+                          type: string
+                          format: email
+                        isActive:
+                          type: boolean
+                        phoneNumber:
+                          type: string
+                        avatar:
+                          type: string
+                        address:
+                          $ref: '#/components/schemas/address'
+                        store:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              format: number
+                            phoneNumber:
+                              type: string
+                            address:
+                              $ref: '#/components/schemas/address'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /staff/{state}:
+    get:
+      summary: Get staff living in a given state
+      operationId: getStaffByState
+      tags:
+        - staff
+      parameters:
+        - in: path
+          name: state
+          required: true
+          description: The name of the state
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully returned list of staff living in a state
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/staffItem'
+                  length:
+                    type: integer
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
 components:
   securitySchemes:
     cookieAuth:
@@ -1363,6 +1719,15 @@ components:
             type: string
     notFound:
       description: Requested resource does not exist
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    forbidden:
+      description: User do not have permission to perform the operation
       content:
         application/json:
           schema:
@@ -1711,9 +2076,30 @@ components:
           type: string
         phoneNumber:
           type: string
+    address:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: number
+          readOnly: true
+        addressLine:
+          type: string
+        cityName:
+          type: string
+        stateName:
+          type: string
+        country:
+          type: string
+        postalCode:
+          type: string
     staffItem:
       type: object
       properties:
+        id:
+          type: string
+          format: number
+          readOnly: true
         firstName:
           type: string
         lastName:
@@ -1731,18 +2117,7 @@ components:
           type: string
           format: uri
         address:
-          type: object
-          properties:
-            addressLine:
-              type: string
-            city:
-              type: string
-            state:
-              type: string
-            country:
-              type: string
-            postalCode:
-              type: string
+          $ref: '#/components/schemas/address'
     storeDetail:
       type: object
       properties:

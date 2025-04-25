@@ -40,3 +40,9 @@
   $ref: apis/moviesInStore.yaml
 /stores/{id}/staff:
   $ref: apis/staffInStore.yaml
+/staff:
+  $ref: apis/staff.yaml
+/staff/managers:
+  $ref: apis/storeManagers.yaml
+/staff/{state}:
+  $ref: apis/staffByState.yaml

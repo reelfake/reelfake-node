@@ -1,5 +1,5 @@
 get:
-  summary: Get movies by page
+  summary: Get the movies list with the pagination support
   operationId: getMovies
   tags:
     - movie

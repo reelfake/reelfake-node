@@ -663,32 +663,7 @@ describe('Store Controller', () => {
     });
 
     it('should update the store with the new manager', async () => {
-      const payload = getStorePayload();
-      const storeManagerPayload = getStorePayload().storeManager;
-      const newStoreResponse = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
-      const storeBeforeUpdate = newStoreResponse.body;
-
-      const response = await server
-        .put(`/api/v1/stores/${storeBeforeUpdate.id}`)
-        .set('Cookie', cookie)
-        .send({ storeManager: storeManagerPayload });
-      expect(response.status).toBe(204);
-
-      const storeAfterUpdate = await queryStore(storeBeforeUpdate.id);
-      const storeManagerAfterUpdate = await queryStaff(storeBeforeUpdate.storeManager.id);
-      expect(storeAfterUpdate.phoneNumber).toEqual(storeBeforeUpdate.phoneNumber);
-      expect(storeAfterUpdate.storeManagerId).toEqual(storeBeforeUpdate.storeManager.id);
-
-      expect(storeManagerAfterUpdate).toEqual({
-        ...storeBeforeUpdate.storeManager,
-        address: {
-          addressLine: storeBeforeUpdate.storeManager.address.addressLine,
-          cityName: storeBeforeUpdate.storeManager.address.cityName,
-          stateName: storeBeforeUpdate.storeManager.address.stateName,
-          country: storeBeforeUpdate.storeManager.address.country,
-          postalCode: storeBeforeUpdate.storeManager.address.postalCode,
-        },
-      });
+      expect(true).toBeFalsy();
     });
 
     it('should not allow to change the state of the store', async () => {

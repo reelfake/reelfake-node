@@ -1,7 +1,7 @@
 import type { Response } from 'express';
-import { col, literal, Op } from 'sequelize';
+import { col, literal, Op, WhereOptions } from 'sequelize';
 import { StaffModel, AddressModel, CityModel, CountryModel, StoreModel } from '../models';
-import { AppError, addressUtils } from '../utils';
+import { AppError, capitalize } from '../utils';
 import sequelize from '../sequelize.config';
 import type { Address, CustomRequest, CustomRequestWithBody, StaffPayload } from '../types';
 
@@ -12,20 +12,33 @@ export const getStaff = async (req: CustomRequest, res: Response) => {
     throw new AppError('Invalid token', 401);
   }
 
-  const updatedStaff = await StaffModel.findAll({
-    attributes: {
-      exclude: ['addressId', 'storeId'],
-    },
+  const staffInstance = await StaffModel.findAll({
+    attributes: [
+      'id',
+      'firstName',
+      'lastName',
+      'email',
+      [col(`"active"`), 'isActive'],
+      'phoneNumber',
+      'avatar',
+      [literal(`"store"."store_manager_id" = "Staff"."id"`), 'isStoreManager'],
+    ],
     include: [
+      {
+        model: StoreModel,
+        as: 'store',
+        attributes: [],
+      },
       {
         model: AddressModel,
         as: 'address',
         attributes: [
+          'id',
           'addressLine',
           [literal(`"address->city"."city_name"`), 'cityName'],
           [literal(`"address->city"."state_name"`), 'stateName'],
           [literal(`"address->city->country"."country_name"`), 'country'],
-          [literal(`"address"."postal_code"`), 'postalCode'],
+          [literal(`"postal_code"`), 'postalCode'],
         ],
         include: [
           {
@@ -46,8 +59,8 @@ export const getStaff = async (req: CustomRequest, res: Response) => {
   });
 
   res.status(200).json({
-    items: updatedStaff,
-    length: updatedStaff.length,
+    items: staffInstance,
+    length: staffInstance.length,
   });
 };
 
@@ -59,24 +72,48 @@ export const getStoreManagers = async (req: CustomRequest, res: Response) => {
   }
 
   const storeManagers = await StaffModel.findAll({
-    attributes: { exclude: ['addressId', 'storeId'] },
+    attributes: [
+      'id',
+      'firstName',
+      'lastName',
+      'email',
+      [col(`"active"`), 'isActive'],
+      'phoneNumber',
+      'avatar',
+      [
+        literal(
+          `(SELECT json_build_object(
+              'id', a.id,
+              'addressLine', a.address_line,
+              'cityName', c.city_name,
+              'stateName', c.state_name,
+              'country', cy.country_name,
+              'postalCode', a.postal_code
+            )
+            FROM address AS a LEFT JOIN city AS c ON a.city_id = c.id 
+            LEFT JOIN country AS cy ON c.country_id = cy.id
+            WHERE a.id = "Staff"."address_id")`
+        ),
+        'address',
+      ],
+    ],
     include: [
       {
         model: StoreModel,
         as: 'store',
-        attributes: [
-          'phoneNumber',
-          [literal(`"store->address"."address_line"`), 'addressLine'],
-          [literal(`"store->address->city"."city_name"`), 'cityName'],
-          [literal(`"store->address->city"."state_name"`), 'stateName'],
-          [literal(`"store->address->city->country"."country_name"`), 'country'],
-          [literal(`"store->address"."postal_code"`), 'postalCode'],
-        ],
+        attributes: ['id', 'phoneNumber'],
         include: [
           {
             model: AddressModel,
             as: 'address',
-            attributes: [],
+            attributes: [
+              'id',
+              'addressLine',
+              [literal(`"store->address->city"."city_name"`), 'cityName'],
+              [literal(`"store->address->city"."state_name"`), 'stateName'],
+              [literal(`"store->address->city->country"."country_name"`), 'country'],
+              [literal(`"postal_code"`), 'postalCode'],
+            ],
             include: [
               {
                 model: CityModel,
@@ -110,13 +147,10 @@ export const getStoreManagers = async (req: CustomRequest, res: Response) => {
 };
 
 export const getStaffByState = async (req: CustomRequest, res: Response) => {
-  const { user } = req;
+  const { user, validateUserRole } = req;
+  validateUserRole?.(() => !!(user && (user.staffId || user.storeManagerId)));
   const { state } = req.params;
   const { city } = req.query;
-
-  if (!user) {
-    throw new AppError('Invalid token', 401);
-  }
 
   if (!isNaN(Number(state))) {
     throw new AppError('Unknown state', 400);
@@ -131,38 +165,69 @@ export const getStaffByState = async (req: CustomRequest, res: Response) => {
     conditions.push(`city.city_name = '${city}'`);
   }
 
-  const queryText = `
-        SELECT staff.id AS "id", staff.first_name AS "firstName", staff.last_name as "lastName",
-        json_build_object(
-            'id', address.id,
-            'addressLine', address.address_line,
-            'cityName', city.city_name,
-            'stateName', city.state_name,
-            'countryName', country.country_name,
-            'postalCode', address.postal_code
-        ) AS "address",
-        (SELECT json_build_object(
-            'id', s.id,
-            'phoneNumber', s.phone_number,
-            'address', json_build_object(
-                'id', a.id,
-                'addressLine', a.address_line,
-                'cityName', city.city_name,
-                'stateName', city.state_name,
-                'countryName', country.country_name,
-                'postalCode', address.postal_code
-            )
-        ) FROM store AS "s" LEFT JOIN address AS "a" ON s.address_id = a.id WHERE s.id = staff.store_id) AS "store"
-        FROM staff LEFT JOIN address ON staff.address_id = address.id
-        LEFT JOIN city ON address.city_id = city.id
-        LEFT JOIN country ON city.country_id = country.id WHERE ${conditions.join(' AND ')} ORDER BY staff.id ASC;
-    `;
+  const where: WhereOptions = {
+    stateName: {
+      [Op.eq]: capitalize(state),
+    },
+  };
 
-  const [queryResult] = await sequelize.query(queryText);
+  if (city) {
+    where.cityName = {
+      [Op.eq]: capitalize(String(city)),
+    };
+  }
+
+  const staffInstance = await StaffModel.findAll({
+    attributes: [
+      'id',
+      'firstName',
+      'lastName',
+      'email',
+      [col(`"active"`), 'isActive'],
+      'phoneNumber',
+      'avatar',
+      [literal(`"store"."store_manager_id" = "Staff"."id"`), 'isStoreManager'],
+    ],
+    include: [
+      {
+        model: StoreModel,
+        as: 'store',
+        attributes: [],
+      },
+      {
+        model: AddressModel,
+        as: 'address',
+        required: true,
+        attributes: [
+          'id',
+          'addressLine',
+          [literal(`"address->city"."city_name"`), 'cityName'],
+          [literal(`"address->city"."state_name"`), 'stateName'],
+          [literal(`"address->city->country"."country_name"`), 'country'],
+          [literal(`"postal_code"`), 'postalCode'],
+        ],
+        include: [
+          {
+            model: CityModel,
+            as: 'city',
+            attributes: [],
+            where,
+            include: [
+              {
+                model: CountryModel,
+                attributes: [],
+                as: 'country',
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  });
 
   res.status(200).json({
-    items: queryResult,
-    length: queryResult.length,
+    items: staffInstance,
+    length: staffInstance.length,
   });
 };
 
