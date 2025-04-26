@@ -44,5 +44,5 @@
   $ref: apis/staff.yaml
 /staff/managers:
   $ref: apis/storeManagers.yaml
-/staff/{state}:
-  $ref: apis/staffByState.yaml
+/staff/{id}:
+  $ref: apis/staffById.yaml

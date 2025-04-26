@@ -3,13 +3,27 @@ import { col, literal, Op, WhereOptions } from 'sequelize';
 import { StaffModel, AddressModel, CityModel, CountryModel, StoreModel } from '../models';
 import { AppError, capitalize } from '../utils';
 import sequelize from '../sequelize.config';
+import { ERROR_MESSAGES } from '../constants';
 import type { Address, CustomRequest, CustomRequestWithBody, StaffPayload } from '../types';
 
 export const getStaff = async (req: CustomRequest, res: Response) => {
-  const { user } = req;
+  const { user, validateUserRole } = req;
+  validateUserRole?.(() => !!(user && (user.staffId || user.storeManagerId)));
 
-  if (!user) {
-    throw new AppError('Invalid token', 401);
+  const { state: stateName, city: cityName } = req.query;
+
+  const where: WhereOptions = {};
+
+  if (stateName) {
+    where['stateName'] = {
+      [Op.eq]: capitalize(String(stateName)),
+    };
+  }
+
+  if (cityName) {
+    where['cityName'] = {
+      [Op.eq]: capitalize(String(cityName)),
+    };
   }
 
   const staffInstance = await StaffModel.findAll({
@@ -40,11 +54,13 @@ export const getStaff = async (req: CustomRequest, res: Response) => {
           [literal(`"address->city->country"."country_name"`), 'country'],
           [literal(`"postal_code"`), 'postalCode'],
         ],
+        required: true,
         include: [
           {
             model: CityModel,
             as: 'city',
             attributes: [],
+            where,
             include: [
               {
                 model: CountryModel,
@@ -62,6 +78,88 @@ export const getStaff = async (req: CustomRequest, res: Response) => {
     items: staffInstance,
     length: staffInstance.length,
   });
+};
+
+export const getStaffById = async (req: CustomRequest, res: Response) => {
+  const { user, validateUserRole } = req;
+  validateUserRole?.(() => !!(user && (user.staffId || user.storeManagerId)));
+
+  const { id: idText } = req.params;
+  const staffId = Number(idText);
+
+  if (isNaN(staffId)) {
+    throw new AppError('Invalid staff id', 400);
+  }
+
+  const staffInstance = await StaffModel.findByPk(staffId, {
+    attributes: [
+      'id',
+      'firstName',
+      'lastName',
+      'email',
+      [literal(`"store"."store_manager_id" = "Staff"."id"`), 'isStoreManager'],
+      [col(`"active"`), 'isActive'],
+      'phoneNumber',
+      'avatar',
+    ],
+    include: [
+      {
+        model: AddressModel,
+        as: 'address',
+        attributes: [
+          'id',
+          'addressLine',
+          [literal(`"address->city"."city_name"`), 'cityName'],
+          [literal(`"address->city"."state_name"`), 'stateName'],
+          [literal(`"address->city->country"."country_name"`), 'country'],
+          [literal(`"postal_code"`), 'postalCode'],
+        ],
+        required: true,
+        include: [
+          {
+            model: CityModel,
+            as: 'city',
+            attributes: [],
+            include: [
+              {
+                model: CountryModel,
+                attributes: [],
+                as: 'country',
+              },
+            ],
+          },
+        ],
+      },
+      {
+        model: StoreModel,
+        as: 'store',
+        attributes: [
+          'id',
+          'phoneNumber',
+          [
+            literal(`(SELECT json_build_object(
+              'id', a.id,
+              'addressLine', a.address_line,
+              'cityName', c.city_name,
+              'stateName', c.state_name,
+              'country', cy.country_name,
+              'postalCode', a.postal_code
+            )
+            FROM address AS a LEFT JOIN city AS c ON c.id = a.city_id
+            LEFT JOIN country AS cy ON cy.id = c.country_id
+            WHERE a.id = "store"."address_id")`),
+            'address',
+          ],
+        ],
+      },
+    ],
+  });
+
+  if (!staffInstance) {
+    throw new AppError(ERROR_MESSAGES.RESOURCES_NOT_FOUND, 404);
+  }
+
+  res.status(200).json(staffInstance);
 };
 
 export const getStoreManagers = async (req: CustomRequest, res: Response) => {
@@ -146,91 +244,6 @@ export const getStoreManagers = async (req: CustomRequest, res: Response) => {
   });
 };
 
-export const getStaffByState = async (req: CustomRequest, res: Response) => {
-  const { user, validateUserRole } = req;
-  validateUserRole?.(() => !!(user && (user.staffId || user.storeManagerId)));
-  const { state } = req.params;
-  const { city } = req.query;
-
-  if (!isNaN(Number(state))) {
-    throw new AppError('Unknown state', 400);
-  }
-
-  if (city && !isNaN(Number(city))) {
-    throw new AppError('Unknown city', 400);
-  }
-
-  const conditions = [`city.state_name = '${state}'`];
-  if (city) {
-    conditions.push(`city.city_name = '${city}'`);
-  }
-
-  const where: WhereOptions = {
-    stateName: {
-      [Op.eq]: capitalize(state),
-    },
-  };
-
-  if (city) {
-    where.cityName = {
-      [Op.eq]: capitalize(String(city)),
-    };
-  }
-
-  const staffInstance = await StaffModel.findAll({
-    attributes: [
-      'id',
-      'firstName',
-      'lastName',
-      'email',
-      [col(`"active"`), 'isActive'],
-      'phoneNumber',
-      'avatar',
-      [literal(`"store"."store_manager_id" = "Staff"."id"`), 'isStoreManager'],
-    ],
-    include: [
-      {
-        model: StoreModel,
-        as: 'store',
-        attributes: [],
-      },
-      {
-        model: AddressModel,
-        as: 'address',
-        required: true,
-        attributes: [
-          'id',
-          'addressLine',
-          [literal(`"address->city"."city_name"`), 'cityName'],
-          [literal(`"address->city"."state_name"`), 'stateName'],
-          [literal(`"address->city->country"."country_name"`), 'country'],
-          [literal(`"postal_code"`), 'postalCode'],
-        ],
-        include: [
-          {
-            model: CityModel,
-            as: 'city',
-            attributes: [],
-            where,
-            include: [
-              {
-                model: CountryModel,
-                attributes: [],
-                as: 'country',
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  });
-
-  res.status(200).json({
-    items: staffInstance,
-    length: staffInstance.length,
-  });
-};
-
 export const updateStaff = async (req: CustomRequestWithBody<StaffPayload>, res: Response) => {
   const { user, validateUserRole } = req;
   validateUserRole?.(() => !!(user && user.storeManagerId));
@@ -293,11 +306,10 @@ export const updateStaff = async (req: CustomRequestWithBody<StaffPayload>, res:
   }
 
   if (address) {
-    const storeStaffIsEmployedAt = await StaffModel.getStore(staffId);
+    const staffStore = await StaffModel.getStore(staffId);
     if (
-      storeStaffIsEmployedAt &&
-      (storeStaffIsEmployedAt.address.stateName !== address.stateName ||
-        storeStaffIsEmployedAt.address.country !== address.country)
+      staffStore &&
+      (staffStore.address.stateName !== address.stateName || staffStore.address.country !== address.country)
     ) {
       throw new AppError('Cannot assign staff to store outside state', 400);
     }
@@ -379,7 +391,16 @@ export const createStaff = async (req: CustomRequestWithBody<StaffPayload>, res:
   });
 
   const newStaffDetail = await StaffModel.findOne({
-    attributes: ['id', 'firstName', 'lastName', 'email', 'storeId', 'active', 'phoneNumber', 'avatar'],
+    attributes: [
+      'id',
+      'firstName',
+      'lastName',
+      'email',
+      'storeId',
+      [col('active'), 'isActive'],
+      'phoneNumber',
+      'avatar',
+    ],
     include: [
       {
         model: AddressModel,

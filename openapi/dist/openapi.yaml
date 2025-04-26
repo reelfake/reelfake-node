@@ -1579,10 +1579,23 @@ paths:
           $ref: '#/components/responses/internalServerError'
   /staff:
     get:
-      summary: Get list of all staff
+      summary: Get list of all staff (optionally filter by residential state and city)
       operationId: getStaff
       tags:
         - staff
+      parameters:
+        - in: query
+          name: state
+          description: The name of the state to filter the staff
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: city
+          description: The name of the city to filter the staff
+          required: false
+          schema:
+            type: string
       responses:
         '200':
           description: Successfully returned list of all staff
@@ -1590,6 +1603,74 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/staffItem'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    post:
+      summary: Add new staff
+      operationId: createStaff
+      tags:
+        - staff
+      requestBody:
+        description: Payload for the new staff
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                phoneNumber:
+                  type: string
+                avatar:
+                  type: string
+                storeId:
+                  type: integer
+                  format: number
+                address:
+                  $ref: '#/components/schemas/address'
+      responses:
+        '201':
+          description: Successfully created new staff
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: number
+                    readOnly: true
+                  firstName:
+                    type: string
+                  lastName:
+                    type: string
+                  email:
+                    type: string
+                    format: email
+                  isActive:
+                    type: boolean
+                  phoneNumber:
+                    type: string
+                  avatar:
+                    type: string
+                    format: uri
+                  storeId:
+                    type: integer
+                    format: number
+                  address:
+                    $ref: '#/components/schemas/address'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -1653,35 +1734,117 @@ paths:
           $ref: '#/components/responses/forbidden'
         '500':
           $ref: '#/components/responses/internalServerError'
-  /staff/{state}:
+  /staff/{id}:
     get:
-      summary: Get staff living in a given state
-      operationId: getStaffByState
+      summary: Get staff detail
+      operationId: getStaffById
       tags:
         - staff
       parameters:
         - in: path
-          name: state
+          name: id
           required: true
-          description: The name of the state
+          description: Id of the staff
           schema:
-            type: string
+            type: integer
       responses:
-        '200':
-          description: Successfully returned list of staff living in a state
+        '201':
+          description: Successfully updated staff
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/staffItem'
-                  length:
-                    type: integer
+                allOf:
+                  - $ref: '#/components/schemas/staffItem'
+                  - type: object
+                    properties:
+                      store:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            format: number
+                          phoneNumber:
+                            type: string
+                          address:
+                            $ref: '#/components/schemas/address'
         '400':
           $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    put:
+      summary: Update staff
+      operationId: updateStaff
+      tags:
+        - staff
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Id of the staff
+          schema:
+            type: integer
+      requestBody:
+        description: Payload of the staff to update
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                active:
+                  type: boolean
+                phoneNumber:
+                  type: string
+                avatar:
+                  type: string
+                storeId:
+                  type: integer
+                  format: number
+                address:
+                  $ref: '#/components/schemas/address'
+      responses:
+        '204':
+          description: Successfully updated staff
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    delete:
+      summary: Delete staff
+      operationId: deleteStaff
+      tags:
+        - staff
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the staff
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Successfully deleted staff
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
         '404':
           $ref: '#/components/responses/notFound'
         '500':
