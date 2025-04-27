@@ -8,3 +8,4 @@ export { default as actorRoutes } from './actorRoutes';
 export { default as storeRoutes } from './storeRoutes';
 export { default as userRoutes } from './userRoutes';
 export { default as staffRoutes } from './staffRoutes';
+export { default as customerRoutes } from './customerRoutes';

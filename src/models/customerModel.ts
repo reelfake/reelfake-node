@@ -35,13 +35,9 @@ Customer.init(
       type: DataTypes.BOOLEAN,
       field: 'active',
     },
-    userName: {
-      type: DataTypes.STRING(40),
-      field: 'user_name',
-    },
-    userPassword: {
-      type: DataTypes.STRING(40),
-      field: 'user_password',
+    phoneNumber: {
+      type: DataTypes.STRING(30),
+      field: 'phone_number',
     },
     avatar: {
       type: DataTypes.STRING(120),

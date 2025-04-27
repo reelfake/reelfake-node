@@ -283,7 +283,7 @@ export const updateStore = async (req: CustomRequestWithBody<Partial<StorePayloa
     }
 
     if (address) {
-      const addressId = await AddressModel.findOrCreateAddress(newStoreAddress, t);
+      const { addressId } = await AddressModel.findOrCreateAddress(newStoreAddress, t);
       storeData['addressId'] = Number(addressId);
     }
 
@@ -354,10 +354,6 @@ export const createStore = async (req: CustomRequestWithBody<StorePayload>, res:
     storeManagerAddress = storeManager.address;
   }
 
-  // if (!storeManagerAddress) {
-  //   throw new AppError('Store manager address is missing', 400);
-  // }
-
   if (storeManagerAddress) {
     StoreModel.validateAddressAgainstManagerAddress(address, storeManagerAddress);
 
@@ -368,7 +364,7 @@ export const createStore = async (req: CustomRequestWithBody<StorePayload>, res:
 
   const newStoreId = await sequelize.transaction(async (t) => {
     if (storeManager) {
-      const addressId = await AddressModel.findOrCreateAddress(storeManager.address, t);
+      const { addressId } = await AddressModel.findOrCreateAddress(storeManager.address, t);
       const newStaffInstance = await StaffModel.create(
         {
           firstName: storeManager.firstName,
@@ -388,7 +384,7 @@ export const createStore = async (req: CustomRequestWithBody<StorePayload>, res:
       newStoreManagerId = Number(newStaffInstance.getDataValue('id'));
     }
 
-    const addressId = await AddressModel.findOrCreateAddress(address, t);
+    const { addressId } = await AddressModel.findOrCreateAddress(address, t);
 
     const newStoreData: KeyValuePair = {};
     if (newStoreManagerId) {

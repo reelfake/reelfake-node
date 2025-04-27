@@ -16,6 +16,7 @@ import {
   actorRoutes,
   storeRoutes,
   staffRoutes,
+  customerRoutes,
 } from './routes';
 
 // app.use(cors());
@@ -54,26 +55,32 @@ app.use('/api/v1/addresses', addressRoutes);
 
 app.use('/api/v1/user', userRoutes);
 
-// /api/genres
+// Genres
 app.use('/api/v1/genres', genreRoutes);
 
-// /api/countries
+// Countries
 app.use('/api/v1/countries', countryRoutes);
 
-// /api/movie_languages
+// Movie languages
 app.use('/api/v1/movie_languages', movieLanguageRoutes);
 
-// /api/cities
+// Cities
 app.use('/api/v1/cities', cityRoutes);
 
-// /api/movies
+// Movies
 app.use('/api/v1/movies', movieRoutes);
 
+// Actors
 app.use('/api/v1/actors', actorRoutes);
 
+// Stores
 app.use('/api/v1/stores', storeRoutes);
 
+// Staff
 app.use('/api/v1/staff', staffRoutes);
+
+// Customers
+app.use('/api/v1/customers', customerRoutes);
 
 app.use('*', (req: Request, res: Response) => {
   res.status(404).json({

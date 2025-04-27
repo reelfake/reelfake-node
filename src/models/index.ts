@@ -52,6 +52,7 @@ StoreModel.belongsTo(AddressModel, { as: 'address', foreignKey: 'addressId' });
 InventoryModel.belongsTo(StoreModel, { as: 'store', foreignKey: 'storeId' });
 InventoryModel.belongsTo(MovieModel, { as: 'movie', foreignKey: 'movieId' });
 
+CustomerModel.belongsTo(StoreModel, { as: 'preferredStore', foreignKey: 'preferredStoreId' });
 CustomerModel.belongsTo(AddressModel, { as: 'address', foreignKey: 'addressId' });
 
 StaffModel.belongsTo(AddressModel, { as: 'address', foreignKey: 'addressId' });

@@ -119,3 +119,14 @@ export type StorePayload = {
   phoneNumber: string;
   address: Address;
 };
+
+export type CustomerPayload = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  address: Address;
+  active?: boolean;
+  preferredStoreId?: string;
+  phoneNumber: string;
+  avatar?: string;
+};

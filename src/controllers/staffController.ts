@@ -322,7 +322,7 @@ export const updateStaff = async (req: CustomRequestWithBody<StaffPayload>, res:
     };
 
     if (address) {
-      const addressId = await AddressModel.findOrCreateAddress(address, t);
+      const { addressId } = await AddressModel.findOrCreateAddress(address, t);
       staffData['addressId'] = addressId;
     }
 
@@ -367,7 +367,7 @@ export const createStaff = async (req: CustomRequestWithBody<StaffPayload>, res:
   }
 
   const newStaffId = await sequelize.transaction(async (t) => {
-    const addressId = await AddressModel.findOrCreateAddress(address, t);
+    const { addressId } = await AddressModel.findOrCreateAddress(address, t);
 
     const staffInstance = await StaffModel.create(
       {

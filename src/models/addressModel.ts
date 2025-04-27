@@ -42,7 +42,7 @@ class Address extends BaseModel {
 
     const cityId = cityInstance.getDataValue('id');
 
-    const [addressInstance] = await Address.findOrCreate({
+    const [addressInstance, isCreated] = await Address.findOrCreate({
       where: {
         addressLine,
         cityId,
@@ -52,9 +52,9 @@ class Address extends BaseModel {
       transaction: t,
     });
 
-    const addressId = addressInstance.getDataValue('id');
+    const addressId: number = addressInstance.getDataValue('id');
 
-    return addressId;
+    return { addressId, isNew: isCreated };
   }
 
   public static async getUnusedAddresses() {
@@ -72,6 +72,70 @@ class Address extends BaseModel {
       `);
 
     return result;
+  }
+
+  public static async updateAddress(id: number, address: Partial<AddressType>, t: Transaction | undefined = undefined) {
+    const { addressLine, cityName, stateName, country, postalCode } = address;
+
+    if (!addressLine || !cityName || !stateName || !country || !postalCode) {
+      throw new AppError('Incomplete address', 400);
+    }
+
+    const currentAddressInstance = await Address.findByPk(id, { transaction: t });
+    if (!currentAddressInstance) {
+      throw new AppError('Address not found', 404);
+    }
+
+    let cityId, countryId;
+
+    if (country) {
+      const countryInstance = await CountryModel.findOne({
+        where: {
+          countryName: country,
+        },
+        transaction: t,
+      });
+
+      if (!countryInstance) {
+        throw new AppError('Country not found', 404);
+      }
+
+      countryId = countryInstance.getDataValue('id');
+    }
+
+    if (cityName) {
+      const cityInstance = await CityModel.findOne({
+        where: {
+          cityName,
+          stateName: stateName || currentAddressInstance.getDataValue('stateName'),
+          countryId: countryId || currentAddressInstance.getDataValue('countryId'),
+        },
+        transaction: t,
+      });
+
+      if (!cityInstance) {
+        throw new AppError('City not found', 404);
+      }
+
+      cityId = cityInstance.getDataValue('id');
+    }
+
+    const newAddressData: { [key: string]: string } = {};
+    if (addressLine) {
+      newAddressData['addressLine'] = addressLine;
+    }
+    if (cityId) {
+      newAddressData['cityId'] = cityId;
+    }
+    if (countryId) {
+      newAddressData['countryId'] = countryId;
+    }
+    if (postalCode) {
+      newAddressData['postalCode'] = postalCode;
+    }
+
+    await currentAddressInstance.update({ ...newAddressData });
+    await currentAddressInstance.save({ transaction: t });
   }
 }
 
