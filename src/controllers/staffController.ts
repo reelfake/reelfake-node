@@ -32,7 +32,7 @@ export const getStaff = async (req: CustomRequest, res: Response) => {
       'firstName',
       'lastName',
       'email',
-      [col(`"active"`), 'isActive'],
+      'active',
       'phoneNumber',
       'avatar',
       [literal(`"store"."store_manager_id" = "Staff"."id"`), 'isStoreManager'],
@@ -98,7 +98,7 @@ export const getStaffById = async (req: CustomRequest, res: Response) => {
       'lastName',
       'email',
       [literal(`"store"."store_manager_id" = "Staff"."id"`), 'isStoreManager'],
-      [col(`"active"`), 'isActive'],
+      'active',
       'phoneNumber',
       'avatar',
     ],
@@ -175,7 +175,7 @@ export const getStoreManagers = async (req: CustomRequest, res: Response) => {
       'firstName',
       'lastName',
       'email',
-      [col(`"active"`), 'isActive'],
+      'active',
       'phoneNumber',
       'avatar',
       [
@@ -391,16 +391,7 @@ export const createStaff = async (req: CustomRequestWithBody<StaffPayload>, res:
   });
 
   const newStaffDetail = await StaffModel.findOne({
-    attributes: [
-      'id',
-      'firstName',
-      'lastName',
-      'email',
-      'storeId',
-      [col('active'), 'isActive'],
-      'phoneNumber',
-      'avatar',
-    ],
+    attributes: ['id', 'firstName', 'lastName', 'email', 'storeId', 'active', 'phoneNumber', 'avatar'],
     include: [
       {
         model: AddressModel,

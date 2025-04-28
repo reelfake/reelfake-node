@@ -79,7 +79,7 @@ post:
               email:
                 type: string
                 format: email
-              isActive:
+              active:
                 type: boolean
               phoneNumber:
                 type: string
