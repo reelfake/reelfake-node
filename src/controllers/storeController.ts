@@ -11,7 +11,7 @@ import {
   StaffModel,
   MovieLanguageModel,
 } from '../models';
-import { ITEMS_PER_PAGE_FOR_PAGINATION, movieModelAttributes } from '../constants';
+import { ERROR_MESSAGES, ITEMS_PER_PAGE_FOR_PAGINATION, movieModelAttributes } from '../constants';
 import { AppError } from '../utils';
 import { StorePayload, CustomRequest, CustomRequestWithBody, KeyValuePair, Address } from '../types';
 
@@ -215,6 +215,11 @@ export const updateStore = async (req: CustomRequestWithBody<Partial<StorePayloa
     throw new AppError('Duplicate store manager data in request', 400);
   }
 
+  const currentStoreInstance = await StoreModel.findByPk(storeId);
+  if (!currentStoreInstance) {
+    throw new AppError(ERROR_MESSAGES.RESOURCES_NOT_FOUND, 404);
+  }
+
   if (address) {
     if (await StoreModel.isAddressInUse(address, storeId)) {
       throw new AppError('The address is in use by other store', 400);
@@ -283,8 +288,8 @@ export const updateStore = async (req: CustomRequestWithBody<Partial<StorePayloa
     }
 
     if (address) {
-      const { addressId } = await AddressModel.findOrCreateAddress(newStoreAddress, t);
-      storeData['addressId'] = Number(addressId);
+      const addressId = currentStoreInstance.getDataValue('addressId');
+      await AddressModel.updateAddress(addressId, address, t);
     }
 
     await StoreModel.update(

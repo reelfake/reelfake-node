@@ -264,6 +264,11 @@ export const updateStaff = async (req: CustomRequestWithBody<StaffPayload>, res:
     throw new AppError('Incomplete address', 400);
   }
 
+  const currentStaffInstance = await StaffModel.findByPk(staffId);
+  if (!currentStaffInstance) {
+    throw new AppError(ERROR_MESSAGES.RESOURCES_NOT_FOUND, 404);
+  }
+
   if (address) {
     if (await StoreModel.isAddressInUse(address)) {
       throw new AppError('The address is in use by a store', 400);
@@ -322,8 +327,8 @@ export const updateStaff = async (req: CustomRequestWithBody<StaffPayload>, res:
     };
 
     if (address) {
-      const { addressId } = await AddressModel.findOrCreateAddress(address, t);
-      staffData['addressId'] = addressId;
+      const addressId = currentStaffInstance.getDataValue('addressId');
+      await AddressModel.updateAddress(addressId, address, t);
     }
 
     await StaffModel.update(
@@ -335,7 +340,6 @@ export const updateStaff = async (req: CustomRequestWithBody<StaffPayload>, res:
         where: {
           id: staffId,
         },
-        returning: ['id'],
         transaction: t,
       }
     );

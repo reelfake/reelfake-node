@@ -121,6 +121,18 @@ describe('Store Controller', () => {
     },
   });
 
+  const queryAddress = async (id: number) => {
+    const [queryResult] = await execQuery(`
+      SELECT a.address_line AS "addressLine", c.city_name AS "cityName",
+      c.state_name AS "stateName", cy.country_name AS "country",
+      a.postal_code AS "postalCode"
+      FROM address AS a LEFT JOIN city AS c ON a.city_id = c.id
+      LEFT JOIN country AS cy ON c.country_id = cy.id
+      WHERE a.id = ${id}
+    `);
+    return queryResult;
+  };
+
   describe('GET /stores', () => {
     it('should all the stores', async () => {
       const response = await server.get('/api/v1/stores');
@@ -524,27 +536,6 @@ describe('Store Controller', () => {
       return store;
     };
 
-    const queryStaff = async (id: number) => {
-      const query = `
-        SELECT s.id, s.first_name AS "firstName", s.last_name AS "lastName",
-        s.email, s.active, s.store_id AS "storeId", s.phone_number AS "phoneNumber",
-        s.avatar, json_build_object(
-          'addressLine', a.address_line, 
-          'cityName', c.city_name,
-          'stateName', c.state_name,
-          'country', cy.country_name,
-          'postalCode', a.postal_code
-        ) as "address"
-        FROM staff s
-        LEFT JOIN address a ON s.address_id = a.id 
-        LEFT JOIN city c ON a.city_id = c.id
-        LEFT JOIN country cy ON c.country_id = cy.id
-        WHERE s.id = ${id};
-      `;
-      const [staff] = await execQuery(query);
-      return staff;
-    };
-
     const getDifferentCity = async (cityName: string, stateName: string) => {
       const [{ cityName: newCityName }] = await execQuery(`
         SELECT city_name as "cityName" 
@@ -560,6 +551,8 @@ describe('Store Controller', () => {
       const payload = getStorePayload();
       const newStoreResponse = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
       const storeBeforeUpdate = newStoreResponse.body;
+      const storeAddressId = newStoreResponse.body.address.id;
+
       const newAddressLine = `${storeBeforeUpdate.address.addressLine} UPDATED`;
 
       const newCityName = await getDifferentCity(
@@ -592,12 +585,23 @@ describe('Store Controller', () => {
         country: storeBeforeUpdate.address.country,
         postalCode: '12345',
       });
+
+      const updatedStoreAddress = await queryAddress(storeAddressId);
+
+      expect(updatedStoreAddress).toEqual({
+        addressLine: newAddressLine,
+        cityName: newCityName,
+        stateName: storeBeforeUpdate.address.stateName,
+        country: storeBeforeUpdate.address.country,
+        postalCode: '12345',
+      });
     });
 
     it('should update the address line of the store', async () => {
       const payload = getStorePayload();
       const newStoreResponse = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
       const storeBeforeUpdate = newStoreResponse.body;
+      const storeAddressId = newStoreResponse.body.address.id;
 
       const newAddressLine = `${storeBeforeUpdate.address.addressLine} UPDATED`;
       const response = await server
@@ -624,12 +628,23 @@ describe('Store Controller', () => {
         country: storeBeforeUpdate.address.country,
         postalCode: '12345',
       });
+
+      const updatedStoreAddress = await queryAddress(storeAddressId);
+
+      expect(updatedStoreAddress).toEqual({
+        addressLine: newAddressLine,
+        cityName: storeBeforeUpdate.address.cityName,
+        stateName: storeBeforeUpdate.address.stateName,
+        country: storeBeforeUpdate.address.country,
+        postalCode: '12345',
+      });
     });
 
     it('should update the city of the store', async () => {
       const payload = getStorePayload();
       const newStoreResponse = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
       const storeBeforeUpdate = newStoreResponse.body;
+      const storeAddressId = newStoreResponse.body.address.id;
 
       const newCityName = await getDifferentCity(
         storeBeforeUpdate.address.cityName,
@@ -660,10 +675,49 @@ describe('Store Controller', () => {
         country: storeBeforeUpdate.address.country,
         postalCode: '12345',
       });
+
+      const updatedStoreAddress = await queryAddress(storeAddressId);
+
+      expect(updatedStoreAddress).toEqual({
+        addressLine: storeBeforeUpdate.address.addressLine,
+        cityName: newCityName,
+        stateName: storeBeforeUpdate.address.stateName,
+        country: storeBeforeUpdate.address.country,
+        postalCode: '12345',
+      });
     });
 
     it('should update the store with the new manager', async () => {
-      expect(true).toBeFalsy();
+      const storePayload = getStorePayload();
+      const staffPayload = getStaffPayload();
+      staffPayload.address = {
+        ...staffPayload.address,
+        stateName: storePayload.address.stateName,
+        country: storePayload.address.country,
+      };
+
+      const storeResponse = await server.post('/api/v1/stores').set('Cookie', cookie).send(storePayload);
+      const storeId = storeResponse.body.id;
+
+      const staffResponse = await server.post('/api/v1/staff').set('Cookie', cookie).send(staffPayload);
+      const staffId = staffResponse.body.id;
+
+      let [storeQueryResult] = await execQuery(`
+          SELECT store_manager_id AS "storeManagerId" FROM store WHERE id = ${storeId}
+        `);
+
+      expect(Number(storeQueryResult.storeManagerId)).not.toEqual(Number(staffId));
+
+      const response = await server.put(`/api/v1/stores/${storeId}`).set('Cookie', cookie).send({
+        storeManagerId: staffId,
+      });
+      expect(response.status).toEqual(204);
+      expect(response.body).toEqual({});
+
+      [storeQueryResult] = await execQuery(`
+        SELECT store_manager_id AS "storeManagerId" FROM store WHERE id = ${storeId}
+      `);
+      expect(Number(storeQueryResult.storeManagerId)).toEqual(Number(staffId));
     });
 
     it('should not allow to change the state of the store', async () => {

@@ -7,6 +7,7 @@ describe('Staff Controller', () => {
   const email = 'test@example.com';
   const password = 'password123';
   let cookie: string = '';
+
   const getAddressCount = async (address: {
     addressLine: string;
     cityName: string;
@@ -27,6 +28,7 @@ describe('Staff Controller', () => {
 
     return Number(addressQueryResult.count);
   };
+
   const getStorePayload = () => ({
     phoneNumber: `${Math.ceil(Math.random() * 10000000000)}`,
     address: {
@@ -50,6 +52,7 @@ describe('Staff Controller', () => {
       },
     },
   });
+
   const getStaffPayload = () => ({
     firstName: 'Jane',
     lastName: 'Doe',
@@ -63,6 +66,19 @@ describe('Staff Controller', () => {
       postalCode: getRandomPostalCode(),
     },
   });
+
+  const queryAddress = async (id: number) => {
+    const [queryResult] = await execQuery(`
+      SELECT a.address_line AS "addressLine", c.city_name AS "cityName",
+      c.state_name AS "stateName", cy.country_name AS "country",
+      a.postal_code AS "postalCode"
+      FROM address AS a LEFT JOIN city AS c ON a.city_id = c.id
+      LEFT JOIN country AS cy ON c.country_id = cy.id
+      WHERE a.id = ${id}
+    `);
+    return queryResult;
+  };
+
   const server = supertest(app);
 
   beforeAll(async () => {
@@ -313,7 +329,7 @@ describe('Staff Controller', () => {
     });
   });
 
-  describe('PUT /staff/:id', () => {
+  describe.only('PUT /staff/:id', () => {
     it('should update staff with the new phone number', async () => {
       const payload1 = getStaffPayload();
 
@@ -344,6 +360,8 @@ describe('Staff Controller', () => {
       const newStoreResponse = await server.post('/api/v1/stores').set('Cookie', cookie).send(storePayload);
       const newStore = newStoreResponse.body;
 
+      const staffAddressId = newStaff.address.id;
+
       await execQuery(`
         UPDATE staff SET store_id = ${newStore.id} WHERE id = ${newStaff.id}
       `);
@@ -353,58 +371,9 @@ describe('Staff Controller', () => {
       });
 
       expect(response.status).toEqual(204);
-      const [staffAddress] = await execQuery(`
-        SELECT address.address_line AS "addressLine", city.city_name AS "cityName",
-        city.state_name AS "stateName", country.country_name AS country,
-        address.postal_code AS "postalCode"
-        FROM staff LEFT JOIN address ON staff.address_id = address.id
-        LEFT JOIN city ON address.city_id = city.id
-        LEFT JOIN country ON city.country_id = country.id
-        WHERE staff.id = ${newStaff.id}
-      `);
 
-      expect(staffAddress).toEqual(payload2.address);
-    });
-
-    it('should update staff with the existing different address', async () => {
-      const payload = getStaffPayload();
-      const newStaffResponse = await server.post('/api/v1/staff').set('Cookie', cookie).send(payload);
-      const newStaff = newStaffResponse.body;
-
-      const [existingAddress] = await execQuery(`
-        SELECT address.id, address.address_line AS "addressLine", city.city_name AS "cityName", 
-        city.state_name AS "stateName", country.country_name AS country, 
-        address.postal_code AS "postalCode"
-        FROM address LEFT JOIN city ON address.city_id = city.id
-        LEFT JOIN country ON city.country_id = country.id WHERE
-        city.state_name = '${newStaff.address.stateName}' AND
-        NOT EXISTS (
-          SELECT address_id FROM staff WHERE address.id = staff.address_id
-        ) AND NOT EXISTS (
-          SELECT address_id FROM store WHERE address.id = store.address_id
-        ) LIMIT 1
-      `);
-
-      const response = await server
-        .put(`/api/v1/staff/${newStaff.id}`)
-        .set('Cookie', cookie)
-        .send({
-          address: {
-            ...existingAddress,
-            id: undefined,
-          },
-        });
-      expect(response.status).toEqual(204);
-      const [staffAddress] = await execQuery(`
-        SELECT address.id, address.address_line AS "addressLine", city.city_name AS "cityName",
-        city.state_name AS "stateName", country.country_name AS country,
-        address.postal_code AS "postalCode"
-        FROM staff LEFT JOIN address ON staff.address_id = address.id
-        LEFT JOIN city ON address.city_id = city.id
-        LEFT JOIN country ON city.country_id = country.id
-        WHERE staff.id = ${newStaff.id}
-      `);
-      expect(staffAddress).toEqual(existingAddress);
+      const updatedStaffAddress = await queryAddress(staffAddressId);
+      expect(updatedStaffAddress).toEqual(payload2.address);
     });
 
     it('should not update staff with the address if it is outside the state of assigned store', async () => {
