@@ -126,7 +126,7 @@ export type CustomerPayload = {
   email: string;
   address: Address;
   active?: boolean;
-  preferredStoreId?: string;
+  preferredStoreId?: number;
   phoneNumber: string;
   avatar?: string;
 };

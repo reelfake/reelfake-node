@@ -1,4 +1,4 @@
-import { DataTypes, Transaction } from 'sequelize';
+import { DataTypes, Transaction, Op } from 'sequelize';
 import BaseModel from './baseModel';
 import CountryModel from './countryModel';
 import CityModel from './cityModel';
@@ -7,6 +7,58 @@ import { Address as AddressType } from '../types';
 import sequelize from '../sequelize.config';
 
 class Address extends BaseModel {
+  public static async isAddressExist(
+    address: AddressType,
+    t: Transaction | undefined = undefined,
+    excludeAddressId: number | undefined = undefined
+  ) {
+    const { addressLine, cityName, stateName, country, postalCode } = address;
+
+    const similarAddressCount = await Address.count({
+      where: {
+        id: {
+          [Op.not]: excludeAddressId,
+        },
+        addressLine: {
+          [Op.eq]: addressLine,
+        },
+        postalCode: {
+          [Op.eq]: postalCode,
+        },
+      },
+      include: [
+        {
+          model: CityModel,
+          as: 'city',
+          attributes: [],
+          where: {
+            cityName: {
+              [Op.eq]: cityName,
+            },
+            stateName: {
+              [Op.eq]: stateName,
+            },
+          },
+          include: [
+            {
+              model: CountryModel,
+              as: 'country',
+              attributes: [],
+              where: {
+                countryName: {
+                  [Op.eq]: country,
+                },
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    const isDuplicateAddress = similarAddressCount > 0;
+    return isDuplicateAddress;
+  }
+
   public static async findOrCreateAddress(address: AddressType, t: Transaction | undefined = undefined) {
     const { addressLine, cityName, stateName, country, postalCode } = address;
 

@@ -367,6 +367,30 @@ export const updateCustomer = async (req: CustomRequestWithBody<Partial<Customer
     }
   }
 
+  if (email) {
+    const existingCustomerWithSameEmail = await CustomerModel.count({
+      where: {
+        email,
+      },
+    });
+
+    if (existingCustomerWithSameEmail > 0) {
+      throw new AppError('Customer with the same email already exist', 400);
+    }
+  }
+
+  if (phoneNumber) {
+    const existingCustomerWithSamePhoneNumber = await CustomerModel.count({
+      where: {
+        phoneNumber,
+      },
+    });
+
+    if (existingCustomerWithSamePhoneNumber > 0) {
+      throw new AppError('Customer with the same phone number already exist', 400);
+    }
+  }
+
   await sequelize.transaction(async (t) => {
     const existingCustInstance = await CustomerModel.findByPk(id, {
       attributes: ['id', 'addressId'],
@@ -379,6 +403,11 @@ export const updateCustomer = async (req: CustomRequestWithBody<Partial<Customer
 
     if (address) {
       const custAddressId = existingCustInstance.getDataValue('addressId');
+
+      const isDuplicateAddress = await AddressModel.isAddressExist(address, t, custAddressId);
+      if (isDuplicateAddress) {
+        throw new AppError('Customer with the same address already exist', 400);
+      }
 
       await AddressModel.updateAddress(custAddressId, address);
     }
