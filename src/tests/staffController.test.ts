@@ -329,7 +329,7 @@ describe('Staff Controller', () => {
     });
   });
 
-  describe.only('PUT /staff/:id', () => {
+  describe('PUT /staff/:id', () => {
     it('should update staff with the new phone number', async () => {
       const payload1 = getStaffPayload();
 
