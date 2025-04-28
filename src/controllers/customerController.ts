@@ -467,6 +467,10 @@ export const deleteCustomer = async (req: CustomRequest, res: Response) => {
 
     const custAddressInstance = await AddressModel.findByPk(custAddressId);
 
+    if (!custAddressInstance) {
+      throw new AppError('Address for the customer not found', 404);
+    }
+
     await existingCustomerInstance.destroy({ transaction: t });
     await custAddressInstance?.destroy({ transaction: t });
   });

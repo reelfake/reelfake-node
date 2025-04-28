@@ -61,7 +61,150 @@ describe('Customer Controller', () => {
     jest.restoreAllMocks();
   });
 
-  describe('POST /customer', () => {
+  describe('GET /customers', () => {
+    it('should get customers with pagination support', async () => {
+      const pages = [1, 2, 5, 6, 3];
+      const limitPerPage = 50;
+
+      const [totalCustomersQueryResult] = await execQuery(`
+          SELECT COUNT(*) FROM customer
+        `);
+      const totalCustomers = Number(totalCustomersQueryResult.count);
+
+      for (let i of pages) {
+        const response = await server.get(`/api/v1/customers?pageNumber=${i}`).set('Cookie', cookie);
+        expect(response.status).toEqual(200);
+
+        const queryResult = await execQuery(`
+            SELECT cu.id, cu.first_name AS "firstName", cu.last_name AS "lastName",
+            cu.email, cu.phone_number AS "phoneNumber", cu.preferred_store_id AS "preferredStoreId",
+            cu.active, cu.avatar, cu.registered_on AS "registeredOn",
+            json_build_object(
+              'id', a.id,
+              'addressLine', a.address_line,
+              'cityName', c.city_name,
+              'stateName', c.state_name,
+              'country', cy.country_name,
+              'postalCode', a.postal_code
+            ) AS "address"
+            FROM customer AS cu LEFT JOIN address AS a ON cu.address_id = a.id
+            LEFT JOIN city AS c ON a.city_id = c.id
+            LEFT JOIN country AS cy ON c.country_id = cy.id
+            ORDER BY cu.id ASC
+            OFFSET ${(i - 1) * limitPerPage}
+            LIMIT ${limitPerPage}
+          `);
+
+        const pageResult = response.body;
+        expect(pageResult).toEqual({
+          items: queryResult,
+          length: queryResult.length,
+          totalPages: Math.ceil(totalCustomers / limitPerPage),
+          totalItems: totalCustomers,
+        });
+      }
+    });
+
+    it('should return 404 when fetching customers with page that is out of range', async () => {
+      let response = await server.get('/api/v1/customers').set('Cookie', cookie);
+      expect(response.status).toEqual(200);
+      const totalPages = response.body.totalPages;
+      response = await server.get(`/api/v1/customers?pageNumber=${Number(totalPages) + 1}`).set('Cookie', cookie);
+      expect(response.status).toEqual(404);
+      expect(response.body.message).toEqual('Page out of range');
+    });
+  });
+
+  describe('GET /customers/:id', () => {
+    it('should get customer detail', async () => {
+      const payload = getCustomerPayload(1);
+
+      const newCustomerResponse = await server.post('/api/v1/customers').set('Cookie', cookie).send(payload);
+      const customerId = newCustomerResponse.body.id;
+
+      const response = await server.get(`/api/v1/customers/${customerId}`).set('Cookie', cookie);
+      expect(response.status).toEqual(200);
+
+      const [customerQueryResult] = await execQuery(`
+        SELECT cu.id, cu.first_name AS "firstName", cu.last_name AS "lastName",
+        cu.email, cu.phone_number AS "phoneNumber",
+        cu.active, cu.avatar, cu.registered_on AS "registeredOn",
+        cu.preferred_store_id AS "preferredStoreId",
+        json_build_object(
+          'id', a.id,
+          'addressLine', a.address_line,
+          'cityName', c.city_name,
+          'stateName', c.state_name,
+          'country', cy.country_name,
+          'postalCode', a.postal_code
+        ) AS "address"
+        FROM customer AS cu LEFT JOIN address AS a ON cu.address_id = a.id
+        LEFT JOIN city AS c ON a.city_id = c.id
+        LEFT JOIN country AS cy ON c.country_id = cy.id
+        WHERE cu.id = ${customerId}
+      `);
+
+      const storeId = customerQueryResult.preferredStoreId;
+      delete customerQueryResult['preferredStoreId'];
+
+      const [preferredStoreQueryResult] = await execQuery(`
+          SELECT s.id, s.store_manager_id AS "storeManagerId", s.phone_number AS "phoneNumber",
+          json_build_object(
+            'id', a.id,
+            'addressLine', a.address_line,
+            'cityName', c.city_name,
+            'stateName', c.state_name,
+            'country', cy.country_name,
+            'postalCode', a.postal_code
+          ) AS "address"
+          FROM store AS s LEFT JOIN address AS a ON s.address_id = a.id
+          LEFT JOIN city AS c ON a.city_id = c.id
+          LEFT JOIN country AS cy ON c.country_id = cy.id
+          WHERE s.id = ${storeId}
+        `);
+      const storeManagerId = preferredStoreQueryResult.storeManagerId;
+      delete preferredStoreQueryResult['storeManagerId'];
+
+      const [storeManagerQueryResult] = await execQuery(`
+        SELECT s.id, s.first_name AS "firstName", s.last_name AS "lastName", 
+        s.email, s.active, s.phone_number AS "phoneNumber", s.avatar,
+        json_build_object(
+          'id', a.id,
+          'addressLine', a.address_line,
+          'cityName', c.city_name,
+          'stateName', c.state_name,
+          'country', cy.country_name,
+          'postalCode', a.postal_code
+        ) AS "address"
+        FROM staff AS s LEFT JOIN address AS a ON s.address_id = a.id
+        LEFT JOIN city AS c ON a.city_id = c.id
+        LEFT JOIN country AS cy ON c.country_id = cy.id
+        WHERE s.id = ${storeManagerId}
+      `);
+
+      expect(response.body).toEqual({
+        ...customerQueryResult,
+        preferredStore: {
+          ...preferredStoreQueryResult,
+          storeManager: {
+            ...storeManagerQueryResult,
+          },
+        },
+      });
+    });
+
+    it('should return 404 if the customer does not exist with the given id', async () => {
+      const [customerQueryResult] = await execQuery(`
+          SELECT max(id) FROM customer
+        `);
+      const customerId = Number(customerQueryResult.max);
+      const response = await server.get(`/api/v1/customers/${customerId + 1}`).set('Cookie', cookie);
+      expect(response.status).toEqual(404);
+      expect(response.body.message).toEqual('Resources not found');
+    });
+  });
+
+  describe('POST /customers', () => {
     it('should create customer with the given payload', async () => {
       const payload = getCustomerPayload(1);
 
@@ -267,7 +410,7 @@ describe('Customer Controller', () => {
     });
   });
 
-  describe('PUT /customer/:id', () => {
+  describe('PUT /customers/:id', () => {
     it('should update the customer with the given payload', async () => {
       const payload1 = getCustomerPayload(1);
       const payload2 = getCustomerPayload(1);
@@ -442,6 +585,52 @@ describe('Customer Controller', () => {
       });
       expect(response.status).toEqual(400);
       expect(response.body.message).toEqual('Customer with the same address already exist');
+    });
+  });
+
+  describe('DELETE /customers/:id', () => {
+    it('should delete the customer', async () => {
+      const payload = getCustomerPayload();
+      const newCustomerResponse = await server.post('/api/v1/customers').set('Cookie', cookie).send(payload);
+      const customerId = newCustomerResponse.body.id;
+
+      let [queryResult] = await execQuery(`SELECT COUNT(*) FROM customer WHERE id = ${customerId}`);
+      expect(Number(queryResult.count)).toEqual(1);
+
+      const response = await server.delete(`/api/v1/customers/${customerId}`).set('Cookie', cookie);
+      expect(response.status).toEqual(204);
+      expect(response.body).toEqual({});
+      [queryResult] = await execQuery(`SELECT COUNT(*) FROM customer WHERE id = ${customerId}`);
+      expect(Number(queryResult.count)).toEqual(0);
+    });
+
+    it('should delete the customer along with the address', async () => {
+      const payload = getCustomerPayload();
+      const newCustomerResponse = await server.post('/api/v1/customers').set('Cookie', cookie).send(payload);
+      const customerId = newCustomerResponse.body.id;
+      const addressId = newCustomerResponse.body.address.id;
+
+      let [custCountQueryResult] = await execQuery(`SELECT COUNT(*) FROM customer WHERE id = ${customerId}`);
+      let [addrCountQueryResult] = await execQuery(`SELECT COUNT(*) FROM address WHERE id = ${addressId}`);
+      expect(Number(custCountQueryResult.count)).toEqual(1);
+      expect(Number(addrCountQueryResult.count)).toEqual(1);
+
+      const response = await server.delete(`/api/v1/customers/${customerId}`).set('Cookie', cookie);
+      expect(response.status).toEqual(204);
+      expect(response.body).toEqual({});
+
+      [custCountQueryResult] = await execQuery(`SELECT COUNT(*) FROM customer WHERE id = ${customerId}`);
+      [addrCountQueryResult] = await execQuery(`SELECT COUNT(*) FROM address WHERE id = ${addressId}`);
+      expect(Number(custCountQueryResult.count)).toEqual(0);
+      expect(Number(addrCountQueryResult.count)).toEqual(0);
+    });
+
+    it('should return 404 when deleting customer with id that does not exist', async () => {
+      const [queryResult] = await execQuery(`SELECT max(id) FROM customer`);
+      const customerId = Number(queryResult.max) + 1;
+      const response = await server.delete(`/api/v1/customers/${customerId}`).set('Cookie', cookie);
+      expect(response.status).toEqual(404);
+      expect(response.body.message).toEqual('Resources not found');
     });
   });
 });
