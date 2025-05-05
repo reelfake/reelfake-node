@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
+import { literal, col, Op } from 'sequelize';
 import bcrypt from 'bcryptjs';
-import { CustomerModel, StaffModel, UserModel } from '../models';
+import { CustomerModel, StaffModel, StoreModel, UserModel } from '../models';
 import { USER_ROLES } from '../constants';
 import { AppError, generateAuthToken } from '../utils';
 
@@ -8,7 +9,7 @@ async function findUser(email: string) {
   const user = await UserModel.findOne({
     attributes: ['id', 'userPassword'],
     where: {
-      userEmail: email,
+      email,
     },
   });
 
@@ -37,27 +38,49 @@ async function findUser(email: string) {
     };
   }
 
+  const storeManager = await StaffModel.findOne({
+    where: {
+      id: {
+        [Op.eq]: literal(`"store"."store_manager_id"`),
+      },
+      email,
+    },
+    attributes: ['id', 'userPassword'],
+    include: [
+      {
+        model: StoreModel,
+        as: 'store',
+        attributes: [],
+      },
+    ],
+  });
+
+  if (storeManager) {
+    return {
+      id: storeManager.getDataValue('id'),
+      email,
+      password: storeManager.getDataValue('userPassword'),
+      role: USER_ROLES.STORE_MANAGER,
+    };
+  }
+
   const staff = await StaffModel.findOne({
-    attributes: ['id', 'userPassword', 'isStoreManager'],
+    attributes: ['id', 'userPassword'],
     where: {
       email,
     },
   });
 
-  if (!staff) {
-    return undefined;
+  if (staff) {
+    return {
+      id: staff.getDataValue('id'),
+      email,
+      password: staff.getDataValue('userPassword'),
+      role: USER_ROLES.STAFF,
+    };
   }
 
-  const isStoreManager: boolean = staff.getDataValue('isStoreManager');
-
-  const userRole = isStoreManager ? USER_ROLES.STORE_MANAGER : USER_ROLES.STAFF;
-
-  return {
-    id: staff.getDataValue('id'),
-    email,
-    password: staff.getDataValue('userPassword'),
-    role: userRole,
-  };
+  return undefined;
 }
 
 export const login = async (req: Request, res: Response) => {
@@ -66,7 +89,7 @@ export const login = async (req: Request, res: Response) => {
   const user = await findUser(email);
 
   if (!user) {
-    throw new AppError('Invalid credentials', 401);
+    throw new AppError('User not registered', 404);
   }
 
   const isPasswordMatch = await bcrypt.compare(password, user.password);

@@ -2,5 +2,5 @@ export default {
   INVALID_AUTH_TOKEN: 'Invalid or expired token',
   RESOURCES_NOT_FOUND: 'Resources not found',
   INTERNAL_SERVER_ERROR: 'Server encountered unexpected error',
-  FORBIDDEN: 'Forbidden',
+  FORBIDDEN: 'You are not authorized to perform this operation',
 };

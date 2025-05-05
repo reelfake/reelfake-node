@@ -32,9 +32,9 @@ User.init(
       type: DataTypes.UUID,
       field: 'user_uuid',
     },
-    userEmail: {
+    email: {
       type: DataTypes.STRING(150),
-      field: 'user_email',
+      field: 'email',
     },
     userPassword: {
       type: DataTypes.STRING(10),

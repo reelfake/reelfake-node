@@ -22,8 +22,8 @@ export default async function (req: Request, res: Response, next: NextFunction) 
     }
 
     (req as CustomRequest).user = {
-      userEmail,
-      userRole,
+      email: userEmail,
+      role: userRole,
     };
 
     next();
@@ -39,58 +39,18 @@ export default async function (req: Request, res: Response, next: NextFunction) 
   }
 }
 
-export async function validateUserIsNormalUser(req: Request, res: Response, next: NextFunction) {
-  const { user } = req as CustomRequest;
+export function validateUserRole(...roles: USER_ROLES[]) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const { user } = req as CustomRequest;
 
-  if (!user) {
-    throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
-  }
+    if (!user) {
+      throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
+    }
 
-  if (user.userRole !== USER_ROLES.USER) {
-    throw new AppError(ERROR_MESSAGES.FORBIDDEN, 403);
-  }
+    if (!roles.includes(user.role)) {
+      throw new AppError(ERROR_MESSAGES.FORBIDDEN, 403);
+    }
 
-  next();
-}
-
-export async function validateUserIsCustomer(req: Request, res: Response, next: NextFunction) {
-  const { user } = req as CustomRequest;
-
-  if (!user) {
-    throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
-  }
-
-  if (user.userRole !== USER_ROLES.CUSTOMER) {
-    throw new AppError(ERROR_MESSAGES.FORBIDDEN, 403);
-  }
-
-  next();
-}
-
-export async function validateUserIsStaff(req: Request, res: Response, next: NextFunction) {
-  const { user } = req as CustomRequest;
-
-  if (!user) {
-    throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
-  }
-
-  if (user.userRole !== USER_ROLES.STAFF) {
-    throw new AppError(ERROR_MESSAGES.FORBIDDEN, 403);
-  }
-
-  next();
-}
-
-export async function validateUserIsStoreManager(req: Request, res: Response, next: NextFunction) {
-  const { user } = req as CustomRequest;
-
-  if (!user) {
-    throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
-  }
-
-  if (user.userRole !== USER_ROLES.STORE_MANAGER) {
-    throw new AppError(ERROR_MESSAGES.FORBIDDEN, 403);
-  }
-
-  next();
+    next();
+  };
 }

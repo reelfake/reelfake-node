@@ -5,10 +5,10 @@ import { AppError, generateAuthToken } from '../utils';
 import { CustomRequest } from '../types';
 import { Op } from 'sequelize';
 
-async function findUser(userEmail: string) {
+async function findUser(email: string) {
   const user = await UserModel.findOne({
     where: {
-      userEmail,
+      email,
     },
   });
 
@@ -22,13 +22,13 @@ export const getUser = async (req: CustomRequest, res: Response) => {
     throw new AppError('Invalid token', 401);
   }
 
-  const { userEmail } = userFromToken;
+  const { email } = userFromToken;
 
   const existingUser = await UserModel.findOne({
     where: {
-      userEmail,
+      email,
     },
-    attributes: ['userEmail', 'customerId', 'staffId', 'storeManagerId'],
+    attributes: ['email', 'customerId', 'staffId', 'storeManagerId'],
   });
 
   res.status(200).json(existingUser);
@@ -50,8 +50,8 @@ export const updateUser = async (req: CustomRequest, res: Response) => {
     throw new AppError('Invalid token', 401);
   }
 
-  const { userEmail } = currentUser;
-  const userToUpdate = await findUser(userEmail);
+  const { email } = currentUser;
+  const userToUpdate = await findUser(email);
 
   if (!userToUpdate) {
     throw new AppError('Error finding user with the given user remail', 500);
@@ -80,7 +80,7 @@ export const updateUser = async (req: CustomRequest, res: Response) => {
       [Op.and]: {
         [Op.or]: conditions,
         [Op.not]: {
-          userEmail: currentUser.userEmail,
+          email: currentUser.email,
         },
       },
     },
@@ -93,13 +93,13 @@ export const updateUser = async (req: CustomRequest, res: Response) => {
   userToUpdate.set({ ...changes });
   await userToUpdate.save();
 
-  const updatedUser = await findUser(userEmail);
+  const updatedUser = await findUser(email);
 
   if (!updatedUser) {
     throw new AppError('Error updating the user details', 500);
   }
 
-  const newAuthToken = generateAuthToken(currentUser.userEmail, currentUser.userRole);
+  const newAuthToken = generateAuthToken(currentUser.email, currentUser.role);
 
   res.status(204).cookie('auth_token', newAuthToken, { httpOnly: true, secure: true, sameSite: 'strict' }).send();
 };
@@ -109,7 +109,7 @@ export const registerUser = async (req: Request, res: Response) => {
 
   const user = await UserModel.findOne({
     where: {
-      userEmail: email,
+      email,
     },
   });
 
@@ -119,6 +119,6 @@ export const registerUser = async (req: Request, res: Response) => {
 
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
-  await UserModel.create({ userEmail: email, userPassword: hashedPassword }, { fields: ['userEmail', 'userPassword'] });
+  await UserModel.create({ email, userPassword: hashedPassword }, { fields: ['email', 'userPassword'] });
   res.status(201).json({ message: 'User is registered successfully' });
 };

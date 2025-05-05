@@ -11,8 +11,8 @@ import {
   updateMovie,
   deleteMovie,
 } from '../controllers';
-import { validateAuthToken } from '../middlewares';
-import { GENRES } from '../constants';
+import { validateAuthToken, validateUserRole } from '../middlewares';
+import { GENRES, USER_ROLES } from '../constants';
 import { CustomRequest } from '../types';
 
 const validGenres = Object.entries(GENRES).reduce<{ [key: string]: string }>((acc, curr) => {
@@ -117,11 +117,16 @@ function validateMoviesRouteQuery(req: CustomRequest, res: Response, next: NextF
 }
 
 router.get('/', validateMoviesRouteQuery, routeFnWrapper(getMovies));
-router.post('/', validateAuthToken, routeFnWrapper(createMovie));
+router.post('/', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(createMovie));
 router.get('/:id', validateMovieByIdRouteQuery, routeFnWrapper(getMovieById));
-router.put('/:id', validateAuthToken, routeFnWrapper(updateMovie));
-router.delete('/:id', validateAuthToken, routeFnWrapper(deleteMovie));
-router.post('/:id/add_actors', validateAuthToken, routeFnWrapper(addActors));
+router.put('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(updateMovie));
+router.delete('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(deleteMovie));
+router.post(
+  '/:id/add_actors',
+  validateAuthToken,
+  validateUserRole(USER_ROLES.STORE_MANAGER),
+  routeFnWrapper(addActors)
+);
 router.get('/search', routeFnWrapper(searchMovies));
 router.get('/:id/stores', routeFnWrapper(findInStores));
 

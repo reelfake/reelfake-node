@@ -1,8 +1,9 @@
 import type { Request, Response, NextFunction } from 'express';
 import { Router } from 'express';
-import { validateAuthToken } from '../middlewares';
+import { validateAuthToken, validateUserRole } from '../middlewares';
 import { getActors, searchActor, getActorById, updateActor, deleteActor, addActor, addToMovie } from '../controllers';
 import { routeFnWrapper, AppError } from '../utils';
+import { USER_ROLES } from '../constants';
 
 const router = Router();
 
@@ -57,11 +58,16 @@ function validateActorByIdRouteQuery(req: Request, res: Response, next: NextFunc
 }
 
 router.get('/', validateActorsRouteQuery, routeFnWrapper(getActors));
-router.post('/', validateAuthToken, routeFnWrapper(addActor));
-router.post('/:id/add_to_movie', validateAuthToken, routeFnWrapper(addToMovie));
+router.post('/', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(addActor));
+router.post(
+  '/:id/add_to_movie',
+  validateAuthToken,
+  validateUserRole(USER_ROLES.STORE_MANAGER),
+  routeFnWrapper(addToMovie)
+);
 router.get('/search', validateSearchRouteQuery, routeFnWrapper(searchActor));
 router.get('/:id', validateActorByIdRouteQuery, routeFnWrapper(getActorById));
-router.put('/:id', validateAuthToken, routeFnWrapper(updateActor));
-router.delete('/:id', validateAuthToken, routeFnWrapper(deleteActor));
+router.put('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(updateActor));
+router.delete('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(deleteActor));
 
 export default router;

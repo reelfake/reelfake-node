@@ -30,8 +30,8 @@ export type TransactionResult = {
 
 export interface CustomRequest extends Request {
   user?: {
-    userEmail: string;
-    userRole: USER_ROLES;
+    email: string;
+    role: USER_ROLES;
   };
   genres?: string[];
   languages?: string[];
@@ -40,8 +40,8 @@ export interface CustomRequest extends Request {
 
 export interface CustomRequestWithBody<M> extends Request<{ [key: string]: string }, {}, M> {
   user?: {
-    userEmail: string;
-    userRole: USER_ROLES;
+    email: string;
+    role: USER_ROLES;
   };
   genres?: string[];
   languages?: string[];

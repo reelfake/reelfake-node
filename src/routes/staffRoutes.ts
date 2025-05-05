@@ -1,15 +1,16 @@
 import { Router } from 'express';
 import { getStaff, getStaffById, createStaff, getStoreManagers, updateStaff, deleteStaff } from '../controllers';
-import { validateAuthToken } from '../middlewares';
+import { validateAuthToken, validateUserRole } from '../middlewares';
 import { routeFnWrapper } from '../utils';
+import { USER_ROLES } from '../constants';
 
 const router = Router();
 
-router.get('/', validateAuthToken, routeFnWrapper(getStaff));
-router.post('/', validateAuthToken, routeFnWrapper(createStaff));
-router.get('/:id', validateAuthToken, routeFnWrapper(getStaffById));
-router.put('/:id', validateAuthToken, routeFnWrapper(updateStaff));
-router.delete('/:id', validateAuthToken, routeFnWrapper(deleteStaff));
-router.get('/managers', validateAuthToken, routeFnWrapper(getStoreManagers));
+router.get('/', validateAuthToken, validateUserRole(USER_ROLES.STAFF), routeFnWrapper(getStaff));
+router.post('/', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(createStaff));
+router.get('/:id', validateAuthToken, validateUserRole(USER_ROLES.STAFF), routeFnWrapper(getStaffById));
+router.put('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(updateStaff));
+router.delete('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(deleteStaff));
+router.get('/managers', validateAuthToken, validateUserRole(USER_ROLES.STAFF), routeFnWrapper(getStoreManagers));
 
 export default router;
