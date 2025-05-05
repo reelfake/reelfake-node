@@ -1,6 +1,7 @@
 import type { Locals, Request } from 'express';
 import { DataType, Model } from 'sequelize';
 import type { Sequelize } from 'sequelize';
+import { USER_ROLES } from '../constants';
 
 export type KeyValuePair = {
   [key: string]: string | number | boolean | KeyValuePair;
@@ -29,13 +30,9 @@ export type TransactionResult = {
 
 export interface CustomRequest extends Request {
   user?: {
-    userUUID: string;
     userEmail: string;
-    customerId?: number;
-    staffId?: number;
-    storeManagerId?: number;
+    userRole: USER_ROLES;
   };
-  validateUserRole?: (fn: () => boolean) => void;
   genres?: string[];
   languages?: string[];
   languageIds?: number[];
@@ -43,13 +40,9 @@ export interface CustomRequest extends Request {
 
 export interface CustomRequestWithBody<M> extends Request<{ [key: string]: string }, {}, M> {
   user?: {
-    userUUID: string;
     userEmail: string;
-    customerId?: number;
-    staffId?: number;
-    storeManagerId?: number;
+    userRole: USER_ROLES;
   };
-  validateUserRole?: (fn: () => boolean) => void;
   genres?: string[];
   languages?: string[];
   languageIds?: number[];

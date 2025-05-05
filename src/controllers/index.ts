@@ -31,7 +31,8 @@ export {
   updateStore,
   deleteStore,
 } from './storeController';
-export { login, logout, registerUser, getUser, updateUser } from './userController';
+export { login, logout } from './authController';
+export { registerUser, getUser, updateUser } from './userController';
 export { getStaff, getStaffById, getStoreManagers, updateStaff, createStaff, deleteStaff } from './staffController';
 export { getAddresses, getAddressesInCity, getAddressesInState } from './addressController';
 export { getCustomers, getCustomerById, createCustomer, deleteCustomer, updateCustomer } from './customerController';

@@ -7,9 +7,6 @@ import { ERROR_MESSAGES } from '../constants';
 import type { Address, CustomRequest, CustomRequestWithBody, StaffPayload } from '../types';
 
 export const getStaff = async (req: CustomRequest, res: Response) => {
-  const { user, validateUserRole } = req;
-  validateUserRole?.(() => !!(user && (user.staffId || user.storeManagerId)));
-
   const { state: stateName, city: cityName } = req.query;
 
   const where: WhereOptions = {};
@@ -81,9 +78,6 @@ export const getStaff = async (req: CustomRequest, res: Response) => {
 };
 
 export const getStaffById = async (req: CustomRequest, res: Response) => {
-  const { user, validateUserRole } = req;
-  validateUserRole?.(() => !!(user && (user.staffId || user.storeManagerId)));
-
   const { id: idText } = req.params;
   const staffId = Number(idText);
 
@@ -245,9 +239,6 @@ export const getStoreManagers = async (req: CustomRequest, res: Response) => {
 };
 
 export const updateStaff = async (req: CustomRequestWithBody<StaffPayload>, res: Response) => {
-  const { user, validateUserRole } = req;
-  validateUserRole?.(() => !!(user && user.storeManagerId));
-
   const { id: idText } = req.params;
   const staffId = Number(idText);
 
@@ -349,9 +340,6 @@ export const updateStaff = async (req: CustomRequestWithBody<StaffPayload>, res:
 };
 
 export const createStaff = async (req: CustomRequestWithBody<StaffPayload>, res: Response) => {
-  const { user, validateUserRole } = req;
-  validateUserRole?.(() => !!(user && user.storeManagerId));
-
   const { address, firstName, lastName, email, phoneNumber, avatar, storeId } = req.body;
 
   if (await StoreModel.isAddressInUse(address)) {
@@ -433,9 +421,6 @@ export const createStaff = async (req: CustomRequestWithBody<StaffPayload>, res:
 };
 
 export const deleteStaff = async (req: CustomRequest, res: Response) => {
-  const { user, validateUserRole } = req;
-  validateUserRole?.(() => !!(user && user.storeManagerId));
-
   const { id: idText } = req.params;
   const staffId = Number(idText);
 

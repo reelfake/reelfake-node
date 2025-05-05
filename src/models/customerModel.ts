@@ -47,6 +47,10 @@ Customer.init(
       type: DataTypes.DATEONLY,
       field: 'registered_on',
     },
+    userPassword: {
+      type: DataTypes.STRING(8),
+      field: 'user_password',
+    },
   },
   {
     sequelize,

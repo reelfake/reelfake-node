@@ -2,8 +2,6 @@ import supertest from 'supertest';
 
 import app from '../app';
 
-const apiKey = process.env.API_KEY || '';
-
 describe('App', () => {
   it('GET /api/v1 should return api name and version', async () => {
     const server = supertest(app);

@@ -4,8 +4,6 @@ import app from '../app';
 import * as dbQuery from '../utils/dbQuery';
 import { FIELD_MAP, execQuery } from './testUtil';
 
-const apiKey = process.env.API_KEY || '';
-
 describe('Countries Controller', () => {
   it('GET /api/v1/countries should return a list of countries', async () => {
     const server = supertest(app);
@@ -20,9 +18,7 @@ describe('Countries Controller', () => {
   });
 
   it('GET /api/v1/countries should return 500 on exception', async () => {
-    jest
-      .spyOn(dbQuery, 'queryCountries')
-      .mockRejectedValue({ message: 'unit testing exception for /api/countries' });
+    jest.spyOn(dbQuery, 'queryCountries').mockRejectedValue({ message: 'unit testing exception for /api/countries' });
     const server = supertest(app);
     const response = await server.get('/api/v1/countries');
     expect(response.status).toBe(500);

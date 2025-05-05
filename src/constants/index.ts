@@ -4,3 +4,4 @@ export { GENRES, availableGenres } from './genres';
 export { COUNTRIES } from './countries';
 export { LANGUAGES } from './languages';
 export { movieModelAttributes } from './expandedAttributes';
+export { USER_ROLES } from './auth';

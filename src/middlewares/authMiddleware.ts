@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { AppError } from '../utils';
-import { ERROR_MESSAGES } from '../constants';
+import { ERROR_MESSAGES, USER_ROLES } from '../constants';
 import { CustomRequest } from '../types';
 
 export default async function (req: Request, res: Response, next: NextFunction) {
@@ -13,24 +13,19 @@ export default async function (req: Request, res: Response, next: NextFunction) 
     const decodedToken = jwt.verify(token, process.env.JWT_SECRET || '', {
       ignoreExpiration: false, // default
     });
-    const userUUID = (decodedToken as { [key: string]: string })['id'];
-    const userEmail = (decodedToken as { [key: string]: string })['userEmail'];
-    const customerId = (decodedToken as { [key: string]: string })['customerId'];
-    const staffId = (decodedToken as { [key: string]: string })['staffId'];
-    const storeManagerId = (decodedToken as { [key: string]: string })['storeManagerId'];
+
+    const userEmail = (decodedToken as { [key: string]: string })['email'];
+    const userRole = (decodedToken as { [key: string]: USER_ROLES })['role'];
+
+    if (!userRole) {
+      throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 403);
+    }
 
     (req as CustomRequest).user = {
-      userUUID,
       userEmail,
-      customerId: Number(customerId),
-      staffId: Number(staffId),
-      storeManagerId: Number(storeManagerId),
+      userRole,
     };
-    (req as CustomRequest).validateUserRole = (fn: () => boolean) => {
-      if (!fn()) {
-        throw new AppError(ERROR_MESSAGES.FORBIDDEN, 403);
-      }
-    };
+
     next();
   } catch (err: unknown) {
     if ((err as Error).name === 'TokenExpiredError') {
@@ -44,28 +39,58 @@ export default async function (req: Request, res: Response, next: NextFunction) 
   }
 }
 
-// export async function validateUserIsManagerStaff(req: Request, res: Response, next: NextFunction) {
-//   const token = req.cookies.auth_token;
+export async function validateUserIsNormalUser(req: Request, res: Response, next: NextFunction) {
+  const { user } = req as CustomRequest;
 
-//   try {
-//     const decodedToken = jwt.verify(token, process.env.JWT_SECRET || '');
-//     const userUUID = (decodedToken as { [key: string]: string })['id'];
-//     const userEmail = (decodedToken as { [key: string]: string })['email'];
-//     const user = await UserModel.findOne({
-//       where: {
-//         userUUID,
-//         userEmail,
-//       },
-//     });
-//     if (user && user.getDataValue('storeManagerId')) {
-//       return next();
-//     }
-//     next(new AppError('You are not authorized to perform this operation', 403));
-//   } catch (err: unknown) {
-//     if (process.env.NODE_ENV === 'prod') {
-//       next(new AppError('Error validating token', 401));
-//     } else {
-//       next(err);
-//     }
-//   }
-// }
+  if (!user) {
+    throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
+  }
+
+  if (user.userRole !== USER_ROLES.USER) {
+    throw new AppError(ERROR_MESSAGES.FORBIDDEN, 403);
+  }
+
+  next();
+}
+
+export async function validateUserIsCustomer(req: Request, res: Response, next: NextFunction) {
+  const { user } = req as CustomRequest;
+
+  if (!user) {
+    throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
+  }
+
+  if (user.userRole !== USER_ROLES.CUSTOMER) {
+    throw new AppError(ERROR_MESSAGES.FORBIDDEN, 403);
+  }
+
+  next();
+}
+
+export async function validateUserIsStaff(req: Request, res: Response, next: NextFunction) {
+  const { user } = req as CustomRequest;
+
+  if (!user) {
+    throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
+  }
+
+  if (user.userRole !== USER_ROLES.STAFF) {
+    throw new AppError(ERROR_MESSAGES.FORBIDDEN, 403);
+  }
+
+  next();
+}
+
+export async function validateUserIsStoreManager(req: Request, res: Response, next: NextFunction) {
+  const { user } = req as CustomRequest;
+
+  if (!user) {
+    throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
+  }
+
+  if (user.userRole !== USER_ROLES.STORE_MANAGER) {
+    throw new AppError(ERROR_MESSAGES.FORBIDDEN, 403);
+  }
+
+  next();
+}

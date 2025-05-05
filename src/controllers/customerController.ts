@@ -7,9 +7,6 @@ import { ERROR_MESSAGES, ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
 import { CustomRequest, CustomRequestWithBody, CustomerPayload } from '../types';
 
 export const getCustomers = async (req: CustomRequest, res: Response) => {
-  const { user, validateUserRole } = req;
-  validateUserRole?.(() => !!((user && user.staffId) || user?.storeManagerId));
-
   const { pageNumber: pageNumberText = '1' } = req.query;
 
   const pageNumber = Number(pageNumberText);
@@ -70,9 +67,6 @@ export const getCustomers = async (req: CustomRequest, res: Response) => {
 };
 
 export const getCustomerById = async (req: CustomRequest, res: Response) => {
-  const { user, validateUserRole } = req;
-  validateUserRole?.(() => !!((user && user.staffId) || user?.storeManagerId));
-
   const { id: idText } = req.params;
 
   const id = Number(idText);
@@ -196,9 +190,6 @@ export const getCustomerById = async (req: CustomRequest, res: Response) => {
 };
 
 export const createCustomer = async (req: CustomRequestWithBody<CustomerPayload>, res: Response) => {
-  const { user, validateUserRole } = req;
-  validateUserRole?.(() => !!(user && user.storeManagerId));
-
   const { firstName, lastName, email, address, avatar, phoneNumber, preferredStoreId } = req.body;
 
   if (!firstName || !lastName || !email || !address || !phoneNumber) {
@@ -337,9 +328,6 @@ export const createCustomer = async (req: CustomRequestWithBody<CustomerPayload>
 };
 
 export const updateCustomer = async (req: CustomRequestWithBody<Partial<CustomerPayload>>, res: Response) => {
-  const { user, validateUserRole } = req;
-  validateUserRole?.(() => !!(user && user.storeManagerId));
-
   const { firstName, lastName, email, active, address, avatar, phoneNumber, preferredStoreId } = req.body;
 
   const { id: idText } = req.params;
@@ -443,9 +431,6 @@ export const updateCustomer = async (req: CustomRequestWithBody<Partial<Customer
 };
 
 export const deleteCustomer = async (req: CustomRequest, res: Response) => {
-  const { user, validateUserRole } = req;
-  validateUserRole?.(() => !!(user && user.storeManagerId));
-
   const { id: idText } = req.params;
 
   const id = Number(idText);

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { registerUser, login, logout, getUser, updateUser } from '../controllers';
 import { routeFnWrapper } from '../utils';
-import { validateAuthToken } from '../middlewares';
+import { validateAuthToken, validateUserIsNormalUser } from '../middlewares';
 
 const router = Router();
 
@@ -11,8 +11,8 @@ router.post('/login', routeFnWrapper(login));
 
 router.get('/logout', logout);
 
-router.get('/me', validateAuthToken, routeFnWrapper(getUser));
+router.get('/me', validateAuthToken, validateUserIsNormalUser, routeFnWrapper(getUser));
 
-router.patch('/me', validateAuthToken, routeFnWrapper(updateUser));
+router.patch('/me', validateAuthToken, validateUserIsNormalUser, routeFnWrapper(updateUser));
 
 export default router;

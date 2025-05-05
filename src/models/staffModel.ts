@@ -183,6 +183,10 @@ Staff.init(
       type: DataTypes.TEXT,
       field: 'avatar',
     },
+    userPassword: {
+      type: DataTypes.STRING(8),
+      field: 'user_password',
+    },
   },
   {
     sequelize,

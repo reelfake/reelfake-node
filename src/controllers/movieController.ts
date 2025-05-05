@@ -398,8 +398,6 @@ export const createMovie = async (
   req: CustomRequestWithBody<IncomingMovie & { actors: MovieActorPayload[] }>,
   res: Response
 ) => {
-  const { user, validateUserRole } = req;
-  validateUserRole?.(() => !!(user && (user.staffId || user.storeManagerId)));
   const actors = req.body.actors;
   const hasActors = actors && actors.length > 0;
 
@@ -466,9 +464,6 @@ export const createMovie = async (
 };
 
 export const addActors = async (req: CustomRequestWithBody<MovieActorPayload[]>, res: Response) => {
-  const { user, validateUserRole } = req;
-  validateUserRole?.(() => !!(user && (user.staffId || user.storeManagerId)));
-
   const { id: idText } = req.params;
   const movieId = Number(idText);
 
@@ -518,9 +513,6 @@ export const addActors = async (req: CustomRequestWithBody<MovieActorPayload[]>,
 };
 
 export const updateMovie = async (req: CustomRequestWithBody<Partial<IncomingMovie>>, res: Response) => {
-  const { user, validateUserRole } = req;
-  validateUserRole?.(() => !!(user && user.storeManagerId));
-
   const { id: idText } = req.params;
 
   const id = Number(idText);
@@ -543,9 +535,6 @@ export const updateMovie = async (req: CustomRequestWithBody<Partial<IncomingMov
 };
 
 export const deleteMovie = async (req: CustomRequest, res: Response) => {
-  const { user, validateUserRole } = req;
-  validateUserRole?.(() => !!(user && user.storeManagerId));
-
   const { id: idText } = req.params;
 
   const id = Number(idText);

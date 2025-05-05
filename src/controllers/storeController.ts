@@ -192,9 +192,6 @@ export const getMoviesInStore = async (req: Request, res: Response) => {
 };
 
 export const updateStore = async (req: CustomRequestWithBody<Partial<StorePayload>>, res: Response) => {
-  const { user, validateUserRole } = req;
-  validateUserRole?.(() => !!(user && user.storeManagerId));
-
   const { id: idText } = req.params;
 
   const storeId = Number(idText);
@@ -308,9 +305,6 @@ export const updateStore = async (req: CustomRequestWithBody<Partial<StorePayloa
 };
 
 export const createStore = async (req: CustomRequestWithBody<StorePayload>, res: Response) => {
-  const { user, validateUserRole } = req;
-  validateUserRole?.(() => !!(user && user.storeManagerId));
-
   const { storeManagerId, storeManager, phoneNumber, address } = req.body;
   let newStoreManagerId = storeManagerId;
 
@@ -446,9 +440,6 @@ export const createStore = async (req: CustomRequestWithBody<StorePayload>, res:
 };
 
 export const deleteStore = async (req: CustomRequest, res: Response) => {
-  const { user, validateUserRole } = req;
-  validateUserRole?.(() => !!(user && user.storeManagerId));
-
   const { id: idText } = req.params;
   const storeId = Number(idText);
 

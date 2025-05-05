@@ -132,9 +132,6 @@ export const addToMovie = async (
   req: CustomRequestWithBody<MovieActorPayload & { movieId: number }>,
   res: Response
 ) => {
-  const { user, validateUserRole } = req;
-  validateUserRole?.(() => !!(user && (user.staffId || user.storeManagerId)));
-
   const { id: idText } = req.params;
   const actorId = Number(idText);
 
@@ -191,9 +188,6 @@ export const addToMovie = async (
 };
 
 export const addActor = async (req: CustomRequestWithBody<ActorPayload>, res: Response) => {
-  const { user, validateUserRole } = req;
-  validateUserRole?.(() => !!(user && (user.staffId || user.storeManagerId)));
-
   const similarActorCount = await ActorModel.count({
     where: {
       actorName: req.body.actorName,
@@ -255,15 +249,6 @@ export const addActor = async (req: CustomRequestWithBody<ActorPayload>, res: Re
 };
 
 export const updateActor = async (req: CustomRequestWithBody<ActorPayload>, res: Response) => {
-  const { user } = req;
-  if (!user) {
-    throw new AppError('Invalid token', 401);
-  }
-
-  if (!user.storeManagerId) {
-    throw new AppError('Unauthorized access', 403);
-  }
-
   const { id: idText } = req.params;
 
   const id = Number(idText);
@@ -284,15 +269,6 @@ export const updateActor = async (req: CustomRequestWithBody<ActorPayload>, res:
 };
 
 export const deleteActor = async (req: CustomRequest, res: Response) => {
-  const { user } = req;
-  if (!user) {
-    throw new AppError('Invalid token', 401);
-  }
-
-  if (!user.storeManagerId) {
-    throw new AppError('Unauthorized access', 403);
-  }
-
   const { id: idText } = req.params;
 
   const id = Number(idText);
