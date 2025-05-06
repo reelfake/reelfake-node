@@ -22,7 +22,7 @@ export const getCustomers = async (req: CustomRequest, res: Response) => {
   const customers = await CustomerModel.findAll({
     offset: idOffset,
     limit: limitPerPage,
-    attributes: { exclude: ['addressId'] },
+    attributes: { exclude: ['addressId', 'userPassword'] },
     include: [
       {
         model: AddressModel,

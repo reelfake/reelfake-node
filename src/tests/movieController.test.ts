@@ -9,6 +9,9 @@ import {
   getRandomCharacters,
   getRandomActors,
   getRandomDate,
+  getStoreManagerCredential,
+  getStaffCredential,
+  getCustomerCredential,
 } from './testUtil';
 import { MovieActorPayload } from '../types';
 
@@ -16,6 +19,11 @@ describe('Movie Controller', () => {
   const email = `test${getRandomCharacters(10)}@example.com`;
   const password = 'test@12345';
   let cookie: string;
+  const login = async (email: string, password: string) => {
+    const loginResponse = await server.post('/api/v1/user/login').send({ email, password });
+    cookie = loginResponse.get('Set-Cookie')?.at(0) || '';
+  };
+
   const server = supertest(app);
 
   beforeAll(async () => {
@@ -68,7 +76,6 @@ describe('Movie Controller', () => {
       ratingCount: 0,
       posterUrl: `https://image.tmdb.org/t/p/w500/${getRandomCharacters(27)}.jpg`,
       rentalRate: 15.99,
-      rentalDuration: 2,
     };
   };
 
@@ -77,7 +84,7 @@ describe('Movie Controller', () => {
   });
 
   describe('GET /movies', () => {
-    it('GET /api/v1/movies should return movies page by page', async () => {
+    it('should return movies page by page', async () => {
       const startingPage = 1;
       const totalRows = await getRowsCount('movie');
 
@@ -94,7 +101,7 @@ describe('Movie Controller', () => {
             m.release_date AS "releaseDate", ARRAY_AGG(distinct g.genre_name) AS genres, 
             ARRAY_AGG(distinct c.iso_country_code) AS "countriesOfOrigin", ml.iso_language_code as language, m.popularity, 
             m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl",
-            m.rental_rate AS "rentalRate", m.rental_duration AS "rentalDuration"
+            m.rental_rate AS "rentalRate"
             FROM movie AS m LEFT JOIN country AS c ON c.id = ANY(m.origin_country_ids)
             LEFT JOIN genre AS g ON g.id = ANY(m.genre_ids)
             LEFT JOIN movie_language ml ON m.language_id = ml.id
@@ -102,7 +109,7 @@ describe('Movie Controller', () => {
             ORDER BY m.id
           )
           SELECT id, title, overview, runtime, "releaseDate", genres, "countriesOfOrigin", language,
-          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate", "rentalDuration" FROM expanded_movies 
+          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate" FROM expanded_movies 
           WHERE "rowNumber" > ${(i - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST} limit 50;
         `);
 
@@ -116,7 +123,7 @@ describe('Movie Controller', () => {
       }
     });
 
-    it('GET /api/v1/movies should return for the correct page when jumping between pages', async () => {
+    it('should return for the correct page when jumping between pages', async () => {
       const pages = [3, 7, 4];
       const totalRows = await getRowsCount('movie');
 
@@ -130,7 +137,7 @@ describe('Movie Controller', () => {
             m.release_date AS "releaseDate", ARRAY_AGG(distinct g.genre_name) AS genres, 
             ARRAY_AGG(distinct c.iso_country_code) AS "countriesOfOrigin", ml.iso_language_code as language, m.popularity, 
             m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl",
-            m.rental_rate AS "rentalRate", m.rental_duration AS "rentalDuration"
+            m.rental_rate AS "rentalRate"
             FROM movie AS m LEFT JOIN country AS c ON c.id = ANY(m.origin_country_ids)
             LEFT JOIN genre AS g ON g.id = ANY(m.genre_ids)
             LEFT JOIN movie_language ml ON m.language_id = ml.id
@@ -138,7 +145,7 @@ describe('Movie Controller', () => {
             ORDER BY m.id
           )
           SELECT id, title, overview, runtime, "releaseDate", genres, "countriesOfOrigin", language,
-          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate", "rentalDuration" FROM expanded_movies 
+          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate" FROM expanded_movies 
           WHERE "rowNumber" > ${(page - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST} limit 50;
         `);
 
@@ -171,7 +178,7 @@ describe('Movie Controller', () => {
             m.release_date AS "releaseDate", ARRAY_AGG(distinct g.genre_name) AS genres, 
             ARRAY_AGG(distinct c.iso_country_code) AS "countriesOfOrigin", ml.iso_language_code as language, m.popularity, 
             m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl",
-            m.rental_rate AS "rentalRate", m.rental_duration AS "rentalDuration"
+            m.rental_rate AS "rentalRate"
             FROM movie AS m LEFT JOIN country AS c ON c.id = ANY(m.origin_country_ids)
             LEFT JOIN genre AS g ON g.id = ANY(m.genre_ids)
             LEFT JOIN movie_language ml ON m.language_id = ml.id
@@ -179,7 +186,7 @@ describe('Movie Controller', () => {
             ORDER BY release_date, m.id
           )
           SELECT id, title, overview, runtime, "releaseDate", genres, "countriesOfOrigin", language,
-          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate", "rentalDuration" FROM expanded_movies 
+          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate" FROM expanded_movies 
           WHERE "rowNumber" > ${(i - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST} limit 50;
         `);
 
@@ -206,7 +213,7 @@ describe('Movie Controller', () => {
             m.release_date AS "releaseDate", ARRAY_AGG(distinct g.genre_name) AS genres, 
             ARRAY_AGG(distinct c.iso_country_code) AS "countriesOfOrigin", ml.iso_language_code as language, m.popularity, 
             m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl",
-            m.rental_rate AS "rentalRate", m.rental_duration AS "rentalDuration"
+            m.rental_rate AS "rentalRate"
             FROM movie AS m LEFT JOIN country AS c ON c.id = ANY(m.origin_country_ids)
             LEFT JOIN genre AS g ON g.id = ANY(m.genre_ids)
             LEFT JOIN movie_language ml ON m.language_id = ml.id
@@ -214,7 +221,7 @@ describe('Movie Controller', () => {
             ORDER BY release_date, m.id
           )
           SELECT id, title, overview, runtime, "releaseDate", genres, "countriesOfOrigin", language,
-          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate", "rentalDuration" FROM expanded_movies 
+          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate" FROM expanded_movies 
           WHERE "rowNumber" > ${(page - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST} limit 50;
         `);
 
@@ -254,7 +261,7 @@ describe('Movie Controller', () => {
             m.release_date AS "releaseDate", ARRAY_AGG(distinct g.genre_name) AS genres, 
             ARRAY_AGG(distinct c.iso_country_code) AS "countriesOfOrigin", ml.iso_language_code as language, m.popularity, 
             m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl",
-            m.rental_rate AS "rentalRate", m.rental_duration AS "rentalDuration"
+            m.rental_rate AS "rentalRate"
             FROM movie AS m LEFT JOIN country AS c ON c.id = ANY(m.origin_country_ids)
             LEFT JOIN genre AS g ON g.id = ANY(m.genre_ids)
             LEFT JOIN movie_language ml ON m.language_id = ml.id
@@ -263,7 +270,7 @@ describe('Movie Controller', () => {
             ORDER BY release_date, m.id
           )
           SELECT id, title, overview, runtime, "releaseDate", genres, "countriesOfOrigin", language,
-          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate", "rentalDuration" FROM expanded_movies 
+          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate" FROM expanded_movies 
           WHERE "rowNumber" > ${(i - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST} limit 50;
         `);
 
@@ -298,7 +305,7 @@ describe('Movie Controller', () => {
             m.release_date AS "releaseDate", ARRAY_AGG(distinct g.genre_name) AS genres, 
             ARRAY_AGG(distinct c.iso_country_code) AS "countriesOfOrigin", ml.iso_language_code as language, m.popularity, 
             m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl",
-            m.rental_rate AS "rentalRate", m.rental_duration AS "rentalDuration"
+            m.rental_rate AS "rentalRate"
             FROM movie AS m LEFT JOIN country AS c ON c.id = ANY(m.origin_country_ids)
             LEFT JOIN genre AS g ON g.id = ANY(m.genre_ids)
             LEFT JOIN movie_language ml ON m.language_id = ml.id
@@ -306,7 +313,7 @@ describe('Movie Controller', () => {
             ORDER BY m.id
           )
           SELECT id, title, overview, runtime, "releaseDate", genres, "countriesOfOrigin", language,
-          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate", "rentalDuration" FROM expanded_movies 
+          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate" FROM expanded_movies 
           WHERE "rowNumber" > ${(i - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST} limit 50;
         `);
 
@@ -342,7 +349,7 @@ describe('Movie Controller', () => {
             m.release_date AS "releaseDate", ARRAY_AGG(distinct g.genre_name) AS genres, 
             ARRAY_AGG(distinct c.iso_country_code) AS "countriesOfOrigin", ml.iso_language_code as language, m.popularity, 
             m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl",
-            m.rental_rate AS "rentalRate", m.rental_duration AS "rentalDuration"
+            m.rental_rate AS "rentalRate"
             FROM movie AS m LEFT JOIN country AS c ON c.id = ANY(m.origin_country_ids)
             LEFT JOIN genre AS g ON g.id = ANY(m.genre_ids)
             LEFT JOIN movie_language ml ON m.language_id = ml.id
@@ -350,7 +357,7 @@ describe('Movie Controller', () => {
             ORDER BY m.id
           )
           SELECT id, title, overview, runtime, "releaseDate", genres, "countriesOfOrigin", language,
-          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate", "rentalDuration" FROM expanded_movies 
+          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate" FROM expanded_movies 
           WHERE "rowNumber" > ${(page - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST} limit 50;
         `);
         expect(response.body).toStrictEqual({
@@ -395,7 +402,7 @@ describe('Movie Controller', () => {
             m.release_date AS "releaseDate", ARRAY_AGG(distinct g.genre_name) AS genres, 
             ARRAY_AGG(distinct c.iso_country_code) AS "countriesOfOrigin", ml.iso_language_code as language, m.popularity, 
             m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl",
-            m.rental_rate AS "rentalRate", m.rental_duration AS "rentalDuration"
+            m.rental_rate AS "rentalRate"
             FROM movie AS m LEFT JOIN country AS c ON c.id = ANY(m.origin_country_ids)
             LEFT JOIN genre AS g ON g.id = ANY(m.genre_ids)
             LEFT JOIN movie_language ml ON m.language_id = ml.id
@@ -403,7 +410,7 @@ describe('Movie Controller', () => {
             ORDER BY m.release_date, m.id
           )
           SELECT id, title, overview, runtime, "releaseDate", genres, "countriesOfOrigin", language,
-          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate", "rentalDuration" FROM expanded_movies 
+          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate" FROM expanded_movies 
           WHERE "rowNumber" > ${(i - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST} limit 50;
         `);
 
@@ -433,7 +440,7 @@ describe('Movie Controller', () => {
             m.release_date AS "releaseDate", ARRAY_AGG(distinct g.genre_name) AS genres, 
             ARRAY_AGG(distinct c.iso_country_code) AS "countriesOfOrigin", ml.iso_language_code as language, m.popularity, 
             m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl",
-            m.rental_rate AS "rentalRate", m.rental_duration AS "rentalDuration"
+            m.rental_rate AS "rentalRate"
             FROM movie AS m LEFT JOIN country AS c ON c.id = ANY(m.origin_country_ids)
             LEFT JOIN genre AS g ON g.id = ANY(m.genre_ids)
             LEFT JOIN movie_language ml ON m.language_id = ml.id
@@ -441,7 +448,7 @@ describe('Movie Controller', () => {
             ORDER BY m.release_date, m.id
           )
           SELECT id, title, overview, runtime, "releaseDate", genres, "countriesOfOrigin", language,
-          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate", "rentalDuration" FROM expanded_movies 
+          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate" FROM expanded_movies 
           WHERE "rowNumber" > ${(page - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST} limit 50;
         `);
         expect(response.status).toBe(200);
@@ -480,7 +487,7 @@ describe('Movie Controller', () => {
             m.release_date AS "releaseDate", ARRAY_AGG(distinct g.genre_name) AS genres, 
             ARRAY_AGG(distinct c.iso_country_code) AS "countriesOfOrigin", ml.iso_language_code as language, m.popularity, 
             m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl",
-            m.rental_rate AS "rentalRate", m.rental_duration AS "rentalDuration"
+            m.rental_rate AS "rentalRate"
             FROM movie AS m LEFT JOIN country AS c ON c.id = ANY(m.origin_country_ids)
             LEFT JOIN genre AS g ON g.id = ANY(m.genre_ids)
             LEFT JOIN movie_language ml ON m.language_id = ml.id
@@ -489,7 +496,7 @@ describe('Movie Controller', () => {
             ORDER BY m.release_date, m.id
           )
           SELECT id, title, overview, runtime, "releaseDate", genres, "countriesOfOrigin", language,
-          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate", "rentalDuration" FROM expanded_movies 
+          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate" FROM expanded_movies 
           WHERE "rowNumber" > ${(i - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST} limit 50;
         `);
 
@@ -523,7 +530,7 @@ describe('Movie Controller', () => {
             m.release_date AS "releaseDate", ARRAY_AGG(distinct g.genre_name) AS genres, 
             ARRAY_AGG(distinct c.iso_country_code) AS "countriesOfOrigin", ml.iso_language_code as language, m.popularity, 
             m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl",
-            m.rental_rate AS "rentalRate", m.rental_duration AS "rentalDuration"
+            m.rental_rate AS "rentalRate"
             FROM movie AS m LEFT JOIN country AS c ON c.id = ANY(m.origin_country_ids)
             LEFT JOIN genre AS g ON g.id = ANY(m.genre_ids)
             LEFT JOIN movie_language ml ON m.language_id = ml.id
@@ -531,7 +538,7 @@ describe('Movie Controller', () => {
             ORDER BY m.id
           )
           SELECT id, title, overview, runtime, "releaseDate", genres, "countriesOfOrigin", language,
-          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate", "rentalDuration" FROM expanded_movies 
+          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate" FROM expanded_movies 
           WHERE "rowNumber" > ${(page - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST} limit 50;
         `);
         expect(response.body).toStrictEqual({
@@ -612,7 +619,7 @@ describe('Movie Controller', () => {
         m.popularity,
         m.budget, m.revenue, m.rating_average AS "ratingAverage",
         m.rating_count AS "ratingCount", m.poster_url AS "posterUrl",
-        m.rental_rate AS "rentalRate", m.rental_duration AS "rentalDuration",
+        m.rental_rate AS "rentalRate",
         ${
           includeActors
             ? `json_agg(
@@ -767,6 +774,9 @@ describe('Movie Controller', () => {
     it('should create movie with the data in request body and token in cookie', async () => {
       const moviePayload = await getMoviePayload();
 
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const response = await server
         .post('/api/v1/movies')
         .send(moviePayload)
@@ -780,14 +790,14 @@ describe('Movie Controller', () => {
         array_agg(DISTINCT c.iso_country_code) AS "countriesOfOrigin", l.iso_language_code AS "language",
         m.movie_status AS "movieStatus", m.popularity, m.budget, m.revenue,
         m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount",
-        m.poster_url AS "posterUrl", m.rental_rate AS "rentalRate", m.rental_duration AS "rentalDuration"
+        m.poster_url AS "posterUrl", m.rental_rate AS "rentalRate"
         FROM movie AS m LEFT JOIN genre AS g ON g.id = ANY(m.genre_ids)
         LEFT JOIN country AS c ON c.id = ANY(m.origin_country_ids)
         LEFT JOIN movie_language AS l ON m.language_id = l.id
         WHERE m.id = ${newMovieId}
         GROUP BY m.id, m.tmdb_id, m.imdb_id, m.title, m.original_title, m.overview, l.iso_language_code, m.runtime, 
         m.release_Date, m.movie_status, m.popularity, m.budget, m.revenue, m.rating_average, m.rating_count,
-        m.poster_url, m.rental_rate, m.rental_duration;  
+        m.poster_url, m.rental_rate;  
       `);
       expect(response.statusCode).toBe(201);
       expect(response.body).toStrictEqual(actualMovieData);
@@ -796,6 +806,9 @@ describe('Movie Controller', () => {
     it('should create movies with actors', async () => {
       const actors = await getRandomActors(5);
       const moviePayload = await getMoviePayload();
+
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
 
       const response = await server
         .post('/api/v1/movies')
@@ -815,7 +828,7 @@ describe('Movie Controller', () => {
         m.popularity,
         m.budget, m.revenue, m.rating_average AS "ratingAverage",
         m.rating_count AS "ratingCount", m.poster_url AS "posterUrl",
-        m.rental_rate AS "rentalRate", m.rental_duration AS "rentalDuration",
+        m.rental_rate AS "rentalRate",
         json_agg(
           json_build_object(
             'id', a.id,
@@ -839,11 +852,46 @@ describe('Movie Controller', () => {
       `);
       expect(response.body).toEqual(actualMovieData);
     });
+
+    it('should not let staff to create movie', async () => {
+      const moviePayload = await getMoviePayload();
+
+      const credential = await getStaffCredential();
+      await login(credential.email, credential.password);
+
+      const response = await server.post('/api/v1/movies').send(moviePayload).set('Cookie', cookie);
+      expect(response.status).toEqual(403);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'You are not authorized to perform this operation',
+      });
+    });
+
+    it('should not let customer to create movie', async () => {
+      const moviePayload = await getMoviePayload();
+
+      const credential = await getCustomerCredential();
+      await login(credential.email, credential.password);
+
+      const response = await server.post('/api/v1/movies').send(moviePayload).set('Cookie', cookie);
+      expect(response.status).toEqual(403);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'You are not authorized to perform this operation',
+      });
+    });
   });
 
   describe('PUT /movies/:id', () => {
+    afterEach(() => {
+      cookie = '';
+    });
+
     it('should update title and original title of the movie with the payload', async () => {
       const newMoviePayload = await getMoviePayload();
+
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
 
       const newMovieResponse = await server.post('/api/v1/movies').set('Cookie', cookie).send(newMoviePayload);
       const newMovieId = newMovieResponse.body.id;
@@ -874,6 +922,9 @@ describe('Movie Controller', () => {
     it('should update genre of the movie', async () => {
       const newMoviePayload = await getMoviePayload();
       newMoviePayload.genres = ['Drama', 'Thriller'];
+
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
 
       let [genresQueryResult] = await execQuery(`
         SELECT json_agg(id) AS ids 
@@ -910,6 +961,9 @@ describe('Movie Controller', () => {
     it('should update genre of the movie when data in payload is mixed casing', async () => {
       const newMoviePayload = await getMoviePayload();
       newMoviePayload.genres = ['drAMA', 'THRILler'];
+
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
 
       let [genresQueryResult] = await execQuery(`
         SELECT json_agg(id) AS ids 
@@ -949,6 +1003,9 @@ describe('Movie Controller', () => {
       const newMoviePayload = await getMoviePayload();
       newMoviePayload.countriesOfOrigin = ['US'];
 
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       let [countriesQueryResult] = await execQuery(`
         SELECT json_agg(id) AS ids 
         FROM country 
@@ -986,6 +1043,9 @@ describe('Movie Controller', () => {
       const newMoviePayload = await getMoviePayload();
       newMoviePayload.countriesOfOrigin = ['US'];
 
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       let [countriesQueryResult] = await execQuery(`
         SELECT json_agg(id) AS ids 
         FROM country 
@@ -1022,6 +1082,9 @@ describe('Movie Controller', () => {
     it('should update the movie language of the movie', async () => {
       const newMoviePayload = await getMoviePayload();
       newMoviePayload.genres = ['Drama', 'Thriller'];
+
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
 
       let [languageQueryResult] = await execQuery(`
         SELECT id 
@@ -1066,7 +1129,11 @@ describe('Movie Controller', () => {
         WHERE iso_language_code = LOWER('${newMoviePayload.language}')
       `);
 
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const newMovieResponse = await server.post('/api/v1/movies').set('Cookie', cookie).send(newMoviePayload);
+      expect(newMovieResponse.status).toEqual(201);
       const newMovieId = newMovieResponse.body.id;
 
       const [beforeUpdate] = await execQuery(`
@@ -1091,6 +1158,58 @@ describe('Movie Controller', () => {
       `);
 
       expect(afterUpdate.languageId).toEqual(languageQueryResult.id);
+    });
+
+    it('should not let staff to update the movie', async () => {
+      const newMoviePayload = await getMoviePayload();
+
+      let credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
+      const newMovieResponse = await server.post('/api/v1/movies').set('Cookie', cookie).send(newMoviePayload);
+      const newMovieId = newMovieResponse.body.id;
+
+      credential = await getStaffCredential();
+      await login(credential.email, credential.password);
+
+      const response = await server
+        .put(`/api/v1/movies/${newMovieId}`)
+        .set('Cookie', cookie)
+        .send({
+          title: `${newMoviePayload.title} UPDATED`,
+        });
+
+      expect(response.status).toEqual(403);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'You are not authorized to perform this operation',
+      });
+    });
+
+    it('should not let customer to update the movie', async () => {
+      const newMoviePayload = await getMoviePayload();
+
+      let credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
+      const newMovieResponse = await server.post('/api/v1/movies').set('Cookie', cookie).send(newMoviePayload);
+      const newMovieId = newMovieResponse.body.id;
+
+      credential = await getCustomerCredential();
+      await login(credential.email, credential.password);
+
+      const response = await server
+        .put(`/api/v1/movies/${newMovieId}`)
+        .set('Cookie', cookie)
+        .send({
+          title: `${newMoviePayload.title} UPDATED`,
+        });
+
+      expect(response.status).toEqual(403);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'You are not authorized to perform this operation',
+      });
     });
   });
 
@@ -1118,6 +1237,9 @@ describe('Movie Controller', () => {
     };
 
     it('should delete the movie', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const newMoviePayload = await getMoviePayload();
       const newMovieResponse = await server.post('/api/v1/movies').set('Cookie', cookie).send(newMoviePayload);
       const newMovieId = newMovieResponse.body.id;
@@ -1137,6 +1259,9 @@ describe('Movie Controller', () => {
     });
 
     it('should delete the movie and movie actors', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const newMoviePayload = await getMoviePayload();
       const newActors = await getRandomActors(5);
       const newMovieResponse = await server.post('/api/v1/movies').set('Cookie', cookie).send(newMoviePayload);
@@ -1187,6 +1312,9 @@ describe('Movie Controller', () => {
     });
 
     it('should delete the movie, movie actors and the inventory records', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const newMoviePayload = await getMoviePayload();
       const newActors = await getRandomActors(5);
       const newMovieResponse = await server.post('/api/v1/movies').set('Cookie', cookie).send(newMoviePayload);
@@ -1251,6 +1379,42 @@ describe('Movie Controller', () => {
         SELECT COUNT(*) FROM inventory WHERE movie_id = ${newMovieId}
       `);
       expect(Number(inventoryQueryResult.count)).toEqual(0);
+    });
+
+    it('should not let staff to delete the movie', async () => {
+      let credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
+      const newMoviePayload = await getMoviePayload();
+      const newMovieResponse = await server.post('/api/v1/movies').set('Cookie', cookie).send(newMoviePayload);
+      const newMovieId = newMovieResponse.body.id;
+
+      credential = await getStaffCredential();
+      await login(credential.email, credential.password);
+      const response = await server.delete(`/api/v1/movies/${newMovieId}`).set('Cookie', cookie);
+      expect(response.status).toEqual(403);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'You are not authorized to perform this operation',
+      });
+    });
+
+    it('should not let customer to delete the movie', async () => {
+      let credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
+      const newMoviePayload = await getMoviePayload();
+      const newMovieResponse = await server.post('/api/v1/movies').set('Cookie', cookie).send(newMoviePayload);
+      const newMovieId = newMovieResponse.body.id;
+
+      credential = await getCustomerCredential();
+      await login(credential.email, credential.password);
+      const response = await server.delete(`/api/v1/movies/${newMovieId}`).set('Cookie', cookie);
+      expect(response.status).toEqual(403);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'You are not authorized to perform this operation',
+      });
     });
   });
 });

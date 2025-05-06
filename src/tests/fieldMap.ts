@@ -31,7 +31,6 @@ export const FIELD_MAP: Record<ModelForTest, Record<string, string>> = {
     rating_count: 'ratingCount',
     poster_url: 'posterUrl',
     rental_rate: 'rentalRate',
-    rental_duration: 'rentalDuration',
   },
   genre: {
     id: 'id',

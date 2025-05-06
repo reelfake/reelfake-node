@@ -27,5 +27,4 @@ export const movieModelAttributes: (string | [Literal, string])[] = [
   'ratingCount',
   'posterUrl',
   'rentalRate',
-  'rentalDuration',
 ];

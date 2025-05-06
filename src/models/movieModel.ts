@@ -26,7 +26,6 @@ class Movie extends BaseModel {
   declare ratingCount: number;
   declare posterUrl: string;
   declare rentalRate: number;
-  declare rentalDuration: number;
 
   public static async getRowsCountWhere(conditions: WhereOptions[]) {
     const where = conditions.reduce<WhereOptions>((acc, curr) => {
@@ -128,10 +127,6 @@ Movie.init(
     rentalRate: {
       type: DataTypes.DECIMAL({ precision: 4, scale: 2 }),
       field: 'rental_rate',
-    },
-    rentalDuration: {
-      type: DataTypes.SMALLINT,
-      field: 'rental_duration',
     },
   },
   {

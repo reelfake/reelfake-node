@@ -1,9 +1,12 @@
 import { QueryTypes } from 'sequelize';
+import bcrypt from 'bcryptjs';
 import sequelize from '../sequelize.config';
 export * from './fieldMap';
 import { MovieActorPayload } from '../types';
 
 export const ITEMS_COUNT_PER_PAGE_FOR_TEST = 50;
+
+const passwordMock = 'test1234';
 
 export function getRandomNumberBetween(start: number, end: number) {
   return Math.floor(Math.random() * (end - start) + start);
@@ -174,3 +177,73 @@ export const getRandomActors = async (count: number = 3): Promise<MovieActorPayl
 
   return randomActors;
 };
+
+export async function getStoreManagerCredential() {
+  const [storeManager] = await execQuery(`
+    SELECT staff.id, email
+    FROM staff LEFT OUTER JOIN store ON staff.store_id = store.id
+    WHERE store.store_manager_id = staff.id
+    LIMIT 1
+  `);
+
+  const email = storeManager.email;
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(passwordMock, salt);
+
+  await execQuery(`
+      UPDATE staff SET user_password = '${hashedPassword}' WHERE id = ${storeManager.id}
+    `);
+
+  return { email, password: passwordMock };
+}
+
+export async function getStaffCredential() {
+  const [staff] = await execQuery(`
+    SELECT staff.id, email
+    FROM staff LEFT OUTER JOIN store ON staff.store_id = store.id
+    WHERE store.store_manager_id <> staff.id AND staff.active = true
+    LIMIT 1
+  `);
+
+  const email = staff.email;
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(passwordMock, salt);
+
+  await execQuery(`
+      UPDATE staff SET user_password = '${hashedPassword}' WHERE id = ${staff.id}
+    `);
+
+  return { email, password: passwordMock };
+}
+
+export async function getCustomerCredential() {
+  const [customer] = await execQuery(`
+    SELECT id, email
+    FROM customer WHERE active = true LIMIT 1
+  `);
+
+  const email = customer.email;
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(passwordMock, salt);
+
+  await execQuery(`
+      UPDATE customer SET user_password = '${hashedPassword}' WHERE id = ${customer.id}
+    `);
+
+  return { email, password: passwordMock };
+}
+
+export async function getUserCredential() {
+  const [user] = await execQuery(`
+    SELECT email, user_password as "userPassword"
+    FROM user LIMIT 1
+  `);
+
+  const email = user.email;
+  const password = user.userPassword;
+
+  return { email, password };
+}

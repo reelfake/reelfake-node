@@ -35,7 +35,6 @@ const newMovieFields = [
   'ratingCount',
   'posterUrl',
   'rentalRate',
-  'rentalDuration',
 ];
 
 const newActorFields = [
@@ -94,7 +93,7 @@ async function getMoviesUsingQuery(pageNumber: number, genresIds: number[], orde
       m.title, m.overview, m.runtime, m.release_date AS "releaseDate", ARRAY_AGG(distinct g.genre_name) AS genres,
       ARRAY_AGG(distinct c.iso_country_code) AS "countriesOfOrigin", ml.iso_language_code as language,
       m.popularity, m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl",
-      m.rental_rate AS "rentalRate", m.rental_duration AS "rentalDuration"
+      m.rental_rate AS "rentalRate"
       FROM movie AS m LEFT JOIN country AS c ON c.id = ANY(m.origin_country_ids)
       LEFT JOIN genre AS g ON g.id = ANY(m.genre_ids)
       LEFT JOIN movie_language ml ON m.language_id = ml.id
@@ -102,7 +101,7 @@ async function getMoviesUsingQuery(pageNumber: number, genresIds: number[], orde
       ORDER BY ${orderByFields}
     )
     SELECT id, title, overview, runtime, "releaseDate", genres, "countriesOfOrigin", language,
-    popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate", "rentalDuration" 
+    popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate"
     FROM exppanded_movies WHERE "rowNumber" > ${startingRowNumber} LIMIT ${ITEMS_PER_PAGE_FOR_PAGINATION}
   `;
 
@@ -407,7 +406,6 @@ export const createMovie = async (
       fields: newMovieFields,
       transaction: t,
     });
-
     newMovie.setDataValue('genreIds', undefined);
     newMovie.setDataValue('originCountryIds', undefined);
     newMovie.setDataValue('languageId', undefined);

@@ -67,7 +67,6 @@ export type IncomingMovie = {
   ratingCount: number;
   posterUrl: string;
   rentalRate?: number;
-  rentalDuration?: number;
 };
 
 export type Address = {
