@@ -81,6 +81,7 @@ describe('Movie Controller', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
+    cookie = '';
   });
 
   describe('GET /movies', () => {

@@ -8,6 +8,9 @@ import {
   getRandomActors,
   getRandomCharacters,
   FIELD_MAP,
+  getStoreManagerCredential,
+  getCustomerCredential,
+  getStaffCredential,
 } from './testUtil';
 
 describe('Actor Controller', () => {
@@ -15,6 +18,11 @@ describe('Actor Controller', () => {
   const password = 'test@12345';
   let cookie: string;
   const server = supertest(app);
+
+  const login = async (email: string, password: string) => {
+    const loginResponse = await server.post('/api/v1/user/login').send({ email, password });
+    cookie = loginResponse.get('Set-Cookie')?.at(0) || '';
+  };
 
   beforeAll(async () => {
     await server.post('/api/v1/user/register').send({
@@ -42,10 +50,11 @@ describe('Actor Controller', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
+    cookie = '';
   });
 
   describe('GET /actors', () => {
-    it('GET /api/v1/actors should return actors page by page', async () => {
+    it('should return actors page by page', async () => {
       const startingPage = 1;
       const totalRows = await getRowsCount('actor');
 
@@ -74,7 +83,7 @@ describe('Actor Controller', () => {
       }
     });
 
-    it('GET /api/v1/actors should return correct actor list when jumping between pages', async () => {
+    it('should return correct actor list when jumping between pages', async () => {
       const totalRows = await getRowsCount('actor');
       const pages = [2, 5, 3];
 
@@ -101,7 +110,7 @@ describe('Actor Controller', () => {
       }
     });
 
-    it('GET /api/v1/actors should return 400 when page number is 0', async () => {
+    it('should return 400 when page number is 0', async () => {
       const response = await server.get(`/api/v1/actors?pageNumber=0`);
 
       expect(response.status).toBe(400);
@@ -109,7 +118,7 @@ describe('Actor Controller', () => {
       expect(response.body.message).toBe('Page number should be a valid non-zero positive number');
     });
 
-    it('GET /api/v1/actors should return 400 when page number is not a number', async () => {
+    it('should return 400 when page number is not a number', async () => {
       const response = await server.get(`/api/v1/actors?pageNumber=a`);
 
       expect(response.status).toBe(400);
@@ -119,7 +128,7 @@ describe('Actor Controller', () => {
   });
 
   describe('GET /actors/:id', () => {
-    it('GET /api/v1/actors/:id should return actor without the movies', async () => {
+    it('should return actor without the movies', async () => {
       const response = await server.get(`/api/v1/actors/928365`);
       const expectedActor = await execQuery(
         `
@@ -133,7 +142,7 @@ describe('Actor Controller', () => {
       expect(response.body).toStrictEqual(expectedActor[0]);
     });
 
-    it('GET /api/v1/actors/:id?includeMovies=true should return actor with the movies', async () => {
+    it('should return actor with the movies', async () => {
       const actorId = 928365;
 
       const response = await server.get(`/api/v1/actors/${actorId}?includeMovies=true`);
@@ -163,7 +172,7 @@ describe('Actor Controller', () => {
   });
 
   describe('GET /actors/search', () => {
-    it('GET /actors/search?q=... should return list of actors with name containing the given chars', async () => {
+    it('should return list of actors with name containing the given chars', async () => {
       const totalRows = await getRowsCount('actor', "actor_name LIKE '%john%'");
 
       const pages = [1, 2, 7, 8, 3];
@@ -194,7 +203,7 @@ describe('Actor Controller', () => {
       }
     });
 
-    it('GET /actors/search?name=... should return list of actors with the given name', async () => {
+    it('should return list of actors with the given name', async () => {
       const totalRows = await getRowsCount('actor', "actor_name = 'steve smith'");
       const response = await server.get('/api/v1/actors/search?name=steve smith');
       const expectedActors = await execQuery(
@@ -216,14 +225,14 @@ describe('Actor Controller', () => {
       });
     });
 
-    it('GET /actors/search should return 400 when missing the string to search', async () => {
+    it('should return 400 when missing the string to search', async () => {
       const response = await server.get(`/api/v1/actors/search?q=   `);
       expect(response.status).toBe(400);
       expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
       expect(response.body.message).toBe('Request is missing the search parameter');
     });
 
-    it('GET /actors/search?q=... should return 404 when no actors found with the given search string', async () => {
+    it('should return 404 when no actors found with the given search string', async () => {
       const response = await server.get(`/api/v1/actors/search?q=blahblahblah`);
       expect(response.status).toBe(404);
       expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
@@ -234,6 +243,9 @@ describe('Actor Controller', () => {
   describe('POST /actors', () => {
     it('should add new actor', async () => {
       const [payload] = await getRandomActors(1);
+
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
 
       const response = await server
         .post('/api/v1/actors')
@@ -277,6 +289,9 @@ describe('Actor Controller', () => {
         )
       `);
 
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const response = await server
         .post('/api/v1/actors')
         .set('Cookie', cookie)
@@ -286,6 +301,50 @@ describe('Actor Controller', () => {
         });
       expect(response.status).toEqual(400);
       expect(response.body.message).toEqual(`Actor with name ${payload1.actorName} already exist`);
+    });
+
+    it('should not let staff to create actor', async () => {
+      const [payload] = await getRandomActors(1);
+
+      const credential = await getStaffCredential();
+      await login(credential.email, credential.password);
+
+      const response = await server
+        .post('/api/v1/actors')
+        .set('Cookie', cookie)
+        .send({
+          ...payload,
+          characterName: undefined,
+          castOrder: undefined,
+        });
+
+      expect(response.status).toEqual(403);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'You are not authorized to perform this operation',
+      });
+    });
+
+    it('should not let customer to add new actor', async () => {
+      const [payload] = await getRandomActors(1);
+
+      const credential = await getCustomerCredential();
+      await login(credential.email, credential.password);
+
+      const response = await server
+        .post('/api/v1/actors')
+        .set('Cookie', cookie)
+        .send({
+          ...payload,
+          characterName: undefined,
+          castOrder: undefined,
+        });
+
+      expect(response.status).toEqual(403);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'You are not authorized to perform this operation',
+      });
     });
   });
 
@@ -313,6 +372,9 @@ describe('Actor Controller', () => {
         RETURNING id;
       `);
       const newActorId = newActorQueryResult.id;
+
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
 
       const response = await server
         .put(`/api/v1/actors/${newActorId}`)
@@ -352,8 +414,12 @@ describe('Actor Controller', () => {
     });
 
     it('should return 404 if the actor with the given id does not exist', async () => {
-      const payload = await getRandomActors(1);
+      const [payload] = await getRandomActors(1);
       const [actorQueryResult] = await execQuery(`SELECT MAX(id) AS id FROM actor`);
+
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const response = await server
         .put(`/api/v1/actors/${Number(actorQueryResult.id) + 1}`)
         .set('Cookie', cookie)
@@ -361,11 +427,82 @@ describe('Actor Controller', () => {
       expect(response.status).toEqual(404);
       expect(response.body.message).toEqual('Resources not found');
     });
+
+    it('should not let staff to update actor data', async () => {
+      const [payload] = await getRandomActors(1);
+
+      const [newActorQueryResult] = await execQuery(`
+        INSERT INTO actor (
+          tmdb_id, imdb_id, actor_name, biography, birthday, deathday, 
+          place_of_birth, popularity, profile_picture_url
+        )
+        VALUES (
+          ${payload.tmdbId},
+          ${payload.imdbId ? `'${payload.imdbId}'` : null},
+          '${payload.actorName}',
+          ${payload.biography ? `'${payload.biography}'` : null},
+          '${payload.birthday?.toISOString().split('T')[0]}',
+          ${payload.deathday ? `'${payload.deathday}'` : null},
+          ${payload.placeOfBirth ? `'${payload.placeOfBirth}'` : null},
+          ${payload.popularity},
+          '${payload.profilePictureUrl}'
+        )
+        RETURNING id;
+      `);
+      const newActorId = newActorQueryResult.id;
+
+      const credential = await getStaffCredential();
+      await login(credential.email, credential.password);
+
+      const response = await server
+        .put(`/api/v1/actors/${Number(newActorId) + 1}`)
+        .set('Cookie', cookie)
+        .send({ actorName: 'New Actor Name' });
+      expect(response.status).toEqual(403);
+      expect(response.body.message).toEqual('You are not authorized to perform this operation');
+    });
+
+    it('should not let customer to update actor data', async () => {
+      const [payload] = await getRandomActors(1);
+
+      const [newActorQueryResult] = await execQuery(`
+        INSERT INTO actor (
+          tmdb_id, imdb_id, actor_name, biography, birthday, deathday, 
+          place_of_birth, popularity, profile_picture_url
+        )
+        VALUES (
+          ${payload.tmdbId},
+          ${payload.imdbId ? `'${payload.imdbId}'` : null},
+          '${payload.actorName}',
+          ${payload.biography ? `'${payload.biography}'` : null},
+          '${payload.birthday?.toISOString().split('T')[0]}',
+          ${payload.deathday ? `'${payload.deathday}'` : null},
+          ${payload.placeOfBirth ? `'${payload.placeOfBirth}'` : null},
+          ${payload.popularity},
+          '${payload.profilePictureUrl}'
+        )
+        RETURNING id;
+      `);
+      const newActorId = newActorQueryResult.id;
+
+      const credential = await getCustomerCredential();
+      await login(credential.email, credential.password);
+
+      const response = await server
+        .put(`/api/v1/actors/${Number(newActorId) + 1}`)
+        .set('Cookie', cookie)
+        .send({ actorName: 'New Actor Name' });
+      expect(response.status).toEqual(403);
+      expect(response.body.message).toEqual('You are not authorized to perform this operation');
+    });
   });
 
   describe('DELETE /actors/:id', () => {
     it('should delete the actor with the given id', async () => {
       const [payload] = await getRandomActors(1);
+
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
 
       const newActorResponse = await server.post('/api/v1/actors').set('Cookie', cookie).send(payload);
       const newActorId = Number(newActorResponse.body.id);
@@ -382,9 +519,53 @@ describe('Actor Controller', () => {
 
     it('should return 404 when deleting the actor with the id that does not exist', async () => {
       const [actorQueryResult] = await execQuery(`SELECT MAX(id) AS id FROM actor`);
+
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const response = await server.delete(`/api/v1/actors/${Number(actorQueryResult.id) + 1}`).set('Cookie', cookie);
       expect(response.status).toEqual(404);
       expect(response.body.message).toEqual('Resources not found');
+    });
+
+    it('should not let staff to delete the actor', async () => {
+      const [payload] = await getRandomActors(1);
+
+      const storeManagerCredential = await getStoreManagerCredential();
+      await login(storeManagerCredential.email, storeManagerCredential.password);
+
+      const newActorResponse = await server.post('/api/v1/actors').set('Cookie', cookie).send(payload);
+      const newActorId = Number(newActorResponse.body.id);
+
+      const staffCredential = await getStaffCredential();
+      await login(staffCredential.email, staffCredential.password);
+
+      const response = await server.delete(`/api/v1/actors/${newActorId}`).set('Cookie', cookie);
+      expect(response.status).toEqual(403);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'You are not authorized to perform this operation',
+      });
+    });
+
+    it('should not let customer to delete the actor', async () => {
+      const [payload] = await getRandomActors(1);
+
+      const storeManagerCredential = await getStoreManagerCredential();
+      await login(storeManagerCredential.email, storeManagerCredential.password);
+
+      const newActorResponse = await server.post('/api/v1/actors').set('Cookie', cookie).send(payload);
+      const newActorId = Number(newActorResponse.body.id);
+
+      const customerCredential = await getCustomerCredential();
+      await login(customerCredential.email, customerCredential.password);
+
+      const response = await server.delete(`/api/v1/actors/${newActorId}`).set('Cookie', cookie);
+      expect(response.status).toEqual(403);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'You are not authorized to perform this operation',
+      });
     });
   });
 });
