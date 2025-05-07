@@ -48,7 +48,7 @@ Customer.init(
       field: 'registered_on',
     },
     userPassword: {
-      type: DataTypes.STRING(8),
+      type: DataTypes.STRING(120),
       field: 'user_password',
     },
   },
@@ -57,6 +57,11 @@ Customer.init(
     modelName: 'Customer',
     tableName: 'customer',
     timestamps: false,
+    defaultScope: {
+      attributes: {
+        exclude: ['userPassword'],
+      },
+    },
   }
 );
 

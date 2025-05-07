@@ -19,7 +19,12 @@ router.get('/', routeFnWrapper(getStores));
 router.get('/:id', routeFnWrapper(getStoreById));
 router.get('/:id/stock', routeFnWrapper(getStockCount));
 router.get('/:id/movies', routeFnWrapper(getMoviesInStore));
-router.get('/:id/staff', validateAuthToken, routeFnWrapper(getStaffInStore));
+router.get(
+  '/:id/staff',
+  validateAuthToken,
+  validateUserRole(USER_ROLES.STAFF, USER_ROLES.STORE_MANAGER),
+  routeFnWrapper(getStaffInStore)
+);
 router.post('/', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(createStore));
 router.put('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(updateStore));
 router.delete('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(deleteStore));

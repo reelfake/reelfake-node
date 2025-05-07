@@ -6,11 +6,26 @@ import { USER_ROLES } from '../constants';
 
 const router = Router();
 
-router.get('/', validateAuthToken, validateUserRole(USER_ROLES.STAFF), routeFnWrapper(getStaff));
+router.get(
+  '/',
+  validateAuthToken,
+  validateUserRole(USER_ROLES.STAFF, USER_ROLES.STORE_MANAGER),
+  routeFnWrapper(getStaff)
+);
 router.post('/', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(createStaff));
-router.get('/:id', validateAuthToken, validateUserRole(USER_ROLES.STAFF), routeFnWrapper(getStaffById));
+router.get(
+  '/:id',
+  validateAuthToken,
+  validateUserRole(USER_ROLES.STAFF, USER_ROLES.STORE_MANAGER),
+  routeFnWrapper(getStaffById)
+);
 router.put('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(updateStaff));
 router.delete('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(deleteStaff));
-router.get('/managers', validateAuthToken, validateUserRole(USER_ROLES.STAFF), routeFnWrapper(getStoreManagers));
+router.get(
+  '/managers',
+  validateAuthToken,
+  validateUserRole(USER_ROLES.STAFF, USER_ROLES.STORE_MANAGER),
+  routeFnWrapper(getStoreManagers)
+);
 
 export default router;

@@ -8,6 +8,9 @@ import {
   getRandomEmail,
   getRandomAddressLine,
   getRandomPostalCode,
+  getStoreManagerCredential,
+  getStaffCredential,
+  getCustomerCredential,
 } from './testUtil';
 
 describe('Store Controller', () => {
@@ -53,6 +56,11 @@ describe('Store Controller', () => {
       LEFT JOIN country ON city.country_id = country.id
     `;
   const server = supertest(app);
+  const login = async (email: string, password: string) => {
+    const loginResponse = await server.post('/api/v1/user/login').send({ email, password });
+    cookie = loginResponse.get('Set-Cookie')?.at(0) || '';
+  };
+
   beforeAll(async () => {
     await server.post('/api/v1/user/register').send({
       email,
@@ -81,6 +89,7 @@ describe('Store Controller', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
+    cookie = '';
   });
 
   const getStaffPayload = () => ({
@@ -218,7 +227,10 @@ describe('Store Controller', () => {
       }
     });
 
-    it('should return the staff employed at the store', async () => {
+    it('should return the staff employed at the store when staff is logged in', async () => {
+      const credential = await getStaffCredential();
+      await login(credential.email, credential.password);
+
       const storeId = 1;
       const response = await server.get(`/api/v1/stores/${storeId}/staff`).set('Cookie', cookie);
       expect(response.status).toEqual(200);
@@ -243,6 +255,57 @@ describe('Store Controller', () => {
       });
     });
 
+    it('should return the staff employed at the store when store manager is logged in', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
+      const storeId = 1;
+      const response = await server.get(`/api/v1/stores/${storeId}/staff`).set('Cookie', cookie);
+      expect(response.status).toEqual(200);
+
+      const expectedItems = await execQuery(`
+        SELECT staff.id, staff.first_name AS "firstName", staff.last_name AS "lastName",
+        staff.email, staff.address_id AS "addressId", staff.store_id AS "storeId",
+        staff.active, staff.phone_number AS "phoneNumber", staff.avatar, 
+        store.store_manager_id = staff.id AS "isStoreManager", json_build_object(
+          'id', store.id,
+          'storeManagerId', store.store_manager_id,
+          'addressId', store.address_id,
+          'phoneNumber', store.phone_number
+        ) AS "store"
+        FROM staff LEFT JOIN store ON staff.store_id = store.id
+        WHERE store.id = ${storeId}
+      `);
+
+      expect(response.body).toEqual({
+        items: expectedItems,
+        length: expectedItems.length,
+      });
+    });
+
+    it('should not let customer to query for the staff employed at the store', async () => {
+      const credential = await getCustomerCredential();
+      await login(credential.email, credential.password);
+
+      const storeId = 1;
+      const response = await server.get(`/api/v1/stores/${storeId}/staff`).set('Cookie', cookie);
+      expect(response.status).toEqual(403);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'You are not authorized to perform this operation',
+      });
+    });
+
+    it('should not return staff employed at the store without authentication', async () => {
+      const storeId = 1;
+      const response = await server.get(`/api/v1/stores/${storeId}/staff`).set('Cookie', cookie);
+      expect(response.status).toEqual(401);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'Invalid or expired token',
+      });
+    });
+
     it('should return 400 when getting stock count but id is not a valid number', async () => {
       const response = await server.get('/api/v1/stores/blah/stock');
       expect(response.status).toBe(400);
@@ -264,9 +327,11 @@ describe('Store Controller', () => {
 
   describe('POST /stores', () => {
     it('should create a new store with the new address and new manager', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStorePayload();
       const response = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
-
       expect(response.status).toBe(201);
       const newStoreId = response.body.id;
 
@@ -276,6 +341,9 @@ describe('Store Controller', () => {
     });
 
     it('should create store without the store manager', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStorePayload();
 
       const response = await server
@@ -295,6 +363,9 @@ describe('Store Controller', () => {
     });
 
     it('should create a new store with the new address and existing manager', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStorePayload();
 
       const staffResponse = await server.post('/api/v1/staff').set('Cookie', cookie).send(payload.storeManager);
@@ -326,6 +397,9 @@ describe('Store Controller', () => {
     });
 
     it('should not allow creating store when address is incomplete', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStorePayload();
 
       const response = await server
@@ -343,6 +417,9 @@ describe('Store Controller', () => {
     });
 
     it('should not allow creating store when store manager id and data are in request', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStorePayload();
 
       const response = await server
@@ -358,6 +435,9 @@ describe('Store Controller', () => {
     });
 
     it('should not allow creating store when address used by other store', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       let payload = getStorePayload();
 
       await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
@@ -373,6 +453,9 @@ describe('Store Controller', () => {
     });
 
     it('should not allow creating store when phone number is used  by other store', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       let payload = getStorePayload();
 
       await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
@@ -388,6 +471,9 @@ describe('Store Controller', () => {
     });
 
     it('should not create store when the address is used by staff', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const paylaod = getStorePayload();
       const staffPayload = getStaffPayload();
 
@@ -405,9 +491,10 @@ describe('Store Controller', () => {
       expect(response.body.message).toEqual('The address is in use by other staff');
     });
 
-    it('should not create store when the store manager address is used by staff', async () => {});
-
     it('should not allow creating store when store manager is already assigned to other store', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStorePayload();
 
       let response = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
@@ -426,6 +513,9 @@ describe('Store Controller', () => {
     });
 
     it('should not allow creating store when store manager address is outside state', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStorePayload();
 
       let response = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
@@ -449,6 +539,9 @@ describe('Store Controller', () => {
     });
 
     it('should not allow creating store when store manager address is same as some other store address', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStorePayload();
 
       let response = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
@@ -473,6 +566,9 @@ describe('Store Controller', () => {
     });
 
     it('should not allow creating store when store manager address is same as new store address', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStorePayload();
 
       let response = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
@@ -497,6 +593,9 @@ describe('Store Controller', () => {
     });
 
     it('should not create store with the phone number which is in use by a staff', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStorePayload();
 
       const [staffPhoneNumberQueryResult] = await execQuery(`SELECT phone_number AS "phoneNumber" FROM staff LIMIT 1`);
@@ -512,6 +611,34 @@ describe('Store Controller', () => {
 
       expect(response.status).toEqual(400);
       expect(response.body.message).toEqual('The phone number is in use by staff');
+    });
+
+    it('should not let staff to create store', async () => {
+      const credential = await getStaffCredential();
+      await login(credential.email, credential.password);
+
+      const payload = getStorePayload();
+
+      const response = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
+      expect(response.status).toEqual(403);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'You are not authorized to perform this operation',
+      });
+    });
+
+    it('should not let customer to create store', async () => {
+      const credential = await getCustomerCredential();
+      await login(credential.email, credential.password);
+
+      const payload = getStorePayload();
+
+      const response = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
+      expect(response.status).toEqual(403);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'You are not authorized to perform this operation',
+      });
     });
   });
 
@@ -548,6 +675,9 @@ describe('Store Controller', () => {
     };
 
     it('should update address line, city and postal code of the store', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStorePayload();
       const newStoreResponse = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
       const storeBeforeUpdate = newStoreResponse.body;
@@ -598,6 +728,9 @@ describe('Store Controller', () => {
     });
 
     it('should update the address line of the store', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStorePayload();
       const newStoreResponse = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
       const storeBeforeUpdate = newStoreResponse.body;
@@ -641,6 +774,9 @@ describe('Store Controller', () => {
     });
 
     it('should update the city of the store', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStorePayload();
       const newStoreResponse = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
       const storeBeforeUpdate = newStoreResponse.body;
@@ -688,6 +824,9 @@ describe('Store Controller', () => {
     });
 
     it('should update the store with the new manager', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const storePayload = getStorePayload();
       const staffPayload = getStaffPayload();
       staffPayload.address = {
@@ -721,6 +860,9 @@ describe('Store Controller', () => {
     });
 
     it('should not allow to change the state of the store', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStorePayload();
       const newStoreResponse = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
       const storeBeforeUpdate = newStoreResponse.body;
@@ -742,6 +884,9 @@ describe('Store Controller', () => {
     });
 
     it('should not allow to change the country of the store', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStorePayload();
       const newStoreResponse = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
       const storeBeforeUpdate = newStoreResponse.body;
@@ -763,6 +908,9 @@ describe('Store Controller', () => {
     });
 
     it('should not allow to change the city of the store to outside the state', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStorePayload();
       const newStoreResponse = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
       const storeBeforeUpdate = newStoreResponse.body;
@@ -782,6 +930,9 @@ describe('Store Controller', () => {
     });
 
     it('should not allow creating store when address is incomplete', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStorePayload();
       const newStoreResponse = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
       const storeBeforeUpdate = newStoreResponse.body;
@@ -801,6 +952,9 @@ describe('Store Controller', () => {
     });
 
     it('should not allow creating store when store manager id and data are in request', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStorePayload();
       const newStoreResponse = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
       const storeBeforeUpdate = newStoreResponse.body;
@@ -818,6 +972,9 @@ describe('Store Controller', () => {
     });
 
     it('should not allow updating store when address used by other store', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload1 = getStorePayload();
       const payload2 = getStorePayload();
       const store1Response = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload1);
@@ -837,6 +994,9 @@ describe('Store Controller', () => {
     });
 
     it('should not allow updating store when phone number is used  by other store', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload1 = getStorePayload();
       const payload2 = getStorePayload();
       const store1Response = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload1);
@@ -851,6 +1011,9 @@ describe('Store Controller', () => {
     });
 
     it('should not allow updating store when store manager is already assigned to other store', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload1 = getStorePayload();
       const payload2 = getStorePayload();
       const store1Response = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload1);
@@ -865,6 +1028,9 @@ describe('Store Controller', () => {
     });
 
     it('should not allow updating store when store manager address is outside state', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload1 = getStorePayload();
       const payload2 = getStorePayload();
       const store1Response = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload1);
@@ -887,10 +1053,57 @@ describe('Store Controller', () => {
       expect(response.status).toEqual(400);
       expect(response.body.message).toEqual('Cannot assign manager to store outside state');
     });
+
+    it('should not let staff to update the store', async () => {
+      const storeManagerCredential = await getStoreManagerCredential();
+      await login(storeManagerCredential.email, storeManagerCredential.password);
+
+      const payload = getStorePayload();
+      const storeResponse = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
+      const storeId = storeResponse.body.id;
+
+      const staffCredential = await getStaffCredential();
+      await login(staffCredential.email, staffCredential.password);
+
+      const response = await server.put(`/api/v1/stores/${storeId}`).set('Cookie', cookie).send({
+        phoneNumber: '472-482-382',
+      });
+
+      expect(response.status).toEqual(403);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'You are not authorized to perform this operation',
+      });
+    });
+
+    it('should not let customer to update the store', async () => {
+      const storeManagerCredential = await getStoreManagerCredential();
+      await login(storeManagerCredential.email, storeManagerCredential.password);
+
+      const payload = getStorePayload();
+      const storeResponse = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
+      const storeId = storeResponse.body.id;
+
+      const customerCredential = await getCustomerCredential();
+      await login(customerCredential.email, customerCredential.password);
+
+      const response = await server.put(`/api/v1/stores/${storeId}`).set('Cookie', cookie).send({
+        phoneNumber: '472-482-382',
+      });
+
+      expect(response.status).toEqual(403);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'You are not authorized to perform this operation',
+      });
+    });
   });
 
   describe('DELETE /stores/:id', () => {
     it('should delete store', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStorePayload();
 
       const newStoreResponse = await server
@@ -940,6 +1153,9 @@ describe('Store Controller', () => {
     });
 
     it('should not delete the store if there are staff employed at the store', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStaffPayload();
       const storePayload = getStorePayload();
 
@@ -973,6 +1189,9 @@ describe('Store Controller', () => {
     });
 
     it('should delete the store and deactivate the store staff', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const storePayload = getStorePayload();
       const staff1Payload = getStaffPayload();
       const staff2Payload = getStaffPayload();
@@ -1005,6 +1224,60 @@ describe('Store Controller', () => {
 
       const response = await server.delete(`/api/v1/stores/${storeId}?forceDelete=true`).set('Cookie', cookie);
       expect(response.status).toEqual(204);
+    });
+
+    it('should not let staff to delete the store', async () => {
+      const storeManagerCredential = await getStoreManagerCredential();
+      await login(storeManagerCredential.email, storeManagerCredential.password);
+
+      const payload = getStorePayload();
+
+      const newStoreResponse = await server
+        .post('/api/v1/stores')
+        .set('Cookie', cookie)
+        .send({
+          ...payload,
+          storeManager: undefined,
+          storeManagerId: undefined,
+        });
+      const storeId = newStoreResponse.body.id;
+
+      const credential = await getCustomerCredential();
+      await login(credential.email, credential.password);
+
+      const response = await server.delete(`/api/v1/stores/${storeId}`).set('Cookie', cookie);
+      expect(response.status).toEqual(403);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'You are not authorized to perform this operation',
+      });
+    });
+
+    it('should not let customer to delete the store', async () => {
+      const storeManagerCredential = await getStoreManagerCredential();
+      await login(storeManagerCredential.email, storeManagerCredential.password);
+
+      const payload = getStorePayload();
+
+      const newStoreResponse = await server
+        .post('/api/v1/stores')
+        .set('Cookie', cookie)
+        .send({
+          ...payload,
+          storeManager: undefined,
+          storeManagerId: undefined,
+        });
+      const storeId = newStoreResponse.body.id;
+
+      const credential = await getCustomerCredential();
+      await login(credential.email, credential.password);
+
+      const response = await server.delete(`/api/v1/stores/${storeId}`).set('Cookie', cookie);
+      expect(response.status).toEqual(403);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'You are not authorized to perform this operation',
+      });
     });
   });
 });

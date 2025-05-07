@@ -1,7 +1,15 @@
 import supertest from 'supertest';
 
 import app from '../app';
-import { execQuery, getRandomAddressLine, getRandomPostalCode, getRandomEmail } from './testUtil';
+import {
+  execQuery,
+  getRandomAddressLine,
+  getRandomPostalCode,
+  getRandomEmail,
+  getStoreManagerCredential,
+  getStaffCredential,
+  getCustomerCredential,
+} from './testUtil';
 
 describe('Staff Controller', () => {
   const email = 'test@example.com';
@@ -81,6 +89,11 @@ describe('Staff Controller', () => {
 
   const server = supertest(app);
 
+  const login = async (email: string, password: string) => {
+    const loginResponse = await server.post('/api/v1/user/login').send({ email, password });
+    cookie = loginResponse.get('Set-Cookie')?.at(0) || '';
+  };
+
   beforeAll(async () => {
     await server.post('/api/v1/user/register').send({
       email,
@@ -107,10 +120,14 @@ describe('Staff Controller', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
+    cookie = '';
   });
 
   describe('POST /staff', () => {
     it('should create new staff', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStaffPayload();
 
       expect(await getAddressCount(payload.address)).toEqual(0);
@@ -143,6 +160,9 @@ describe('Staff Controller', () => {
     });
 
     it('should create staff with the store id of existing store', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const storePayload = getStorePayload();
       const staffPayload = getStaffPayload();
 
@@ -189,6 +209,9 @@ describe('Staff Controller', () => {
     });
 
     it('should create staff with the existing address', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStaffPayload();
 
       const [existingAddress] = await execQuery(`
@@ -244,6 +267,9 @@ describe('Staff Controller', () => {
     });
 
     it('should not create staff with address which is in use by a store', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const staffPayload = getStaffPayload();
 
       const [addressInUseQueryResult] = await execQuery(`
@@ -270,6 +296,9 @@ describe('Staff Controller', () => {
     });
 
     it('should not create staff with phone number which is in use by a store', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStaffPayload();
 
       const [phoneNumberQueryResult] = await execQuery(`SELECT phone_number AS "phoneNumber" FROM store LIMIT 1`);
@@ -288,6 +317,9 @@ describe('Staff Controller', () => {
     });
 
     it('should not create staff with address which is in use by other staff', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStaffPayload();
 
       const [addressInUserQueryResult] = await execQuery(`
@@ -311,6 +343,9 @@ describe('Staff Controller', () => {
     });
 
     it('should not create staff with phone number which is in use by other staff', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStaffPayload();
 
       const [phoneNumberQueryResult] = await execQuery(`SELECT phone_number AS "phoneNumber" FROM staff LIMIT 1`);
@@ -327,10 +362,39 @@ describe('Staff Controller', () => {
       expect(response.status).toEqual(400);
       expect(response.body.message).toEqual('The phone number is in use by other staff');
     });
+
+    it('should not let staff to create staff', async () => {
+      const credential = await getStaffCredential();
+      await login(credential.email, credential.password);
+
+      const payload = getStaffPayload();
+      const response = await server.post('/api/v1/staff').set('Cookie', cookie).send(payload);
+      expect(response.status).toBe(403);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'You are not authorized to perform this operation',
+      });
+    });
+
+    it('should not let customer to create staff', async () => {
+      const credential = await getCustomerCredential();
+      await login(credential.email, credential.password);
+
+      const payload = getStaffPayload();
+      const response = await server.post('/api/v1/staff').set('Cookie', cookie).send(payload);
+      expect(response.status).toBe(403);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'You are not authorized to perform this operation',
+      });
+    });
   });
 
   describe('PUT /staff/:id', () => {
     it('should update staff with the new phone number', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload1 = getStaffPayload();
 
       const newStaffResponse = await server.post('/api/v1/staff').set('Cookie', cookie).send(payload1);
@@ -351,6 +415,9 @@ describe('Staff Controller', () => {
     });
 
     it('should update staff with the new address', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload1 = getStaffPayload();
       const payload2 = getStaffPayload();
       const storePayload = getStorePayload();
@@ -377,6 +444,9 @@ describe('Staff Controller', () => {
     });
 
     it('should not update staff with the address if it is outside the state of assigned store', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStaffPayload();
       const payload2 = getStaffPayload();
       const storePayload = getStorePayload();
@@ -406,6 +476,9 @@ describe('Staff Controller', () => {
     });
 
     it('should not update staff with the address that belongs to a store', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStaffPayload();
       const newStaffResponse = await server.post('/api/v1/staff').set('Cookie', cookie).send(payload);
       const newStaff = newStaffResponse.body;
@@ -428,6 +501,9 @@ describe('Staff Controller', () => {
     });
 
     it('should not update staff with the address that belongs to other staff', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStaffPayload();
       const newStaffResponse = await server.post('/api/v1/staff').set('Cookie', cookie).send(payload);
       const newStaff = newStaffResponse.body;
@@ -450,6 +526,9 @@ describe('Staff Controller', () => {
     });
 
     it('should not update staff with the phone number that is used by a store', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStaffPayload();
       const newStaffResponse = await server.post('/api/v1/staff').set('Cookie', cookie).send(payload);
       const newStaff = newStaffResponse.body;
@@ -469,6 +548,9 @@ describe('Staff Controller', () => {
     });
 
     it('should not update staff with the phone number that is used by other staff', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStaffPayload();
       const newStaffResponse = await server.post('/api/v1/staff').set('Cookie', cookie).send(payload);
       const newStaff = newStaffResponse.body;
@@ -488,6 +570,9 @@ describe('Staff Controller', () => {
     });
 
     it('should not update staff with email address that is used by other staff', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload1 = getStaffPayload();
       const payload2 = getStaffPayload();
       const newStaff1Response = await server.post('/api/v1/staff').set('Cookie', cookie).send(payload1);
@@ -505,6 +590,9 @@ describe('Staff Controller', () => {
     });
 
     it('should not update staff with store that is outside state of the staff', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStaffPayload();
       const newStaffResponse = await server.post('/api/v1/staff').set('Cookie', cookie).send(payload);
       const newStaff = newStaffResponse.body;
@@ -522,10 +610,63 @@ describe('Staff Controller', () => {
       });
       expect(response.status).toEqual(400);
     });
+
+    it('should not let staff to update staff data', async () => {
+      const storeManagerCredential = await getStoreManagerCredential();
+      await login(storeManagerCredential.email, storeManagerCredential.password);
+
+      const payload = getStaffPayload();
+      const newStaffResponse = await server.post('/api/v1/staff').set('Cookie', cookie).send(payload);
+      const staffId = newStaffResponse.body.id;
+
+      const staffCredential = await getStaffCredential();
+      await login(staffCredential.email, staffCredential.password);
+
+      const response = await server
+        .put(`/api/v1/staff/${staffId}`)
+        .set('Cookie', cookie)
+        .send({
+          firstName: `${payload.firstName} UPDATED`,
+          lastName: `${payload.lastName} UPDATED`,
+        });
+      expect(response.status).toEqual(403);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'You are not authorized to perform this operation',
+      });
+    });
+
+    it('should not let customer to update staff data', async () => {
+      const storeManagerCredential = await getStoreManagerCredential();
+      await login(storeManagerCredential.email, storeManagerCredential.password);
+
+      const payload = getStaffPayload();
+      const newStaffResponse = await server.post('/api/v1/staff').set('Cookie', cookie).send(payload);
+      const staffId = newStaffResponse.body.id;
+
+      const staffCredential = await getStaffCredential();
+      await login(staffCredential.email, staffCredential.password);
+
+      const response = await server
+        .put(`/api/v1/staff/${staffId}`)
+        .set('Cookie', cookie)
+        .send({
+          firstName: `${payload.firstName} UPDATED`,
+          lastName: `${payload.lastName} UPDATED`,
+        });
+      expect(response.status).toEqual(403);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'You are not authorized to perform this operation',
+      });
+    });
   });
 
   describe('DELETE /staff/:id', () => {
     it('should delete the store', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStaffPayload();
 
       const newStaffResponse = await server.post('/api/v1/staff').set('Cookie', cookie).send(payload);
@@ -568,6 +709,9 @@ describe('Staff Controller', () => {
     });
 
     it('should not delete the staff if the staff is a manager of existing store', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getStaffPayload();
       const storePayload = getStorePayload();
 
@@ -586,6 +730,44 @@ describe('Staff Controller', () => {
       const response = await server.delete(`/api/v1/staff/${newStaffId}`).set('Cookie', cookie);
       expect(response.status).toEqual(400);
       expect(response.body.message).toEqual('Staff is a manager of existing store');
+    });
+
+    it('should not let staff to delete staff', async () => {
+      const storeManagerCredential = await getStoreManagerCredential();
+      await login(storeManagerCredential.email, storeManagerCredential.password);
+
+      const payload = getStaffPayload();
+      const newStaffResposne = await server.post('/api/v1/staff').set('Cookie', cookie).send(payload);
+      const staffId = newStaffResposne.body.id;
+
+      const staffCredential = await getStaffCredential();
+      await login(staffCredential.email, staffCredential.password);
+
+      const response = await server.delete(`/api/v1/staff/${staffId}`).set('Cookie', cookie);
+      expect(response.status).toEqual(403);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'You are not authorized to perform this operation',
+      });
+    });
+
+    it('should not let customer to delete staff', async () => {
+      const storeManagerCredential = await getStoreManagerCredential();
+      await login(storeManagerCredential.email, storeManagerCredential.password);
+
+      const payload = getStaffPayload();
+      const newStaffResposne = await server.post('/api/v1/staff').set('Cookie', cookie).send(payload);
+      const staffId = newStaffResposne.body.id;
+
+      const customerCredential = await getCustomerCredential();
+      await login(customerCredential.email, customerCredential.password);
+
+      const response = await server.delete(`/api/v1/staff/${staffId}`).set('Cookie', cookie);
+      expect(response.status).toEqual(403);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'You are not authorized to perform this operation',
+      });
     });
   });
 });

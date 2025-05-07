@@ -184,7 +184,7 @@ Staff.init(
       field: 'avatar',
     },
     userPassword: {
-      type: DataTypes.STRING(8),
+      type: DataTypes.STRING(120),
       field: 'user_password',
     },
   },
@@ -193,6 +193,11 @@ Staff.init(
     modelName: 'Staff',
     tableName: 'staff',
     timestamps: false,
+    defaultScope: {
+      attributes: {
+        exclude: ['userPassword'],
+      },
+    },
   }
 );
 
