@@ -709,7 +709,7 @@ describe('Customer Controller', () => {
     });
   });
 
-  describe.only('DELETE /customers/:id', () => {
+  describe('DELETE /customers/:id', () => {
     it('should delete the customer', async () => {
       const credential = await getStoreManagerCredential();
       await login(credential.email, credential.password);
