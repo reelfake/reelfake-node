@@ -6,7 +6,6 @@ import {
   execQuery,
   getRowsCount,
   getRandomActors,
-  getRandomCharacters,
   FIELD_MAP,
   getStoreManagerCredential,
   getCustomerCredential,
@@ -14,8 +13,6 @@ import {
 } from './testUtil';
 
 describe('Actor Controller', () => {
-  const email = `test${getRandomCharacters(10)}@example.com`;
-  const password = 'test@12345';
   let cookie: string;
   const server = supertest(app);
 
@@ -23,30 +20,6 @@ describe('Actor Controller', () => {
     const loginResponse = await server.post('/api/v1/user/login').send({ email, password });
     cookie = loginResponse.get('Set-Cookie')?.at(0) || '';
   };
-
-  beforeAll(async () => {
-    await server.post('/api/v1/user/register').send({
-      email,
-      password,
-    });
-
-    let response = await server.post('/api/v1/user/login').send({
-      email,
-      password,
-    });
-
-    cookie = response.get('Set-Cookie')?.at(0) || '';
-
-    response = await server.patch('/api/v1/user/me').set('Cookie', cookie).send({
-      storeManagerId: 2,
-    });
-
-    cookie = response.get('Set-Cookie')?.at(0) || '';
-  });
-
-  afterAll(async () => {
-    await execQuery(`DELETE FROM public.user`);
-  });
 
   afterEach(() => {
     jest.restoreAllMocks();

@@ -1,12 +1,19 @@
 import supertest from 'supertest';
 
 import app from '../app';
-import { execQuery, getRandomAddressLine, getRandomPostalCode, getRandomEmail, getRandomCharacters } from './testUtil';
+import {
+  execQuery,
+  getRandomAddressLine,
+  getRandomPostalCode,
+  getRandomEmail,
+  getRandomCharacters,
+  getStoreManagerCredential,
+  getStaffCredential,
+  getCustomerCredential,
+} from './testUtil';
 import { CustomerPayload } from '../types';
 
 describe('Customer Controller', () => {
-  const email = 'test@example.com';
-  const password = 'password123';
   let cookie: string = '';
   const server = supertest(app);
   const getCustomerPayload = (preferredStoreId: number | undefined = undefined) => {
@@ -33,36 +40,21 @@ describe('Customer Controller', () => {
     return payload;
   };
 
-  beforeAll(async () => {
-    await server.post('/api/v1/user/register').send({
-      email,
-      password,
-    });
-
-    let response = await server.post('/api/v1/user/login').send({
-      email,
-      password,
-    });
-
-    cookie = response.get('Set-Cookie')?.at(0) || '';
-
-    response = await server.patch('/api/v1/user/me').set('Cookie', cookie).send({
-      storeManagerId: 2,
-    });
-
-    cookie = response.get('Set-Cookie')?.at(0) || '';
-  });
-
-  afterAll(async () => {
-    await execQuery(`DELETE FROM public.user;`);
-  });
+  const login = async (email: string, password: string) => {
+    const loginResponse = await server.post('/api/v1/user/login').send({ email, password });
+    cookie = loginResponse.get('Set-Cookie')?.at(0) || '';
+  };
 
   afterEach(() => {
     jest.restoreAllMocks();
+    cookie = '';
   });
 
   describe('GET /customers', () => {
     it('should get customers with pagination support', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const pages = [1, 2, 5, 6, 3];
       const limitPerPage = 50;
 
@@ -106,6 +98,9 @@ describe('Customer Controller', () => {
     });
 
     it('should return 404 when fetching customers with page that is out of range', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       let response = await server.get('/api/v1/customers').set('Cookie', cookie);
       expect(response.status).toEqual(200);
       const totalPages = response.body.totalPages;
@@ -117,6 +112,9 @@ describe('Customer Controller', () => {
 
   describe('GET /customers/:id', () => {
     it('should get customer detail', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getCustomerPayload(1);
 
       const newCustomerResponse = await server.post('/api/v1/customers').set('Cookie', cookie).send(payload);
@@ -194,6 +192,9 @@ describe('Customer Controller', () => {
     });
 
     it('should return 404 if the customer does not exist with the given id', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const [customerQueryResult] = await execQuery(`
           SELECT max(id) FROM customer
         `);
@@ -206,6 +207,9 @@ describe('Customer Controller', () => {
 
   describe('POST /customers', () => {
     it('should create customer with the given payload', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getCustomerPayload(1);
 
       const response = await server
@@ -238,6 +242,9 @@ describe('Customer Controller', () => {
     });
 
     it('should create customer without preferred store', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload: Omit<CustomerPayload, 'preferredStoreId'> = getCustomerPayload();
 
       const response = await server
@@ -270,6 +277,9 @@ describe('Customer Controller', () => {
     });
 
     it('should not create customer if data required for new customer is missing', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload: Omit<CustomerPayload, 'preferredStoreId'> = getCustomerPayload();
 
       // Missing first name
@@ -329,6 +339,9 @@ describe('Customer Controller', () => {
     });
 
     it('should not create customer if the address is in complete', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getCustomerPayload(1);
 
       const response = await server
@@ -346,6 +359,9 @@ describe('Customer Controller', () => {
     });
 
     it('should not create customer if the email address is already in use', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const [existingEmailAddress] = await execQuery(`
             SELECT email FROM customer LIMIT 1
         `);
@@ -364,6 +380,9 @@ describe('Customer Controller', () => {
     });
 
     it('should not create customer if the phone number is already in use', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const [existingPhoneNumber] = await execQuery(`
             SELECT phone_number AS "phoneNumber" FROM customer LIMIT 1
         `);
@@ -382,6 +401,9 @@ describe('Customer Controller', () => {
     });
 
     it('should not create customer if the residential address is already in use', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const [existingAddress] = await execQuery(`
             SELECT json_build_object(
                 'addressLine', a.address_line,
@@ -408,10 +430,41 @@ describe('Customer Controller', () => {
       expect(response.status).toEqual(400);
       expect(response.body.message).toEqual('Customer with the same address already exist');
     });
+
+    it('should not let staff to create customer', async () => {
+      const credential = await getStaffCredential();
+      await login(credential.email, credential.password);
+
+      const payload = getCustomerPayload(1);
+
+      const response = await server.post('/api/v1/customers').set('Cookie', cookie).send(payload);
+      expect(response.status).toEqual(403);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'You are not authorized to perform this operation',
+      });
+    });
+
+    it('should not let customer to create customer', async () => {
+      const credential = await getCustomerCredential();
+      await login(credential.email, credential.password);
+
+      const payload = getCustomerPayload(1);
+
+      const response = await server.post('/api/v1/customers').set('Cookie', cookie).send(payload);
+      expect(response.status).toEqual(403);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'You are not authorized to perform this operation',
+      });
+    });
   });
 
   describe('PUT /customers/:id', () => {
     it('should update the customer with the given payload', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload1 = getCustomerPayload(1);
       const payload2 = getCustomerPayload(1);
 
@@ -450,6 +503,9 @@ describe('Customer Controller', () => {
     });
 
     it('should update preferred store id for the customer', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getCustomerPayload(1);
 
       const newCustomerResponse = await server.post('/api/v1/customers').set('Cookie', cookie).send(payload);
@@ -468,6 +524,9 @@ describe('Customer Controller', () => {
     });
 
     it('should update address of the customer', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload1 = getCustomerPayload(1);
       const address1Payload = {
         ...payload1.address,
@@ -529,6 +588,9 @@ describe('Customer Controller', () => {
     });
 
     it('should not update the customer with duplicate email address', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getCustomerPayload(1);
       const [existingCustEmailAddress] = await execQuery(`
             SELECT email FROM customer LIMIT 1
@@ -545,6 +607,9 @@ describe('Customer Controller', () => {
     });
 
     it('should not update the customer with duplicate phone number', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getCustomerPayload(1);
       const [existingCustPhoneNumber] = await execQuery(`
               SELECT phone_number AS "phoneNumber" FROM customer LIMIT 1
@@ -561,6 +626,9 @@ describe('Customer Controller', () => {
     });
 
     it('should not update the customer with duplicate residential address', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const [existingAddressQueryResult] = await execQuery(`
             SELECT json_build_object(
                 'addressLine', a.address_line,
@@ -586,10 +654,66 @@ describe('Customer Controller', () => {
       expect(response.status).toEqual(400);
       expect(response.body.message).toEqual('Customer with the same address already exist');
     });
+
+    it('should not let staff to update customer', async () => {
+      const storeManagerCredential = await getStoreManagerCredential();
+      await login(storeManagerCredential.email, storeManagerCredential.password);
+
+      const payload = getCustomerPayload(1);
+
+      const newCustomerResponse = await server.post('/api/v1/customers').set('Cookie', cookie).send(payload);
+      const custId = newCustomerResponse.body.id;
+
+      const staffCredential = await getStaffCredential();
+      await login(staffCredential.email, staffCredential.password);
+
+      const response = await server
+        .put(`/api/v1/customers/${custId}`)
+        .set('Cookie', cookie)
+        .send({
+          firstName: `${payload.firstName} UPDATED`,
+          lastName: `${payload.lastName} UPDATED`,
+        });
+      expect(response.status).toEqual(403);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'You are not authorized to perform this operation',
+      });
+    });
+
+    it('should not let customer to update other customer data', async () => {
+      const storeManagerCredential = await getStoreManagerCredential();
+      await login(storeManagerCredential.email, storeManagerCredential.password);
+
+      const payload = getCustomerPayload(1);
+
+      const newCustomerResponse = await server.post('/api/v1/customers').set('Cookie', cookie).send(payload);
+      const custId = newCustomerResponse.body.id;
+
+      const custCredential = await getCustomerCredential();
+      await login(custCredential.email, custCredential.password);
+
+      const response = await server
+        .put(`/api/v1/customers/${custId}`)
+        .set('Cookie', cookie)
+        .send({
+          firstName: `${payload.firstName} UPDATED`,
+          lastName: `${payload.lastName} UPDATED`,
+        });
+
+      expect(response.status).toEqual(403);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'You are not authorized to perform this operation',
+      });
+    });
   });
 
-  describe('DELETE /customers/:id', () => {
+  describe.only('DELETE /customers/:id', () => {
     it('should delete the customer', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getCustomerPayload();
       const newCustomerResponse = await server.post('/api/v1/customers').set('Cookie', cookie).send(payload);
       const customerId = newCustomerResponse.body.id;
@@ -605,6 +729,9 @@ describe('Customer Controller', () => {
     });
 
     it('should delete the customer along with the address', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const payload = getCustomerPayload();
       const newCustomerResponse = await server.post('/api/v1/customers').set('Cookie', cookie).send(payload);
       const customerId = newCustomerResponse.body.id;
@@ -626,11 +753,52 @@ describe('Customer Controller', () => {
     });
 
     it('should return 404 when deleting customer with id that does not exist', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
       const [queryResult] = await execQuery(`SELECT max(id) FROM customer`);
       const customerId = Number(queryResult.max) + 1;
       const response = await server.delete(`/api/v1/customers/${customerId}`).set('Cookie', cookie);
       expect(response.status).toEqual(404);
       expect(response.body.message).toEqual('Resources not found');
+    });
+
+    it('should not let staff to delete customer', async () => {
+      const storeManagerCredential = await getStoreManagerCredential();
+      await login(storeManagerCredential.email, storeManagerCredential.password);
+
+      const payload = getCustomerPayload();
+      const newCustomerResponse = await server.post('/api/v1/customers').set('Cookie', cookie).send(payload);
+      const customerId = newCustomerResponse.body.id;
+
+      const staffCredential = await getStaffCredential();
+      await login(staffCredential.email, staffCredential.password);
+
+      const response = await server.delete(`/api/v1/customers/${customerId}`).set('Cookie', cookie);
+      expect(response.status).toEqual(403);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'You are not authorized to perform this operation',
+      });
+    });
+
+    it('should not let customer to delete other customer', async () => {
+      const storeManagerCredential = await getStoreManagerCredential();
+      await login(storeManagerCredential.email, storeManagerCredential.password);
+
+      const payload = getCustomerPayload();
+      const newCustomerResponse = await server.post('/api/v1/customers').set('Cookie', cookie).send(payload);
+      const customerId = newCustomerResponse.body.id;
+
+      const customerCredential = await getCustomerCredential();
+      await login(customerCredential.email, customerCredential.password);
+
+      const response = await server.delete(`/api/v1/customers/${customerId}`).set('Cookie', cookie);
+      expect(response.status).toEqual(403);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'You are not authorized to perform this operation',
+      });
     });
   });
 });

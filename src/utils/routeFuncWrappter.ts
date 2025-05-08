@@ -7,7 +7,7 @@ export default function (fn: (req: Request, res: Response, next: NextFunction) =
       if (process.env.NODE_ENV === 'production') {
         next(new AppError('Internal Server Error', 500));
       } else {
-        res.status(err.statusCode || 500).json({ ...err, message: err.message });
+        res.status(err.statusCode || 500).json({ status: 'error', message: err.message });
       }
     });
   };

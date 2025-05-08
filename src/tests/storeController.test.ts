@@ -15,8 +15,6 @@ import {
 
 describe('Store Controller', () => {
   let cookie: string = '';
-  const email = 'test@example.com';
-  const password = 'password123';
   const storeDetailQueryText = `
       SELECT store.id AS "id", store.phone_number AS "phoneNumber",
       (
@@ -60,32 +58,6 @@ describe('Store Controller', () => {
     const loginResponse = await server.post('/api/v1/user/login').send({ email, password });
     cookie = loginResponse.get('Set-Cookie')?.at(0) || '';
   };
-
-  beforeAll(async () => {
-    await server.post('/api/v1/user/register').send({
-      email,
-      password,
-    });
-
-    let response = await server.post('/api/v1/user/login').send({
-      email,
-      password,
-    });
-
-    cookie = response.get('Set-Cookie')?.at(0) || '';
-
-    response = await server.patch('/api/v1/user/me').set('Cookie', cookie).send({
-      storeManagerId: 2,
-    });
-
-    cookie = response.get('Set-Cookie')?.at(0) || '';
-  });
-
-  afterAll(async () => {
-    await execQuery(`
-        DELETE FROM public.user;
-      `);
-  });
 
   afterEach(() => {
     jest.restoreAllMocks();

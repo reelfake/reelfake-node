@@ -3,7 +3,7 @@ import { literal, fn, Op } from 'sequelize';
 import { CustomerModel, StoreModel, AddressModel, StaffModel, CityModel, CountryModel } from '../models';
 import { AppError } from '../utils';
 import sequelize from '../sequelize.config';
-import { ERROR_MESSAGES, ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
+import { ERROR_MESSAGES, ITEMS_PER_PAGE_FOR_PAGINATION, USER_ROLES } from '../constants';
 import { CustomRequest, CustomRequestWithBody, CustomerPayload } from '../types';
 
 export const getCustomers = async (req: CustomRequest, res: Response) => {
@@ -328,6 +328,12 @@ export const createCustomer = async (req: CustomRequestWithBody<CustomerPayload>
 };
 
 export const updateCustomer = async (req: CustomRequestWithBody<Partial<CustomerPayload>>, res: Response) => {
+  const { user } = req;
+
+  if (!user) {
+    throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
+  }
+
   const { firstName, lastName, email, active, address, avatar, phoneNumber, preferredStoreId } = req.body;
 
   const { id: idText } = req.params;
@@ -379,16 +385,19 @@ export const updateCustomer = async (req: CustomRequestWithBody<Partial<Customer
     }
   }
 
+  const existingCustInstance = await CustomerModel.findByPk(id, {
+    attributes: ['id', 'email', 'addressId'],
+  });
+
+  if (!existingCustInstance) {
+    throw new AppError(ERROR_MESSAGES.RESOURCES_NOT_FOUND, 404);
+  }
+
+  if (user.role === USER_ROLES.CUSTOMER && existingCustInstance.getDataValue('email') !== user.email) {
+    throw new AppError(ERROR_MESSAGES.FORBIDDEN, 403);
+  }
+
   await sequelize.transaction(async (t) => {
-    const existingCustInstance = await CustomerModel.findByPk(id, {
-      attributes: ['id', 'addressId'],
-      transaction: t,
-    });
-
-    if (!existingCustInstance) {
-      throw new AppError(ERROR_MESSAGES.RESOURCES_NOT_FOUND, 404);
-    }
-
     if (address) {
       const custAddressId = existingCustInstance.getDataValue('addressId');
 
@@ -431,6 +440,12 @@ export const updateCustomer = async (req: CustomRequestWithBody<Partial<Customer
 };
 
 export const deleteCustomer = async (req: CustomRequest, res: Response) => {
+  const { user } = req;
+
+  if (!user) {
+    throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
+  }
+
   const { id: idText } = req.params;
 
   const id = Number(idText);
@@ -438,17 +453,20 @@ export const deleteCustomer = async (req: CustomRequest, res: Response) => {
     throw new AppError('Invalid customer id', 400);
   }
 
+  const existingCusInstance = await CustomerModel.findByPk(id, {
+    attributes: ['id', 'addressId'],
+  });
+
+  if (!existingCusInstance) {
+    throw new AppError(ERROR_MESSAGES.RESOURCES_NOT_FOUND, 404);
+  }
+
+  if (user.role === USER_ROLES.CUSTOMER && existingCusInstance.getDataValue('email') !== user.email) {
+    throw new AppError(ERROR_MESSAGES.FORBIDDEN, 403);
+  }
+
   await sequelize.transaction(async (t) => {
-    const existingCustomerInstance = await CustomerModel.findByPk(id, {
-      attributes: ['id', 'addressId'],
-      transaction: t,
-    });
-
-    if (!existingCustomerInstance) {
-      throw new AppError(ERROR_MESSAGES.RESOURCES_NOT_FOUND, 404);
-    }
-
-    const custAddressId = existingCustomerInstance.getDataValue('addressId');
+    const custAddressId = existingCusInstance.getDataValue('addressId');
 
     const custAddressInstance = await AddressModel.findByPk(custAddressId);
 
@@ -456,7 +474,7 @@ export const deleteCustomer = async (req: CustomRequest, res: Response) => {
       throw new AppError('Address for the customer not found', 404);
     }
 
-    await existingCustomerInstance.destroy({ transaction: t });
+    await existingCusInstance.destroy({ transaction: t });
     await custAddressInstance?.destroy({ transaction: t });
   });
 

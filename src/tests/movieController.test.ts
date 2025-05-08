@@ -16,8 +16,6 @@ import {
 import { MovieActorPayload } from '../types';
 
 describe('Movie Controller', () => {
-  const email = `test${getRandomCharacters(10)}@example.com`;
-  const password = 'test@12345';
   let cookie: string;
   const login = async (email: string, password: string) => {
     const loginResponse = await server.post('/api/v1/user/login').send({ email, password });
@@ -25,30 +23,6 @@ describe('Movie Controller', () => {
   };
 
   const server = supertest(app);
-
-  beforeAll(async () => {
-    await server.post('/api/v1/user/register').send({
-      email,
-      password,
-    });
-
-    let response = await server.post('/api/v1/user/login').send({
-      email,
-      password,
-    });
-
-    cookie = response.get('Set-Cookie')?.at(0) || '';
-
-    response = await server.patch('/api/v1/user/me').set('Cookie', cookie).send({
-      storeManagerId: 2,
-    });
-
-    cookie = response.get('Set-Cookie')?.at(0) || '';
-  });
-
-  afterAll(async () => {
-    await execQuery(`DELETE FROM public.user`);
-  });
 
   const getMoviePayload = async () => {
     const [highestTmdbIdQueryResult] = await execQuery(`

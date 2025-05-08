@@ -9,7 +9,17 @@ const router = Router();
 router.get('/', validateAuthToken, routeFnWrapper(getCustomers));
 router.post('/', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(createCustomer));
 router.get('/:id', validateAuthToken, routeFnWrapper(getCustomerById));
-router.put('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(updateCustomer));
-router.delete('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(deleteCustomer));
+router.put(
+  '/:id',
+  validateAuthToken,
+  validateUserRole(USER_ROLES.CUSTOMER, USER_ROLES.STORE_MANAGER),
+  routeFnWrapper(updateCustomer)
+);
+router.delete(
+  '/:id',
+  validateAuthToken,
+  validateUserRole(USER_ROLES.CUSTOMER, USER_ROLES.STORE_MANAGER),
+  routeFnWrapper(deleteCustomer)
+);
 
 export default router;
