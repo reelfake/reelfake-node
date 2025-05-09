@@ -9,3 +9,4 @@ export { default as storeRoutes } from './storeRoutes';
 export { default as userRoutes } from './userRoutes';
 export { default as staffRoutes } from './staffRoutes';
 export { default as customerRoutes } from './customerRoutes';
+export { default as authRoutes } from './authRoutes';

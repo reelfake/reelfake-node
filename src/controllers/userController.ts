@@ -1,9 +1,10 @@
+import { Op } from 'sequelize';
 import type { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { UserModel } from '../models';
 import { AppError, generateAuthToken } from '../utils';
+import { ERROR_MESSAGES } from '../constants';
 import { CustomRequest } from '../types';
-import { Op } from 'sequelize';
 
 async function findUser(email: string) {
   const user = await UserModel.findOne({
@@ -16,22 +17,28 @@ async function findUser(email: string) {
 }
 
 export const getUser = async (req: CustomRequest, res: Response) => {
-  const userFromToken = req.user;
+  const { user } = req;
 
-  if (!userFromToken) {
-    throw new AppError('Invalid token', 401);
+  if (!user) {
+    throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
   }
 
-  const { email } = userFromToken;
+  const { email } = user;
 
-  const existingUser = await UserModel.findOne({
+  const userInstance = await UserModel.findOne({
     where: {
       email,
     },
     attributes: ['email', 'customerId', 'staffId', 'storeManagerId'],
   });
 
-  res.status(200).json(existingUser);
+  if (!userInstance) {
+    throw new AppError(ERROR_MESSAGES.USER_NOT_FOUND, 404);
+  }
+
+  const userData = userInstance.toJSON();
+
+  res.status(200).json(userData);
 };
 
 export const updateUser = async (req: CustomRequest, res: Response) => {

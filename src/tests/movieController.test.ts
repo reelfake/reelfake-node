@@ -18,7 +18,7 @@ import { MovieActorPayload } from '../types';
 describe('Movie Controller', () => {
   let cookie: string;
   const login = async (email: string, password: string) => {
-    const loginResponse = await server.post('/api/v1/user/login').send({ email, password });
+    const loginResponse = await server.post('/api/v1/auth/login').send({ email, password });
     cookie = loginResponse.get('Set-Cookie')?.at(0) || '';
   };
 
@@ -758,6 +758,7 @@ describe('Movie Controller', () => {
         .set('Cookie', cookie)
         .set('Content-Type', 'application/json')
         .set('Accept', 'application/json');
+
       const newMovieId = response.body.id;
       const [actualMovieData] = await execQuery(`
         SELECT m.id, m.tmdb_id AS "tmdbId", m.imdb_id AS "imdbId", m.title, m.original_title AS "originalTitle",
@@ -774,6 +775,7 @@ describe('Movie Controller', () => {
         m.release_Date, m.movie_status, m.popularity, m.budget, m.revenue, m.rating_average, m.rating_count,
         m.poster_url, m.rental_rate;  
       `);
+
       expect(response.statusCode).toBe(201);
       expect(response.body).toStrictEqual(actualMovieData);
     });

@@ -55,7 +55,7 @@ describe('Store Controller', () => {
     `;
   const server = supertest(app);
   const login = async (email: string, password: string) => {
-    const loginResponse = await server.post('/api/v1/user/login').send({ email, password });
+    const loginResponse = await server.post('/api/v1/auth/login').send({ email, password });
     cookie = loginResponse.get('Set-Cookie')?.at(0) || '';
   };
 

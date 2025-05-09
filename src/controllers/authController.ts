@@ -1,8 +1,8 @@
 import type { Request, Response } from 'express';
-import { literal, col, Op } from 'sequelize';
+import { literal, Op } from 'sequelize';
 import bcrypt from 'bcryptjs';
 import { CustomerModel, StaffModel, StoreModel, UserModel } from '../models';
-import { USER_ROLES } from '../constants';
+import { ERROR_MESSAGES, USER_ROLES } from '../constants';
 import { AppError, generateAuthToken } from '../utils';
 
 async function findUser(email: string) {
@@ -89,7 +89,7 @@ export const login = async (req: Request, res: Response) => {
   const user = await findUser(email);
 
   if (!user) {
-    throw new AppError('User not registered', 404);
+    throw new AppError(ERROR_MESSAGES.INVALID_LOGIN_DETAIL, 401);
   }
 
   const isPasswordMatch = await bcrypt.compare(password, user.password);
@@ -106,5 +106,5 @@ export const login = async (req: Request, res: Response) => {
 };
 
 export const logout = (req: Request, res: Response) => {
-  res.clearCookie('auth_token').json({ message: 'Logged out successfully' });
+  res.clearCookie('auth_token').status(200).json({ message: 'Logged out successfully' });
 };

@@ -3,8 +3,6 @@ import bcrypt from 'bcryptjs';
 import app from '../app';
 import { cleanUserTable, execQuery, getRandomCharacters } from './testUtil';
 
-const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
-
 describe('User Controller', () => {
   const email = `test${getRandomCharacters(10)}@example.com`;
   const password = 'test@12345';
@@ -30,12 +28,11 @@ describe('User Controller', () => {
         })
         .set('Content-Type', 'application/json')
         .set('Accept', 'application/json');
-
       expect(response.statusCode).toBe(201);
       expect(response.body.message).toBe('User is registered successfully');
 
       const result = await execQuery(
-        `SELECT user_email as "userEmail", user_password as "userPassword" FROM public.user WHERE user_email = '${email}'`
+        `SELECT email as "userEmail", user_password as "userPassword" FROM public.user WHERE email = '${email}'`
       );
       expect(result.length).toBe(1);
       expect(result[0].userEmail).toBe(email);
@@ -80,9 +77,9 @@ describe('User Controller', () => {
         .set('Accept', 'application/json');
     });
 
-    it('POST /user/login should log in the user send the token in cookie', async () => {
+    it('POST /auth/login should log in the user send the token in cookie', async () => {
       const response = await server
-        .post('/api/v1/user/login')
+        .post('/api/v1/auth/login')
         .send({
           email: email,
           password: password,
@@ -99,9 +96,9 @@ describe('User Controller', () => {
       expect(cookie).toMatch(/^auth_token=([a-zA-Z0-9._-]*); Path=\/; HttpOnly; Secure; SameSite=Strict$/);
     });
 
-    it('POST /user/login should return 401 when user try to login with invalid email', async () => {
+    it('POST /auth/login should return 401 when user try to login with invalid email', async () => {
       const response = await server
-        .post('/api/v1/user/login')
+        .post('/api/v1/auth/login')
         .send({
           email: 'doesnotexist@example.com',
           password: password,
@@ -109,12 +106,12 @@ describe('User Controller', () => {
         .set('Content-Type', 'application/json')
         .set('Accept', 'application/json');
       expect(response.status).toBe(401);
-      expect(response.body.message).toStrictEqual('Invalid credentials');
+      expect(response.body.message).toStrictEqual('Invalid email or password');
     });
 
-    it('POST /user/login should return 401 when user try to login with invalid password', async () => {
+    it('POST /auth/login should return 401 when user try to login with invalid password', async () => {
       const response = await server
-        .post('/api/v1/user/login')
+        .post('/api/v1/auth/login')
         .send({
           email: email,
           password: 'blah@12345',
@@ -125,9 +122,9 @@ describe('User Controller', () => {
       expect(response.body.message).toStrictEqual('Invalid credentials');
     });
 
-    it('GET /user/logout should log out the user by using the cookie in the request', async () => {
+    it('GET /auth/logout should log out the user by using the cookie in the request', async () => {
       let response = await server
-        .post('/api/v1/user/login')
+        .post('/api/v1/auth/login')
         .send({
           email: email,
           password: password,
@@ -137,8 +134,17 @@ describe('User Controller', () => {
 
       const cookie = response.get('Set-Cookie')?.at(0);
 
-      response = await server.get('/api/v1/user/logout').set('Cookie', cookie || '');
+      response = await server.get('/api/v1/auth/logout').set('Cookie', cookie || '');
       expect(response.body.message).toStrictEqual('Logged out successfully');
+    });
+
+    it('GET /auth/logout should return 401 is user has not logged in', async () => {
+      const response = await server.get('/api/v1/auth/logout');
+      expect(response.status).toEqual(401);
+      expect(response.body).toEqual({
+        status: 'error',
+        message: 'Invalid or expired token',
+      });
     });
   });
 
@@ -155,7 +161,7 @@ describe('User Controller', () => {
     });
 
     const login = async (email: string, password: string) => {
-      const response = await server.post('/api/v1/user/login').send({
+      const response = await server.post('/api/v1/auth/login').send({
         email,
         password,
       });
@@ -168,8 +174,7 @@ describe('User Controller', () => {
 
       const getUserResponseBefore = await server.get('/api/v1/user/me').set('Cookie', cookie);
       expect(getUserResponseBefore.body).toStrictEqual({
-        userUUID: expect.stringMatching(uuidRegex),
-        userEmail: email,
+        email: email,
         customerId: null,
         staffId: null,
         storeManagerId: null,
@@ -185,8 +190,7 @@ describe('User Controller', () => {
 
       const getUserResponseAfter = await server.get('/api/v1/user/me').set('Cookie', cookie);
       expect(getUserResponseAfter.body).toStrictEqual({
-        userUUID: expect.stringMatching(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/),
-        userEmail: email,
+        email: email,
         customerId: payload.customerId || null,
         staffId: payload.staffId || null,
         storeManagerId: payload.storeManagerId || null,
