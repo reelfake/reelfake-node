@@ -1,10 +1,39 @@
-import { Op } from 'sequelize';
+import { literal, Op, Includeable, col, fn } from 'sequelize';
 import type { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import { UserModel } from '../models';
+import { AddressModel, CityModel, CountryModel, CustomerModel, StaffModel, StoreModel, UserModel } from '../models';
 import { AppError, generateAuthToken } from '../utils';
-import { ERROR_MESSAGES } from '../constants';
+import { ERROR_MESSAGES, USER_ROLES } from '../constants';
 import { CustomRequest } from '../types';
+
+const getAddressAssociation = (): Includeable => {
+  return {
+    model: AddressModel,
+    as: 'address',
+    attributes: [
+      'id',
+      'addressLine',
+      [literal(`"address->city"."city_name"`), 'cityName'],
+      [literal(`"address->city"."state_name"`), 'stateName'],
+      [literal(`"address->city->country"."country_name"`), 'country'],
+      [literal(`"address"."postal_code"`), 'postalCode'],
+    ],
+    include: [
+      {
+        model: CityModel,
+        as: 'city',
+        attributes: [],
+        include: [
+          {
+            model: CountryModel,
+            as: 'country',
+            attributes: [],
+          },
+        ],
+      },
+    ],
+  };
+};
 
 async function findUser(email: string) {
   const user = await UserModel.findOne({
@@ -23,22 +52,130 @@ export const getUser = async (req: CustomRequest, res: Response) => {
     throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
   }
 
-  const { email } = user;
+  const { email, role } = user;
 
-  const userInstance = await UserModel.findOne({
+  if (role === USER_ROLES.USER) {
+    const userInstance = await UserModel.findOne({
+      where: {
+        email,
+      },
+      attributes: ['id', 'email', 'customerId', 'staffId', 'storeManagerId'],
+    });
+
+    if (!userInstance) {
+      throw new AppError(ERROR_MESSAGES.USER_NOT_FOUND, 404);
+    }
+
+    const userData = userInstance.toJSON();
+
+    res.status(200).json(userData);
+    return;
+  }
+
+  if (role === USER_ROLES.CUSTOMER) {
+    const customerInstance = await CustomerModel.findOne({
+      attributes: ['id', 'firstName', 'lastName', 'email', 'active', 'phoneNumber', 'avatar', 'registeredOn'],
+      subQuery: false,
+      include: [
+        getAddressAssociation(),
+        {
+          model: StoreModel,
+          as: 'preferredStore',
+          attributes: [
+            'id',
+            'phoneNumber',
+            [
+              fn(
+                'json_build_object',
+                'id',
+                literal(`"preferredStore->staff"."id"`),
+                'firstName',
+                literal(`"preferredStore->staff"."first_name"`),
+                'lastName',
+                literal(`"preferredStore->staff"."last_name"`),
+                'email',
+                literal(`"preferredStore->staff"."email"`),
+                'active',
+                literal(`"preferredStore->staff"."active"`),
+                'phoneNumber',
+                literal(`"preferredStore->staff"."phone_number"`),
+                'avatar',
+                literal(`"preferredStore->staff"."avatar"`)
+                // 'address',
+                // fn(
+                //   'json_build_object',
+                //   'id',
+                //   literal(`"preferredStore->staff->address"."id"`),
+                //   'addressLine',
+                //   literal(`"preferredStore->staff->address"."address_line"`),
+                //   'cityName',
+                //   literal(`"preferredStore->staff->address->city"."city_name"`),
+                //   'stateName',
+                //   literal(`"preferredStore->staff->address->city"."state_name"`),
+                //   'country',
+                //   literal(`"preferredStore->staff->address->city->country"."country_name"`),
+                //   'postalCode',
+                //   literal(`"preferredStore->staff->address"."postal_code"`)
+                // )
+              ),
+              'storeManager',
+            ],
+          ],
+          subQuery: false,
+          required: true,
+          include: [
+            getAddressAssociation(),
+            {
+              model: StaffModel,
+              as: 'staff',
+              attributes: [],
+              include: [getAddressAssociation()],
+              where: {
+                id: {
+                  [Op.eq]: literal(`"preferredStore"."store_manager_id"`),
+                },
+              },
+            },
+          ],
+        },
+      ],
+      where: {
+        email,
+      },
+    });
+
+    if (!customerInstance) {
+      throw new AppError(ERROR_MESSAGES.USER_NOT_FOUND, 404);
+    }
+
+    const custData = customerInstance.toJSON();
+
+    res.status(200).json(custData);
+    return;
+  }
+
+  const staffInstance = await StaffModel.findOne({
     where: {
       email,
     },
-    attributes: ['email', 'customerId', 'staffId', 'storeManagerId'],
+    attributes: ['id', 'firstName', 'lastName', 'email', 'active', 'phoneNumber', 'avatar'],
+    include: [
+      getAddressAssociation(),
+      {
+        model: StoreModel,
+        as: 'store',
+        include: [getAddressAssociation()],
+      },
+    ],
   });
 
-  if (!userInstance) {
+  if (!staffInstance) {
     throw new AppError(ERROR_MESSAGES.USER_NOT_FOUND, 404);
   }
 
-  const userData = userInstance.toJSON();
+  const staffData = staffInstance.toJSON();
 
-  res.status(200).json(userData);
+  res.status(200).json(staffData);
 };
 
 export const updateUser = async (req: CustomRequest, res: Response) => {
@@ -78,6 +215,17 @@ export const updateUser = async (req: CustomRequest, res: Response) => {
   }
 
   if (storeManagerId) {
+    // Verify the store manager being assigned to user is actually a store manager
+    const storeInstance = await StoreModel.findOne({
+      where: {
+        storeManagerId,
+      },
+    });
+
+    if (!storeInstance) {
+      throw new AppError(ERROR_MESSAGES.STAFF_NOT_STORE_MANAGER, 400);
+    }
+
     conditions.push({ storeManagerId });
     changes.storeManagerId = storeManagerId;
   }

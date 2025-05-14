@@ -11,6 +11,7 @@ import InventoryModel from './inventoryModel';
 import CustomerModel from './customerModel';
 import StaffModel from './staffModel';
 import UserModel from './userModel';
+import RentalModel from './rentalModel';
 
 export {
   GenreModel,
@@ -26,6 +27,7 @@ export {
   CustomerModel,
   UserModel,
   StaffModel,
+  RentalModel,
 };
 
 MovieModel.belongsToMany(ActorModel, {
@@ -62,3 +64,13 @@ StoreModel.hasMany(StaffModel, { as: 'staff', foreignKey: 'storeId' });
 UserModel.belongsTo(CustomerModel, { as: 'customer', foreignKey: 'customerId' });
 UserModel.belongsTo(StaffModel, { as: 'staff', foreignKey: 'staffId' });
 UserModel.belongsTo(StaffModel, { as: 'storeManager', foreignKey: 'storeManagerId' });
+
+// Rental <-> Customer relationship
+CustomerModel.hasMany(RentalModel, { as: 'customerRentals', foreignKey: 'customerId' });
+
+// Rental <-> Staff relationship
+StaffModel.hasMany(RentalModel, { as: 'rentalsByStaff', foreignKey: 'staffId' });
+
+// Rental <-> Inventory relationship
+InventoryModel.hasMany(RentalModel, { as: 'inventory', foreignKey: 'inventoryId' });
+RentalModel.belongsTo(InventoryModel, { as: 'inventory', foreignKey: 'inventoryId' });

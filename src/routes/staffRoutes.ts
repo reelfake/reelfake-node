@@ -1,5 +1,13 @@
 import { Router } from 'express';
-import { getStaff, getStaffById, createStaff, getStoreManagers, updateStaff, deleteStaff } from '../controllers';
+import {
+  getStaff,
+  getStaffById,
+  createStaff,
+  getStoreManagers,
+  updateStaff,
+  deleteStaff,
+  setStaffPassword,
+} from '../controllers';
 import { validateAuthToken, validateUserRole } from '../middlewares';
 import { routeFnWrapper } from '../utils';
 import { USER_ROLES } from '../constants';
@@ -20,6 +28,7 @@ router.get(
   routeFnWrapper(getStaffById)
 );
 router.put('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(updateStaff));
+router.put('/:id/set_password', validateAuthToken, validateUserRole(USER_ROLES.USER), routeFnWrapper(setStaffPassword));
 router.delete('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(deleteStaff));
 router.get(
   '/managers',

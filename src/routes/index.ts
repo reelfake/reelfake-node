@@ -10,3 +10,4 @@ export { default as userRoutes } from './userRoutes';
 export { default as staffRoutes } from './staffRoutes';
 export { default as customerRoutes } from './customerRoutes';
 export { default as authRoutes } from './authRoutes';
+export { default as rentalRoutes } from './rentalRoutes';

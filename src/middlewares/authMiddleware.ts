@@ -4,7 +4,7 @@ import { AppError } from '../utils';
 import { ERROR_MESSAGES, USER_ROLES } from '../constants';
 import { CustomRequest } from '../types';
 
-export default async function (req: Request, res: Response, next: NextFunction) {
+export default function (req: Request, res: Response, next: NextFunction) {
   const token = req.cookies.auth_token;
   if (!token) {
     return next(new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401));

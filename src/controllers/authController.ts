@@ -92,6 +92,10 @@ export const login = async (req: Request, res: Response) => {
     throw new AppError(ERROR_MESSAGES.INVALID_LOGIN_DETAIL, 401);
   }
 
+  if (!user.password) {
+    throw new AppError(ERROR_MESSAGES.INVALID_LOGIN_DETAIL, 401);
+  }
+
   const isPasswordMatch = await bcrypt.compare(password, user.password);
   if (!isPasswordMatch) {
     throw new AppError('Invalid credentials', 401);

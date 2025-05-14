@@ -28,10 +28,6 @@ User.init(
       field: 'store_manager_id',
       allowNull: false,
     },
-    userUUID: {
-      type: DataTypes.UUID,
-      field: 'user_uuid',
-    },
     email: {
       type: DataTypes.STRING(150),
       field: 'email',

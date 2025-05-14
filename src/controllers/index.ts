@@ -33,6 +33,22 @@ export {
 } from './storeController';
 export { login, logout } from './authController';
 export { registerUser, getUser, updateUser } from './userController';
-export { getStaff, getStaffById, getStoreManagers, updateStaff, createStaff, deleteStaff } from './staffController';
+export {
+  getStaff,
+  getStaffById,
+  getStoreManagers,
+  updateStaff,
+  createStaff,
+  deleteStaff,
+  setStaffPassword,
+} from './staffController';
 export { getAddresses, getAddressesInCity, getAddressesInState } from './addressController';
-export { getCustomers, getCustomerById, createCustomer, deleteCustomer, updateCustomer } from './customerController';
+export {
+  getCustomers,
+  getCustomerById,
+  createCustomer,
+  deleteCustomer,
+  updateCustomer,
+  setCustomerPassword,
+} from './customerController';
+export { getRentals } from './rentalController';

@@ -1,6 +1,7 @@
 import type { Response } from 'express';
 import { literal, fn, Op } from 'sequelize';
-import { CustomerModel, StoreModel, AddressModel, StaffModel, CityModel, CountryModel } from '../models';
+import bcrypt from 'bcryptjs';
+import { CustomerModel, StoreModel, AddressModel, StaffModel, CityModel, CountryModel, UserModel } from '../models';
 import { AppError } from '../utils';
 import sequelize from '../sequelize.config';
 import { ERROR_MESSAGES, ITEMS_PER_PAGE_FOR_PAGINATION, USER_ROLES } from '../constants';
@@ -434,6 +435,63 @@ export const updateCustomer = async (req: CustomRequestWithBody<Partial<Customer
 
     await existingCustInstance.update({ ...newCustomerData });
     await existingCustInstance.save({ transaction: t });
+  });
+
+  res.status(204).send();
+};
+
+export const setCustomerPassword = async (req: CustomRequestWithBody<{ password: string }>, res: Response) => {
+  const { user } = req;
+
+  if (!user) {
+    throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
+  }
+
+  const { password: newPassword } = req.body;
+
+  if (!newPassword) {
+    throw new AppError(ERROR_MESSAGES.REQUEST_BODY_MISSING, 400);
+  }
+
+  const userEmail = user.email;
+
+  const userInstance = await UserModel.findOne({
+    attributes: ['id', 'customerId'],
+    where: {
+      email: userEmail,
+    },
+  });
+
+  if (!userInstance) {
+    throw new AppError(ERROR_MESSAGES.USER_NOT_FOUND, 404);
+  }
+
+  const { id: idText } = req.params;
+  const id = Number(idText);
+  if (isNaN(id) || id <= 0) {
+    throw new AppError('Invalid customer id', 400);
+  }
+
+  const customerId = Number(userInstance.getDataValue('customerId'));
+
+  if (id !== customerId) {
+    throw new AppError(ERROR_MESSAGES.CUSTOMER_NOT_ASSIGNED, 400);
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+  await sequelize.transaction(async (t) => {
+    const customerInstance = await CustomerModel.findByPk(id, { transaction: t });
+
+    if (!customerInstance) {
+      throw new AppError(ERROR_MESSAGES.RESOURCES_NOT_FOUND, 404);
+    }
+
+    await customerInstance.update({
+      userPassword: hashedPassword,
+    });
+    await customerInstance.save({ transaction: t });
   });
 
   res.status(204).send();

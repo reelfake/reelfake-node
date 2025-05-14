@@ -7,7 +7,7 @@ import { USER_ROLES } from '../constants';
 const router = Router();
 
 router.post('/register', routeFnWrapper(registerUser));
-router.get('/me', validateAuthToken, validateUserRole(USER_ROLES.USER), routeFnWrapper(getUser));
+router.get('/me', validateAuthToken, routeFnWrapper(getUser));
 router.patch('/me', validateAuthToken, validateUserRole(USER_ROLES.USER), routeFnWrapper(updateUser));
 
 export default router;

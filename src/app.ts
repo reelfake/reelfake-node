@@ -18,6 +18,7 @@ import {
   staffRoutes,
   customerRoutes,
   authRoutes,
+  rentalRoutes,
 } from './routes';
 
 // app.use(cors());
@@ -87,6 +88,9 @@ app.use('/api/v1/staff', staffRoutes);
 
 // Customers
 app.use('/api/v1/customers', customerRoutes);
+
+// Rentals
+app.use('/api/v1/rentals', rentalRoutes);
 
 app.use('*', (req: Request, res: Response) => {
   res.status(404).json({
