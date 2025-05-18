@@ -88,13 +88,13 @@ const getAddressAssociation = (): Includeable => ({
   ],
 });
 
-async function getUserIdIfExist(email: string, role: USER_ROLES) {
+async function getUserAndStoreIdIdIfExist(email: string, role: USER_ROLES) {
   let modelInstance: Model | null = null;
 
   switch (role) {
     case USER_ROLES.CUSTOMER:
       modelInstance = await CustomerModel.findOne({
-        attributes: ['id', 'active'],
+        attributes: ['id', 'active', ['preferredStoreId', 'storeId']],
         where: {
           email,
         },
@@ -103,7 +103,7 @@ async function getUserIdIfExist(email: string, role: USER_ROLES) {
     case USER_ROLES.STAFF:
     case USER_ROLES.STORE_MANAGER:
       modelInstance = await StaffModel.findOne({
-        attributes: ['id', 'active'],
+        attributes: ['id', 'active', 'storeId'],
         where: {
           email,
         },
@@ -121,7 +121,10 @@ async function getUserIdIfExist(email: string, role: USER_ROLES) {
     throw new AppError(ERROR_MESSAGES.USER_NOT_ACTIVE, 403);
   }
 
-  return Number(modelInstance.getDataValue('id'));
+  const userId = Number(modelInstance.getDataValue('id'));
+  const storeId = Number(modelInstance.getDataValue('storeId'));
+
+  return { userId, storeId };
 }
 
 export const getRentals = async (req: CustomRequest, res: Response) => {
@@ -131,7 +134,7 @@ export const getRentals = async (req: CustomRequest, res: Response) => {
     throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
   }
 
-  const userId = await getUserIdIfExist(user.email, user.role);
+  const { userId } = await getUserAndStoreIdIdIfExist(user.email, user.role);
   const role = user.role;
 
   const condition: WhereOptions = {};
@@ -215,7 +218,7 @@ export const getRentalById = async (req: CustomRequest, res: Response) => {
   }
 
   const role = user.role;
-  const userId = await getUserIdIfExist(user.email, user.role);
+  const { userId } = await getUserAndStoreIdIdIfExist(user.email, user.role);
 
   const includes: Includeable[] = [
     {
@@ -341,12 +344,10 @@ export const getRentalsForStore = async (req: CustomRequest, res: Response) => {
     throw new AppError('Invalid page number', 400);
   }
 
-  const userId = await getUserIdIfExist(email, role);
-  const storeInstance = await StaffModel.findByPk(userId, { attributes: ['storeId'] });
-  if (!storeInstance) {
+  const { storeId } = await getUserAndStoreIdIdIfExist(email, role);
+  if (!storeId) {
     throw new AppError('Store not found for the user', 404);
   }
-  const storeId = Number(storeInstance?.getDataValue('storeId'));
 
   const limitPerPage = ITEMS_PER_PAGE_FOR_PAGINATION;
   const pageOffset = (pageNumber - 1) * limitPerPage;
