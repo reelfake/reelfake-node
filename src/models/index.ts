@@ -66,10 +66,12 @@ UserModel.belongsTo(StaffModel, { as: 'staff', foreignKey: 'staffId' });
 UserModel.belongsTo(StaffModel, { as: 'storeManager', foreignKey: 'storeManagerId' });
 
 // Rental <-> Customer relationship
-CustomerModel.hasMany(RentalModel, { as: 'customerRentals', foreignKey: 'customerId' });
+CustomerModel.hasMany(RentalModel, { as: 'customer', foreignKey: 'customerId' });
+RentalModel.belongsTo(CustomerModel, { as: 'customer', foreignKey: 'customerId' });
 
 // Rental <-> Staff relationship
-StaffModel.hasMany(RentalModel, { as: 'rentalsByStaff', foreignKey: 'staffId' });
+StaffModel.hasMany(RentalModel, { as: 'processedBy', foreignKey: 'staffId' });
+RentalModel.belongsTo(StaffModel, { as: 'processedBy', foreignKey: 'staffId' });
 
 // Rental <-> Inventory relationship
 InventoryModel.hasMany(RentalModel, { as: 'inventory', foreignKey: 'inventoryId' });

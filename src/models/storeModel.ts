@@ -29,27 +29,7 @@ class Store extends BaseModel {
         [literal(`"address->city->country"."country_name"`), 'country'],
         [col(`"address"."postal_code"`), 'postalCode'],
       ],
-      include: [
-        {
-          model: AddressModel,
-          as: 'address',
-          attributes: [],
-          include: [
-            {
-              model: CityModel,
-              as: 'city',
-              attributes: [],
-              include: [
-                {
-                  model: CountryModel,
-                  as: 'country',
-                  attributes: [],
-                },
-              ],
-            },
-          ],
-        },
-      ],
+      include: [addressUtils.getAddressAssociations()],
     });
 
     if (!storeAddressInstance) {
@@ -63,16 +43,18 @@ class Store extends BaseModel {
     const { addressLine, cityName, stateName, country, postalCode } = address;
 
     const storeCountInstance = await Store.count({
-      include: addressUtils.getAddressAssociations(
-        {
-          addressLine,
-          postalCode,
-        },
-        { cityName, stateName },
-        {
-          countryName: country,
-        }
-      ),
+      include: [
+        addressUtils.getAddressAssociations(
+          {
+            addressLine,
+            postalCode,
+          },
+          { cityName, stateName },
+          {
+            countryName: country,
+          }
+        ),
+      ],
       where: exemptedStoreId
         ? {
             id: {

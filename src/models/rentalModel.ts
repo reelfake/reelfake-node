@@ -51,7 +51,7 @@ Rental.init(
       type: DataTypes.INTEGER,
       field: 'rental_duration',
     },
-    delayed_by_days: {
+    delayedByDays: {
       type: DataTypes.INTEGER,
       field: 'delayed_by_days',
     },

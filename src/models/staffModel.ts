@@ -18,7 +18,7 @@ class Staff extends BaseModel {
         [literal(`"address->city->country"."country_name"`), 'country'],
         [col(`"address"."postal_code"`), 'postalCode'],
       ],
-      include: addressUtils.getAddressAssociations(),
+      include: [addressUtils.getAddressAssociations()],
       where: {
         id: staffId,
       },
@@ -35,11 +35,13 @@ class Staff extends BaseModel {
     const { addressLine, cityName, stateName, country, postalCode } = address;
 
     const staffCountInstance = await Staff.count({
-      include: addressUtils.getAddressAssociations(
-        { addressLine, postalCode },
-        { cityName, stateName },
-        { countryName: country }
-      ),
+      include: [
+        addressUtils.getAddressAssociations(
+          { addressLine, postalCode },
+          { cityName, stateName },
+          { countryName: country }
+        ),
+      ],
       where: exemptedId ? { id: { [Op.not]: exemptedId } } : undefined,
     });
 
@@ -141,6 +143,18 @@ class Staff extends BaseModel {
 
     const storeData = storeInstance?.toJSON();
     return storeData;
+  }
+
+  public static async getStoreId(staffId: number) {
+    const staff = await Staff.findByPk(staffId, {
+      attributes: ['storeId'],
+    });
+
+    if (!staff) {
+      return null;
+    }
+
+    return Number(staff.getDataValue('id'));
   }
 }
 

@@ -51,4 +51,4 @@ export {
   updateCustomer,
   setCustomerPassword,
 } from './customerController';
-export { getRentals } from './rentalController';
+export { getRentals, getRentalById, getRentalsForStore } from './rentalController';
