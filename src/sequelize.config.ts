@@ -1,6 +1,8 @@
 import dotenv from 'dotenv';
-const envName = process.env.NODE_ENV || 'dev';
-dotenv.config({ path: `.env.${envName}` });
+
+const envName = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development' ? 'dev' : 'test';
+
+dotenv.config({ path: `${process.cwd()}/.env.${envName}` });
 
 import { Sequelize } from 'sequelize';
 const db = process.env.DB_NAME;

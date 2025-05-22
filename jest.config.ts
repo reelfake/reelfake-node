@@ -4,7 +4,7 @@ const config: Config.InitialOptions = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   verbose: true,
-  collectCoverage: true,
+  collectCoverage: false,
   collectCoverageFrom: [
     '<rootDir>/src/**/*.ts',
     '!<rootDir>/src/server.ts',
@@ -15,7 +15,7 @@ const config: Config.InitialOptions = {
     '!<rootDir>/src/tests/**',
     '!<rootDir>/src/sequelize.config.ts',
   ],
-  coverageDirectory: '<rootDir>/testReport',
+  // coverageDirectory: '<rootDir>/testReport',
   testMatch: ['**/tests/**/*.test.ts', '!<rootDir>/src/server.ts'],
   // globalSetup: '<rootDir>/src/jest.setup.ts',
   // globalTeardown: '<rootDir>/src/jest.teardown.ts'
