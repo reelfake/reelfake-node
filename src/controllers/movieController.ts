@@ -176,10 +176,6 @@ async function createActors(t: Transaction, actors: MovieActorPayload[], movieId
 }
 
 export const getMovies = async (req: Request, res: Response) => {
-  if (!MovieModel.sequelize) {
-    throw new AppError('Server encoutered unhandled exception', 500);
-  }
-
   const { pageNumber: pageNumberText, genres: genresText } = req.query;
   const pageNumber = pageNumberText ? Number(pageNumberText) : 1;
 
