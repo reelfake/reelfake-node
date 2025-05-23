@@ -173,7 +173,9 @@ describe('User Controller', () => {
       const cookie = await login(email, password);
 
       const getUserResponseBefore = await server.get('/api/v1/user/me').set('Cookie', cookie);
+
       expect(getUserResponseBefore.body).toStrictEqual({
+        id: expect.any(Number),
         email: email,
         customerId: null,
         staffId: null,
@@ -186,10 +188,12 @@ describe('User Controller', () => {
         .send({
           ...payload,
         });
+
       expect(patchResponse.status).toBe(204);
 
       const getUserResponseAfter = await server.get('/api/v1/user/me').set('Cookie', cookie);
       expect(getUserResponseAfter.body).toStrictEqual({
+        id: expect.any(Number),
         email: email,
         customerId: payload.customerId || null,
         staffId: payload.staffId || null,
@@ -198,23 +202,32 @@ describe('User Controller', () => {
       });
     };
 
-    it('PATCH /user should update the customer id for the user', async () => {
+    it('should update the customer id for the user', async () => {
       await verifyPatch({ customerId: 100 });
     });
 
-    it('PATCH /user should update the staff id for the user', async () => {
+    it('should update the staff id for the user', async () => {
       await verifyPatch({ staffId: 100 });
     });
 
-    it('PATCH /user should update the manager staff id for the user', async () => {
-      await verifyPatch({ storeManagerId: 100 });
+    it('should update the manager staff id for the user', async () => {
+      const [{ storeManagerId }] = await execQuery(
+        `SELECT staff.id as "storeManagerId" FROM store LEFT OUTER JOIN staff ON store.store_manager_id = staff.id 
+        WHERE staff.active = true LIMIT 1`
+      );
+
+      await verifyPatch({ storeManagerId: Number(storeManagerId) });
     });
 
-    it('PATCH /user should update customer, staff and manager staff id', async () => {
-      await verifyPatch({ customerId: 98, staffId: 99, storeManagerId: 100 });
+    it('should update customer, staff and manager staff id', async () => {
+      const [{ storeManagerId }] = await execQuery(
+        `SELECT staff.id as "storeManagerId" FROM store LEFT OUTER JOIN staff ON store.store_manager_id = staff.id 
+        WHERE staff.active = true LIMIT 1`
+      );
+      await verifyPatch({ customerId: 98, staffId: 99, storeManagerId: Number(storeManagerId) });
     });
 
-    it('PATCH /user should not allow the use of customer id which is already assigned to other user', async () => {
+    it('should not allow the use of customer id which is already assigned to other user', async () => {
       const email2 = 'test1@example.com';
       const password2 = 'test1@12345';
       const cookie = await login(email, password);
@@ -237,7 +250,7 @@ describe('User Controller', () => {
       expect(patchResponse.body.message).toStrictEqual('Another user with the same config already exist');
     });
 
-    it('PATCH /user should return 400 when the request body is empty', async () => {
+    it('should return 400 when the request body is empty', async () => {
       const cookie = await login(email, password);
 
       const response = await server.patch('/api/v1/user/me').set('Cookie', cookie).send({
