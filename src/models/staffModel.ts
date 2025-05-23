@@ -18,7 +18,7 @@ class Staff extends BaseModel {
         [literal(`"address->city->country"."country_name"`), 'country'],
         [col(`"address"."postal_code"`), 'postalCode'],
       ],
-      include: [addressUtils.getAddressAssociations()],
+      include: [addressUtils.includeAddress()],
       where: {
         id: staffId,
       },
@@ -36,11 +36,11 @@ class Staff extends BaseModel {
 
     const staffCountInstance = await Staff.count({
       include: [
-        addressUtils.getAddressAssociations(
-          { addressLine, postalCode },
-          { cityName, stateName },
-          { countryName: country }
-        ),
+        addressUtils.includeAddress({
+          whereAddress: { addressLine, postalCode },
+          whereCity: { cityName, stateName },
+          whereCountry: { countryName: country },
+        }),
       ],
       where: exemptedId ? { id: { [Op.not]: exemptedId } } : undefined,
     });

@@ -29,7 +29,7 @@ class Store extends BaseModel {
         [literal(`"address->city->country"."country_name"`), 'country'],
         [col(`"address"."postal_code"`), 'postalCode'],
       ],
-      include: [addressUtils.getAddressAssociations()],
+      include: [addressUtils.includeAddress()],
     });
 
     if (!storeAddressInstance) {
@@ -44,16 +44,16 @@ class Store extends BaseModel {
 
     const storeCountInstance = await Store.count({
       include: [
-        addressUtils.getAddressAssociations(
-          {
+        addressUtils.includeAddress({
+          whereAddress: {
             addressLine,
             postalCode,
           },
-          { cityName, stateName },
-          {
+          whereCity: { cityName, stateName },
+          whereCountry: {
             countryName: country,
-          }
-        ),
+          },
+        }),
       ],
       where: exemptedStoreId
         ? {

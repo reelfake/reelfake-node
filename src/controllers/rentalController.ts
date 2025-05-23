@@ -247,7 +247,7 @@ export const getRentalById = async (req: CustomRequest, res: Response) => {
                 },
               },
             },
-            addressUtils.getAddressAssociations(),
+            addressUtils.includeAddress(),
           ],
         },
       ],

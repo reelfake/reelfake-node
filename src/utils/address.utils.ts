@@ -1,15 +1,32 @@
-import { WhereOptions, literal } from 'sequelize';
+import { WhereOptions, literal, Includeable } from 'sequelize';
 import { CityModel, CountryModel, AddressModel } from '../models';
 
-export function getAddressAssociations(
-  whereAddress: WhereOptions | undefined = undefined,
-  whereCity: WhereOptions | undefined = undefined,
-  whereCountry: WhereOptions | undefined = undefined
+export function includeAddress(
+  {
+    whereAddress,
+    whereCity,
+    whereCountry,
+    addressPath,
+  }: {
+    whereAddress?: WhereOptions;
+    whereCity?: WhereOptions;
+    whereCountry?: WhereOptions;
+    addressPath?: string;
+  } = { addressPath: undefined, whereAddress: undefined, whereCity: undefined, whereCountry: undefined }
 ) {
-  const associations = {
+  const associations: Includeable = {
     model: AddressModel,
     as: 'address',
-    attributes: [],
+    attributes: addressPath
+      ? [
+          'id',
+          'addressLine',
+          [literal(`"${addressPath}->city"."city_name"`), 'cityName'],
+          [literal(`"${addressPath}->city"."state_name"`), 'stateName'],
+          [literal(`"${addressPath}->city->country"."country_name"`), 'country'],
+          'postalCode',
+        ]
+      : [],
     where: whereAddress,
     include: [
       {

@@ -12,35 +12,8 @@ import {
   MovieLanguageModel,
 } from '../models';
 import { ERROR_MESSAGES, ITEMS_PER_PAGE_FOR_PAGINATION, movieModelAttributes } from '../constants';
-import { AppError } from '../utils';
+import { AppError, addressUtils } from '../utils';
 import { StorePayload, CustomRequest, CustomRequestWithBody, KeyValuePair, Address } from '../types';
-
-const getStoreAddressAssociation = (): Includeable => ({
-  model: AddressModel,
-  as: 'address',
-  attributes: [
-    'id',
-    'addressLine',
-    [literal(`"address->city"."city_name"`), 'cityName'],
-    [literal(`"address->city"."state_name"`), 'stateName'],
-    [literal(`"address->city->country"."country_name"`), 'country'],
-    'postalCode',
-  ],
-  include: [
-    {
-      model: CityModel,
-      as: 'city',
-      attributes: [],
-      include: [
-        {
-          model: CountryModel,
-          as: 'country',
-          attributes: [],
-        },
-      ],
-    },
-  ],
-});
 
 async function getStoreData(storeId: number) {
   const storeInstance = await StoreModel.findOne({
@@ -50,9 +23,9 @@ async function getStoreData(storeId: number) {
         model: StaffModel,
         as: 'storeManager',
         attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber', 'storeId', 'active', 'avatar'],
-        include: [getStoreAddressAssociation()],
+        include: [addressUtils.includeAddress({ addressPath: 'address' })],
       },
-      getStoreAddressAssociation(),
+      addressUtils.includeAddress({ addressPath: 'address' }),
     ],
     where: {
       id: storeId,
