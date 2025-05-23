@@ -115,7 +115,7 @@ describe('Store Controller', () => {
   };
 
   describe('GET /stores', () => {
-    it('should all the stores', async () => {
+    it('should get all the stores', async () => {
       const response = await server.get('/api/v1/stores');
       const expectedStores = await execQuery(
         `
@@ -124,7 +124,7 @@ describe('Store Controller', () => {
             'addressLine', a.address_line,
             'cityName', c.city_name,
             'stateName', c.state_name,
-            'country', cy.country_name,
+            'countryName', cy.country_name,
             'postalCode', a.postal_code
           ) AS "address"
           FROM store AS s LEFT OUTER JOIN address AS a ON s.address_id = a.id

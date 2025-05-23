@@ -90,7 +90,7 @@ class Store extends BaseModel {
               'addressLine',
               [literal(`"address->city"."city_name"`), 'cityName'],
               [literal(`"address->city"."state_name"`), 'stateName'],
-              [literal(`"address->city->country"."country_name"`), 'country'],
+              [literal(`"address->city->country"."country_name"`), 'countryName'],
               'postalCode',
             ]
           : [],
@@ -159,79 +159,14 @@ class Store extends BaseModel {
     }
   }
 
-  public static async getExpandedData(storeId: number) {
-    const storeInstance = await Store.findOne({
-      attributes: [
-        'id',
-        'phoneNumber',
-        [fn('COUNT', `"staff"."id"`), 'staffCount'],
-        [
-          literal(`(
-            SELECT jsonb_build_object(
-              'id', staff.id,
-              'firstName', first_name,
-              'lastName', last_name,
-              'email', email,
-              'phoneNumber', phone_number,
-              'storeId', store_id,
-              'active', active,
-              'avatar', avatar,
-              'address', jsonb_build_object(
-                'id', address.id,
-                'addressLine', address.address_line,
-                'cityName', city.city_name,
-                'stateName', city.state_name,
-                'country', country.country_name,
-                'postalCode', address.postal_code
-              )
-            ) FROM staff LEFT JOIN address ON staff.address_id = address.id
-              LEFT JOIN city ON address.city_id = city.id
-              LEFT JOIN country ON city.country_id = country.id
-              WHERE staff.id = "Store"."store_manager_id"
-          )`),
-          'storeManager',
-        ],
-      ],
-      include: [
-        {
-          model: StaffModel,
-          as: 'staff',
-          attributes: [],
-        },
-        {
-          model: AddressModel,
-          as: 'address',
-          attributes: [
-            'id',
-            'addressLine',
-            [literal(`"address->city"."city_name"`), 'cityName'],
-            [literal(`"address->city"."state_name"`), 'stateName'],
-            [literal(`"address->city->country"."country_name"`), 'country'],
-            'postalCode',
-          ],
-          include: [
-            {
-              model: CityModel,
-              as: 'city',
-              attributes: [],
-              include: [
-                {
-                  model: CountryModel,
-                  as: 'country',
-                  attributes: [],
-                },
-              ],
-            },
-          ],
-        },
-      ],
+  public static async getStaffCount(storeId: number) {
+    const staffCount = await StaffModel.count({
       where: {
-        id: storeId,
+        storeId,
       },
-      group: ['Store.id', 'address.id', 'address->city.id', 'address->city->country.id'],
     });
 
-    return storeInstance;
+    return staffCount;
   }
 
   public static async isPhoneNumberInUse(phoneNumber: string, exemptedId: number | undefined = undefined) {

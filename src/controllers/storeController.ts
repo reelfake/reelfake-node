@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { literal, col, Op } from 'sequelize';
+import { literal, col, Op, Includeable } from 'sequelize';
 import sequelize from '../sequelize.config';
 import {
   StoreModel,
@@ -14,6 +14,53 @@ import {
 import { ERROR_MESSAGES, ITEMS_PER_PAGE_FOR_PAGINATION, movieModelAttributes } from '../constants';
 import { AppError } from '../utils';
 import { StorePayload, CustomRequest, CustomRequestWithBody, KeyValuePair, Address } from '../types';
+
+const getStoreAddressAssociation = (): Includeable => ({
+  model: AddressModel,
+  as: 'address',
+  attributes: [
+    'id',
+    'addressLine',
+    [literal(`"address->city"."city_name"`), 'cityName'],
+    [literal(`"address->city"."state_name"`), 'stateName'],
+    [literal(`"address->city->country"."country_name"`), 'country'],
+    'postalCode',
+  ],
+  include: [
+    {
+      model: CityModel,
+      as: 'city',
+      attributes: [],
+      include: [
+        {
+          model: CountryModel,
+          as: 'country',
+          attributes: [],
+        },
+      ],
+    },
+  ],
+});
+
+async function getStoreData(storeId: number) {
+  const storeInstance = await StoreModel.findOne({
+    attributes: ['id', 'phoneNumber'],
+    include: [
+      {
+        model: StaffModel,
+        as: 'storeManager',
+        attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber', 'storeId', 'active', 'avatar'],
+        include: [getStoreAddressAssociation()],
+      },
+      getStoreAddressAssociation(),
+    ],
+    where: {
+      id: storeId,
+    },
+  });
+
+  return storeInstance;
+}
 
 export const getStaffInStore = async (req: CustomRequest, res: Response) => {
   const { user } = req;
@@ -59,9 +106,15 @@ export const getStoreById = async (req: Request, res: Response) => {
     throw new AppError('Invalid store id', 400);
   }
 
-  const storeInstance = await StoreModel.getExpandedData(storeId);
+  const storeInstance = await getStoreData(storeId);
 
-  res.status(200).json(storeInstance);
+  if (!storeInstance) {
+    throw new AppError(ERROR_MESSAGES.RESOURCES_NOT_FOUND, 404);
+  }
+
+  const staffCount = await StoreModel.getStaffCount(storeId);
+
+  res.status(200).json({ ...storeInstance.toJSON(), staffCount });
 };
 
 export const getStores = async (req: Request, res: Response) => {
@@ -75,7 +128,7 @@ export const getStores = async (req: Request, res: Response) => {
           [col(`"address_line"`), 'addressLine'],
           [literal(`"address->city"."city_name"`), 'cityName'],
           [literal(`"address->city"."state_name"`), 'stateName'],
-          [literal(`"address->city->country"."country_name"`), 'country'],
+          [literal(`"address->city->country"."country_name"`), 'countryName'],
           [col(`"postal_code"`), 'postalCode'],
         ],
         include: [
@@ -431,11 +484,11 @@ export const createStore = async (req: CustomRequestWithBody<StorePayload>, res:
     return newStoreId;
   });
 
-  const storeInstance = await StoreModel.getExpandedData(newStoreId);
+  const storeInstance = await getStoreData(newStoreId);
   if (!storeInstance) {
     throw new AppError(`Failed to get new store data for ${newStoreId}`, 500);
   }
-  storeInstance.setDataValue('staffCount', undefined);
+
   res.status(201).json(storeInstance);
 };
 
