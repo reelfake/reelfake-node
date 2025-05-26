@@ -1,21 +1,11 @@
 import type { Response } from 'express';
-import { Model, Op, literal, fn, WhereOptions, Includeable, HasMany, BelongsTo } from 'sequelize';
+import { Model, Op, literal, fn, WhereOptions, Includeable } from 'sequelize';
 import { AppError, addressUtils } from '../utils';
-import {
-  AddressModel,
-  CityModel,
-  CountryModel,
-  CustomerModel,
-  InventoryModel,
-  MovieModel,
-  RentalModel,
-  StaffModel,
-  StoreModel,
-} from '../models';
+import { CustomerModel, InventoryModel, MovieModel, RentalModel, StaffModel, StoreModel } from '../models';
 import { ERROR_MESSAGES, USER_ROLES, ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
 import { CustomRequest } from '../types';
 
-function getExpandedStoreAttributes() {
+function getInventoryStoreAttributes() {
   const expandedStoreData = fn(
     'json_build_object',
     'id',
@@ -60,33 +50,6 @@ function getExpandedStoreAttributes() {
 
   return expandedStoreData;
 }
-
-const getAddressAssociation = (): Includeable => ({
-  model: AddressModel,
-  as: 'address',
-  attributes: [
-    'id',
-    'addressLine',
-    [literal(`"customer->address->city"."city_name"`), 'cityName'],
-    [literal(`"customer->address->city"."state_name"`), 'stateName'],
-    [literal(`"customer->address->city->country"."country_name"`), 'countryName'],
-    'postalCode',
-  ],
-  include: [
-    {
-      model: CityModel,
-      as: 'city',
-      attributes: [],
-      include: [
-        {
-          model: CountryModel,
-          as: 'country',
-          attributes: [],
-        },
-      ],
-    },
-  ],
-});
 
 async function getUserAndStoreIdIdIfExist(email: string, role: USER_ROLES) {
   let modelInstance: Model | null = null;
@@ -219,13 +182,17 @@ export const getRentalById = async (req: CustomRequest, res: Response) => {
 
   const role = user.role;
   const { userId } = await getUserAndStoreIdIdIfExist(user.email, user.role);
+  const modelBasicAttributes = ['id', 'firstName', 'lastName', 'email', 'phoneNumber', 'avatar'];
 
   const includes: Includeable[] = [
     {
       model: StaffModel,
       as: 'processedBy',
-      attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber', 'avatar'],
-      include: role === USER_ROLES.STAFF || role === USER_ROLES.STORE_MANAGER ? [getAddressAssociation()] : [],
+      attributes: [...modelBasicAttributes],
+      include:
+        role === USER_ROLES.STAFF || role === USER_ROLES.STORE_MANAGER
+          ? [addressUtils.includeAddress({ addressPath: 'customer->address' })]
+          : [],
     },
     {
       model: InventoryModel,
@@ -247,7 +214,7 @@ export const getRentalById = async (req: CustomRequest, res: Response) => {
                 },
               },
             },
-            addressUtils.includeAddress(),
+            addressUtils.includeAddress({ addressPath: 'inventory->store->address' }),
           ],
         },
       ],
@@ -258,24 +225,14 @@ export const getRentalById = async (req: CustomRequest, res: Response) => {
     includes.push({
       model: CustomerModel,
       as: 'customer',
-      attributes: [
-        'id',
-        'firstName',
-        'lastName',
-        'email',
-        'active',
-        'phoneNumber',
-        'preferredStoreId',
-        'avatar',
-        'registeredOn',
-      ],
-      include: [getAddressAssociation()],
+      attributes: [...modelBasicAttributes, 'active', 'preferredStoreId', 'registeredOn'],
+      include: [addressUtils.includeAddress({ addressPath: 'customer->address' })],
     });
   }
 
   const rentalInstance = await RentalModel.findByPk(id, {
     attributes: {
-      include: [[getExpandedStoreAttributes(), 'store']],
+      include: [[getInventoryStoreAttributes(), 'store']],
     },
     include: includes,
   });
