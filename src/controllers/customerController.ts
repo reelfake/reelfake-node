@@ -2,7 +2,7 @@ import type { Response } from 'express';
 import { literal, fn, Op } from 'sequelize';
 import bcrypt from 'bcryptjs';
 import { CustomerModel, StoreModel, AddressModel, StaffModel, CityModel, CountryModel, UserModel } from '../models';
-import { AppError } from '../utils';
+import { addressUtils, AppError } from '../utils';
 import sequelize from '../sequelize.config';
 import { ERROR_MESSAGES, ITEMS_PER_PAGE_FOR_PAGINATION, USER_ROLES } from '../constants';
 import { CustomRequest, CustomRequestWithBody, CustomerPayload } from '../types';
@@ -24,34 +24,7 @@ export const getCustomers = async (req: CustomRequest, res: Response) => {
     offset: idOffset,
     limit: limitPerPage,
     attributes: { exclude: ['addressId', 'userPassword'] },
-    include: [
-      {
-        model: AddressModel,
-        as: 'address',
-        attributes: [
-          'id',
-          'addressLine',
-          [literal(`"address->city"."city_name"`), 'cityName'],
-          [literal(`"address->city"."state_name"`), 'stateName'],
-          [literal(`"address->city->country"."country_name"`), 'country'],
-          'postalCode',
-        ],
-        include: [
-          {
-            model: CityModel,
-            as: 'city',
-            attributes: [],
-            include: [
-              {
-                model: CountryModel,
-                as: 'country',
-                attributes: [],
-              },
-            ],
-          },
-        ],
-      },
-    ],
+    include: [addressUtils.includeAddress({ addressPath: 'address' })],
     order: [['id', 'ASC']],
   });
 
@@ -81,103 +54,18 @@ export const getCustomerById = async (req: CustomRequest, res: Response) => {
       {
         model: StoreModel,
         as: 'preferredStore',
-        attributes: [
-          'id',
-          'phoneNumber',
-          [
-            fn(
-              'json_build_object',
-              'id',
-              literal(`"preferredStore->staff"."id"`),
-              'firstName',
-              literal(`"preferredStore->staff"."first_name"`),
-              'lastName',
-              literal(`"preferredStore->staff"."last_name"`),
-              'email',
-              literal(`"preferredStore->staff"."email"`),
-              'active',
-              literal(`"preferredStore->staff"."active"`),
-              'phoneNumber',
-              literal(`"preferredStore->staff"."phone_number"`),
-              'avatar',
-              literal(`"preferredStore->staff"."avatar"`),
-              'address',
-              literal(
-                `(
-                  SELECT json_build_object(
-                    'id', a.id,
-                    'addressLine', a.address_line,
-                    'cityName', c.city_name,
-                    'stateName', c.state_name,
-                    'country', cy.country_name,
-                    'postalCode', a.postal_code
-                  )
-                  FROM address AS a LEFT JOIN city AS c ON a.city_id = c.id
-                  LEFT JOIN country AS cy ON c.country_id = cy.id
-                  WHERE a.id = "preferredStore->staff"."address_id"
-                )`
-              )
-            ),
-            'storeManager',
-          ],
-          [
-            literal(
-              `(
-                SELECT json_build_object(
-                  'id', a.id,
-                  'addressLine', a.address_line,
-                  'cityName', c.city_name,
-                  'stateName', c.state_name,
-                  'country', cy.country_name,
-                  'postalCode', a.postal_code
-                )
-                FROM address AS a LEFT JOIN city AS c ON a.city_id = c.id
-                LEFT JOIN country AS cy ON c.country_id = cy.id
-                WHERE a.id = "preferredStore"."address_id"
-              )`
-            ),
-            'address',
-          ],
-        ],
+        attributes: ['id', 'phoneNumber'],
         include: [
           {
             model: StaffModel,
-            as: 'staff',
-            attributes: [],
-            where: {
-              id: {
-                [Op.eq]: literal(`"preferredStore"."store_manager_id"`),
-              },
-            },
+            as: 'storeManager',
+            attributes: ['id', 'firstName', 'lastName', 'email', 'active', 'phoneNumber', 'avatar'],
+            include: [addressUtils.includeAddress({ addressPath: 'preferredStore->storeManager->address' })],
           },
+          addressUtils.includeAddress({ addressPath: 'preferredStore->address' }),
         ],
       },
-      {
-        model: AddressModel,
-        as: 'address',
-        attributes: [
-          'id',
-          'addressLine',
-          [literal(`"address->city"."city_name"`), 'cityName'],
-          [literal(`"address->city"."state_name"`), 'stateName'],
-          [literal(`"address->city->country"."country_name"`), 'country'],
-          'postalCode',
-        ],
-        include: [
-          {
-            model: CityModel,
-            as: 'city',
-            attributes: [],
-            include: [
-              {
-                model: CountryModel,
-                as: 'country',
-                attributes: [],
-              },
-            ],
-          },
-        ],
-      },
+      addressUtils.includeAddress({ addressPath: 'address' }),
     ],
   });
 

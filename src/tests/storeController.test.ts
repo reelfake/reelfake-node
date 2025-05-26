@@ -121,10 +121,11 @@ describe('Store Controller', () => {
         `
           SELECT s.id AS "id", s.phone_number AS "phoneNumber", s.store_manager_id AS "storeManagerId",
           json_build_object(
+            'id', a.id,
             'addressLine', a.address_line,
             'cityName', c.city_name,
             'stateName', c.state_name,
-            'countryName', cy.country_name,
+            'country', cy.country_name,
             'postalCode', a.postal_code
           ) AS "address"
           FROM store AS s LEFT OUTER JOIN address AS a ON s.address_id = a.id

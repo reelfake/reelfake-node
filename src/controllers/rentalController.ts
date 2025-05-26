@@ -5,52 +5,6 @@ import { CustomerModel, InventoryModel, MovieModel, RentalModel, StaffModel, Sto
 import { ERROR_MESSAGES, USER_ROLES, ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
 import { CustomRequest } from '../types';
 
-function getInventoryStoreAttributes() {
-  const expandedStoreData = fn(
-    'json_build_object',
-    'id',
-    literal(`"inventory->store"."id"`),
-    'phoneNumber',
-    literal(`"inventory->store"."phone_number"`),
-    'storeManager',
-    fn(
-      'json_build_object',
-      'id',
-      literal(`"inventory->store->staff"."id"`),
-      'firstName',
-      literal(`"inventory->store->staff"."first_name"`),
-      'lastName',
-      literal(`"inventory->store->staff"."last_name"`),
-      'email',
-      literal(`"inventory->store->staff"."email"`),
-      'active',
-      literal(`"inventory->store->staff"."active"`),
-      'phoneNumber',
-      literal(`"inventory->store->staff"."phone_number"`),
-      'avatar',
-      literal(`"inventory->store->staff"."avatar"`)
-    ),
-    'address',
-    fn(
-      'json_build_object',
-      'id',
-      literal(`"inventory->store->address"."id"`),
-      'addressLine',
-      literal(`"inventory->store->address"."address_line"`),
-      'cityName',
-      literal(`"inventory->store->address->city"."city_name"`),
-      'stateName',
-      literal(`"inventory->store->address->city"."state_name"`),
-      'country',
-      literal(`"inventory->store->address->city->country"."country_name"`),
-      'postalCode',
-      literal(`"inventory->store->address"."postal_code"`)
-    )
-  );
-
-  return expandedStoreData;
-}
-
 async function getUserAndStoreIdIdIfExist(email: string, role: USER_ROLES) {
   let modelInstance: Model | null = null;
 
@@ -197,22 +151,16 @@ export const getRentalById = async (req: CustomRequest, res: Response) => {
     {
       model: InventoryModel,
       as: 'inventory',
-      attributes: [],
+      attributes: ['id', 'movieId', [literal(`"inventory"."stock_count"`), 'stock']],
       include: [
         {
           model: StoreModel,
           as: 'store',
-          attributes: [],
+          attributes: ['id', 'phoneNumber'],
           include: [
             {
               model: StaffModel,
-              as: 'staff',
-              attributes: [],
-              where: {
-                id: {
-                  [Op.eq]: literal(`"inventory->store"."store_manager_id"`),
-                },
-              },
+              as: 'storeManager',
             },
             addressUtils.includeAddress({ addressPath: 'inventory->store->address' }),
           ],
@@ -231,9 +179,6 @@ export const getRentalById = async (req: CustomRequest, res: Response) => {
   }
 
   const rentalInstance = await RentalModel.findByPk(id, {
-    attributes: {
-      include: [[getInventoryStoreAttributes(), 'store']],
-    },
     include: includes,
   });
 
