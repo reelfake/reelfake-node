@@ -2,7 +2,7 @@ import type { Response } from 'express';
 import { col, literal, Op, WhereOptions } from 'sequelize';
 import bcrypt from 'bcryptjs';
 import { StaffModel, AddressModel, CityModel, CountryModel, StoreModel, UserModel } from '../models';
-import { AppError, capitalize } from '../utils';
+import { addressUtils, AppError, capitalize } from '../utils';
 import sequelize from '../sequelize.config';
 import { ERROR_MESSAGES } from '../constants';
 import type { Address, CustomRequest, CustomRequestWithBody, StaffPayload } from '../types';
@@ -33,6 +33,7 @@ export const getStaff = async (req: CustomRequest, res: Response) => {
       'active',
       'phoneNumber',
       'avatar',
+      'storeId',
       [literal(`"store"."store_manager_id" = "Staff"."id"`), 'isStoreManager'],
     ],
     include: [
@@ -41,34 +42,7 @@ export const getStaff = async (req: CustomRequest, res: Response) => {
         as: 'store',
         attributes: [],
       },
-      {
-        model: AddressModel,
-        as: 'address',
-        attributes: [
-          'id',
-          'addressLine',
-          [literal(`"address->city"."city_name"`), 'cityName'],
-          [literal(`"address->city"."state_name"`), 'stateName'],
-          [literal(`"address->city->country"."country_name"`), 'country'],
-          [literal(`"postal_code"`), 'postalCode'],
-        ],
-        required: true,
-        include: [
-          {
-            model: CityModel,
-            as: 'city',
-            attributes: [],
-            where,
-            include: [
-              {
-                model: CountryModel,
-                attributes: [],
-                as: 'country',
-              },
-            ],
-          },
-        ],
-      },
+      addressUtils.includeAddress({ addressPath: 'address' }),
     ],
   });
 
@@ -98,54 +72,12 @@ export const getStaffById = async (req: CustomRequest, res: Response) => {
       'avatar',
     ],
     include: [
-      {
-        model: AddressModel,
-        as: 'address',
-        attributes: [
-          'id',
-          'addressLine',
-          [literal(`"address->city"."city_name"`), 'cityName'],
-          [literal(`"address->city"."state_name"`), 'stateName'],
-          [literal(`"address->city->country"."country_name"`), 'country'],
-          [literal(`"postal_code"`), 'postalCode'],
-        ],
-        required: true,
-        include: [
-          {
-            model: CityModel,
-            as: 'city',
-            attributes: [],
-            include: [
-              {
-                model: CountryModel,
-                attributes: [],
-                as: 'country',
-              },
-            ],
-          },
-        ],
-      },
+      addressUtils.includeAddress({ addressPath: 'address' }),
       {
         model: StoreModel,
         as: 'store',
-        attributes: [
-          'id',
-          'phoneNumber',
-          [
-            literal(`(SELECT json_build_object(
-              'id', a.id,
-              'addressLine', a.address_line,
-              'cityName', c.city_name,
-              'stateName', c.state_name,
-              'country', cy.country_name,
-              'postalCode', a.postal_code
-            )
-            FROM address AS a LEFT JOIN city AS c ON c.id = a.city_id
-            LEFT JOIN country AS cy ON cy.id = c.country_id
-            WHERE a.id = "store"."address_id")`),
-            'address',
-          ],
-        ],
+        attributes: ['id', 'phoneNumber'],
+        include: [addressUtils.includeAddress({ addressPath: 'address' })],
       },
     ],
   });
@@ -165,64 +97,16 @@ export const getStoreManagers = async (req: CustomRequest, res: Response) => {
   }
 
   const storeManagers = await StaffModel.findAll({
-    attributes: [
-      'id',
-      'firstName',
-      'lastName',
-      'email',
-      'active',
-      'phoneNumber',
-      'avatar',
-      [
-        literal(
-          `(SELECT json_build_object(
-              'id', a.id,
-              'addressLine', a.address_line,
-              'cityName', c.city_name,
-              'stateName', c.state_name,
-              'country', cy.country_name,
-              'postalCode', a.postal_code
-            )
-            FROM address AS a LEFT JOIN city AS c ON a.city_id = c.id 
-            LEFT JOIN country AS cy ON c.country_id = cy.id
-            WHERE a.id = "Staff"."address_id")`
-        ),
-        'address',
-      ],
-    ],
+    attributes: {
+      exclude: ['addressId', 'storeId'],
+    },
     include: [
+      addressUtils.includeAddress({ addressPath: 'address' }),
       {
         model: StoreModel,
         as: 'store',
         attributes: ['id', 'phoneNumber'],
-        include: [
-          {
-            model: AddressModel,
-            as: 'address',
-            attributes: [
-              'id',
-              'addressLine',
-              [literal(`"store->address->city"."city_name"`), 'cityName'],
-              [literal(`"store->address->city"."state_name"`), 'stateName'],
-              [literal(`"store->address->city->country"."country_name"`), 'country'],
-              [literal(`"postal_code"`), 'postalCode'],
-            ],
-            include: [
-              {
-                model: CityModel,
-                as: 'city',
-                attributes: [],
-                include: [
-                  {
-                    model: CountryModel,
-                    as: 'country',
-                    attributes: [],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
+        include: [addressUtils.includeAddress({ addressPath: 'store->address' })],
         order: [['id', 'ASC']],
       },
     ],

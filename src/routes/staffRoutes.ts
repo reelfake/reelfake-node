@@ -22,6 +22,12 @@ router.get(
 );
 router.post('/', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(createStaff));
 router.get(
+  '/managers',
+  validateAuthToken,
+  validateUserRole(USER_ROLES.STAFF, USER_ROLES.STORE_MANAGER),
+  routeFnWrapper(getStoreManagers)
+);
+router.get(
   '/:id',
   validateAuthToken,
   validateUserRole(USER_ROLES.STAFF, USER_ROLES.STORE_MANAGER),
@@ -30,11 +36,5 @@ router.get(
 router.put('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(updateStaff));
 router.put('/:id/set_password', validateAuthToken, validateUserRole(USER_ROLES.USER), routeFnWrapper(setStaffPassword));
 router.delete('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(deleteStaff));
-router.get(
-  '/managers',
-  validateAuthToken,
-  validateUserRole(USER_ROLES.STAFF, USER_ROLES.STORE_MANAGER),
-  routeFnWrapper(getStoreManagers)
-);
 
 export default router;

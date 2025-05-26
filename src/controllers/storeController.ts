@@ -1,11 +1,10 @@
 import type { Request, Response } from 'express';
-import { literal, col, Op, Includeable } from 'sequelize';
+import { literal, Op } from 'sequelize';
 import sequelize from '../sequelize.config';
 import {
   StoreModel,
   AddressModel,
   CityModel,
-  CountryModel,
   InventoryModel,
   MovieModel,
   StaffModel,
@@ -93,33 +92,7 @@ export const getStoreById = async (req: Request, res: Response) => {
 export const getStores = async (req: Request, res: Response) => {
   const stores = await StoreModel.findAll({
     attributes: ['id', 'storeManagerId', 'phoneNumber'],
-    include: [
-      {
-        model: AddressModel,
-        as: 'address',
-        attributes: [
-          [col(`"address_line"`), 'addressLine'],
-          [literal(`"address->city"."city_name"`), 'cityName'],
-          [literal(`"address->city"."state_name"`), 'stateName'],
-          [literal(`"address->city->country"."country_name"`), 'countryName'],
-          [col(`"postal_code"`), 'postalCode'],
-        ],
-        include: [
-          {
-            model: CityModel,
-            as: 'city',
-            attributes: [],
-            include: [
-              {
-                model: CountryModel,
-                as: 'country',
-                attributes: [],
-              },
-            ],
-          },
-        ],
-      },
-    ],
+    include: [addressUtils.includeAddress({ addressPath: 'address' })],
     order: [['id', 'ASC']],
   });
 
