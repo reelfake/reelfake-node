@@ -7,6 +7,7 @@ export default {
   FORBIDDEN_RESOURCE_ACCESS: 'You are not authorized to view the resource',
   INVALID_LOGIN_DETAIL: 'Invalid email or password',
   USER_NOT_ACTIVE: 'User is not active',
+  CUSTOMER_IN_USE_BY_USER: 'Customer is assigned to one of the user',
   CUSTOMER_NOT_ASSIGNED: 'Customer is not assigned to the user',
   STAFF_NOT_ASSIGNED: 'Staff (or store manager) is not assigned to the user',
   STAFF_NOT_STORE_MANAGER: 'Staff is not a store manager',

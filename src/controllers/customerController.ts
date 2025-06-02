@@ -411,6 +411,16 @@ export const deleteCustomer = async (req: CustomRequest, res: Response) => {
     throw new AppError(ERROR_MESSAGES.FORBIDDEN, 403);
   }
 
+  const userCountWithCustomerId = await UserModel.count({
+    where: {
+      customerId: existingCusInstance.getDataValue('id'),
+    },
+  });
+
+  if (userCountWithCustomerId > 0) {
+    throw new AppError(ERROR_MESSAGES.CUSTOMER_IN_USE_BY_USER, 400);
+  }
+
   await sequelize.transaction(async (t) => {
     const custAddressId = existingCusInstance.getDataValue('addressId');
 
