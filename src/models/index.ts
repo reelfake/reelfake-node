@@ -30,6 +30,8 @@ export {
   RentalModel,
 };
 
+CityModel.belongsTo(CountryModel, { as: 'country', foreignKey: 'countryId' });
+
 MovieModel.belongsToMany(ActorModel, {
   through: MovieActorModel,
   foreignKey: 'movieId',
