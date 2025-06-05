@@ -800,5 +800,49 @@ describe('Customer Controller', () => {
         message: 'You are not authorized to perform this operation',
       });
     });
+
+    it('should not allow store manager to delete customer if it is in use by any user', async () => {
+      const userEmaiil = `test${getRandomCharacters(10)}@example.com`;
+      const userPassword = 'test@12345';
+
+      // Login as store manager to create customer
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
+      const payload = getCustomerPayload(1);
+
+      const newCustomerResponse = await server
+        .post('/api/v1/customers')
+        .set('Cookie', cookie)
+        .send({
+          ...payload,
+        });
+      expect(newCustomerResponse.status).toEqual(201);
+
+      // Register a user
+      const userRegistrationResponse = await server.post('/api/v1/user/register').send({
+        email: userEmaiil,
+        password: userPassword,
+      });
+      expect(userRegistrationResponse.statusCode).toBe(201);
+
+      // Login as new user and set customer id
+      await login(userEmaiil, userPassword);
+
+      const updateUserResponse = await server
+        .patch('/api/v1/user/me')
+        .send({
+          customerId: newCustomerResponse.body.id,
+        })
+        .set('Cookie', cookie);
+      expect(updateUserResponse.statusCode).toBe(204);
+
+      // Login as store manager and try deleting the customer
+      await login(credential.email, credential.password);
+
+      const response = await server.delete(`/api/v1/customers/${newCustomerResponse.body.id}`).set('Cookie', cookie);
+      expect(response.body.message).toEqual('Customer is assigned to one of the user');
+      expect(response.status).toEqual(400);
+    });
   });
 });

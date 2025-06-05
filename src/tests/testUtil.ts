@@ -69,7 +69,7 @@ export function getRandomCharacters(length: number = 5, firstCharUpperCase: bool
 }
 
 export function getRandomEmail() {
-  return `${getRandomCharacters()}${getRandomCharacters()}${Math.ceil(Math.random() * 1000)}@example.com`;
+  return `${getRandomCharacters()}${getRandomCharacters()}${Math.ceil(Math.random() * 1000)}@${getRandomCharacters(6)}.com`;
 }
 
 export function getRandomAddressLine() {
