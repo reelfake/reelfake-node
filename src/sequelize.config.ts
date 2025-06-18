@@ -1,6 +1,20 @@
 import dotenv from 'dotenv';
 
-const envName = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development' ? 'dev' : 'test';
+let envName = '';
+
+switch (process.env.NODE_ENV) {
+  case 'production':
+    envName = 'prod';
+    break;
+  case 'development':
+    envName = 'dev';
+    break;
+  case 'test':
+    envName = 'test';
+    break;
+  default:
+    throw new Error('App environment not found');
+}
 
 dotenv.config({ path: `${process.cwd()}/.env.${envName}` });
 

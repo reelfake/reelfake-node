@@ -5,3 +5,4 @@ dist
 .yarn
 testReport
 src/tests/test_db
+script
