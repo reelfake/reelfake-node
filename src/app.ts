@@ -33,6 +33,10 @@ app.use(cors({ credentials: true }));
 app.use(cookieParser());
 app.use(compression());
 
+app.get('/', (req: Request, res: Response) => {
+  res.status(200).send('Welcome to Reelfake API...');
+});
+
 app.get('/api/v1', (req: Request, res: Response) => {
   res.status(200).json({
     name: 'reelfake-api',
