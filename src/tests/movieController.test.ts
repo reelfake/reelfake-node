@@ -13,6 +13,7 @@ import {
   getStaffCredential,
   getCustomerCredential,
 } from './testUtil';
+import { MovieModel } from '../models';
 import { MovieActorPayload } from '../types';
 
 describe('Movie Controller', () => {
@@ -62,488 +63,302 @@ describe('Movie Controller', () => {
     it('should return movies page by page', async () => {
       const startingPage = 1;
       const totalRows = await getRowsCount('movie');
+      const pageLimit = ITEMS_COUNT_PER_PAGE_FOR_TEST;
 
       const iterations = 3;
 
       for (let i = startingPage; i < iterations + startingPage; i++) {
-        const response = await server.get(`/api/v1/movies?pageNumber=${i}`);
+        const response = await server.get(`/api/v1/movies?page=${i}`);
         expect(response.status).toBe(200);
         expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
 
         const expectedMovies = await execQuery(`
-          with expanded_movies as (
-            SELECT ROW_NUMBER() OVER (ORDER BY m.id) AS "rowNumber", m.id, m.title, m.overview, m.runtime, 
-            m.release_date AS "releaseDate", ARRAY_AGG(distinct g.genre_name) AS genres, 
-            ARRAY_AGG(distinct c.iso_country_code) AS "countriesOfOrigin", ml.iso_language_code as language, m.popularity, 
-            m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl",
-            m.rental_rate AS "rentalRate"
-            FROM movie AS m LEFT JOIN country AS c ON c.id = ANY(m.origin_country_ids)
-            LEFT JOIN genre AS g ON g.id = ANY(m.genre_ids)
-            LEFT JOIN movie_language ml ON m.language_id = ml.id
+            SELECT m.id, m.title, m.runtime, m.release_date AS "releaseDate", (
+              SELECT ARRAY_AGG(g.genre_name) FROM unnest(m.genre_ids) AS g_ids LEFT JOIN genre AS g ON g.id = g_ids
+            ) AS genres,
+            (
+              SELECT ARRAY_AGG(c.iso_country_code) FROM unnest(m.origin_country_ids) AS c_ids LEFT JOIN country AS c ON c.id = c_ids
+            ) AS "countriesOfOrigin",
+            ml.iso_language_code as language, m.popularity,
+            m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl", m.rental_rate AS "rentalRate"
+            FROM movie AS m LEFT JOIN movie_language AS ml ON m.language_id = ml.id
             GROUP BY m.id, ml.iso_language_code
-            ORDER BY m.id
-          )
-          SELECT id, title, overview, runtime, "releaseDate", genres, "countriesOfOrigin", language,
-          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate" FROM expanded_movies 
-          WHERE "rowNumber" > ${(i - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST} limit 50;
-        `);
+            ORDER BY m.id ASC
+            OFFSET ${i * pageLimit - pageLimit} LIMIT ${pageLimit};
+          `);
 
         expect(response.body).toStrictEqual({
           items: expectedMovies,
-          length: 50,
-          totalItems: Number(totalRows),
-          totalPages: Math.ceil(totalRows / 50),
+          length: expectedMovies.length,
+          pagination: {
+            pageNumber: i,
+            totalPages: Math.ceil(totalRows / pageLimit),
+            totalItems: totalRows,
+            itemsPerPage: pageLimit,
+            next: `?page=${i + 1}`,
+            prev: i > 1 ? `?page=${i - 1}` : null,
+            first: '?page=first',
+            last: '?page=last',
+          },
         });
-        expect(response.headers['rf-page-number']).toBe(`${i}`);
       }
     });
 
     it('should return for the correct page when jumping between pages', async () => {
       const pages = [3, 7, 4];
+      const pageLimit = ITEMS_COUNT_PER_PAGE_FOR_TEST;
       const totalRows = await getRowsCount('movie');
 
-      for (const page of pages) {
-        const response = await server.get(`/api/v1/movies?pageNumber=${page}`);
+      for (const i of pages) {
+        const response = await server.get(`/api/v1/movies?page=${i}`);
         expect(response.status).toBe(200);
         expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
+
         const expectedMovies = await execQuery(`
-          with expanded_movies as (
-            SELECT ROW_NUMBER() OVER (ORDER BY m.id) AS "rowNumber", m.id, m.title, m.overview, m.runtime, 
-            m.release_date AS "releaseDate", ARRAY_AGG(distinct g.genre_name) AS genres, 
-            ARRAY_AGG(distinct c.iso_country_code) AS "countriesOfOrigin", ml.iso_language_code as language, m.popularity, 
-            m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl",
-            m.rental_rate AS "rentalRate"
-            FROM movie AS m LEFT JOIN country AS c ON c.id = ANY(m.origin_country_ids)
-            LEFT JOIN genre AS g ON g.id = ANY(m.genre_ids)
-            LEFT JOIN movie_language ml ON m.language_id = ml.id
+            SELECT m.id, m.title, m.runtime, m.release_date AS "releaseDate", (
+              SELECT ARRAY_AGG(g.genre_name) FROM unnest(m.genre_ids) AS g_ids LEFT JOIN genre AS g ON g.id = g_ids
+            ) AS genres,
+            (
+              SELECT ARRAY_AGG(c.iso_country_code) FROM unnest(m.origin_country_ids) AS c_ids LEFT JOIN country AS c ON c.id = c_ids
+            ) AS "countriesOfOrigin",
+            ml.iso_language_code as language, m.popularity,
+            m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl", m.rental_rate AS "rentalRate"
+            FROM movie AS m LEFT JOIN movie_language AS ml ON m.language_id = ml.id
             GROUP BY m.id, ml.iso_language_code
-            ORDER BY m.id
-          )
-          SELECT id, title, overview, runtime, "releaseDate", genres, "countriesOfOrigin", language,
-          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate" FROM expanded_movies 
-          WHERE "rowNumber" > ${(page - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST} limit 50;
-        `);
+            ORDER BY m.id ASC
+            OFFSET ${i * pageLimit - pageLimit} LIMIT ${pageLimit};
+          `);
 
         expect(response.body).toStrictEqual({
           items: expectedMovies,
-          length: 50,
-          totalItems: Number(totalRows),
-          totalPages: Math.ceil(totalRows / 50),
+          length: expectedMovies.length,
+          pagination: {
+            pageNumber: i,
+            totalPages: Math.ceil(totalRows / pageLimit),
+            totalItems: totalRows,
+            itemsPerPage: pageLimit,
+            next: `?page=${i + 1}`,
+            prev: i > 1 ? `?page=${i - 1}` : null,
+            first: '?page=first',
+            last: '?page=last',
+          },
         });
-        expect(response.headers['rf-page-number']).toBe(`${page}`);
       }
     });
 
-    it('GET /api/v1/movies?releaseYear=2020 should return movies release in 2020 with pagination support', async () => {
+    it('GET /api/v1/movies?release_date=2020-01-01,2020-12-31 should return movies release in 2020 with pagination support', async () => {
       const startingPage = 1;
-
+      const pageLimit = ITEMS_COUNT_PER_PAGE_FOR_TEST;
       const totalRows = await getRowsCount('movie', "release_date BETWEEN '2020-01-01' AND '2020-12-31'");
-
-      const iterations = 3;
-
-      for (let i = startingPage; i < iterations + startingPage; i++) {
-        const url = i > 1 ? `/api/v1/movies?releaseYear=2020&pageNumber=${i}` : '/api/v1/movies?releaseYear=2020';
-
-        const response = await server.get(url);
-        expect(response.status).toBe(200);
-        expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
-        const expectedMovies = await execQuery(`
-          with expanded_movies as (
-            SELECT ROW_NUMBER() OVER (ORDER BY release_date, m.id) AS "rowNumber", m.id, m.title, m.overview, m.runtime, 
-            m.release_date AS "releaseDate", ARRAY_AGG(distinct g.genre_name) AS genres, 
-            ARRAY_AGG(distinct c.iso_country_code) AS "countriesOfOrigin", ml.iso_language_code as language, m.popularity, 
-            m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl",
-            m.rental_rate AS "rentalRate"
-            FROM movie AS m LEFT JOIN country AS c ON c.id = ANY(m.origin_country_ids)
-            LEFT JOIN genre AS g ON g.id = ANY(m.genre_ids)
-            LEFT JOIN movie_language ml ON m.language_id = ml.id
-            GROUP BY m.id, ml.iso_language_code HAVING m.release_date BETWEEN '2020-01-01' AND '2020-12-31'
-            ORDER BY release_date, m.id
-          )
-          SELECT id, title, overview, runtime, "releaseDate", genres, "countriesOfOrigin", language,
-          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate" FROM expanded_movies 
-          WHERE "rowNumber" > ${(i - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST} limit 50;
-        `);
-
-        expect(response.body).toStrictEqual({
-          items: expectedMovies,
-          length: 50,
-          totalItems: Number(totalRows),
-          totalPages: Math.ceil(totalRows / 50),
-        });
-      }
-    });
-
-    it('GET /api/v1/movies?releaseYear=2020 should return for the correct page when jumping between pages', async () => {
-      const pages = [3, 7, 4];
-      const totalRows = await getRowsCount('movie', "release_date BETWEEN '2020-01-01' AND '2020-12-31'");
-
-      for (const page of pages) {
-        const response = await server.get(`/api/v1/movies?releaseYear=2020&pageNumber=${page}`);
-        expect(response.status).toBe(200);
-        expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
-        const expectedMovies = await execQuery(`
-          with expanded_movies as (
-            SELECT ROW_NUMBER() OVER (ORDER BY release_date, m.id) AS "rowNumber", m.id, m.title, m.overview, m.runtime, 
-            m.release_date AS "releaseDate", ARRAY_AGG(distinct g.genre_name) AS genres, 
-            ARRAY_AGG(distinct c.iso_country_code) AS "countriesOfOrigin", ml.iso_language_code as language, m.popularity, 
-            m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl",
-            m.rental_rate AS "rentalRate"
-            FROM movie AS m LEFT JOIN country AS c ON c.id = ANY(m.origin_country_ids)
-            LEFT JOIN genre AS g ON g.id = ANY(m.genre_ids)
-            LEFT JOIN movie_language ml ON m.language_id = ml.id
-            GROUP BY m.id, ml.iso_language_code HAVING m.release_date BETWEEN '2020-01-01' AND '2020-12-31'
-            ORDER BY release_date, m.id
-          )
-          SELECT id, title, overview, runtime, "releaseDate", genres, "countriesOfOrigin", language,
-          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate" FROM expanded_movies 
-          WHERE "rowNumber" > ${(page - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST} limit 50;
-        `);
-
-        expect(response.body).toStrictEqual({
-          items: expectedMovies,
-          length: 50,
-          totalItems: Number(totalRows),
-          totalPages: Math.ceil(totalRows / 50),
-        });
-        expect(response.get('rf-page-number')).toBe(`${page}`);
-      }
-    });
-
-    it('GET /api/v1/movies?releaseYear=2020&genres=... should return movies under given genres', async () => {
-      const startingPage = 1;
-
-      const totalRows = await getRowsCount(
-        'movie',
-        `release_date BETWEEN '2020-01-01' AND '2020-12-31' AND genre_ids @> '{1,2}'`
-      );
 
       const iterations = 3;
 
       for (let i = startingPage; i < iterations + startingPage; i++) {
         const url =
           i > 1
-            ? `/api/v1/movies?releaseYear=2020&genres=action,adventure&pageNumber=${i}`
-            : '/api/v1/movies?releaseYear=2020&genres=action,adventure';
+            ? `/api/v1/movies?release_date=2020-01-01,2020-12-31&page=${i}`
+            : '/api/v1/movies?release_date=2020-01-01,2020-12-31';
 
         const response = await server.get(url);
-
         expect(response.status).toBe(200);
         expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
         const expectedMovies = await execQuery(`
-          with expanded_movies as (
-            SELECT ROW_NUMBER() OVER (ORDER BY release_date, m.id) AS "rowNumber", m.id, m.title, m.overview, m.runtime, 
-            m.release_date AS "releaseDate", ARRAY_AGG(distinct g.genre_name) AS genres, 
-            ARRAY_AGG(distinct c.iso_country_code) AS "countriesOfOrigin", ml.iso_language_code as language, m.popularity, 
-            m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl",
-            m.rental_rate AS "rentalRate"
-            FROM movie AS m LEFT JOIN country AS c ON c.id = ANY(m.origin_country_ids)
-            LEFT JOIN genre AS g ON g.id = ANY(m.genre_ids)
-            LEFT JOIN movie_language ml ON m.language_id = ml.id
-            GROUP BY m.id, ml.iso_language_code HAVING ARRAY_AGG(g.genre_name) @> '{"Action", "Adventure"}' 
-            AND m.release_date BETWEEN '2020-01-01' AND '2020-12-31'
-            ORDER BY release_date, m.id
-          )
-          SELECT id, title, overview, runtime, "releaseDate", genres, "countriesOfOrigin", language,
-          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate" FROM expanded_movies 
-          WHERE "rowNumber" > ${(i - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST} limit 50;
-        `);
+            SELECT m.id, m.title, m.runtime, m.release_date AS "releaseDate", (
+              SELECT ARRAY_AGG(g.genre_name) FROM unnest(m.genre_ids) AS g_ids LEFT JOIN genre AS g ON g.id = g_ids
+            ) AS genres,
+            (
+              SELECT ARRAY_AGG(c.iso_country_code) FROM unnest(m.origin_country_ids) AS c_ids LEFT JOIN country AS c ON c.id = c_ids
+            ) AS "countriesOfOrigin",
+            ml.iso_language_code as language, m.popularity,
+            m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl", m.rental_rate AS "rentalRate"
+            FROM movie AS m LEFT JOIN movie_language AS ml ON m.language_id = ml.id
+            WHERE m.release_date BETWEEN '2020-01-01' AND '2020-12-31'
+            GROUP BY m.id, ml.iso_language_code
+            ORDER BY m.id ASC
+            OFFSET ${i * pageLimit - pageLimit} LIMIT ${pageLimit};
+          `);
 
         expect(response.body).toStrictEqual({
           items: expectedMovies,
           length: expectedMovies.length,
-          totalItems: Number(totalRows),
-          totalPages: Math.ceil(totalRows / ITEMS_COUNT_PER_PAGE_FOR_TEST),
+          pagination: {
+            pageNumber: i,
+            totalPages: Math.ceil(totalRows / pageLimit),
+            totalItems: totalRows,
+            itemsPerPage: pageLimit,
+            next: `?page=${i + 1}&release_date=2020-01-01,2020-12-31`,
+            prev: i > 1 ? `?page=${i - 1}&release_date=2020-01-01,2020-12-31` : null,
+            first: '?page=first&release_date=2020-01-01,2020-12-31',
+            last: '?page=last&release_date=2020-01-01,2020-12-31',
+          },
+        });
+      }
+    });
+
+    it('GET /api/v1/movies?release_date=2020-01-01,2020-12-31 should return for the correct page when jumping between pages', async () => {
+      const pages = [3, 7, 4];
+      const pageLimit = ITEMS_COUNT_PER_PAGE_FOR_TEST;
+      const totalRows = await getRowsCount('movie', "release_date BETWEEN '2020-01-01' AND '2020-12-31'");
+
+      for (const i of pages) {
+        const response = await server.get(`/api/v1/movies?release_date=2020-01-01,2020-12-31&page=${i}`);
+        expect(response.status).toBe(200);
+        expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
+        const expectedMovies = await execQuery(`
+            SELECT m.id, m.title, m.runtime, m.release_date AS "releaseDate", (
+              SELECT ARRAY_AGG(g.genre_name) FROM unnest(m.genre_ids) AS g_ids LEFT JOIN genre AS g ON g.id = g_ids
+            ) AS genres,
+            (
+              SELECT ARRAY_AGG(c.iso_country_code) FROM unnest(m.origin_country_ids) AS c_ids LEFT JOIN country AS c ON c.id = c_ids
+            ) AS "countriesOfOrigin",
+            ml.iso_language_code as language, m.popularity,
+            m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl", m.rental_rate AS "rentalRate"
+            FROM movie AS m LEFT JOIN movie_language AS ml ON m.language_id = ml.id
+            WHERE m.release_date BETWEEN '2020-01-01' AND '2020-12-31'
+            GROUP BY m.id, ml.iso_language_code
+            ORDER BY m.id ASC
+            OFFSET ${i * pageLimit - pageLimit} LIMIT ${pageLimit};
+          `);
+
+        expect(response.body).toStrictEqual({
+          items: expectedMovies,
+          length: expectedMovies.length,
+          pagination: {
+            pageNumber: i,
+            totalPages: Math.ceil(totalRows / pageLimit),
+            totalItems: totalRows,
+            itemsPerPage: pageLimit,
+            next: `?page=${i + 1}&release_date=2020-01-01,2020-12-31`,
+            prev: i > 1 ? `?page=${i - 1}&release_date=2020-01-01,2020-12-31` : null,
+            first: '?page=first&release_date=2020-01-01,2020-12-31',
+            last: '?page=last&release_date=2020-01-01,2020-12-31',
+          },
         });
       }
     });
 
     it('GET /api/v1/movies?genres=... should return movies under given genres', async () => {
       const startingPage = 1;
+      const pageLimit = ITEMS_COUNT_PER_PAGE_FOR_TEST;
 
-      const totalRows = await getRowsCount('movie', `genre_ids @> '{1,2,17}'`);
+      const totalRows = await getRowsCount('movie', `genre_ids @> '{1,2}'`);
 
       const iterations = 3;
 
       for (let i = startingPage; i < iterations + startingPage; i++) {
-        const url =
-          i > 1
-            ? `/api/v1/movies?genres=action,adventure,thriller&pageNumber=${i}`
-            : '/api/v1/movies?genres=action,adventure,thriller';
+        const url = i > 1 ? `/api/v1/movies?genres=action,adventure&page=${i}` : '/api/v1/movies?genres=action,adventure';
 
         const response = await server.get(url);
+
         expect(response.status).toBe(200);
         expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
         const expectedMovies = await execQuery(`
-          with expanded_movies as (
-            SELECT ROW_NUMBER() OVER (ORDER BY m.id) AS "rowNumber", m.id, m.title, m.overview, m.runtime, 
-            m.release_date AS "releaseDate", ARRAY_AGG(distinct g.genre_name) AS genres, 
-            ARRAY_AGG(distinct c.iso_country_code) AS "countriesOfOrigin", ml.iso_language_code as language, m.popularity, 
-            m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl",
-            m.rental_rate AS "rentalRate"
-            FROM movie AS m LEFT JOIN country AS c ON c.id = ANY(m.origin_country_ids)
-            LEFT JOIN genre AS g ON g.id = ANY(m.genre_ids)
-            LEFT JOIN movie_language ml ON m.language_id = ml.id
-            GROUP BY m.id, ml.iso_language_code HAVING ARRAY_AGG(g.genre_name) @> '{"Action", "Adventure", "Thriller"}' 
-            ORDER BY m.id
-          )
-          SELECT id, title, overview, runtime, "releaseDate", genres, "countriesOfOrigin", language,
-          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate" FROM expanded_movies 
-          WHERE "rowNumber" > ${(i - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST} limit 50;
-        `);
+            SELECT m.id, m.title, m.runtime, m.release_date AS "releaseDate", (
+              SELECT ARRAY_AGG(g.genre_name) FROM unnest(m.genre_ids) AS g_ids LEFT JOIN genre AS g ON g.id = g_ids
+            ) AS genres,
+            (
+              SELECT ARRAY_AGG(c.iso_country_code) FROM unnest(m.origin_country_ids) AS c_ids LEFT JOIN country AS c ON c.id = c_ids
+            ) AS "countriesOfOrigin",
+            ml.iso_language_code as language, m.popularity,
+            m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl", m.rental_rate AS "rentalRate"
+            FROM movie AS m LEFT JOIN movie_language AS ml ON m.language_id = ml.id
+            WHERE m.genre_ids @> ARRAY[1,2]
+            GROUP BY m.id, ml.iso_language_code
+            ORDER BY m.id ASC
+            OFFSET ${i * pageLimit - pageLimit} LIMIT ${pageLimit};
+          `);
 
         expect(response.body).toStrictEqual({
           items: expectedMovies,
-          length: ITEMS_COUNT_PER_PAGE_FOR_TEST,
-          totalItems: Number(totalRows),
-          totalPages: Math.ceil(totalRows / ITEMS_COUNT_PER_PAGE_FOR_TEST),
+          length: expectedMovies.length,
+          pagination: {
+            pageNumber: i,
+            totalPages: Math.ceil(totalRows / pageLimit),
+            totalItems: totalRows,
+            itemsPerPage: pageLimit,
+            next: `?page=${i + 1}&genres=Action,Adventure`,
+            prev: i > 1 ? `?page=${i - 1}&genres=Action,Adventure` : null,
+            first: '?page=first&genres=Action,Adventure',
+            last: '?page=last&genres=Action,Adventure',
+          },
         });
       }
     });
 
     it('GET /api/v1/movies?genres=... should return correct list when jumping between pages', async () => {
-      const startingPage = 1;
-
+      const pageLimit = ITEMS_COUNT_PER_PAGE_FOR_TEST;
       const totalRows = await getRowsCount('movie', `genre_ids @> '{1,2,17}'`);
 
       const pages = [3, 7, 4];
 
-      for (const page of pages) {
+      for (const i of pages) {
         const url =
-          page > 1
-            ? `/api/v1/movies?genres=action,adventure,thriller&pageNumber=${page}`
-            : '/api/v1/movies?genres=action,adventure,thriller';
+          i > 1 ? `/api/v1/movies?genres=action,adventure,thriller&page=${i}` : '/api/v1/movies?genres=action,adventure,thriller';
 
         const response = await server.get(url);
 
         expect(response.status).toBe(200);
         expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
         const expectedMovies = await execQuery(`
-          with expanded_movies as (
-            SELECT ROW_NUMBER() OVER (ORDER BY m.id) AS "rowNumber", m.id, m.title, m.overview, m.runtime, 
-            m.release_date AS "releaseDate", ARRAY_AGG(distinct g.genre_name) AS genres, 
-            ARRAY_AGG(distinct c.iso_country_code) AS "countriesOfOrigin", ml.iso_language_code as language, m.popularity, 
-            m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl",
-            m.rental_rate AS "rentalRate"
-            FROM movie AS m LEFT JOIN country AS c ON c.id = ANY(m.origin_country_ids)
-            LEFT JOIN genre AS g ON g.id = ANY(m.genre_ids)
-            LEFT JOIN movie_language ml ON m.language_id = ml.id
-            GROUP BY m.id, ml.iso_language_code HAVING ARRAY_AGG(g.genre_name) @> '{"Action", "Adventure", "Thriller"}' 
-            ORDER BY m.id
-          )
-          SELECT id, title, overview, runtime, "releaseDate", genres, "countriesOfOrigin", language,
-          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate" FROM expanded_movies 
-          WHERE "rowNumber" > ${(page - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST} limit 50;
-        `);
+            SELECT m.id, m.title, m.runtime, m.release_date AS "releaseDate", (
+              SELECT ARRAY_AGG(g.genre_name) FROM unnest(m.genre_ids) AS g_ids LEFT JOIN genre AS g ON g.id = g_ids
+            ) AS genres,
+            (
+              SELECT ARRAY_AGG(c.iso_country_code) FROM unnest(m.origin_country_ids) AS c_ids LEFT JOIN country AS c ON c.id = c_ids
+            ) AS "countriesOfOrigin",
+            ml.iso_language_code as language, m.popularity,
+            m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl", m.rental_rate AS "rentalRate"
+            FROM movie AS m LEFT JOIN movie_language AS ml ON m.language_id = ml.id
+            WHERE m.genre_ids @> ARRAY[1,2,17]
+            GROUP BY m.id, ml.iso_language_code
+            ORDER BY m.id ASC
+            OFFSET ${i * pageLimit - pageLimit} LIMIT ${pageLimit};
+          `);
+
         expect(response.body).toStrictEqual({
           items: expectedMovies,
-          length: ITEMS_COUNT_PER_PAGE_FOR_TEST,
-          totalItems: Number(totalRows),
-          totalPages: Math.ceil(totalRows / ITEMS_COUNT_PER_PAGE_FOR_TEST),
+          length: expectedMovies.length,
+          pagination: {
+            pageNumber: i,
+            totalPages: Math.ceil(totalRows / pageLimit),
+            totalItems: totalRows,
+            itemsPerPage: pageLimit,
+            next: `?page=${i + 1}&genres=Action,Adventure,Thriller`,
+            prev: i > 1 ? `?page=${i - 1}&genres=Action,Adventure,Thriller` : null,
+            first: '?page=first&genres=Action,Adventure,Thriller',
+            last: '?page=last&genres=Action,Adventure,Thriller',
+          },
         });
       }
     });
 
     it('GET /api/v1/movies should return 404 when there are no more pages available', async () => {
-      const rowsCount = await getRowsCount('movie');
       let response = await server.get('/api/v1/movies');
-      const totalPages = Number(response.body.totalPages);
-      response = await server.get(`/api/v1/movies?pageNumber=${totalPages + 1}`).set({
-        'rf-last-visited-page': String(totalPages),
-        'rf-last-id-last-visited-page': String(rowsCount),
-      });
+      const totalPages = Number(response.body.pagination.totalPages);
+      response = await server.get(`/api/v1/movies?page=${totalPages + 1}`);
       expect(response.status).toBe(404);
       expect(response.body.message).toBe('Page out of range');
     });
 
     it('GET /api/v1/movies should return 500 on exception', async () => {
-      jest.spyOn(dbQuery, 'executeQuery').mockRejectedValue({ message: 'unit testing exception for /api/v1/movies' });
-      const response = await server.get('/api/v1/movies?pageNumber=1');
+      jest.spyOn(MovieModel, 'getRowsCountWhere').mockRejectedValue({ message: 'unit testing exception for /api/v1/movies' });
+      const response = await server.get('/api/v1/movies?page=1');
       expect(response.status).toBe(500);
       expect(response.body.message).toEqual('unit testing exception for /api/v1/movies');
     });
 
-    it('GET /api/v1/movies?releaseDates=... should return movies between the release dates with pagination', async () => {
-      const startingPage = 1;
-      const totalRows = await getRowsCount('movie', "release_date BETWEEN '2024-03-01' AND '2024-03-04'");
-
-      const iterations = 3;
-
-      for (let i = startingPage; i < iterations + startingPage; i++) {
-        const response = await server.get(`/api/v1/movies?releaseFrom=2024-03-01&releaseTo=2024-03-04&pageNumber=${i}`);
-        const expectedMovies = await execQuery(`
-          with expanded_movies as (
-            SELECT ROW_NUMBER() OVER (ORDER BY m.release_date, m.id) AS "rowNumber", m.id, m.title, m.overview, m.runtime, 
-            m.release_date AS "releaseDate", ARRAY_AGG(distinct g.genre_name) AS genres, 
-            ARRAY_AGG(distinct c.iso_country_code) AS "countriesOfOrigin", ml.iso_language_code as language, m.popularity, 
-            m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl",
-            m.rental_rate AS "rentalRate"
-            FROM movie AS m LEFT JOIN country AS c ON c.id = ANY(m.origin_country_ids)
-            LEFT JOIN genre AS g ON g.id = ANY(m.genre_ids)
-            LEFT JOIN movie_language ml ON m.language_id = ml.id
-            GROUP BY m.id, ml.iso_language_code HAVING m.release_date BETWEEN '2024-03-01' AND '2024-03-04'
-            ORDER BY m.release_date, m.id
-          )
-          SELECT id, title, overview, runtime, "releaseDate", genres, "countriesOfOrigin", language,
-          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate" FROM expanded_movies 
-          WHERE "rowNumber" > ${(i - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST} limit 50;
-        `);
-
-        expect(response.status).toBe(200);
-        expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
-        expect(response.body).toStrictEqual({
-          items: expectedMovies,
-          length: ITEMS_COUNT_PER_PAGE_FOR_TEST,
-          totalPages: Math.ceil(totalRows / ITEMS_COUNT_PER_PAGE_FOR_TEST),
-          totalItems: Number(totalRows),
-        });
-      }
-    });
-
-    it('GET /api/v1/movies?releaseDates=... should return correct movies when jumping between pages', async () => {
-      const totalRows = await getRowsCount('movie', "release_date BETWEEN '2024-03-01' AND '2024-03-04'");
-
-      const pages = [2, 5, 3];
-
-      for (const page of pages) {
-        const response = await server.get(
-          `/api/v1/movies?releaseFrom=2024-03-01&releaseTo=2024-03-04&pageNumber=${page}`
-        );
-        const expectedMovies = await execQuery(`
-          with expanded_movies as (
-            SELECT ROW_NUMBER() OVER (ORDER BY m.release_date, m.id) AS "rowNumber", m.id, m.title, m.overview, m.runtime, 
-            m.release_date AS "releaseDate", ARRAY_AGG(distinct g.genre_name) AS genres, 
-            ARRAY_AGG(distinct c.iso_country_code) AS "countriesOfOrigin", ml.iso_language_code as language, m.popularity, 
-            m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl",
-            m.rental_rate AS "rentalRate"
-            FROM movie AS m LEFT JOIN country AS c ON c.id = ANY(m.origin_country_ids)
-            LEFT JOIN genre AS g ON g.id = ANY(m.genre_ids)
-            LEFT JOIN movie_language ml ON m.language_id = ml.id
-            GROUP BY m.id, ml.iso_language_code HAVING m.release_date BETWEEN '2024-03-01' AND '2024-03-04'
-            ORDER BY m.release_date, m.id
-          )
-          SELECT id, title, overview, runtime, "releaseDate", genres, "countriesOfOrigin", language,
-          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate" FROM expanded_movies 
-          WHERE "rowNumber" > ${(page - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST} limit 50;
-        `);
-        expect(response.status).toBe(200);
-        expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
-        expect(response.body).toStrictEqual({
-          items: expectedMovies,
-          length: ITEMS_COUNT_PER_PAGE_FOR_TEST,
-          totalPages: Math.ceil(totalRows / ITEMS_COUNT_PER_PAGE_FOR_TEST),
-          totalItems: Number(totalRows),
-        });
-      }
-    });
-
-    it('GET /api/v1/movies?releaseDates=...&genres=... should return movies under given genres', async () => {
-      const startingPage = 1;
-
-      const totalRows = await getRowsCount(
-        'movie',
-        `genre_ids @> '{1,2}' AND release_date BETWEEN '2024-03-01' AND '2024-10-31'`
-      );
-
-      const iterations = 3;
-
-      for (let i = startingPage; i < iterations + startingPage; i++) {
-        const url =
-          i > 1
-            ? `/api/v1/movies?releaseFrom=2024-03-01&releaseTo=2024-10-31&genres=action,adventure&pageNumber=${i}`
-            : '/api/v1/movies?releaseFrom=2024-03-01&releaseTo=2024-10-31&genres=action,adventure';
-
-        const response = await server.get(url);
-        expect(response.status).toBe(200);
-        expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
-        const expectedMovies = await execQuery(`
-          with expanded_movies as (
-            SELECT ROW_NUMBER() OVER (ORDER BY m.release_date, m.id) AS "rowNumber", m.id, m.title, m.overview, m.runtime, 
-            m.release_date AS "releaseDate", ARRAY_AGG(distinct g.genre_name) AS genres, 
-            ARRAY_AGG(distinct c.iso_country_code) AS "countriesOfOrigin", ml.iso_language_code as language, m.popularity, 
-            m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl",
-            m.rental_rate AS "rentalRate"
-            FROM movie AS m LEFT JOIN country AS c ON c.id = ANY(m.origin_country_ids)
-            LEFT JOIN genre AS g ON g.id = ANY(m.genre_ids)
-            LEFT JOIN movie_language ml ON m.language_id = ml.id
-            GROUP BY m.id, ml.iso_language_code HAVING ARRAY_AGG(g.genre_name) @> '{"Action", "Adventure"}' 
-            AND m.release_date BETWEEN '2024-03-01' AND '2024-10-31'
-            ORDER BY m.release_date, m.id
-          )
-          SELECT id, title, overview, runtime, "releaseDate", genres, "countriesOfOrigin", language,
-          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate" FROM expanded_movies 
-          WHERE "rowNumber" > ${(i - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST} limit 50;
-        `);
-
-        expect(response.body).toStrictEqual({
-          items: expectedMovies,
-          length: expectedMovies.length,
-          totalItems: Number(totalRows),
-          totalPages: Math.ceil(totalRows / ITEMS_COUNT_PER_PAGE_FOR_TEST),
-        });
-      }
-    });
-
-    it('GET /api/v1/movies?genres=... should return correct list when jumping between pages', async () => {
-      const totalRows = await getRowsCount('movie', `genre_ids @> '{1,2}'`);
-
-      const pages = [3, 7, 4];
-
-      for (const page of pages) {
-        const url =
-          page > 1
-            ? `/api/v1/movies?genres=action,adventure&pageNumber=${page}`
-            : '/api/v1/movies?genres=action,adventure';
-
-        const response = await server.get(url);
-
-        expect(response.status).toBe(200);
-        expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
-        const expectedMovies = await execQuery(`
-          with expanded_movies as (
-            SELECT ROW_NUMBER() OVER (ORDER BY m.id) AS "rowNumber", m.id, m.title, m.overview, m.runtime, 
-            m.release_date AS "releaseDate", ARRAY_AGG(distinct g.genre_name) AS genres, 
-            ARRAY_AGG(distinct c.iso_country_code) AS "countriesOfOrigin", ml.iso_language_code as language, m.popularity, 
-            m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl",
-            m.rental_rate AS "rentalRate"
-            FROM movie AS m LEFT JOIN country AS c ON c.id = ANY(m.origin_country_ids)
-            LEFT JOIN genre AS g ON g.id = ANY(m.genre_ids)
-            LEFT JOIN movie_language ml ON m.language_id = ml.id
-            GROUP BY m.id, ml.iso_language_code HAVING ARRAY_AGG(g.genre_name) @> '{"Action", "Adventure"}'
-            ORDER BY m.id
-          )
-          SELECT id, title, overview, runtime, "releaseDate", genres, "countriesOfOrigin", language,
-          popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate" FROM expanded_movies 
-          WHERE "rowNumber" > ${(page - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST} limit 50;
-        `);
-        expect(response.body).toStrictEqual({
-          items: expectedMovies,
-          length: ITEMS_COUNT_PER_PAGE_FOR_TEST,
-          totalItems: Number(totalRows),
-          totalPages: Math.ceil(totalRows / ITEMS_COUNT_PER_PAGE_FOR_TEST),
-        });
-      }
-    });
-
-    it('GET /api/v1/movies should return 400 for invalid pageNumber', async () => {
+    it('GET /api/v1/movies should return 400 for invalid page number', async () => {
       const pageNumber = 'x';
-      const response = await server.get(`/api/v1/movies?pageNumber=${pageNumber}`);
+      const response = await server.get(`/api/v1/movies?page=${pageNumber}`);
       expect(response.status).toBe(400);
-      expect(response.body.message).toBe('Page number should be a valid non-zero positive number');
+      expect(response.body.message).toBe('Invalid page number');
     });
 
-    it('GET /api/v1/movies should return 400 when pageNumber is 0', async () => {
+    it('GET /api/v1/movies should return 400 when page number is 0', async () => {
       const pageNumber = 0;
-      const response = await server.get(`/api/v1/movies?pageNumber=${pageNumber}`);
+      const response = await server.get(`/api/v1/movies?page=${pageNumber}`);
       expect(response.status).toBe(400);
-      expect(response.body.message).toBe('Page number should be a valid non-zero positive number');
-    });
-
-    it('GET /movies should return 400 when releaseYear in query is invalid', async () => {
-      const releaseYear = 'invalid';
-      const response = await server.get(`/api/v1/movies?releaseYear=${releaseYear}`);
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe('Invalid release year');
+      expect(response.body.message).toBe('Invalid page number');
     });
 
     it('GET /movies should return 400 when genres in query is invalid', async () => {
@@ -551,36 +366,6 @@ describe('Movie Controller', () => {
       const response = await server.get(`/api/v1/movies?genres=${invalidGenres}`);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('[invalid_genre] are invalid genres');
-    });
-
-    it('GET /movies should return 400 when releaseFrom is in query but releaseTo is missing', async () => {
-      const response = await server.get(`/api/v1/movies?releaseFrom=2024-05-01`);
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe('To filter by release dates, release date from and to are required.');
-    });
-
-    it('GET /movies should return 400 when releaseTo is in query but releaseFrom is missing', async () => {
-      const response = await server.get(`/api/v1/movies?releaseTo=2024-05-01`);
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe('To filter by release dates, release date from and to are required.');
-    });
-
-    it('GET /movies should return 400 when releaseYear and release dates both are in query', async () => {
-      const response = await server.get(`/api/v1/movies?releaseYear=2024&releaseFrom=2024-04-01&releaseTo=2024-05-01`);
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe('Release year and release dates cannot be used together');
-    });
-
-    it('GET /movies should return 400 when releaseFrom has invalid format in query', async () => {
-      const response = await server.get(`/api/v1/movies?releaseFrom=2024-04-xx&releaseTo=2024-05-01`);
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe('Invalid release date');
-    });
-
-    it('GET /movies should return 400 when releaseTo has invalid format in query', async () => {
-      const response = await server.get(`/api/v1/movies?releaseFrom=2024-04-01&releaseTo=2024-xx-01`);
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe('Invalid release date');
     });
   });
 

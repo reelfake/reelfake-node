@@ -5,7 +5,7 @@ import { CustomerModel, InventoryModel, MovieModel, RentalModel, StaffModel, Sto
 import { ERROR_MESSAGES, USER_ROLES, ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
 import { CustomRequest } from '../types';
 
-async function getUserAndStoreIdIdIfExist(email: string, role: USER_ROLES) {
+async function getUserAndStoreIdIfExist(email: string, role: USER_ROLES) {
   let modelInstance: Model | null = null;
 
   switch (role) {
@@ -51,7 +51,7 @@ export const getRentals = async (req: CustomRequest, res: Response) => {
     throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
   }
 
-  const { userId } = await getUserAndStoreIdIdIfExist(user.email, user.role);
+  const { userId } = await getUserAndStoreIdIfExist(user.email, user.role);
   const role = user.role;
 
   const condition: WhereOptions = {};
@@ -77,13 +77,7 @@ export const getRentals = async (req: CustomRequest, res: Response) => {
       include: [
         [literal(`"inventory->store"."id"`), 'storeId'],
         [
-          fn(
-            'json_build_object',
-            'id',
-            literal(`"inventory->movie"."id"`),
-            'title',
-            literal(`"inventory->movie"."title"`)
-          ),
+          fn('json_build_object', 'id', literal(`"inventory->movie"."id"`), 'title', literal(`"inventory->movie"."title"`)),
           'movie',
         ],
       ],
@@ -135,7 +129,7 @@ export const getRentalById = async (req: CustomRequest, res: Response) => {
   }
 
   const role = user.role;
-  const { userId } = await getUserAndStoreIdIdIfExist(user.email, user.role);
+  const { userId } = await getUserAndStoreIdIfExist(user.email, user.role);
   const modelBasicAttributes = ['id', 'firstName', 'lastName', 'email', 'phoneNumber', 'avatar'];
 
   const includes: Includeable[] = [
@@ -246,7 +240,7 @@ export const getRentalsForStore = async (req: CustomRequest, res: Response) => {
     throw new AppError('Invalid page number', 400);
   }
 
-  const { storeId } = await getUserAndStoreIdIdIfExist(email, role);
+  const { storeId } = await getUserAndStoreIdIfExist(email, role);
   if (!storeId) {
     throw new AppError('Store not found for the user', 404);
   }

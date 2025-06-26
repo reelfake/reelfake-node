@@ -1,7 +1,6 @@
 import type { Request, Response } from 'express';
-import { Includeable, Op, Transaction, WhereOptions, col, fn, literal } from 'sequelize';
+import { Includeable, Op, Transaction, col, literal } from 'sequelize';
 import sequelize from '../sequelize.config';
-import { executeQuery, AppError } from '../utils';
 import {
   ActorModel,
   MovieActorModel,
@@ -13,7 +12,8 @@ import {
   CountryModel,
   MovieLanguageModel,
 } from '../models';
-import { ITEMS_PER_PAGE_FOR_PAGINATION, availableGenres, ERROR_MESSAGES, movieModelAttributes } from '../constants';
+import { AppError, parseMovieFilters, getOffsetData, parseRequestQuery } from '../utils';
+import { ITEMS_PER_PAGE_FOR_PAGINATION, ERROR_MESSAGES, movieModelAttributes } from '../constants';
 import { CustomRequest, CustomRequestWithBody, IncomingMovie, MovieActorPayload } from '../types';
 
 const newMovieFields = [
@@ -48,66 +48,6 @@ const newActorFields = [
   'popularity',
   'profilePictureUrl',
 ];
-
-function getReleaseDatesRangeFromQuery(req: Request) {
-  const { releaseYear: releaseYearText, releaseFrom, releaseTo } = req.query;
-  const releaseYear = Number(releaseYearText);
-
-  if (!isNaN(releaseYear)) {
-    return [`${releaseYear}-01-01`, `${releaseYear}-12-31`];
-  }
-
-  if (releaseFrom && releaseTo) {
-    return [releaseFrom, releaseTo];
-  }
-
-  return [];
-}
-
-async function getMoviesUsingQuery(pageNumber: number, genresIds: number[], orderBy: string, filter: string = '') {
-  if (!MovieModel.sequelize) {
-    throw new AppError('Server encoutered unhandled exception', 500);
-  }
-
-  const startingRowNumber = pageNumber * ITEMS_PER_PAGE_FOR_PAGINATION - ITEMS_PER_PAGE_FOR_PAGINATION;
-
-  const filters: string[] = [];
-  if (genresIds.length > 0) {
-    const genresQuery = `m.genre_ids @> '{${genresIds.map((gId) => `${gId}`).join(',')}}'`;
-    filters.push(genresQuery);
-  }
-  if (filter) {
-    filters.push(`${filter}`);
-  }
-
-  let filterText = filters.length > 1 ? filters.join(' AND ').trim() : filters[0];
-  const whereClause = filterText ? `HAVING ${filterText}` : '';
-  const orderByFields = orderBy
-    .split(',')
-    .map((field) => `m.${field.trim()}`)
-    .join(',');
-
-  const queryText = `
-    WITH exppanded_movies AS (
-      SELECT ROW_NUMBER() OVER (ORDER BY ${orderByFields} ASC) AS "rowNumber", m.id, 
-      m.title, m.overview, m.runtime, m.release_date AS "releaseDate", ARRAY_AGG(distinct g.genre_name) AS genres,
-      ARRAY_AGG(distinct c.iso_country_code) AS "countriesOfOrigin", ml.iso_language_code as language,
-      m.popularity, m.rating_average AS "ratingAverage", m.rating_count AS "ratingCount", m.poster_url AS "posterUrl",
-      m.rental_rate AS "rentalRate"
-      FROM movie AS m LEFT JOIN country AS c ON c.id = ANY(m.origin_country_ids)
-      LEFT JOIN genre AS g ON g.id = ANY(m.genre_ids)
-      LEFT JOIN movie_language ml ON m.language_id = ml.id
-      GROUP BY m.id, ml.iso_language_code ${whereClause}
-      ORDER BY ${orderByFields}
-    )
-    SELECT id, title, overview, runtime, "releaseDate", genres, "countriesOfOrigin", language,
-    popularity, "ratingAverage", "ratingCount", "posterUrl", "rentalRate"
-    FROM exppanded_movies WHERE "rowNumber" > ${startingRowNumber} LIMIT ${ITEMS_PER_PAGE_FOR_PAGINATION}
-  `;
-
-  const movies = await executeQuery(MovieModel.sequelize, queryText);
-  return movies;
-}
 
 async function createActors(t: Transaction, actors: MovieActorPayload[], movieId?: number) {
   const createdActors = await ActorModel.bulkCreate(
@@ -176,63 +116,105 @@ async function createActors(t: Transaction, actors: MovieActorPayload[], movieId
 }
 
 export const getMovies = async (req: Request, res: Response) => {
-  const { pageNumber: pageNumberText, genres: genresText } = req.query;
-  const pageNumber = pageNumberText ? Number(pageNumberText) : 1;
+  const { page: pageNumberText = '1' } = req.query;
 
-  const genres = genresText ? genresText.toString().split(',') : [];
   const limitPerPage = ITEMS_PER_PAGE_FOR_PAGINATION;
+  const pageNumber = Number(pageNumberText);
 
-  const genreIds = Object.entries(availableGenres)
-    .filter(([key, value]) => genres.includes(value))
-    .map(([key]) => Number(key));
-
-  const conditions: WhereOptions[] = [];
-
-  if (genres.length > 0) {
-    conditions.push({
-      genreIds: {
-        [Op.contains]: genreIds,
-      },
-    });
-  }
-
-  const [startDate, endDate] = getReleaseDatesRangeFromQuery(req);
-
-  const queryHasReleaseDates = startDate && endDate;
-
-  if (queryHasReleaseDates) {
-    conditions.push({
-      releaseDate: {
-        [Op.between]: [startDate, endDate],
-      },
-    });
-  }
-
-  const totalMovies = await MovieModel.getRowsCountWhere(conditions);
-
-  const movies = await getMoviesUsingQuery(
-    pageNumber,
-    genreIds,
-    queryHasReleaseDates ? 'release_date, id' : 'id',
-    queryHasReleaseDates ? `release_date BETWEEN '${startDate}' AND '${endDate}'` : ''
-  );
-  const moviesCount = movies.length;
-
-  if (moviesCount === 0) {
+  const filters = parseMovieFilters(req);
+  const { idOffset, totalMovies } = await getOffsetData(pageNumber, limitPerPage, filters);
+  const totalPages = Math.ceil(totalMovies / limitPerPage);
+  if (pageNumber > totalPages) {
     throw new AppError('Page out of range', 404);
   }
 
-  res
-    .status(200)
-    .set({
-      'rf-page-number': pageNumber,
-    })
-    .json({
-      items: movies,
-      length: moviesCount,
-      totalPages: Math.ceil(totalMovies / limitPerPage),
-      totalItems: Number(totalMovies),
-    });
+  const movies = await MovieModel.findAll({
+    attributes: [
+      'id',
+      'title',
+      'runtime',
+      'releaseDate',
+      [
+        literal(`
+          (SELECT ARRAY_AGG(g.genre_name) FROM unnest("Movie".genre_ids) AS g_ids LEFT OUTER JOIN genre AS g ON g.id = g_ids)
+        `),
+        'genres',
+      ],
+      [
+        literal(`
+          (SELECT ARRAY_AGG(c.iso_country_code) FROM unnest("Movie".origin_country_ids) as c_ids LEFT OUTER JOIN country AS c ON c.id = c_ids)
+        `),
+        'countriesOfOrigin',
+      ],
+      [col(`"movieLanguage"."iso_language_code"`), 'language'],
+      'popularity',
+      'ratingAverage',
+      'ratingCount',
+      'posterUrl',
+      'rentalRate',
+    ],
+    include: [
+      {
+        model: MovieLanguageModel,
+        as: 'movieLanguage',
+        attributes: [],
+      },
+    ],
+    order: [['id', idOffset >= 0 ? 'ASC' : 'DESC']],
+    where: {
+      id: {
+        [idOffset >= 0 ? Op.gte : Op.lte]: idOffset >= 0 ? idOffset : totalMovies,
+      },
+      ...filters,
+    },
+    limit: idOffset >= 0 ? limitPerPage : totalMovies % limitPerPage,
+  });
+
+  const currentPageNumber = pageNumber > 0 ? pageNumber : totalPages;
+  const isLastPage = pageNumber === -1 || totalPages === pageNumber;
+  const isFirstPage = pageNumber === 1;
+
+  let nextPage = isLastPage ? null : `?page=${currentPageNumber + 1}`;
+  let prevPage = isFirstPage ? null : `?page=${currentPageNumber - 1}`;
+  let firstPage = '?page=first';
+  let lastPage = '?page=last';
+
+  const queryObject = parseRequestQuery(req, ['page']);
+  const keyValueQueries = Object.entries(queryObject).reduce<string[]>((acc, curr) => {
+    return [...acc, `${curr[0]}=${curr[1]}`];
+  }, []);
+
+  if (nextPage && filters) {
+    nextPage += `&${keyValueQueries.join('&')}`;
+  }
+
+  if (prevPage && filters) {
+    prevPage += `&${keyValueQueries.join('&')}`;
+  }
+
+  if (filters) {
+    firstPage += `&${keyValueQueries.join('&')}`;
+    lastPage += `&${keyValueQueries.join('&')}`;
+  }
+
+  const pagination = {
+    items: pageNumber > 0 ? movies : movies.reverse(),
+    pagination: {
+      pageNumber: currentPageNumber,
+      totalPages,
+      totalItems: totalMovies,
+      itemsPerPage: limitPerPage,
+      next: nextPage,
+      prev: prevPage,
+      first: firstPage,
+      last: lastPage,
+    },
+  };
+
+  res.status(200).json({
+    ...pagination,
+    length: pagination.items.length,
+  });
 };
 
 export const getMovieById = async (req: Request, res: Response) => {
@@ -389,10 +371,7 @@ export const findInStores = async (req: Request, res: Response) => {
   });
 };
 
-export const createMovie = async (
-  req: CustomRequestWithBody<IncomingMovie & { actors: MovieActorPayload[] }>,
-  res: Response
-) => {
+export const createMovie = async (req: CustomRequestWithBody<IncomingMovie & { actors: MovieActorPayload[] }>, res: Response) => {
   const actors = req.body.actors;
   const hasActors = actors && actors.length > 0;
 
