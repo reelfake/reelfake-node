@@ -27,16 +27,21 @@ class Movie extends BaseModel {
   declare posterUrl: string;
   declare rentalRate: number;
 
-  public static async getRowsCountWhere(conditions: WhereOptions[]) {
-    const where = conditions.reduce<WhereOptions>((acc, curr) => {
-      acc = { ...acc, ...curr };
-      return acc;
-    }, {});
-
+  public static async getRowsCountWhere(conditions?: WhereOptions) {
     const countOfRows = await Movie.count({
-      where: conditions.length > 0 ? where : undefined,
+      where: conditions,
     });
     return countOfRows;
+  }
+
+  public static async getRecordIds(conditions?: WhereOptions) {
+    const results = await Movie.findAll({
+      attributes: ['id'],
+      where: conditions,
+      order: [['id', 'ASC']],
+    });
+    const ids = results.map<number>((res) => res.toJSON().id);
+    return ids;
   }
 }
 

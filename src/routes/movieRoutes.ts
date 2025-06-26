@@ -12,7 +12,7 @@ import {
   deleteMovie,
 } from '../controllers';
 import { validateAuthToken, validateUserRole } from '../middlewares';
-import { GENRES, USER_ROLES } from '../constants';
+import { GENRES, USER_ROLES, RELEASE_DATE_FORMAT, ERROR_MESSAGES } from '../constants';
 import { CustomRequest } from '../types';
 
 const validGenres = Object.entries(GENRES).reduce<{ [key: string]: string }>((acc, curr) => {
@@ -68,13 +68,27 @@ function validateMovieByIdRouteQuery(req: Request, res: Response, next: NextFunc
 }
 
 function validateMoviesRouteQuery(req: CustomRequest, res: Response, next: NextFunction) {
-  const { pageNumber: pageNumberText = '1', releaseYear: releaseYearText, releaseFrom, releaseTo } = req.query;
+  const { page: pageNumberText = '1', release_date: releaseDate, rating } = req.query;
   const genresText = (req.query.genres as string) || '';
 
-  if (isNaN(Number(pageNumberText)) || Number(pageNumberText) < 1) {
-    return next(new AppError('Page number should be a valid non-zero positive number', 400));
+  // Validate page query
+  if (
+    pageNumberText !== 'first' &&
+    pageNumberText !== 'last' &&
+    (isNaN(Number(pageNumberText)) || Number(pageNumberText) < 1)
+  ) {
+    return next(new AppError('Invalid page number', 400));
   }
 
+  if (pageNumberText === 'first') {
+    req.query.page = '1';
+  }
+
+  if (pageNumberText === 'last') {
+    req.query.page = '-1';
+  }
+
+  // Validate genres query
   const updatedGenres = [];
   const invalidGenres = [];
   const requestedGenres = genresText ? genresText.split(',') : [];
@@ -91,27 +105,32 @@ function validateMoviesRouteQuery(req: CustomRequest, res: Response, next: NextF
     return next(new AppError(`[${invalidGenres.join(',')}] are invalid genres`, 400));
   }
 
-  const releaseYear = Number(releaseYearText);
-  if (releaseYearText && isNaN(releaseYear)) {
-    return next(new AppError('Invalid release year', 400));
-  }
-
-  if ((releaseFrom && !releaseTo) || (!releaseFrom && releaseTo)) {
-    return next(new AppError('To filter by release dates, release date from and to are required.', 400));
-  }
-
-  if (releaseYear && releaseFrom && releaseTo) {
-    return next(new AppError('Release year and release dates cannot be used together', 400));
-  }
-
-  if (
-    (releaseFrom && !validateReleaseDate(String(releaseFrom))) ||
-    (releaseTo && !validateReleaseDate(String(releaseTo)))
-  ) {
-    return next(new AppError('Invalid release date', 400));
-  }
-
   req.query.genres = updatedGenres.join(',');
+
+  // Validate release date query
+  const releaseDateRange = releaseDate ? releaseDate.toString().split(',') : [];
+  if (releaseDateRange.length > 2) {
+    return next(new AppError(ERROR_MESSAGES.INVALID_RELEASE_DATE, 400));
+  }
+
+  for (const date of releaseDateRange) {
+    if (date) continue;
+
+    const dateParts = RELEASE_DATE_FORMAT.exec(date);
+    if (
+      !dateParts ||
+      (dateParts && (Number(dateParts.at(2)) > 12 || Number(dateParts.at(3)) > 31)) ||
+      isNaN(new Date(date).getTime())
+    ) {
+      return next(new AppError(ERROR_MESSAGES.RELEASE_DATE_INVALID_FORMAT, 400));
+    }
+  }
+
+  // Validate rating query
+  const ratingRange = rating ? rating.toString().split(',') : [];
+  if (ratingRange.length > 2 || ratingRange.some((r) => r && isNaN(Number(r)))) {
+    return next(new AppError(ERROR_MESSAGES.INVALID_RATING, 400));
+  }
 
   next();
 }
