@@ -61,48 +61,6 @@ export const getActors = async (req: Request, res: Response) => {
   });
 };
 
-export const searchActor = async (req: Request, res: Response) => {
-  const operator = req.query.name ? Op.eq : Op.like;
-  const searchText = req.query.name ?? `%${req.query.q}%`;
-
-  const { q, pageNumber: pageNumberText = '1' } = req.query;
-  const pageNumber = Number(pageNumberText);
-
-  const totalRows = await ActorModel.count({
-    where: {
-      actorName: {
-        [operator]: searchText,
-      },
-    },
-  });
-
-  const result = await ActorModel.findAll({
-    attributes: { exclude: ['tmdbId'] },
-    where: {
-      actorName: {
-        [operator]: searchText,
-      },
-    },
-    limit: ITEMS_PER_PAGE_FOR_PAGINATION,
-    offset: (pageNumber - 1) * ITEMS_PER_PAGE_FOR_PAGINATION,
-    order: [['actorName', 'ASC']],
-  });
-
-  if (result.length === 0) {
-    throw new AppError('Resources not found', 404);
-  }
-
-  res
-    .status(200)
-    .set('rf-page-number', String(pageNumber))
-    .json({
-      items: result,
-      length: result.length,
-      totalItems: totalRows,
-      totalPages: Math.ceil(totalRows / ITEMS_PER_PAGE_FOR_PAGINATION),
-    });
-};
-
 export const getActorById = async (req: Request, res: Response) => {
   const { id: idText } = req.params;
   const { includeMovies: includeMoviesText } = req.query;

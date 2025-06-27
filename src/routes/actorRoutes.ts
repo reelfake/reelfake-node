@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { Router } from 'express';
 import { validateAuthToken, validateUserRole } from '../middlewares';
-import { getActors, searchActor, getActorById, updateActor, deleteActor, addActor, addToMovie } from '../controllers';
+import { getActors, getActorById, updateActor, deleteActor, addActor, addToMovie } from '../controllers';
 import { routeFnWrapper, AppError, validateDateRangeInRequest, validatePopularityRangeInRequest } from '../utils';
 import { USER_ROLES, ERROR_MESSAGES } from '../constants';
 
@@ -100,7 +100,6 @@ function validateActorByIdRouteQuery(req: Request, res: Response, next: NextFunc
 router.get('/', validateActorsRouteQuery, routeFnWrapper(getActors));
 router.post('/', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(addActor));
 router.post('/:id/add_to_movie', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(addToMovie));
-router.get('/search', validateSearchRouteQuery, routeFnWrapper(searchActor));
 router.get('/:id', validateActorByIdRouteQuery, routeFnWrapper(getActorById));
 router.put('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(updateActor));
 router.delete('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(deleteActor));

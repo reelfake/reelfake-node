@@ -12,15 +12,7 @@ export {
   updateMovie,
   deleteMovie,
 } from './movieController';
-export {
-  getActors,
-  searchActor,
-  getActorById,
-  updateActor,
-  deleteActor,
-  addActor,
-  addToMovie,
-} from './actorController';
+export { getActors, getActorById, updateActor, deleteActor, addActor, addToMovie } from './actorController';
 export {
   getStores,
   getStockCount,
