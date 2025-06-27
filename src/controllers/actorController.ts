@@ -1,41 +1,64 @@
 import type { Request, Response } from 'express';
-import { Op, literal } from 'sequelize';
+import { Op, literal, WhereOptions } from 'sequelize';
 import sequelize from '../sequelize.config';
 import { ActorModel, MovieActorModel, MovieModel } from '../models';
-import { AppError } from '../utils';
+import {
+  AppError,
+  parseActorsPaginationFilters,
+  getPaginationOffsetWithFilters,
+  getPaginationOffset,
+  getPaginationMetadata,
+  parseRequestQuery,
+} from '../utils';
 import { ERROR_MESSAGES, ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
 import { CustomRequestWithBody, CustomRequest, MovieActorPayload, ActorPayload } from '../types';
 
+async function getActorsPaginationOffset(pageNumber: number, limitPerPage: number, filters?: WhereOptions) {
+  if (filters) {
+    const actorIds = await ActorModel.getRecordIds(filters);
+    const idOffset = await getPaginationOffsetWithFilters(pageNumber, limitPerPage, actorIds);
+    return { idOffset, totalActors: actorIds.length };
+  }
+
+  const totalActors = await ActorModel.getRowsCountWhere();
+  const idOffset = await getPaginationOffset(pageNumber, limitPerPage);
+  return { idOffset, totalActors };
+}
+
 export const getActors = async (req: Request, res: Response) => {
-  const { pageNumber: pageNumberText = '1' } = req.query;
+  const { page: pageNumberText = '1' } = req.query;
+
+  const limitPerPage = ITEMS_PER_PAGE_FOR_PAGINATION;
   const pageNumber = Number(pageNumberText);
 
-  const idOffset = (pageNumber - 1) * ITEMS_PER_PAGE_FOR_PAGINATION;
+  const filters = parseActorsPaginationFilters(req);
+  const { idOffset, totalActors } = await getActorsPaginationOffset(pageNumber, limitPerPage, filters);
 
-  const totalActors = await ActorModel.getTotalRowsCount();
+  const totalPages = Math.ceil(totalActors / limitPerPage);
+  if (pageNumber > totalPages) {
+    throw new AppError('Page out of range', 404);
+  }
 
   const actors = await ActorModel.findAll({
+    attributes: ['id', 'imdbId', 'actorName', 'birthday', 'deathday', 'placeOfBirth', 'popularity', 'profilePictureUrl'],
+    order: [['id', idOffset >= 0 ? 'ASC' : 'DESC']],
     where: {
       id: {
-        [Op.gt]: idOffset,
+        [idOffset >= 0 ? Op.gte : Op.lte]: idOffset >= 0 ? idOffset : totalActors,
       },
+      ...filters,
     },
-    attributes: { exclude: ['tmdbId'] },
-    order: [['id', 'ASC']],
-    limit: ITEMS_PER_PAGE_FOR_PAGINATION,
+    limit: idOffset >= 0 ? limitPerPage : totalActors % limitPerPage,
   });
 
-  res
-    .status(200)
-    .set({
-      'rf-page-number': pageNumber,
-    })
-    .json({
-      items: actors,
-      length: actors.length,
-      totalPages: Math.ceil(totalActors / ITEMS_PER_PAGE_FOR_PAGINATION),
-      totalItems: totalActors,
-    });
+  const queryObject = parseRequestQuery(req, ['page']);
+  const pagination = getPaginationMetadata(pageNumber, totalActors, limitPerPage, totalPages, queryObject, filters);
+
+  res.status(200).json({
+    items: pageNumber > 0 ? actors : actors.reverse(),
+    length: actors.length,
+    pagination,
+  });
 };
 
 export const searchActor = async (req: Request, res: Response) => {
@@ -107,10 +130,7 @@ export const getActorById = async (req: Request, res: Response) => {
               'id',
               'title',
               'releaseDate',
-              [
-                literal(`(SELECT ARRAY_AGG(g.genre_name) FROM genre AS g JOIN UNNEST(genre_ids) AS gid ON g.id = gid)`),
-                'genres',
-              ],
+              [literal(`(SELECT ARRAY_AGG(g.genre_name) FROM genre AS g JOIN UNNEST(genre_ids) AS gid ON g.id = gid)`), 'genres'],
               'runtime',
               'ratingAverage',
               'ratingCount',
@@ -128,10 +148,7 @@ export const getActorById = async (req: Request, res: Response) => {
   res.status(200).json(actor);
 };
 
-export const addToMovie = async (
-  req: CustomRequestWithBody<MovieActorPayload & { movieId: number }>,
-  res: Response
-) => {
+export const addToMovie = async (req: CustomRequestWithBody<MovieActorPayload & { movieId: number }>, res: Response) => {
   const { id: idText } = req.params;
   const actorId = Number(idText);
 

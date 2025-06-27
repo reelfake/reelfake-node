@@ -1,7 +1,8 @@
 import type { Request } from 'express';
 import { Op, WhereOptions } from 'sequelize';
-import { availableGenres } from '../constants';
 import { MovieModel } from '../models';
+import { parseFilterRangeQuery } from '../utils';
+import { availableGenres } from '../constants';
 
 function parseRatingQuery(ratingQuery: string | undefined) {
   const ratingRange = ratingQuery?.toString().split(',');
@@ -19,45 +20,6 @@ function parseRatingQuery(ratingQuery: string | undefined) {
     return {
       ratingAverage: {
         [Op.between]: [Number(min), Number(max)],
-      },
-    };
-  }
-
-  return undefined;
-}
-
-function parseReleaseDateQuery(releaseDateQuery: string | undefined) {
-  const releaseDateRange = releaseDateQuery?.toString().split(',');
-  if (releaseDateRange && releaseDateRange.length === 1) {
-    return {
-      releaseDate: {
-        [Op.eq]: releaseDateRange[0],
-      },
-    };
-  }
-
-  if (releaseDateRange && releaseDateRange.length === 2) {
-    const [minReleaseDate, maxReleaseDate] = releaseDateRange;
-
-    if (minReleaseDate && !maxReleaseDate) {
-      return {
-        releaseDate: {
-          [Op.gte]: minReleaseDate,
-        },
-      };
-    }
-
-    if (!minReleaseDate && maxReleaseDate) {
-      return {
-        releaseDate: {
-          [Op.lte]: maxReleaseDate,
-        },
-      };
-    }
-
-    return {
-      releaseDate: {
-        [Op.between]: releaseDateRange,
       },
     };
   }
@@ -83,7 +45,7 @@ function parseGenresFilter(genresQuery: string | undefined) {
   return undefined;
 }
 
-export function parseMovieFilters(req: Request) {
+export function parseMoviesPaginationFilters(req: Request) {
   const { genres: genresText, release_date: releaseDate, rating } = req.query;
 
   const conditions: WhereOptions[] = [];
@@ -93,7 +55,7 @@ export function parseMovieFilters(req: Request) {
     conditions.push(genresFilter);
   }
 
-  const releaseDateFilter = parseReleaseDateQuery(releaseDate?.toString());
+  const releaseDateFilter = parseFilterRangeQuery<string>('releaseDate', releaseDate?.toString());
   if (releaseDateFilter) {
     conditions.push(releaseDateFilter);
   }
@@ -113,28 +75,4 @@ export function parseMovieFilters(req: Request) {
   }
 
   return where;
-}
-
-export async function getOffsetData(pageNumber: number, limit: number, filters?: WhereOptions) {
-  if (filters) {
-    const movieIds = await MovieModel.getRecordIds(filters);
-    let idOffset = Number(movieIds.at(0));
-
-    const isLastPage = pageNumber === -1 || pageNumber === movieIds.length / limit;
-
-    if (isLastPage) {
-      idOffset = Number(movieIds.at(-limit));
-    }
-
-    if (pageNumber > 1) {
-      idOffset = Number(movieIds.at(pageNumber * limit - limit));
-    }
-
-    return { idOffset: idOffset, totalMovies: movieIds.length };
-  }
-
-  const idOffset = pageNumber > 0 ? pageNumber * limit - limit + 1 : pageNumber;
-  const totalMovies = await MovieModel.getRowsCountWhere();
-
-  return { idOffset, totalMovies };
 }

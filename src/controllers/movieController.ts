@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { Includeable, Op, Transaction, col, literal } from 'sequelize';
+import { Includeable, Op, Transaction, WhereOptions, col, literal } from 'sequelize';
 import sequelize from '../sequelize.config';
 import {
   ActorModel,
@@ -12,7 +12,14 @@ import {
   CountryModel,
   MovieLanguageModel,
 } from '../models';
-import { AppError, parseMovieFilters, getOffsetData, parseRequestQuery } from '../utils';
+import {
+  AppError,
+  parseMoviesPaginationFilters,
+  parseRequestQuery,
+  getPaginationOffset,
+  getPaginationOffsetWithFilters,
+  getPaginationMetadata,
+} from '../utils';
 import { ITEMS_PER_PAGE_FOR_PAGINATION, ERROR_MESSAGES, movieModelAttributes } from '../constants';
 import { CustomRequest, CustomRequestWithBody, IncomingMovie, MovieActorPayload } from '../types';
 
@@ -48,6 +55,18 @@ const newActorFields = [
   'popularity',
   'profilePictureUrl',
 ];
+
+async function getMoviesPaginationOffset(pageNumber: number, limitPerPage: number, filters?: WhereOptions) {
+  if (filters) {
+    const movieIds = await MovieModel.getRecordIds(filters);
+    const idOffset = await getPaginationOffsetWithFilters(pageNumber, limitPerPage, movieIds);
+    return { idOffset, totalMovies: movieIds.length };
+  }
+
+  const totalMovies = await MovieModel.getRowsCountWhere();
+  const idOffset = await getPaginationOffset(pageNumber, limitPerPage);
+  return { idOffset, totalMovies };
+}
 
 async function createActors(t: Transaction, actors: MovieActorPayload[], movieId?: number) {
   const createdActors = await ActorModel.bulkCreate(
@@ -121,8 +140,9 @@ export const getMovies = async (req: Request, res: Response) => {
   const limitPerPage = ITEMS_PER_PAGE_FOR_PAGINATION;
   const pageNumber = Number(pageNumberText);
 
-  const filters = parseMovieFilters(req);
-  const { idOffset, totalMovies } = await getOffsetData(pageNumber, limitPerPage, filters);
+  const filters = parseMoviesPaginationFilters(req);
+  const { idOffset, totalMovies } = await getMoviesPaginationOffset(pageNumber, limitPerPage, filters);
+
   const totalPages = Math.ceil(totalMovies / limitPerPage);
   if (pageNumber > totalPages) {
     throw new AppError('Page out of range', 404);
@@ -170,50 +190,13 @@ export const getMovies = async (req: Request, res: Response) => {
     limit: idOffset >= 0 ? limitPerPage : totalMovies % limitPerPage,
   });
 
-  const currentPageNumber = pageNumber > 0 ? pageNumber : totalPages;
-  const isLastPage = pageNumber === -1 || totalPages === pageNumber;
-  const isFirstPage = pageNumber === 1;
-
-  let nextPage = isLastPage ? null : `?page=${currentPageNumber + 1}`;
-  let prevPage = isFirstPage ? null : `?page=${currentPageNumber - 1}`;
-  let firstPage = '?page=first';
-  let lastPage = '?page=last';
-
   const queryObject = parseRequestQuery(req, ['page']);
-  const keyValueQueries = Object.entries(queryObject).reduce<string[]>((acc, curr) => {
-    return [...acc, `${curr[0]}=${curr[1]}`];
-  }, []);
-
-  if (nextPage && filters) {
-    nextPage += `&${keyValueQueries.join('&')}`;
-  }
-
-  if (prevPage && filters) {
-    prevPage += `&${keyValueQueries.join('&')}`;
-  }
-
-  if (filters) {
-    firstPage += `&${keyValueQueries.join('&')}`;
-    lastPage += `&${keyValueQueries.join('&')}`;
-  }
-
-  const pagination = {
-    items: pageNumber > 0 ? movies : movies.reverse(),
-    pagination: {
-      pageNumber: currentPageNumber,
-      totalPages,
-      totalItems: totalMovies,
-      itemsPerPage: limitPerPage,
-      next: nextPage,
-      prev: prevPage,
-      first: firstPage,
-      last: lastPage,
-    },
-  };
+  const pagination = getPaginationMetadata(pageNumber, totalMovies, limitPerPage, totalPages, queryObject, filters);
 
   res.status(200).json({
-    ...pagination,
-    length: pagination.items.length,
+    items: pageNumber > 0 ? movies : movies.reverse(),
+    length: movies.length,
+    pagination,
   });
 };
 

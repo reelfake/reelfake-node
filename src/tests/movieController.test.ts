@@ -1,6 +1,5 @@
 import supertest from 'supertest';
 import app from '../app';
-import * as dbQuery from '../utils/dbQuery';
 import {
   ITEMS_COUNT_PER_PAGE_FOR_TEST,
   execQuery,
