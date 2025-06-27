@@ -29,20 +29,21 @@ describe('Actor Controller', () => {
   describe('GET /actors', () => {
     it('should return actors page by page', async () => {
       const startingPage = 1;
+      const limitPerPage = ITEMS_COUNT_PER_PAGE_FOR_TEST;
       const totalRows = await getRowsCount('actor');
 
       const iterations = 3;
 
       for (let i = startingPage; i < iterations + startingPage; i++) {
-        const response = await server.get(`/api/v1/actors?pageNumber=${i}`);
+        const response = await server.get(`/api/v1/actors?page=${i}`);
         const expectedActors = await execQuery(
           `
-            SELECT * FROM actor 
+            SELECT id, imdb_id AS "imdbId", actor_name AS "actorName", birthday, deathday,
+            place_of_birth AS "placeOfBirth", popularity, profile_picture_url AS "profilePictureUrl" FROM actor 
             ORDER BY id ASC 
-            LIMIT ${ITEMS_COUNT_PER_PAGE_FOR_TEST} 
-            OFFSET ${(i - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST}
-          `,
-          FIELD_MAP.actor
+            LIMIT ${limitPerPage} 
+            OFFSET ${(i - 1) * limitPerPage}
+          `
         );
 
         expect(response.status).toBe(200);
@@ -50,26 +51,152 @@ describe('Actor Controller', () => {
         expect(response.body).toStrictEqual({
           items: expectedActors,
           length: expectedActors.length,
-          totalPages: Math.ceil(totalRows / ITEMS_COUNT_PER_PAGE_FOR_TEST),
-          totalItems: Number(totalRows),
+          pagination: {
+            pageNumber: i,
+            totalPages: Math.ceil(totalRows / limitPerPage),
+            totalItems: totalRows,
+            itemsPerPage: limitPerPage,
+            next: `?page=${i + 1}`,
+            prev: i > 1 ? `?page=${i - 1}` : null,
+            first: '?page=first',
+            last: '?page=last',
+          },
+        });
+      }
+    });
+
+    it('should return actors with the birthday filter', async () => {
+      const startingPage = 1;
+      const limitPerPage = ITEMS_COUNT_PER_PAGE_FOR_TEST;
+      const totalRows = await getRowsCount('actor', `birthday BETWEEN '1980-01-01' AND '1990-01-01'`);
+
+      const iterations = 3;
+
+      for (let i = startingPage; i < iterations + startingPage; i++) {
+        const response = await server.get(`/api/v1/actors?page=${i}&birthday=1980-01-01,1990-01-01`);
+        const expectedActors = await execQuery(
+          `
+            SELECT id, imdb_id AS "imdbId", actor_name AS "actorName", birthday, deathday,
+            place_of_birth AS "placeOfBirth", popularity, profile_picture_url AS "profilePictureUrl" FROM actor 
+            WHERE birthday BETWEEN '1980-01-01' AND '1990-01-01'
+            ORDER BY id ASC 
+            LIMIT ${limitPerPage}
+            OFFSET ${(i - 1) * limitPerPage}
+          `
+        );
+
+        expect(response.status).toBe(200);
+        expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
+        expect(response.body).toStrictEqual({
+          items: expectedActors,
+          length: expectedActors.length,
+          pagination: {
+            pageNumber: i,
+            totalPages: Math.ceil(totalRows / limitPerPage),
+            totalItems: totalRows,
+            itemsPerPage: limitPerPage,
+            next: `?page=${i + 1}&birthday=1980-01-01,1990-01-01`,
+            prev: i > 1 ? `?page=${i - 1}&birthday=1980-01-01,1990-01-01` : null,
+            first: '?page=first&birthday=1980-01-01,1990-01-01',
+            last: '?page=last&birthday=1980-01-01,1990-01-01',
+          },
+        });
+      }
+    });
+
+    it('should return actors with popularity range filter', async () => {
+      const startingPage = 1;
+      const limitPerPage = ITEMS_COUNT_PER_PAGE_FOR_TEST;
+      const totalRows = await getRowsCount('actor', `popularity BETWEEN 1 AND 2`);
+
+      const iterations = 3;
+
+      for (let i = startingPage; i < iterations + startingPage; i++) {
+        const response = await server.get(`/api/v1/actors?page=${i}&popularity=1,2`);
+        const expectedActors = await execQuery(
+          `
+            SELECT id, imdb_id AS "imdbId", actor_name AS "actorName", birthday, deathday,
+            place_of_birth AS "placeOfBirth", popularity, profile_picture_url AS "profilePictureUrl" FROM actor 
+            WHERE popularity BETWEEN 1 AND 2
+            ORDER BY id ASC 
+            LIMIT ${limitPerPage}
+            OFFSET ${(i - 1) * limitPerPage}
+          `
+        );
+
+        expect(response.status).toBe(200);
+        expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
+        expect(response.body).toStrictEqual({
+          items: expectedActors,
+          length: expectedActors.length,
+          pagination: {
+            pageNumber: i,
+            totalPages: Math.ceil(totalRows / limitPerPage),
+            totalItems: totalRows,
+            itemsPerPage: limitPerPage,
+            next: `?page=${i + 1}&popularity=1,2`,
+            prev: i > 1 ? `?page=${i - 1}&popularity=1,2` : null,
+            first: '?page=first&popularity=1,2',
+            last: '?page=last&popularity=1,2',
+          },
+        });
+      }
+    });
+
+    it('should return actors with name filter', async () => {
+      const startingPage = 1;
+      const limitPerPage = ITEMS_COUNT_PER_PAGE_FOR_TEST;
+      const totalRows = await getRowsCount('actor', `actor_name LIKE '%jennifer%'`);
+
+      const iterations = 3;
+
+      for (let i = startingPage; i < iterations + startingPage; i++) {
+        const response = await server.get(`/api/v1/actors?page=${i}&name=%jennifer%`);
+        const expectedActors = await execQuery(
+          `
+            SELECT id, imdb_id AS "imdbId", actor_name AS "actorName", birthday, deathday,
+            place_of_birth AS "placeOfBirth", popularity, profile_picture_url AS "profilePictureUrl" FROM actor 
+            WHERE actor_name LIKE '%jennifer%'
+            ORDER BY id ASC 
+            LIMIT ${limitPerPage} 
+            OFFSET ${(i - 1) * limitPerPage}
+          `
+        );
+
+        expect(response.status).toBe(200);
+        expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
+        expect(response.body).toStrictEqual({
+          items: expectedActors,
+          length: expectedActors.length,
+          pagination: {
+            pageNumber: i,
+            totalPages: Math.ceil(totalRows / limitPerPage),
+            totalItems: totalRows,
+            itemsPerPage: limitPerPage,
+            next: `?page=${i + 1}&name=%jennifer%`,
+            prev: i > 1 ? `?page=${i - 1}&name=%jennifer%` : null,
+            first: '?page=first&name=%jennifer%',
+            last: '?page=last&name=%jennifer%',
+          },
         });
       }
     });
 
     it('should return correct actor list when jumping between pages', async () => {
       const totalRows = await getRowsCount('actor');
+      const limitPerPage = ITEMS_COUNT_PER_PAGE_FOR_TEST;
       const pages = [2, 5, 3];
 
       for (const page of pages) {
-        const response = await server.get(`/api/v1/actors?pageNumber=${page}`);
+        const response = await server.get(`/api/v1/actors?page=${page}`);
         const expectedActors = await execQuery(
           `
-              SELECT * FROM actor 
-              ORDER BY id ASC 
-              LIMIT ${ITEMS_COUNT_PER_PAGE_FOR_TEST} 
-              OFFSET ${(page - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST}
-            `,
-          FIELD_MAP.actor
+            SELECT id, imdb_id AS "imdbId", actor_name AS "actorName", birthday, deathday,
+            place_of_birth AS "placeOfBirth", popularity, profile_picture_url AS "profilePictureUrl" FROM actor 
+            ORDER BY id ASC 
+            LIMIT ${limitPerPage} 
+            OFFSET ${(page - 1) * limitPerPage}
+          `
         );
 
         expect(response.status).toBe(200);
@@ -77,26 +204,34 @@ describe('Actor Controller', () => {
         expect(response.body).toStrictEqual({
           items: expectedActors,
           length: expectedActors.length,
-          totalPages: Math.ceil(totalRows / ITEMS_COUNT_PER_PAGE_FOR_TEST),
-          totalItems: Number(totalRows),
+          pagination: {
+            pageNumber: page,
+            totalPages: Math.ceil(totalRows / limitPerPage),
+            totalItems: totalRows,
+            itemsPerPage: limitPerPage,
+            next: `?page=${page + 1}`,
+            prev: page > 1 ? `?page=${page - 1}` : null,
+            first: '?page=first',
+            last: '?page=last',
+          },
         });
       }
     });
 
     it('should return 400 when page number is 0', async () => {
-      const response = await server.get(`/api/v1/actors?pageNumber=0`);
+      const response = await server.get(`/api/v1/actors?page=0`);
 
       expect(response.status).toBe(400);
       expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
-      expect(response.body.message).toBe('Page number should be a valid non-zero positive number');
+      expect(response.body.message).toBe('Invalid page number');
     });
 
     it('should return 400 when page number is not a number', async () => {
-      const response = await server.get(`/api/v1/actors?pageNumber=a`);
+      const response = await server.get(`/api/v1/actors?page=a`);
 
       expect(response.status).toBe(400);
       expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
-      expect(response.body.message).toBe('Page number should be a valid non-zero positive number');
+      expect(response.body.message).toBe('Invalid page number');
     });
   });
 

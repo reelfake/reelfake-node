@@ -4,5 +4,12 @@ export { default as routeFnWrapper } from './routeFuncWrappter';
 export * as addressUtils from './address.utils';
 export { capitalize } from './text.utils';
 export { generateAuthToken } from './authUtils';
-export { parseRequestQuery } from './request.utils';
-export { parseMovieFilters, getOffsetData } from './moviePagination.utils';
+export { parseRequestQuery, validateDateRangeInRequest, validatePopularityRangeInRequest } from './request.utils';
+export { parseActorsPaginationFilters } from './actorPagination.utils';
+export { parseMoviesPaginationFilters } from './moviePagination.utils';
+export {
+  parseFilterRangeQuery,
+  getPaginationOffset,
+  getPaginationOffsetWithFilters,
+  getPaginationMetadata,
+} from './pagination.utils';

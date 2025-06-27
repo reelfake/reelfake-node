@@ -618,8 +618,8 @@ describe('Staff Controller', () => {
       const newStaffResponse = await server.post('/api/v1/staff').set('Cookie', cookie).send(payload);
       const staffId = newStaffResponse.body.id;
 
-      const staffCredential = await getStaffCredential();
-      await login(staffCredential.email, staffCredential.password);
+      const customerCredential = await getCustomerCredential();
+      await login(customerCredential.email, customerCredential.password);
 
       const response = await server
         .put(`/api/v1/staff/${staffId}`)

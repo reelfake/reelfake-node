@@ -1,4 +1,4 @@
-import { DataTypes, CreationOptional } from 'sequelize';
+import { DataTypes, CreationOptional, WhereOptions } from 'sequelize';
 import BaseModel from './baseModel';
 import sequelize from '../sequelize.config';
 
@@ -13,6 +13,23 @@ class Actor extends BaseModel {
   declare placeOfBirth: string;
   declare popularity: number;
   declare profilePictureUrl: string;
+
+  public static async getRowsCountWhere(conditions?: WhereOptions) {
+    const countOfRows = await Actor.count({
+      where: conditions,
+    });
+    return countOfRows;
+  }
+
+  public static async getRecordIds(conditions?: WhereOptions) {
+    const results = await Actor.findAll({
+      attributes: ['id'],
+      where: conditions,
+      order: [['id', 'ASC']],
+    });
+    const ids = results.map<number>((res) => res.toJSON().id);
+    return ids;
+  }
 }
 
 Actor.init(
@@ -42,11 +59,11 @@ Actor.init(
       field: 'biography',
     },
     birthday: {
-      type: DataTypes.DATE,
+      type: DataTypes.DATEONLY,
       field: 'birthday',
     },
     deathday: {
-      type: DataTypes.DATE,
+      type: DataTypes.DATEONLY,
       field: 'deathday',
     },
     placeOfBirth: {

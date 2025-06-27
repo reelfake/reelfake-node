@@ -1,4 +1,4 @@
-import { Model, QueryTypes } from 'sequelize';
+import { Model, QueryTypes, WhereOptions } from 'sequelize';
 import { AppError } from '../utils';
 
 class BaseModel extends Model {
@@ -8,9 +8,7 @@ class BaseModel extends Model {
     }
 
     const tableName = this.getTableName();
-    const queryText = id
-      ? `SELECT count(id) FROM ${tableName} WHERE id = ${id};`
-      : `SELECT count(id) FROM ${tableName};`;
+    const queryText = id ? `SELECT count(id) FROM ${tableName} WHERE id = ${id};` : `SELECT count(id) FROM ${tableName};`;
     const countResult = await this.sequelize.query<{ [key: string]: number }>(queryText, {
       type: QueryTypes.SELECT,
       plain: true,
