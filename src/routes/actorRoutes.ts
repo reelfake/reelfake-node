@@ -23,52 +23,39 @@ function validateActorsRouteQuery(req: Request, res: Response, next: NextFunctio
     req.query.page = '-1';
   }
 
-  // Validate birthday
-  const birthdayDateRange = birthday ? birthday.toString().split(',') : [];
-  validateDateRangeInRequest(
-    birthdayDateRange,
-    () => {
-      throw new AppError(ERROR_MESSAGES.INVALID_ACTOR_BIRTHDATE, 400);
-    },
-    () => {
-      throw new AppError(ERROR_MESSAGES.ACTOR_BIRTHDATE_INVALID_FORMAT, 400);
-    }
-  );
-
-  // Validate deathday
-  const deathdayDateRange = deathday ? deathday.toString().split(',') : [];
-  validateDateRangeInRequest(
-    deathdayDateRange,
-    () => {
-      throw new AppError(ERROR_MESSAGES.INVALID_ACTOR_DEATHDATE, 400);
-    },
-    () => {
-      throw new AppError(ERROR_MESSAGES.ACTOR_DEATHDATE_INVALID_FORMAT, 400);
-    }
-  );
-
-  // Validate popularity
-  const popularityRange = popularity ? popularity.toString().split(',') : [];
   try {
+    // Validate birthday
+    const birthdayDateRange = birthday ? birthday.toString().split(',') : [];
+    validateDateRangeInRequest(
+      birthdayDateRange,
+      () => {
+        throw new AppError(ERROR_MESSAGES.INVALID_ACTOR_BIRTHDATE, 400);
+      },
+      () => {
+        throw new AppError(ERROR_MESSAGES.ACTOR_BIRTHDATE_INVALID_FORMAT, 400);
+      }
+    );
+
+    // Validate deathday
+    const deathdayDateRange = deathday ? deathday.toString().split(',') : [];
+    validateDateRangeInRequest(
+      deathdayDateRange,
+      () => {
+        throw new AppError(ERROR_MESSAGES.INVALID_ACTOR_DEATHDATE, 400);
+      },
+      () => {
+        throw new AppError(ERROR_MESSAGES.ACTOR_DEATHDATE_INVALID_FORMAT, 400);
+      }
+    );
+
+    // Validate popularity
+    const popularityRange = popularity ? popularity.toString().split(',') : [];
+
     validatePopularityRangeInRequest(popularityRange, () => {
       throw new AppError(ERROR_MESSAGES.INVALID_ACTOR_POPULARITY, 400);
     });
   } catch (err) {
     return next(err);
-  }
-
-  next();
-}
-
-function validateSearchRouteQuery(req: Request, res: Response, next: NextFunction) {
-  const { name, q } = req.query;
-
-  if (!name && !q) {
-    throw new AppError('Request is missing the search parameter', 400);
-  }
-
-  if (name && q) {
-    throw new AppError('Request cannot have search by name and query together', 400);
   }
 
   next();

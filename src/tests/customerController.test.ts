@@ -10,18 +10,26 @@ import {
   getStoreManagerCredential,
   getStaffCredential,
   getCustomerCredential,
+  getUserCredential,
+  getRandomFirstName,
+  getRandomLastName,
+  getRandomPhoneNumber,
 } from './testUtil';
+import { ITEMS_COUNT_PER_PAGE_FOR_TEST } from './testUtil';
 import { CustomerPayload } from '../types';
 
 describe('Customer Controller', () => {
   let cookie: string = '';
   const server = supertest(app);
   const getCustomerPayload = (preferredStoreId: number | undefined = undefined) => {
+    const firstName = getRandomFirstName();
+    const lastName = getRandomLastName();
+
     const payload = {
-      firstName: getRandomCharacters(10, true),
-      lastName: getRandomCharacters(10, true),
-      email: getRandomEmail(),
-      phoneNumber: `${Math.ceil(Math.random() * 10000000000)}`,
+      firstName: firstName,
+      lastName: lastName,
+      email: getRandomEmail(firstName, lastName),
+      phoneNumber: getRandomPhoneNumber(),
       preferredStoreId,
       avatar: getRandomCharacters(100),
       address: {
@@ -51,50 +59,314 @@ describe('Customer Controller', () => {
   });
 
   describe('GET /customers', () => {
+    const limitPerPage = ITEMS_COUNT_PER_PAGE_FOR_TEST;
+
+    const getExpectedPaginationData = async (page: number, totalCustomers: number) => {
+      const totalPages = Math.ceil(totalCustomers / limitPerPage);
+      const isLastPage = page === totalPages;
+      const isFirstPage = page > 1;
+
+      const pagination = {
+        pageNumber: page,
+        totalPages: totalPages,
+        totalItems: totalCustomers,
+        itemsPerPage: limitPerPage,
+        next: isLastPage ? null : `?page=${page + 1}`,
+        prev: isFirstPage ? `?page=${page - 1}` : null,
+        first: '?page=first',
+        last: '?page=last',
+      };
+
+      return pagination;
+    };
+
+    const getExpectedCustomersPage = async (page: number, condition?: string) => {
+      let queryText = `
+        SELECT cu.id, cu.first_name AS "firstName", cu.last_name AS "lastName",
+        cu.email, cu.phone_number AS "phoneNumber", cu.preferred_store_id AS "preferredStoreId",
+        cu.active, cu.avatar, cu.registered_on AS "registeredOn",
+        json_build_object(
+          'id', a.id,
+          'addressLine', a.address_line,
+          'cityName', c.city_name,
+          'stateName', c.state_name,
+          'country', cy.country_name,
+          'postalCode', a.postal_code
+        ) AS "address"
+        FROM customer AS cu LEFT JOIN address AS a ON cu.address_id = a.id
+        LEFT JOIN city AS c ON a.city_id = c.id
+        LEFT JOIN country AS cy ON c.country_id = cy.id
+      `;
+
+      if (condition) {
+        queryText += ` WHERE ${condition}`;
+      }
+
+      queryText += `
+        ORDER BY cu.id ASC
+        OFFSET ${(page - 1) * limitPerPage}
+        LIMIT ${limitPerPage}
+      `;
+
+      const queryResult = await execQuery(queryText);
+      return queryResult;
+    };
+
     it('should get customers with pagination support', async () => {
       const credential = await getStoreManagerCredential();
       await login(credential.email, credential.password);
 
       const pages = [1, 2, 5, 6, 3];
-      const limitPerPage = 50;
-
-      const [totalCustomersQueryResult] = await execQuery(`
-          SELECT COUNT(*) FROM customer
-        `);
-      const totalCustomers = Number(totalCustomersQueryResult.count);
+      const countQueryResult = await execQuery('SELECT COUNT(*) AS "totalCustomers" FROM customer');
+      const { totalCustomers } = countQueryResult.at(0) || {};
 
       for (let i of pages) {
-        const response = await server.get(`/api/v1/customers?pageNumber=${i}`).set('Cookie', cookie);
+        const response = await server.get(`/api/v1/customers?page=${i}`).set('Cookie', cookie);
         expect(response.status).toEqual(200);
 
-        const queryResult = await execQuery(`
-            SELECT cu.id, cu.first_name AS "firstName", cu.last_name AS "lastName",
-            cu.email, cu.phone_number AS "phoneNumber", cu.preferred_store_id AS "preferredStoreId",
-            cu.active, cu.avatar, cu.registered_on AS "registeredOn",
-            json_build_object(
-              'id', a.id,
-              'addressLine', a.address_line,
-              'cityName', c.city_name,
-              'stateName', c.state_name,
-              'country', cy.country_name,
-              'postalCode', a.postal_code
-            ) AS "address"
-            FROM customer AS cu LEFT JOIN address AS a ON cu.address_id = a.id
-            LEFT JOIN city AS c ON a.city_id = c.id
-            LEFT JOIN country AS cy ON c.country_id = cy.id
-            ORDER BY cu.id ASC
-            OFFSET ${(i - 1) * limitPerPage}
-            LIMIT ${limitPerPage}
-          `);
+        const queryResult = await getExpectedCustomersPage(i);
+        const paginationData = await getExpectedPaginationData(i, Number(totalCustomers));
 
         const pageResult = response.body;
         expect(pageResult).toEqual({
           items: queryResult,
           length: queryResult.length,
-          totalPages: Math.ceil(totalCustomers / limitPerPage),
-          totalItems: totalCustomers,
+          pagination: paginationData,
         });
       }
+    });
+
+    it('should get customers by first name', async () => {
+      const countQueryResult = await execQuery(`
+        SELECT COUNT(*) AS "totalCustomers" FROM customer WHERE first_name ILIKE '%tin%'
+      `);
+      const { totalCustomers } = countQueryResult.at(0) || {};
+
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
+      const pages = [1, 3, 6, 4, 2];
+
+      for (let i of pages) {
+        const response = await server.get(`/api/v1/customers?page=${i}&first_name=%tin%`).set('Cookie', cookie);
+        expect(response.status).toEqual(200);
+
+        const queryResult = await getExpectedCustomersPage(i, "cu.first_name ILIKE '%tin%'");
+        const paginationData = await getExpectedPaginationData(i, Number(totalCustomers));
+
+        const pageResult = response.body;
+        expect(pageResult).toEqual({
+          items: queryResult,
+          length: queryResult.length,
+          pagination: {
+            ...paginationData,
+            next: paginationData.next ? paginationData.next + '&first_name=%tin%' : paginationData.next,
+            prev: paginationData.prev ? paginationData.prev + '&first_name=%tin%' : paginationData.prev,
+            first: paginationData.first + '&first_name=%tin%',
+            last: paginationData.last + '&first_name=%tin%',
+          },
+        });
+      }
+    });
+
+    it('should get customers by last name', async () => {
+      const countQueryResult = await execQuery(`
+        SELECT COUNT(*) AS "totalCustomers" FROM customer WHERE last_name ILIKE '%tin%'
+      `);
+      const { totalCustomers } = countQueryResult.at(0) || {};
+
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
+      const pages = [1, 3, 5, 4];
+
+      for (let i of pages) {
+        const response = await server.get(`/api/v1/customers?page=${i}&last_name=%tin%`).set('Cookie', cookie);
+        expect(response.status).toEqual(200);
+
+        const queryResult = await getExpectedCustomersPage(i, "cu.last_name ILIKE '%tin%'");
+        const paginationData = await getExpectedPaginationData(i, Number(totalCustomers));
+
+        const pageResult = response.body;
+        expect(pageResult).toEqual({
+          items: queryResult,
+          length: queryResult.length,
+          pagination: {
+            ...paginationData,
+            next: paginationData.next ? paginationData.next + '&last_name=%tin%' : paginationData.next,
+            prev: paginationData.prev ? paginationData.prev + '&last_name=%tin%' : paginationData.prev,
+            first: paginationData.first + '&last_name=%tin%',
+            last: paginationData.last + '&last_name=%tin%',
+          },
+        });
+      }
+    });
+
+    it('should get customers by first and last name', async () => {
+      const countQueryResult = await execQuery(`
+        SELECT COUNT(*) AS "totalCustomers" FROM customer WHERE first_name ILIKE '%le%' AND last_name ILIKE '%le%'
+      `);
+      const { totalCustomers } = countQueryResult.at(0) || {};
+
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
+      const pages = [1, 2];
+
+      for (let i of pages) {
+        const response = await server.get(`/api/v1/customers?page=${i}&first_name=%le%&last_name=%le%`).set('Cookie', cookie);
+        expect(response.status).toEqual(200);
+
+        const queryResult = await getExpectedCustomersPage(i, "cu.first_name ILIKE '%le%' AND cu.last_name ILIKE '%le%'");
+        const paginationData = await getExpectedPaginationData(i, Number(totalCustomers));
+
+        const pageResult = response.body;
+        expect(pageResult).toEqual({
+          items: queryResult,
+          length: queryResult.length,
+          pagination: {
+            ...paginationData,
+            next: paginationData.next ? paginationData.next + '&first_name=%le%&last_name=%le%' : paginationData.next,
+            prev: paginationData.prev ? paginationData.prev + '&first_name=%le%&last_name=%le%' : paginationData.prev,
+            first: paginationData.first + '&first_name=%le%&last_name=%le%',
+            last: paginationData.last + '&first_name=%le%&last_name=%le%',
+          },
+        });
+      }
+    });
+
+    it('should get customers by city', async () => {
+      const countQueryResult = await execQuery(`
+        SELECT COUNT(*) AS "totalCustomers" FROM customer AS cu LEFT JOIN address AS a
+        ON cu.address_id = a.id LEFT JOIN city AS c ON a.city_id = c.id
+        WHERE c.city_name ILIKE 'maryborough'
+      `);
+      const { totalCustomers } = countQueryResult.at(0) || {};
+
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
+      const pages = [1, 4, 2];
+
+      for (let i of pages) {
+        const response = await server.get(`/api/v1/customers?page=${i}&city=maryborough`).set('Cookie', cookie);
+        expect(response.status).toEqual(200);
+
+        const queryResult = await getExpectedCustomersPage(i, "c.city_name ILIKE 'maryborough'");
+        const paginationData = await getExpectedPaginationData(i, Number(totalCustomers));
+
+        const pageResult = response.body;
+        expect(pageResult).toEqual({
+          items: queryResult,
+          length: queryResult.length,
+          pagination: {
+            ...paginationData,
+            next: paginationData.next ? paginationData.next + '&city=maryborough' : paginationData.next,
+            prev: paginationData.prev ? paginationData.prev + '&city=maryborough' : paginationData.prev,
+            first: paginationData.first + '&city=maryborough',
+            last: paginationData.last + '&city=maryborough',
+          },
+        });
+      }
+    });
+
+    it('should get customers by state', async () => {
+      const countQueryResult = await execQuery(`
+        SELECT COUNT(*) AS "totalCustomers" FROM customer AS cu LEFT JOIN address AS a
+        ON cu.address_id = a.id LEFT JOIN city AS c ON a.city_id = c.id
+        WHERE c.state_name ILIKE 'victoria'
+      `);
+      const { totalCustomers } = countQueryResult.at(0) || {};
+
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
+      const pages = [1, 2, 5, 6, 3];
+
+      for (let i of pages) {
+        const response = await server.get(`/api/v1/customers?page=${i}&state=victoria`).set('Cookie', cookie);
+        expect(response.status).toEqual(200);
+
+        const queryResult = await getExpectedCustomersPage(i, "c.state_name ILIKE 'victoria'");
+        const paginationData = await getExpectedPaginationData(i, Number(totalCustomers));
+
+        const pageResult = response.body;
+        expect(pageResult).toEqual({
+          items: queryResult,
+          length: queryResult.length,
+          pagination: {
+            ...paginationData,
+            next: paginationData.next ? paginationData.next + '&state=victoria' : paginationData.next,
+            prev: paginationData.prev ? paginationData.prev + '&state=victoria' : paginationData.prev,
+            first: paginationData.first + '&state=victoria',
+            last: paginationData.last + '&state=victoria',
+          },
+        });
+      }
+    });
+
+    it('should get customers by city and state', async () => {
+      const countQueryResult = await execQuery(`
+        SELECT COUNT(*) AS "totalCustomers" FROM customer AS cu LEFT JOIN address AS a
+        ON cu.address_id = a.id LEFT JOIN city AS c ON a.city_id = c.id
+        WHERE c.city_name ILIKE 'melbourne' AND c.state_name ILIKE 'victoria'
+      `);
+      const { totalCustomers } = countQueryResult.at(0) || {};
+
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
+      const pages = [1, 2];
+
+      for (let i of pages) {
+        const response = await server.get(`/api/v1/customers?page=${i}&city=melbourne&state=victoria`).set('Cookie', cookie);
+        expect(response.status).toEqual(200);
+
+        const queryResult = await getExpectedCustomersPage(i, "c.city_name ILIKE 'melbourne' AND c.state_name ILIKE 'victoria'");
+        const paginationData = await getExpectedPaginationData(i, Number(totalCustomers));
+
+        const pageResult = response.body;
+        expect(pageResult).toEqual({
+          items: queryResult,
+          length: queryResult.length,
+          pagination: {
+            ...paginationData,
+            next: paginationData.next ? paginationData.next + '&city=melbourne&state=victoria' : paginationData.next,
+            prev: paginationData.prev ? paginationData.prev + '&city=melbourne&state=victoria' : paginationData.prev,
+            first: paginationData.first + '&city=melbourne&state=victoria',
+            last: paginationData.last + '&city=melbourne&state=victoria',
+          },
+        });
+      }
+    });
+
+    it('should get customers by registered date', async () => {
+      const countQueryResult = await execQuery(`
+        SELECT COUNT(*) AS "totalCustomers" FROM customer WHERE registered_on = '2024-01-01'
+      `);
+      const { totalCustomers } = countQueryResult.at(0) || {};
+
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
+      const response = await server.get(`/api/v1/customers?registered_on=2024-01-01`).set('Cookie', cookie);
+      expect(response.status).toEqual(200);
+
+      const queryResult = await getExpectedCustomersPage(1, "cu.registered_on = '2024-01-01'");
+      const paginationData = await getExpectedPaginationData(1, Number(totalCustomers));
+
+      const pageResult = response.body;
+      expect(pageResult).toEqual({
+        items: queryResult,
+        length: queryResult.length,
+        pagination: {
+          ...paginationData,
+          next: paginationData.next ? paginationData.next + '&registered_on=2024-01-01' : paginationData.next,
+          prev: paginationData.prev ? paginationData.prev + '&registered_on=2024-01-01' : paginationData.prev,
+          first: paginationData.first + '&registered_on=2024-01-01',
+          last: paginationData.last + '&registered_on=2024-01-01',
+        },
+      });
     });
 
     it('should return 404 when fetching customers with page that is out of range', async () => {
@@ -103,8 +375,8 @@ describe('Customer Controller', () => {
 
       let response = await server.get('/api/v1/customers').set('Cookie', cookie);
       expect(response.status).toEqual(200);
-      const totalPages = response.body.totalPages;
-      response = await server.get(`/api/v1/customers?pageNumber=${Number(totalPages) + 1}`).set('Cookie', cookie);
+      const totalPages = response.body.pagination.totalPages;
+      response = await server.get(`/api/v1/customers?page=${Number(totalPages) + 1}`).set('Cookie', cookie);
       expect(response.status).toEqual(404);
       expect(response.body.message).toEqual('Page out of range');
     });

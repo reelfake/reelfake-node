@@ -52,7 +52,7 @@ export const getActors = async (req: Request, res: Response) => {
   });
 
   const queryObject = parseRequestQuery(req, ['page']);
-  const pagination = getPaginationMetadata(pageNumber, totalActors, limitPerPage, totalPages, queryObject, filters);
+  const pagination = getPaginationMetadata(pageNumber, totalActors, limitPerPage, totalPages, queryObject, !!filters);
 
   res.status(200).json({
     items: pageNumber > 0 ? actors : actors.reverse(),

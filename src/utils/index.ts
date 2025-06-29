@@ -7,9 +7,11 @@ export { generateAuthToken } from './authUtils';
 export { parseRequestQuery, validateDateRangeInRequest, validatePopularityRangeInRequest } from './request.utils';
 export { parseActorsPaginationFilters } from './actorPagination.utils';
 export { parseMoviesPaginationFilters } from './moviePagination.utils';
+export { parseCustomersPaginationFilters } from './customerPagination.utils';
 export {
   parseFilterRangeQuery,
   getPaginationOffset,
   getPaginationOffsetWithFilters,
   getPaginationMetadata,
+  parsePaginationFilter,
 } from './pagination.utils';

@@ -191,7 +191,7 @@ export const getMovies = async (req: Request, res: Response) => {
   });
 
   const queryObject = parseRequestQuery(req, ['page']);
-  const pagination = getPaginationMetadata(pageNumber, totalMovies, limitPerPage, totalPages, queryObject, filters);
+  const pagination = getPaginationMetadata(pageNumber, totalMovies, limitPerPage, totalPages, queryObject, !!filters);
 
   res.status(200).json({
     items: pageNumber > 0 ? movies : movies.reverse(),

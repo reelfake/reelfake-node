@@ -1,33 +1,13 @@
 import type { Request } from 'express';
-import { Op, WhereOptions } from 'sequelize';
-import { parseFilterRangeQuery } from './pagination.utils';
-
-function parseActorNameFilter(actorName: string | undefined) {
-  if (!actorName) return undefined;
-
-  return {
-    actorName: {
-      [Op.iLike]: actorName,
-    },
-  };
-}
-
-function parsePlaceOfBirthFilter(placeOfBirth: string | undefined) {
-  if (!placeOfBirth) return undefined;
-
-  return {
-    placeOfBirth: {
-      [Op.iLike]: placeOfBirth,
-    },
-  };
-}
+import { WhereOptions } from 'sequelize';
+import { parseFilterRangeQuery, parsePaginationFilter } from './pagination.utils';
 
 export function parseActorsPaginationFilters(req: Request) {
   const { name: actorName, birthday, deathday, place_of_birth: placeOfBirth, popularity } = req.query;
 
   const conditions: WhereOptions[] = [];
 
-  const actorNameFilter = parseActorNameFilter(actorName?.toString());
+  const actorNameFilter = parsePaginationFilter<string>('actorName', actorName?.toString());
   if (actorNameFilter) {
     conditions.push(actorNameFilter);
   }
@@ -41,7 +21,7 @@ export function parseActorsPaginationFilters(req: Request) {
     conditions.push(deathdayFilter);
   }
 
-  const placeOfBirthFilter = parsePlaceOfBirthFilter(placeOfBirth?.toString());
+  const placeOfBirthFilter = parsePaginationFilter<string>('placeOfBirth', placeOfBirth?.toString());
   if (placeOfBirthFilter) {
     conditions.push(placeOfBirthFilter);
   }

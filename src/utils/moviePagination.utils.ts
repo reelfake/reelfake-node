@@ -1,31 +1,7 @@
 import type { Request } from 'express';
 import { Op, WhereOptions } from 'sequelize';
-import { MovieModel } from '../models';
 import { parseFilterRangeQuery } from '../utils';
 import { availableGenres } from '../constants';
-
-function parseRatingQuery(ratingQuery: string | undefined) {
-  const ratingRange = ratingQuery?.toString().split(',');
-
-  if (ratingRange && ratingRange.length === 1) {
-    return {
-      ratingAverage: {
-        [Op.eq]: Number(ratingRange[0]),
-      },
-    };
-  }
-
-  if (ratingRange && ratingRange.length === 2) {
-    const [min = '0', max = '10'] = ratingRange;
-    return {
-      ratingAverage: {
-        [Op.between]: [Number(min), Number(max)],
-      },
-    };
-  }
-
-  return undefined;
-}
 
 function parseGenresFilter(genresQuery: string | undefined) {
   const genres = genresQuery ? genresQuery.toString().split(',') : [];
@@ -60,7 +36,7 @@ export function parseMoviesPaginationFilters(req: Request) {
     conditions.push(releaseDateFilter);
   }
 
-  const ratingFilter = parseRatingQuery(rating?.toString());
+  const ratingFilter = parseFilterRangeQuery<number>('ratingAverage', rating?.toString());
   if (ratingFilter) {
     conditions.push(ratingFilter);
   }
