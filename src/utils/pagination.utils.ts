@@ -1,5 +1,18 @@
 import { Op, WhereOptions } from 'sequelize';
 
+export function parsePaginationFilter<T extends string | number>(
+  fieldName: string,
+  fieldValue: string | undefined
+): WhereOptions | undefined {
+  if (!fieldValue) return undefined;
+
+  return {
+    [fieldName]: {
+      [Op.iLike]: fieldValue as T,
+    },
+  };
+}
+
 export function parseFilterRangeQuery<T extends string | number>(
   fieldName: string,
   fieldValue: string | undefined
@@ -73,7 +86,7 @@ export function getPaginationMetadata(
   limitPerPage: number,
   totalPages: number,
   queryString: { [key: string]: string },
-  pageFilters: WhereOptions | undefined
+  hasFilters: boolean
 ) {
   const currentPageNumber = pageNumber > 0 ? pageNumber : totalPages;
   const isLastPage = pageNumber === -1 || totalPages === pageNumber;
@@ -88,15 +101,15 @@ export function getPaginationMetadata(
     return [...acc, `${curr[0]}=${curr[1]}`];
   }, []);
 
-  if (nextPage && pageFilters) {
+  if (nextPage && hasFilters) {
     nextPage += `&${keyValueQueries.join('&')}`;
   }
 
-  if (prevPage && pageFilters) {
+  if (prevPage && hasFilters) {
     prevPage += `&${keyValueQueries.join('&')}`;
   }
 
-  if (pageFilters) {
+  if (hasFilters) {
     firstPage += `&${keyValueQueries.join('&')}`;
     lastPage += `&${keyValueQueries.join('&')}`;
   }

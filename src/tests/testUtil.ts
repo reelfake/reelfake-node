@@ -1,4 +1,5 @@
 import { QueryTypes } from 'sequelize';
+import { faker } from '@faker-js/faker';
 import bcrypt from 'bcryptjs';
 import sequelize from '../sequelize.config';
 export * from './fieldMap';
@@ -8,20 +9,20 @@ export const ITEMS_COUNT_PER_PAGE_FOR_TEST = 50;
 
 const passwordMock = 'test1234';
 
+export function getRandomFirstName() {
+  return faker.person.firstName();
+}
+
+export function getRandomLastName() {
+  return faker.person.lastName();
+}
+
 export function getRandomNumberBetween(start: number, end: number) {
   return Math.floor(Math.random() * (end - start) + start);
 }
 
 export function getRandomNumber(digits: number) {
-  if (digits <= 0) {
-    throw new Error('Digits must be greater than 0');
-  }
-
-  return Math.floor(Math.random() * Number('9'.padEnd(digits + 1, '0'))) + 10000;
-}
-
-export function getRandomChoice(choices: string[]) {
-  return choices[getRandomNumberBetween(0, choices.length)];
+  return Number(faker.string.numeric({ length: digits }));
 }
 
 export function getRandomCharacters(length: number = 5, firstCharUpperCase: boolean = true) {
@@ -68,24 +69,24 @@ export function getRandomCharacters(length: number = 5, firstCharUpperCase: bool
   return chars;
 }
 
-export function getRandomEmail() {
-  return `${getRandomCharacters()}${getRandomCharacters()}${Math.ceil(Math.random() * 1000)}@${getRandomCharacters(6)}.com`;
+export function getRandomEmail(firstName?: string, lastName?: string) {
+  return faker.internet.email({ provider: 'example.com', firstName, lastName });
+}
+
+export function getRandomPhoneNumber() {
+  return faker.phone.number();
 }
 
 export function getRandomAddressLine() {
-  return `${Math.ceil(Math.random() * 1000)} ${getRandomCharacters()} Street`;
+  return faker.location.streetAddress();
 }
 
 export function getRandomPostalCode() {
-  return `${getRandomNumberBetween(0, 2)}${getRandomCharacters(5)}${getRandomNumberBetween(0, 2)}`;
+  return faker.location.zipCode();
 }
 
 export function getRandomDate(yearFrom: number, yearTo: number) {
-  const randomYear = getRandomNumberBetween(yearFrom, yearTo);
-  const randomMonth: number = getRandomNumberBetween(1, 13);
-  const randomDayOfMonth = getRandomNumberBetween(1, 31);
-
-  return `${randomYear}-${randomMonth < 10 ? '0' + randomMonth : randomMonth}-${randomDayOfMonth < 10 ? '0' + randomDayOfMonth : randomDayOfMonth}`;
+  return faker.date.between({ from: `${yearFrom}-01-01T00:00:00.000Z`, to: `${yearTo}-01-01T00:00:00.000Z` });
 }
 
 export async function cleanUserTable() {
@@ -172,7 +173,7 @@ export const getRandomActors = async (count: number = 3): Promise<MovieActorPayl
       popularity: Number((Math.random() * 10).toFixed(4)),
       profilePictureUrl: `https://image.tmdb.org/t/p/w500/${getRandomCharacters(27, false)}.jpg`,
       characterName: `${getRandomCharacters(10, true)} ${getRandomCharacters(15, true)}`,
-      castOrder: getRandomNumberBetween(100, 200),
+      castOrder: faker.number.int({ min: 100, max: 200 }),
     }));
 
   return randomActors;
@@ -239,7 +240,7 @@ export async function getCustomerCredential() {
 export async function getUserCredential() {
   const [user] = await execQuery(`
     SELECT email, user_password as "userPassword"
-    FROM user LIMIT 1
+    FROM public.user LIMIT 1
   `);
 
   const email = user.email;

@@ -21,5 +21,8 @@ export default {
   ACTOR_BIRTHDATE_INVALID_FORMAT: 'Birth date must be in format YYYY-MM-DD',
   INVALID_ACTOR_DEATHDATE: 'Invalid death date provided in query',
   ACTOR_DEATHDATE_INVALID_FORMAT: 'Death date must be in format YYYY-MM-DD',
+  INVALID_REGISTERED_ON: 'Invalid registered on date',
+  REGISTERED_ON_FORMAT: 'Registered on date must be in format YYYY-MM-DD',
   INVALID_ACTOR_POPULARITY: 'Invalid actor popularity provided in query',
+  INVALID_CUSTOMER_EMAIL_FORMAT: 'Customer email must be alpha numeric and only example.com domain is allowed',
 };

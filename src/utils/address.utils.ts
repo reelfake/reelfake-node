@@ -12,11 +12,13 @@ export function includeAddress(
     whereCity?: WhereOptions;
     whereCountry?: WhereOptions;
     addressPath?: string;
-  } = { addressPath: undefined, whereAddress: undefined, whereCity: undefined, whereCountry: undefined }
+  } = { addressPath: '', whereAddress: undefined, whereCity: undefined, whereCountry: undefined },
+  useInnerJoin: boolean = true
 ) {
   const associations: Includeable = {
     model: AddressModel,
     as: 'address',
+    required: useInnerJoin,
     attributes: addressPath
       ? [
           'id',
@@ -33,11 +35,13 @@ export function includeAddress(
         model: CityModel,
         as: 'city',
         attributes: [],
+        required: useInnerJoin,
         where: whereCity,
         include: [
           {
             model: CountryModel,
             as: 'country',
+            required: useInnerJoin,
             attributes: [],
             where: whereCountry,
           },

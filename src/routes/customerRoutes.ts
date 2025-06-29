@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Request, Response, Router, NextFunction } from 'express';
 import { validateAuthToken, validateUserRole } from '../middlewares';
 import {
   getCustomers,
@@ -8,12 +8,69 @@ import {
   updateCustomer,
   setCustomerPassword,
 } from '../controllers';
-import { routeFnWrapper } from '../utils';
-import { USER_ROLES } from '../constants';
+import { routeFnWrapper, AppError, validateDateRangeInRequest } from '../utils';
+import { USER_ROLES, CUSTOMER_EMAIL_FORMAT, ERROR_MESSAGES } from '../constants';
 
 const router = Router();
 
-router.get('/', validateAuthToken, routeFnWrapper(getCustomers));
+function validateCustomersRouteQuery(req: Request, res: Response, next: NextFunction) {
+  const { page: pageNumberText = '1', active, registered_on: registeredOn, email } = req.query;
+
+  if (email !== undefined) {
+    req.query.email = email.toString().toLowerCase();
+  }
+
+  if (active !== undefined) {
+    req.query.active = active.toString().toLowerCase();
+  }
+
+  // Validate page number
+  if (pageNumberText !== 'first' && pageNumberText !== 'last' && (isNaN(Number(pageNumberText)) || Number(pageNumberText) < 1)) {
+    throw new AppError(ERROR_MESSAGES.INVALID_PAGE_NUMBER, 400);
+  }
+
+  if (pageNumberText === 'first') {
+    req.query.page = '1';
+  }
+
+  if (pageNumberText === 'last') {
+    req.query.page = '-1';
+  }
+
+  // Validate email
+  if (
+    email &&
+    !email.toString().startsWith('%') &&
+    !email.toString().endsWith('%') &&
+    !CUSTOMER_EMAIL_FORMAT.test(email.toString())
+  ) {
+    return next(new AppError(ERROR_MESSAGES.INVALID_CUSTOMER_EMAIL_FORMAT, 400));
+  }
+
+  // Validate active
+  if ((active && active === 'true') || active === 'false') {
+    return next(new AppError('Customer active flag must be boolean (true or false)', 400));
+  }
+
+  const registeredOnDateRange = registeredOn ? registeredOn.toString().split(',') : [];
+  try {
+    validateDateRangeInRequest(
+      registeredOnDateRange,
+      () => {
+        throw new AppError(ERROR_MESSAGES.INVALID_REGISTERED_ON, 400);
+      },
+      () => {
+        throw new AppError(ERROR_MESSAGES.REGISTERED_ON_FORMAT, 400);
+      }
+    );
+  } catch (err) {
+    return next(err);
+  }
+
+  next();
+}
+
+router.get('/', validateCustomersRouteQuery, validateAuthToken, routeFnWrapper(getCustomers));
 router.post('/', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(createCustomer));
 router.get('/:id', validateAuthToken, routeFnWrapper(getCustomerById));
 router.put(
@@ -22,12 +79,7 @@ router.put(
   validateUserRole(USER_ROLES.CUSTOMER, USER_ROLES.STORE_MANAGER),
   routeFnWrapper(updateCustomer)
 );
-router.put(
-  '/:id/set_password',
-  validateAuthToken,
-  validateUserRole(USER_ROLES.USER),
-  routeFnWrapper(setCustomerPassword)
-);
+router.put('/:id/set_password', validateAuthToken, validateUserRole(USER_ROLES.USER), routeFnWrapper(setCustomerPassword));
 router.delete(
   '/:id',
   validateAuthToken,

@@ -1,42 +1,90 @@
 import type { Response } from 'express';
-import { literal, fn, Op } from 'sequelize';
+import { WhereOptions, literal, fn, Op } from 'sequelize';
 import bcrypt from 'bcryptjs';
 import { CustomerModel, StoreModel, AddressModel, StaffModel, CityModel, CountryModel, UserModel } from '../models';
-import { addressUtils, AppError } from '../utils';
+import {
+  AppError,
+  addressUtils,
+  parseCustomersPaginationFilters,
+  getPaginationOffset,
+  getPaginationOffsetWithFilters,
+  parseRequestQuery,
+  getPaginationMetadata,
+} from '../utils';
 import sequelize from '../sequelize.config';
 import { ERROR_MESSAGES, ITEMS_PER_PAGE_FOR_PAGINATION, USER_ROLES } from '../constants';
 import { CustomRequest, CustomRequestWithBody, CustomerPayload } from '../types';
 
-export const getCustomers = async (req: CustomRequest, res: Response) => {
-  const { pageNumber: pageNumberText = '1' } = req.query;
+async function getCustomersPaginationOffset(
+  pageNumber: number,
+  limitPerPage: number,
+  filters: {
+    customersFilter?: WhereOptions;
+    addressFilter?: { whereAddress?: WhereOptions; whereCity?: WhereOptions; whereCountry?: WhereOptions };
+  }
+) {
+  const { addressFilter, customersFilter } = filters;
 
-  const pageNumber = Number(pageNumberText);
-  if (isNaN(pageNumber) || pageNumber < 0) {
-    throw new AppError('Invalid page number', 400);
+  if (customersFilter || addressFilter) {
+    const customerIdsQueryResult = await CustomerModel.findAll({
+      attributes: ['id'],
+      where: customersFilter,
+      include: [addressUtils.includeAddress(addressFilter, true)],
+      order: [['id', 'ASC']],
+    });
+    const customerIds = customerIdsQueryResult.map<number>((id) => id.toJSON().id);
+    const idOffset = await getPaginationOffsetWithFilters(pageNumber, limitPerPage, customerIds);
+    return { idOffset, totalCustomers: customerIds.length };
   }
 
-  const totalCustomers = await CustomerModel.count();
+  const totalCustomers = await CustomerModel.getRowsCountWhere();
+  const idOffset = await getPaginationOffset(pageNumber, limitPerPage);
+  return { idOffset, totalCustomers };
+}
+
+export const getCustomers = async (req: CustomRequest, res: Response) => {
+  const { page: pageNumberText = '1' } = req.query;
 
   const limitPerPage = ITEMS_PER_PAGE_FOR_PAGINATION;
-  const idOffset = (pageNumber - 1) * limitPerPage;
+  const pageNumber = Number(pageNumberText);
 
-  const customers = await CustomerModel.findAll({
-    offset: idOffset,
-    limit: limitPerPage,
-    attributes: { exclude: ['addressId', 'userPassword'] },
-    include: [addressUtils.includeAddress({ addressPath: 'address' })],
-    order: [['id', 'ASC']],
-  });
+  const filters = parseCustomersPaginationFilters(req);
 
-  if (!customers || customers.length === 0) {
+  const { idOffset, totalCustomers } = await getCustomersPaginationOffset(pageNumber, limitPerPage, filters);
+
+  const totalPages = Math.ceil(totalCustomers / limitPerPage);
+  if (pageNumber > totalPages) {
     throw new AppError('Page out of range', 404);
   }
 
+  const { addressFilter, customersFilter } = filters;
+  const customers = await CustomerModel.findAll({
+    attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber', 'preferredStoreId', 'active', 'avatar', 'registeredOn'],
+    include: [
+      addressUtils.includeAddress({
+        addressPath: 'address',
+        ...addressFilter,
+      }),
+    ],
+    order: [['id', idOffset >= 0 ? 'ASC' : 'DESC']],
+    where: {
+      id: {
+        [idOffset >= 0 ? Op.gte : Op.lte]: idOffset >= 0 ? idOffset : totalCustomers,
+      },
+      ...customersFilter,
+    },
+    limit: idOffset >= 0 ? limitPerPage : totalCustomers % limitPerPage,
+  });
+
+  const hasFilters = !!customersFilter || !!addressFilter;
+
+  const queryObject = parseRequestQuery(req, ['page']);
+  const pagination = getPaginationMetadata(pageNumber, totalCustomers, limitPerPage, totalPages, queryObject, hasFilters);
+
   res.status(200).json({
-    items: customers,
+    items: pageNumber > 0 ? customers : customers.reverse(),
     length: customers.length,
-    totalPages: Math.ceil(totalCustomers / limitPerPage),
-    totalItems: Number(totalCustomers),
+    pagination,
   });
 };
 
@@ -231,10 +279,7 @@ export const updateCustomer = async (req: CustomRequestWithBody<Partial<Customer
     throw new AppError('Invalid customer id', 400);
   }
 
-  if (
-    address &&
-    (!address.addressLine || !address.cityName || !address.stateName || !address.country || !address.postalCode)
-  ) {
+  if (address && (!address.addressLine || !address.cityName || !address.stateName || !address.country || !address.postalCode)) {
     throw new AppError('Incomplete address', 400);
   }
 

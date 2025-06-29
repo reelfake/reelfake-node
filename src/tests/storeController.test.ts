@@ -11,6 +11,7 @@ import {
   getStoreManagerCredential,
   getStaffCredential,
   getCustomerCredential,
+  getRandomPhoneNumber,
 } from './testUtil';
 
 describe('Store Controller', () => {
@@ -67,7 +68,7 @@ describe('Store Controller', () => {
   const getStaffPayload = () => ({
     firstName: 'Jane',
     lastName: 'Doe',
-    phoneNumber: `${Math.ceil(Math.random() * 10000000000)}`,
+    phoneNumber: getRandomPhoneNumber(),
     email: getRandomEmail(),
     address: {
       addressLine: getRandomAddressLine(),
@@ -78,29 +79,34 @@ describe('Store Controller', () => {
     },
   });
 
-  const getStorePayload = () => ({
-    phoneNumber: `${Math.ceil(Math.random() * 10000000000)}`,
-    address: {
-      addressLine: getRandomAddressLine(),
-      cityName: 'Sydney',
-      stateName: 'New South Wales',
-      country: 'Australia',
-      postalCode: getRandomPostalCode(),
-    },
-    storeManager: {
-      firstName: 'Jane',
-      lastName: 'Doe',
-      phoneNumber: `${Math.ceil(Math.random() * 10000000000)}`,
-      email: getRandomEmail(),
+  const getStorePayload = () => {
+    const state = 'New South Wales';
+    const city = 'Sydney';
+
+    return {
+      phoneNumber: getRandomPhoneNumber(),
       address: {
         addressLine: getRandomAddressLine(),
-        cityName: 'Sydney',
-        stateName: 'New South Wales',
+        cityName: city,
+        stateName: state,
         country: 'Australia',
         postalCode: getRandomPostalCode(),
       },
-    },
-  });
+      storeManager: {
+        firstName: 'Jane',
+        lastName: 'Doe',
+        phoneNumber: getRandomPhoneNumber(),
+        email: getRandomEmail(),
+        address: {
+          addressLine: getRandomAddressLine(),
+          cityName: city,
+          stateName: state,
+          country: 'Australia',
+          postalCode: getRandomPostalCode(),
+        },
+      },
+    };
+  };
 
   const queryAddress = async (id: number) => {
     const [queryResult] = await execQuery(`
@@ -658,10 +664,7 @@ describe('Store Controller', () => {
 
       const newAddressLine = `${storeBeforeUpdate.address.addressLine} UPDATED`;
 
-      const newCityName = await getDifferentCity(
-        storeBeforeUpdate.address.cityName,
-        storeBeforeUpdate.address.stateName
-      );
+      const newCityName = await getDifferentCity(storeBeforeUpdate.address.cityName, storeBeforeUpdate.address.stateName);
 
       const response = await server
         .put(`/api/v1/stores/${storeBeforeUpdate.id}`)
@@ -755,10 +758,7 @@ describe('Store Controller', () => {
       const storeBeforeUpdate = newStoreResponse.body;
       const storeAddressId = newStoreResponse.body.address.id;
 
-      const newCityName = await getDifferentCity(
-        storeBeforeUpdate.address.cityName,
-        storeBeforeUpdate.address.stateName
-      );
+      const newCityName = await getDifferentCity(storeBeforeUpdate.address.cityName, storeBeforeUpdate.address.stateName);
 
       const response = await server
         .put(`/api/v1/stores/${storeBeforeUpdate.id}`)
