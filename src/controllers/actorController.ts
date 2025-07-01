@@ -33,6 +33,9 @@ export const getActors = async (req: Request, res: Response) => {
 
   const filters = parseActorsPaginationFilters(req);
   const { idOffset, totalActors } = await getActorsPaginationOffset(pageNumber, limitPerPage, filters);
+  if (totalActors === 0) {
+    throw new AppError('No data found with the given query', 404);
+  }
 
   const totalPages = Math.ceil(totalActors / limitPerPage);
   if (pageNumber > totalPages) {

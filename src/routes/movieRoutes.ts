@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { Router } from 'express';
-import { routeFnWrapper, AppError, validateDateRangeInRequest } from '../utils';
+import { routeFnWrapper, AppError, validateDateRangeInRequest, validateArrayTypeQuery } from '../utils';
 import {
   findInStores,
   getMovieById,
@@ -12,14 +12,8 @@ import {
   deleteMovie,
 } from '../controllers';
 import { validateAuthToken, validateUserRole } from '../middlewares';
-import { GENRES, USER_ROLES, DATE_FORMAT_IN_REQUEST, ERROR_MESSAGES } from '../constants';
+import { USER_ROLES, ERROR_MESSAGES } from '../constants';
 import { CustomRequest } from '../types';
-
-const validGenres = Object.entries(GENRES).reduce<{ [key: string]: string }>((acc, curr) => {
-  const [key, value] = curr;
-  acc[key] = value;
-  return acc;
-}, {});
 
 const router = Router();
 
@@ -48,10 +42,9 @@ function validateMovieByIdRouteQuery(req: Request, res: Response, next: NextFunc
 
 function validateMoviesRouteQuery(req: CustomRequest, res: Response, next: NextFunction) {
   const { page: pageNumberText = '1', release_date: releaseDate, rating } = req.query;
-  const genresText = (req.query.genres as string) || '';
 
-  // Validate page query
   if (pageNumberText !== 'first' && pageNumberText !== 'last' && (isNaN(Number(pageNumberText)) || Number(pageNumberText) < 1)) {
+    // Validate page query
     return next(new AppError(ERROR_MESSAGES.INVALID_PAGE_NUMBER, 400));
   }
 
@@ -63,24 +56,14 @@ function validateMoviesRouteQuery(req: CustomRequest, res: Response, next: NextF
     req.query.page = '-1';
   }
 
-  // Validate genres query
-  const updatedGenres = [];
-  const invalidGenres = [];
-  const requestedGenres = genresText ? genresText.split(',') : [];
-  for (const g of requestedGenres) {
-    const genreName = validGenres[g.toUpperCase()];
-    if (genreName) {
-      updatedGenres.push(genreName);
-    } else {
-      invalidGenres.push(g);
-    }
+  // Validate genres, countries and languages queries
+  try {
+    validateArrayTypeQuery(req, 'genres');
+    validateArrayTypeQuery(req, 'countries');
+    validateArrayTypeQuery(req, 'languages');
+  } catch (err) {
+    return next(err);
   }
-
-  if (invalidGenres.length > 0) {
-    return next(new AppError(`[${invalidGenres.join(',')}] are invalid genres`, 400));
-  }
-
-  req.query.genres = updatedGenres.join(',');
 
   // Validate release date query
   const releaseDateRange = releaseDate ? releaseDate.toString().split(',') : [];

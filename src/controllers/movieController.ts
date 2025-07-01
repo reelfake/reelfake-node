@@ -143,6 +143,10 @@ export const getMovies = async (req: Request, res: Response) => {
   const filters = parseMoviesPaginationFilters(req);
   const { idOffset, totalMovies } = await getMoviesPaginationOffset(pageNumber, limitPerPage, filters);
 
+  if (totalMovies === 0) {
+    throw new AppError('No data found with the given query', 404);
+  }
+
   const totalPages = Math.ceil(totalMovies / limitPerPage);
   if (pageNumber > totalPages) {
     throw new AppError('Page out of range', 404);

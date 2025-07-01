@@ -1,5 +1,6 @@
 import type { Request } from 'express';
-import { DATE_FORMAT_IN_REQUEST } from '../constants';
+import { AppError } from '../utils';
+import { DATE_FORMAT_IN_REQUEST, availableCountries, availableGenres, availableMovieLanguages } from '../constants';
 
 export function parseRequestQuery(req: Request, skipKeys: string[] = []) {
   let queryObject: { [key: string]: string } = {};
@@ -14,6 +15,56 @@ export function parseRequestQuery(req: Request, skipKeys: string[] = []) {
     }
   }
   return queryObject;
+}
+
+export function validateArrayTypeQuery(req: Request, queryName: string) {
+  const queryValue = (req.query[queryName] as string) || '';
+
+  if ((queryValue.startsWith('[') && !queryValue.endsWith(']')) || (!queryValue.startsWith('[') && queryValue.endsWith(']'))) {
+    throw new AppError(`Invalid ${queryName} provided in query`, 400);
+  }
+
+  if (queryValue.startsWith('[') && queryValue.endsWith(']')) {
+    try {
+      JSON.parse(queryValue);
+      return;
+    } catch {
+      throw new AppError(`Invalid ${queryName} provided in query`, 400);
+    }
+  }
+
+  const availableItems = [];
+
+  switch (queryName) {
+    case 'genres':
+      availableItems.push(...Object.keys(availableGenres));
+      break;
+    case 'countries':
+      availableItems.push(...Object.keys(availableCountries));
+      break;
+    case 'languages':
+      availableItems.push(...Object.keys(availableMovieLanguages));
+      break;
+    default:
+      return;
+  }
+
+  const updatedItems = [];
+  const invalidItems = [];
+  const requestedItems = queryValue.split(',').filter((val) => val);
+  for (const item of requestedItems) {
+    if (availableItems.includes(item.toUpperCase())) {
+      updatedItems.push(item);
+    } else {
+      invalidItems.push(item);
+    }
+  }
+
+  if (invalidItems.length > 0) {
+    throw new AppError(`[${invalidItems.join(',')}] are invalid ${queryName}`, 400);
+  }
+
+  req.query[queryName] = queryValue;
 }
 
 export function validatePopularityRangeInRequest(popularityRange: string[], onInvalidPopularity: () => void) {

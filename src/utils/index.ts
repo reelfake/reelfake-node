@@ -4,7 +4,12 @@ export { default as routeFnWrapper } from './routeFuncWrappter';
 export * as addressUtils from './address.utils';
 export { capitalize } from './text.utils';
 export { generateAuthToken } from './authUtils';
-export { parseRequestQuery, validateDateRangeInRequest, validatePopularityRangeInRequest } from './request.utils';
+export {
+  parseRequestQuery,
+  validateDateRangeInRequest,
+  validatePopularityRangeInRequest,
+  validateArrayTypeQuery,
+} from './request.utils';
 export { parseActorsPaginationFilters } from './actorPagination.utils';
 export { parseMoviesPaginationFilters } from './moviePagination.utils';
 export { parseCustomersPaginationFilters } from './customerPagination.utils';
