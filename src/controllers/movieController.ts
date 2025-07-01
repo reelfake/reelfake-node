@@ -252,45 +252,6 @@ export const getMovieById = async (req: Request, res: Response) => {
   res.status(200).json(movie);
 };
 
-export const searchMovies = async (req: Request, res: Response) => {
-  const { q, pageNumber: pageNumberText = '1' } = req.query;
-  if (!q) {
-    throw new AppError('Query text is missing', 400);
-  }
-
-  const pageNumber = Number(pageNumberText);
-
-  const totalRows = await MovieModel.getRowsCountWhere([
-    {
-      title: {
-        [Op.like]: `%${q}%`,
-      },
-    },
-  ]);
-
-  const result = await MovieModel.findAll({
-    attributes: [...movieModelAttributes, [literal(`"movieLanguage"."iso_language_code"`), 'language']],
-    where: {
-      title: {
-        [Op.like]: `%${q}%`,
-      },
-    },
-    limit: ITEMS_PER_PAGE_FOR_PAGINATION,
-    offset: (pageNumber - 1) * ITEMS_PER_PAGE_FOR_PAGINATION,
-    order: [['title', 'ASC']],
-  });
-
-  res
-    .status(200)
-    .set('rf-page-number', String(pageNumber))
-    .json({
-      items: result,
-      length: result.length,
-      totalItems: totalRows,
-      totalPages: Math.ceil(totalRows / ITEMS_PER_PAGE_FOR_PAGINATION),
-    });
-};
-
 export const findInStores = async (req: Request, res: Response) => {
   const { id: idText } = req.params;
 

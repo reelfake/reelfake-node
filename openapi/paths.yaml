@@ -20,14 +20,10 @@
   $ref: apis/movieById.yaml
 /movies/{id}/add_actors:
   $ref: apis/addActorsToMovie.yaml
-/movies/search:
-  $ref: apis/searchMovies.yaml
 /movies/{id}/stores:
   $ref: apis/movieInStores.yaml
 /actors:
   $ref: apis/actors.yaml
-/actors/search:
-  $ref: apis/searchActors.yaml
 /actors/{id}:
   $ref: apis/actorById.yaml
 /stores:
