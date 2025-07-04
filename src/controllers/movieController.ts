@@ -206,7 +206,7 @@ export const getMovies = async (req: Request, res: Response) => {
 
 export const getMovieById = async (req: Request, res: Response) => {
   const { id: idText } = req.params;
-  const { includeActors: includeActorsText } = req.query;
+  const { include_actors: includeActorsText } = req.query;
 
   const id = Number(idText);
   const includeActors = includeActorsText === 'true';

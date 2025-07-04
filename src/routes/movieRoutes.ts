@@ -10,8 +10,9 @@ const router = Router();
 
 function validateMovieByIdRouteQuery(req: Request, res: Response, next: NextFunction) {
   const { id: idText } = req.params;
-  let { includeActors: includeActorsText } = req.query;
-  includeActorsText = includeActorsText ? String(includeActorsText).trim().toLowerCase() : '';
+  const { include_actors: includeActors } = req.query;
+
+  const includeActorsText = includeActors ? String(includeActors).trim().toLowerCase() : '';
 
   const id = Number(idText);
 

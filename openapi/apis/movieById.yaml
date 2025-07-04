@@ -7,17 +7,17 @@ get:
     - in: path
       name: id
       required: true
-      description: The id of the movie that is requested
+      description: The id of the movie
       schema:
         type: integer
     - in: query
-      name: includeActors
+      name: include_actors
       required: false
       description: |
         Whether or not to include the actors of the movie. Accepted values are true, false, yes, no, 0 and 1.
-        If includeActors value is truthy then the movie object will contain actors array.
+        If include_actors value is truthy then the movie object will contain actors array.
         If this is not present in query then it will default to false. If any value other than the accepted ones are
-        given, then 400 is returned.
+        given, 400 is returned.
       schema:
         type: boolean
         default: false

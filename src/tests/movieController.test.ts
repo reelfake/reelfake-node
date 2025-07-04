@@ -552,7 +552,7 @@ describe('Movie Controller', () => {
     };
 
     it('should return movie object with the actors', async () => {
-      const response = await server.get(`/api/v1/movies/100?includeActors=true`);
+      const response = await server.get(`/api/v1/movies/100?include_actors=true`);
       expect(response.status).toBe(200);
       expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
       const actualMovieData = await getMovieData(100, true);
@@ -560,7 +560,7 @@ describe('Movie Controller', () => {
     });
 
     it('should return movie object without the actors', async () => {
-      const response = await server.get(`/api/v1/movies/100?includeActors=false`);
+      const response = await server.get(`/api/v1/movies/100?include_actors=false`);
       expect(response.status).toBe(200);
       expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
       const actualMovieData = await getMovieData(100);
@@ -568,7 +568,7 @@ describe('Movie Controller', () => {
     });
 
     it('should return movie object without the actors', async () => {
-      const response = await server.get(`/api/v1/movies/100?includeActors=no`);
+      const response = await server.get(`/api/v1/movies/100?include_actors=no`);
       expect(response.status).toBe(200);
       expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
       const actualMovieData = await getMovieData(100);
@@ -576,7 +576,7 @@ describe('Movie Controller', () => {
     });
 
     it('should return movie object without the actors', async () => {
-      const response = await server.get(`/api/v1/movies/100?includeActors=0`);
+      const response = await server.get(`/api/v1/movies/100?include_actors=0`);
       expect(response.status).toBe(200);
       expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
       const actualMovieData = await getMovieData(100);
@@ -584,7 +584,7 @@ describe('Movie Controller', () => {
     });
 
     it('should return movie object with the actors', async () => {
-      const response = await server.get(`/api/v1/movies/100?includeActors=true`);
+      const response = await server.get(`/api/v1/movies/100?include_actors=true`);
       expect(response.status).toBe(200);
       expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
       const actualMovieData = await getMovieData(100, true);
@@ -592,7 +592,7 @@ describe('Movie Controller', () => {
     });
 
     it('should return movie object with the actors', async () => {
-      const response = await server.get(`/api/v1/movies/100?includeActors=yes`);
+      const response = await server.get(`/api/v1/movies/100?include_actors=yes`);
       expect(response.status).toBe(200);
       expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
       const actualMovieData = await getMovieData(100, true);
@@ -600,7 +600,7 @@ describe('Movie Controller', () => {
     });
 
     it('should return movie object with the actors', async () => {
-      const response = await server.get(`/api/v1/movies/100?includeActors=1`);
+      const response = await server.get(`/api/v1/movies/100?include_actors=1`);
       expect(response.status).toBe(200);
       expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
       const actualMovieData = await getMovieData(100, true);
@@ -646,7 +646,7 @@ describe('Movie Controller', () => {
     });
 
     it('should return 400 since the includeActors flag has invalid value', async () => {
-      const response = await server.get(`/api/v1/movies/100?includeActors=blahblahck`);
+      const response = await server.get(`/api/v1/movies/100?include_actors=blahblahck`);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
         'Invalid value for includeActors in query. Please refer to api specs for more information.'
