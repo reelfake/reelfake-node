@@ -89,7 +89,7 @@ get:
     '500':
       $ref: ../components/internalServerError.yaml
 post:
-  summary: Add new movie
+  summary: Add new movie (optionally with the actors)
   operationId: addMovie
   tags:
     - movie
@@ -148,9 +148,6 @@ post:
             rentalRate:
               type: number
               format: double
-            rentalDuration:
-              type: integer
-              format: int32
             actors:
               type: array
               items:

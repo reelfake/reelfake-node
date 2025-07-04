@@ -324,11 +324,24 @@ export const createMovie = async (req: CustomRequestWithBody<IncomingMovie & { a
   const hasActors = actors && actors.length > 0;
 
   const movieId = await sequelize.transaction(async (t) => {
+    const duplicateMoviesCount = await MovieModel.count({
+      where: {
+        title: req.body.title,
+        overview: req.body.overview,
+      },
+      transaction: t,
+    });
+
+    if (duplicateMoviesCount > 0) {
+      throw new AppError('Movie with the same title and overview already exist', 400);
+    }
+
     const movieInstance = MovieModel.build({ ...req.body });
     const newMovie = await movieInstance.save({
       fields: newMovieFields,
       transaction: t,
     });
+
     newMovie.setDataValue('genreIds', undefined);
     newMovie.setDataValue('originCountryIds', undefined);
     newMovie.setDataValue('languageId', undefined);
