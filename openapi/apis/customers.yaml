@@ -2,7 +2,7 @@ get:
   summary: Get the customer list with pagination support
   operationId: getCustomers
   tags:
-    - customers
+    - customer
   parameters:
     - in: query
       name: page
@@ -50,10 +50,9 @@ get:
       schema:
         type: string
         format: date
-
   responses:
     '200':
-      description: Successfully returned list of actor summary
+      description: Successfully returned list of customer summary
       content:
         application/json:
           schema:
@@ -62,7 +61,7 @@ get:
               items:
                 type: array
                 items:
-                  $ref: ../components/actorSummary.yaml
+                  $ref: ../components/customerSummary.yaml
               length:
                 type: integer
               pagination:
@@ -72,43 +71,51 @@ get:
     '500':
       $ref: ../components/internalServerError.yaml
 post:
-  summary: Add new actor
-  operationId: addActor
+  summary: Add new customer
+  operationId: createCustomer
   tags:
-    - actor
+    - customer
   requestBody:
-    description: Payload for the new actor
+    description: Payload for the new customer
     required: true
     content:
       application/json:
         schema:
           type: object
           properties:
-            tmdbId:
+            firstName:
               type: string
-            imdbId:
+            lastName:
               type: string
-            actorName:
+            email:
               type: string
-            biography:
+              format: email
+            address:
+              type: object
+              properties:
+                addressLine:
+                  type: string
+                cityName:
+                  type: string
+                stateName:
+                  type: string
+                country:
+                  type: string
+                postalCode:
+                  type: string
+            active:
+              type: boolean
+            preferredStoreId:
+              type: integer
+              format: number
+            phoneNumber:
               type: string
-            birthday:
-              type: string
-              format: date
-            deathday:
-              type: string
-              format: date
-            placeOfBirth:
-              type: string
-            popularity:
-              type: number
-              format: float
-            profilePictureUrl:
+            avatar:
               type: string
               format: uri
   responses:
     '201':
-      description: Successfully added new actor
+      description: Successfully added new customer
       content:
         application/json:
           schema:
@@ -116,25 +123,28 @@ post:
             properties:
               id:
                 type: integer
-              imdbId:
+              firstName:
                 type: string
-              actorName:
+              lastName:
                 type: string
-              biography:
+              email:
                 type: string
-              birthday:
+                format: email
+              preferredStoreId:
+                type: integer
+                format: number
+              active:
+                type: boolean
+              phoneNumber:
+                type: string
+              avatar:
+                type: string
+                format: uri
+              registeredOn:
                 type: string
                 format: date
-              deathday:
-                type: string
-                format: date
-              placeOfBirth:
-                type: string
-              popularity:
-                type: number
-                format: float
-              profilePictureUrl:
-                type: string
+              address:
+                $ref: ../components/address.yaml
     '400':
       $ref: ../components/badRequest.yaml
     '401':

@@ -101,9 +101,6 @@ put:
             rentalRate:
               type: number
               format: double
-            rentalDuration:
-              type: integer
-              format: int32
   responses:
     '204':
       description: Successfully updated the movie

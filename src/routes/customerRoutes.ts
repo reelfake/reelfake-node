@@ -70,9 +70,12 @@ function validateCustomersRouteQuery(req: Request, res: Response, next: NextFunc
   next();
 }
 
+// GET
 router.get('/', validateCustomersRouteQuery, validateAuthToken, routeFnWrapper(getCustomers));
-router.post('/', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(createCustomer));
 router.get('/:id', validateAuthToken, routeFnWrapper(getCustomerById));
+// POST
+router.post('/', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(createCustomer));
+// PUT
 router.put(
   '/:id',
   validateAuthToken,
@@ -80,6 +83,7 @@ router.put(
   routeFnWrapper(updateCustomer)
 );
 router.put('/:id/set_password', validateAuthToken, validateUserRole(USER_ROLES.USER), routeFnWrapper(setCustomerPassword));
+// DELETE
 router.delete(
   '/:id',
   validateAuthToken,

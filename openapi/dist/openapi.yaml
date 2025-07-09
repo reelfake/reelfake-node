@@ -307,6 +307,274 @@ paths:
                     type: string
         '401':
           $ref: '#/components/responses/unauthorized'
+  /customers:
+    get:
+      summary: Get the customer list with pagination support
+      operationId: getCustomers
+      tags:
+        - customer
+      parameters:
+        - in: query
+          name: page
+          required: false
+          description: |
+            The page number (which starts with 1) to fetch the set of customers from.
+            The customers are split into multiple pages with each page having a limited number of customers.
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: first_name
+          required: false
+          description: |
+            The first name of the customer. The api accepts ?first_name=jane (for exact match) and ?first_name=%an% (for first name having "an").
+          schema:
+            type: string
+        - in: query
+          name: last_name
+          required: false
+          description: |
+            The last name of the customer. The api accepts ?last_name=doe (for exact match) and ?last_name=%do% (for last name having "do").
+          schema:
+            type: string
+        - in: query
+          name: email
+          required: false
+          description: |
+            The email of the customer. This query supports only exact match.
+          schema:
+            type: string
+            format: email
+        - in: query
+          name: phone_number
+          required: false
+          description: |
+            The phone number of the customer. This query supports only exact match.
+          schema:
+            type: string
+        - in: query
+          name: registered_on
+          required: false
+          description: |
+            Filters the customers by the registered date (YYYY-MM-DD). This can be a single registered date or a range. For e.g., ?registered_on=2024-01-01 or ?registered_on=2024-01-01,2024-06-30. The query string ?registered_on=2024-01-01 will query customers with the given registered date while ?registered_on=2024-01-01,2024-06-30 will query customers registered between 2024-01-01 and 2024-06-30.
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Successfully returned list of customer summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/customerSummary'
+                  length:
+                    type: integer
+                  pagination:
+                    $ref: '#/components/schemas/pagination'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    post:
+      summary: Add new customer
+      operationId: createCustomer
+      tags:
+        - customer
+      requestBody:
+        description: Payload for the new customer
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                address:
+                  type: object
+                  properties:
+                    addressLine:
+                      type: string
+                    cityName:
+                      type: string
+                    stateName:
+                      type: string
+                    country:
+                      type: string
+                    postalCode:
+                      type: string
+                active:
+                  type: boolean
+                preferredStoreId:
+                  type: integer
+                  format: number
+                phoneNumber:
+                  type: string
+                avatar:
+                  type: string
+                  format: uri
+      responses:
+        '201':
+          description: Successfully added new customer
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  firstName:
+                    type: string
+                  lastName:
+                    type: string
+                  email:
+                    type: string
+                    format: email
+                  preferredStoreId:
+                    type: integer
+                    format: number
+                  active:
+                    type: boolean
+                  phoneNumber:
+                    type: string
+                  avatar:
+                    type: string
+                    format: uri
+                  registeredOn:
+                    type: string
+                    format: date
+                  address:
+                    $ref: '#/components/schemas/address'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /customers/{id}:
+    get:
+      summary: Get customer detail using the id
+      operationId: getCustomerById
+      tags:
+        - customer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the customer
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully returned the customer data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/customerDetail'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    put:
+      summary: Update customer
+      operationId: updateCustomer
+      tags:
+        - customer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the customer
+          schema:
+            type: integer
+      requestBody:
+        description: Payload of the movie to update
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                address:
+                  type: object
+                  properties:
+                    addressLine:
+                      type: string
+                    cityName:
+                      type: string
+                    stateName:
+                      type: string
+                    country:
+                      type: string
+                    postalCode:
+                      type: string
+                active:
+                  type: boolean
+                preferredStoreId:
+                  type: integer
+                  format: number
+                phoneNumber:
+                  type: string
+                avatar:
+                  type: string
+                  format: uri
+      responses:
+        '204':
+          description: Successfully updated the customer
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    delete:
+      summary: |
+        Delete the customer.
+        Note: It is not allowed to delete a customer which is in use by any user
+      operationId: deleteCustomer
+      tags:
+        - customer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the customer
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Successfully deleted the customer
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
   /movies:
     get:
       summary: Get the list of movies with the pagination support
@@ -398,7 +666,7 @@ paths:
         '500':
           $ref: '#/components/responses/internalServerError'
     post:
-      summary: Add new movie
+      summary: Add new movie (optionally with the actors)
       operationId: addMovie
       tags:
         - movie
@@ -457,9 +725,6 @@ paths:
                 rentalRate:
                   type: number
                   format: double
-                rentalDuration:
-                  type: integer
-                  format: int32
                 actors:
                   type: array
                   items:
@@ -660,9 +925,6 @@ paths:
                 rentalRate:
                   type: number
                   format: double
-                rentalDuration:
-                  type: integer
-                  format: int32
       responses:
         '204':
           description: Successfully updated the movie
@@ -1883,6 +2145,133 @@ components:
           type: string
         languageCode:
           type: string
+    address:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: number
+          readOnly: true
+        addressLine:
+          type: string
+        cityName:
+          type: string
+        stateName:
+          type: string
+        country:
+          type: string
+        postalCode:
+          type: string
+    customerSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: number
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        phoneNumber:
+          type: string
+        preferredStoreId:
+          type: integer
+          format: number
+        active:
+          type: boolean
+        avatar:
+          type: string
+          format: uri
+        registeredOn:
+          type: string
+          format: date
+        address:
+          $ref: '#/components/schemas/address'
+    pagination:
+      type: object
+      properties:
+        pageNumber:
+          type: integer
+          description: Current page number
+        totalPages:
+          type: integer
+          description: Total pages available for pagination
+        totalItems:
+          type: integer
+          description: Total items across all the pages
+        itemsPerPage:
+          type: integer
+          description: Maximum number of items that the page can have
+        next:
+          type: string
+          description: Link to the next page
+        prev:
+          type: string
+          description: Link to the previous page
+        first:
+          type: string
+          description: Link to the first page
+        last:
+          type: string
+          description: Link to the last page
+    customerDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: number
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        active:
+          type: boolean
+        phoneNumber:
+          type: string
+        avatar:
+          type: string
+          format: uri
+        registeredOn:
+          type: string
+          format: date
+        preferredStore:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: number
+            phoneNumber:
+              type: string
+            storeManager:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: number
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                active:
+                  type: boolean
+                phoneNumber:
+                  type: string
+                avatar:
+                  type: string
+                  format: uri
+                address:
+                  $ref: '#/components/schemas/address'
+        address:
+          $ref: '#/components/schemas/address'
     movieSummary:
       type: object
       properties:
@@ -1934,33 +2323,6 @@ components:
           type: number
           description: The rental rate of the movie
           format: float
-    pagination:
-      type: object
-      properties:
-        pageNumber:
-          type: integer
-          description: Current page number
-        totalPages:
-          type: integer
-          description: Total pages available for pagination
-        totalItems:
-          type: integer
-          description: Total items across all the pages
-        itemsPerPage:
-          type: integer
-          description: Maximum number of items that the page can have
-        next:
-          type: string
-          description: Link to the next page
-        prev:
-          type: string
-          description: Link to the previous page
-        first:
-          type: string
-          description: Link to the first page
-        last:
-          type: string
-          description: Link to the last page
     movieDetail:
       type: object
       properties:
@@ -2174,23 +2536,6 @@ components:
           type: string
         phoneNumber:
           type: string
-    address:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: number
-          readOnly: true
-        addressLine:
-          type: string
-        cityName:
-          type: string
-        stateName:
-          type: string
-        country:
-          type: string
-        postalCode:
-          type: string
     staffItem:
       type: object
       properties:
@@ -2221,6 +2566,7 @@ components:
       properties:
         id:
           type: integer
+          format: number
         addressLine:
           type: string
         city:

@@ -463,6 +463,28 @@ export const updateMovie = async (req: CustomRequestWithBody<Partial<IncomingMov
     throw new AppError(ERROR_MESSAGES.RESOURCES_NOT_FOUND, 404);
   }
 
+  const { title: existingTitle, overview: existingOverview } = instance;
+
+  const { title, overview } = req.body;
+
+  const duplicateMoviesCount = await MovieModel.count({
+    where: {
+      id: {
+        [Op.ne]: id,
+      },
+      title: {
+        [Op.eq]: title ?? existingTitle,
+      },
+      overview: {
+        [Op.eq]: overview ?? existingOverview,
+      },
+    },
+  });
+
+  if (duplicateMoviesCount > 0) {
+    throw new AppError('Movie with the same title and overview already exist', 400);
+  }
+
   await instance.update({ ...moviePayload });
 
   res.status(204).send();

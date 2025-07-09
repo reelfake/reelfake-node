@@ -14,6 +14,10 @@
   $ref: apis/countries.yaml
 /movie_languages:
   $ref: apis/movieLanguages.yaml
+/customers:
+  $ref: apis/customers.yaml
+/customers/{id}:
+  $ref: apis/customerById.yaml
 /movies:
   $ref: apis/movies.yaml
 /movies/{id}:

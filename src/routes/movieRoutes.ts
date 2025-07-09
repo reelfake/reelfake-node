@@ -82,12 +82,16 @@ function validateMoviesRouteQuery(req: CustomRequest, res: Response, next: NextF
   next();
 }
 
+// GET
 router.get('/', validateMoviesRouteQuery, routeFnWrapper(getMovies));
-router.post('/', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(createMovie));
 router.get('/:id', validateMovieByIdRouteQuery, routeFnWrapper(getMovieById));
-router.put('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(updateMovie));
-router.delete('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(deleteMovie));
-router.post('/:id/add_actors', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(addActors));
 router.get('/:id/stores', routeFnWrapper(findInStores));
+// POST
+router.post('/', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(createMovie));
+router.post('/:id/add_actors', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(addActors));
+// PUT
+router.put('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(updateMovie));
+// DELETE
+router.delete('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(deleteMovie));
 
 export default router;
