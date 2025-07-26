@@ -63,4 +63,11 @@ export async function closeDbConnection() {
   }
 }
 
+if (envName !== 'test') {
+  sequelize
+    .authenticate()
+    .then(() => console.log(`[${envName}] Successfully connected to postgres db...`))
+    .catch((err) => console.log('Db connection error', err));
+}
+
 export default sequelize;
