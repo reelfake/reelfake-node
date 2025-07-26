@@ -1,0 +1,153 @@
+get:
+  summary: Get the customer list with pagination support
+  operationId: getCustomers
+  tags:
+    - customer
+  parameters:
+    - in: query
+      name: page
+      required: false
+      description: |
+        The page number (which starts with 1) to fetch the set of customers from.
+        The customers are split into multiple pages with each page having a limited number of customers.
+      schema:
+        type: integer
+        default: 1
+    - in: query
+      name: first_name
+      required: false
+      description: |
+        The first name of the customer. The api accepts ?first_name=jane (for exact match) and ?first_name=%an% (for first name having "an").
+      schema:
+        type: string
+    - in: query
+      name: last_name
+      required: false
+      description: |
+        The last name of the customer. The api accepts ?last_name=doe (for exact match) and ?last_name=%do% (for last name having "do").
+      schema:
+        type: string
+    - in: query
+      name: email
+      required: false
+      description: |
+        The email of the customer. This query supports only exact match.
+      schema:
+        type: string
+        format: email
+    - in: query
+      name: phone_number
+      required: false
+      description: |
+        The phone number of the customer. This query supports only exact match.
+      schema:
+        type: string
+    - in: query
+      name: registered_on
+      required: false
+      description: |
+        Filters the customers by the registered date (YYYY-MM-DD). This can be a single registered date or a range. For e.g., ?registered_on=2024-01-01 or ?registered_on=2024-01-01,2024-06-30. The query string ?registered_on=2024-01-01 will query customers with the given registered date while ?registered_on=2024-01-01,2024-06-30 will query customers registered between 2024-01-01 and 2024-06-30.
+      schema:
+        type: string
+        format: date
+  responses:
+    '200':
+      description: Successfully returned list of customer summary
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  $ref: ../components/customerSummary.yaml
+              length:
+                type: integer
+              pagination:
+                $ref: ../components/pagination.yaml
+    '400':
+      $ref: ../components/badRequest.yaml
+    '500':
+      $ref: ../components/internalServerError.yaml
+post:
+  summary: Add new customer
+  operationId: createCustomer
+  tags:
+    - customer
+  requestBody:
+    description: Payload for the new customer
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            firstName:
+              type: string
+            lastName:
+              type: string
+            email:
+              type: string
+              format: email
+            address:
+              type: object
+              properties:
+                addressLine:
+                  type: string
+                cityName:
+                  type: string
+                stateName:
+                  type: string
+                country:
+                  type: string
+                postalCode:
+                  type: string
+            active:
+              type: boolean
+            preferredStoreId:
+              type: integer
+              format: number
+            phoneNumber:
+              type: string
+            avatar:
+              type: string
+              format: uri
+  responses:
+    '201':
+      description: Successfully added new customer
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              id:
+                type: integer
+              firstName:
+                type: string
+              lastName:
+                type: string
+              email:
+                type: string
+                format: email
+              preferredStoreId:
+                type: integer
+                format: number
+              active:
+                type: boolean
+              phoneNumber:
+                type: string
+              avatar:
+                type: string
+                format: uri
+              registeredOn:
+                type: string
+                format: date
+              address:
+                $ref: ../components/address.yaml
+    '400':
+      $ref: ../components/badRequest.yaml
+    '401':
+      $ref: ../components/unauthorized.yaml
+    '500':
+      $ref: ../components/internalServerError.yaml

@@ -5,7 +5,7 @@ get:
     - actor
   parameters:
     - in: query
-      name: pageNumber
+      name: page
       required: false
       description: |
         The page number (which starts with 1) to fetch the set of actors from.
@@ -13,9 +13,48 @@ get:
       schema:
         type: integer
         default: 1
+    - in: query
+      name: name
+      required: false
+      description: |
+        The name of the actor. The api accepts ?name=keanu (for exact match) and ?name=%an% (for actor name having "an").
+      schema:
+        type: string
+    - in: query
+      name: birthday
+      required: false
+      description: |
+        Filters the actors by the birth date (YYYY-MM-DD). This can be a single date or a range. For e.g., ?birthday=1980-01-01 or ?birthday=1980-01-01,1990-06-30. The query string ?birthday=1980-01-01 will query actors with the given birth date while ?birthday=1980-01-01,1990-06-30 will query actors born between 1980-01-01 and 1990-06-30.
+      schema:
+        type: string
+        format: date
+    - in: query
+      name: deathday
+      required: false
+      description: |
+        Filters the actors by the death date (YYYY-MM-DD). This can be a single date or a range. For e.g., ?deathday=1980-01-01 or ?deathday=1980-01-01,1990-06-30. The query string ?deathday=1980-01-01 will query actors with the given death date while ?deathday=1980-01-01,1990-06-30 will query actors died between 1980-01-01 and 1990-06-30.
+      schema:
+        type: string
+        format: date
+    - in: query
+      name: place_of_birth
+      required: false
+      description: |
+        The place of birth of the actor. The api accepts ?place_of_birth=jakarta (for exact match) and ?place_of_birth=%art% (for place of birth having "art").
+      schema:
+        type: string
+    - in: query
+      name: popularity
+      required: false
+      description: |
+        The popularity index of the actor
+      schema:
+        type: integer
+        format: float
+
   responses:
     '200':
-      description: Successfully returned an array of actorItem
+      description: Successfully returned list of actor summary
       content:
         application/json:
           schema:
@@ -24,13 +63,11 @@ get:
               items:
                 type: array
                 items:
-                  $ref: ../components/actorItem.yaml
+                  $ref: ../components/actorSummary.yaml
               length:
                 type: integer
-              totalPages:
-                type: integer
-              totalItems:
-                type: integer
+              pagination:
+                $ref: ../components/pagination.yaml
     '400':
       $ref: ../components/badRequest.yaml
     '500':

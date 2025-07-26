@@ -14,20 +14,20 @@
   $ref: apis/countries.yaml
 /movie_languages:
   $ref: apis/movieLanguages.yaml
+/customers:
+  $ref: apis/customers.yaml
+/customers/{id}:
+  $ref: apis/customerById.yaml
 /movies:
   $ref: apis/movies.yaml
 /movies/{id}:
   $ref: apis/movieById.yaml
 /movies/{id}/add_actors:
   $ref: apis/addActorsToMovie.yaml
-/movies/search:
-  $ref: apis/searchMovies.yaml
 /movies/{id}/stores:
   $ref: apis/movieInStores.yaml
 /actors:
   $ref: apis/actors.yaml
-/actors/search:
-  $ref: apis/searchActors.yaml
 /actors/{id}:
   $ref: apis/actorById.yaml
 /stores:

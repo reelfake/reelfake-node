@@ -10,7 +10,7 @@ info:
     name: Pratap Reddy
     email: pratapreddy15@gmail.com
 servers:
-  - url: http://reelfake.com/api/v1
+  - url: http://reelfakeapi.link/api/v1
     description: Production server
   - url: http://127.0.0.1:8000/api/v1
     description: Local server
@@ -307,15 +307,283 @@ paths:
                     type: string
         '401':
           $ref: '#/components/responses/unauthorized'
+  /customers:
+    get:
+      summary: Get the customer list with pagination support
+      operationId: getCustomers
+      tags:
+        - customer
+      parameters:
+        - in: query
+          name: page
+          required: false
+          description: |
+            The page number (which starts with 1) to fetch the set of customers from.
+            The customers are split into multiple pages with each page having a limited number of customers.
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: first_name
+          required: false
+          description: |
+            The first name of the customer. The api accepts ?first_name=jane (for exact match) and ?first_name=%an% (for first name having "an").
+          schema:
+            type: string
+        - in: query
+          name: last_name
+          required: false
+          description: |
+            The last name of the customer. The api accepts ?last_name=doe (for exact match) and ?last_name=%do% (for last name having "do").
+          schema:
+            type: string
+        - in: query
+          name: email
+          required: false
+          description: |
+            The email of the customer. This query supports only exact match.
+          schema:
+            type: string
+            format: email
+        - in: query
+          name: phone_number
+          required: false
+          description: |
+            The phone number of the customer. This query supports only exact match.
+          schema:
+            type: string
+        - in: query
+          name: registered_on
+          required: false
+          description: |
+            Filters the customers by the registered date (YYYY-MM-DD). This can be a single registered date or a range. For e.g., ?registered_on=2024-01-01 or ?registered_on=2024-01-01,2024-06-30. The query string ?registered_on=2024-01-01 will query customers with the given registered date while ?registered_on=2024-01-01,2024-06-30 will query customers registered between 2024-01-01 and 2024-06-30.
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Successfully returned list of customer summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/customerSummary'
+                  length:
+                    type: integer
+                  pagination:
+                    $ref: '#/components/schemas/pagination'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    post:
+      summary: Add new customer
+      operationId: createCustomer
+      tags:
+        - customer
+      requestBody:
+        description: Payload for the new customer
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                address:
+                  type: object
+                  properties:
+                    addressLine:
+                      type: string
+                    cityName:
+                      type: string
+                    stateName:
+                      type: string
+                    country:
+                      type: string
+                    postalCode:
+                      type: string
+                active:
+                  type: boolean
+                preferredStoreId:
+                  type: integer
+                  format: number
+                phoneNumber:
+                  type: string
+                avatar:
+                  type: string
+                  format: uri
+      responses:
+        '201':
+          description: Successfully added new customer
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  firstName:
+                    type: string
+                  lastName:
+                    type: string
+                  email:
+                    type: string
+                    format: email
+                  preferredStoreId:
+                    type: integer
+                    format: number
+                  active:
+                    type: boolean
+                  phoneNumber:
+                    type: string
+                  avatar:
+                    type: string
+                    format: uri
+                  registeredOn:
+                    type: string
+                    format: date
+                  address:
+                    $ref: '#/components/schemas/address'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /customers/{id}:
+    get:
+      summary: Get customer detail using the id
+      operationId: getCustomerById
+      tags:
+        - customer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the customer
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully returned the customer data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/customerDetail'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    put:
+      summary: Update customer
+      operationId: updateCustomer
+      tags:
+        - customer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the customer
+          schema:
+            type: integer
+      requestBody:
+        description: Payload of the movie to update
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                address:
+                  type: object
+                  properties:
+                    addressLine:
+                      type: string
+                    cityName:
+                      type: string
+                    stateName:
+                      type: string
+                    country:
+                      type: string
+                    postalCode:
+                      type: string
+                active:
+                  type: boolean
+                preferredStoreId:
+                  type: integer
+                  format: number
+                phoneNumber:
+                  type: string
+                avatar:
+                  type: string
+                  format: uri
+      responses:
+        '204':
+          description: Successfully updated the customer
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    delete:
+      summary: |
+        Delete the customer.
+        Note: It is not allowed to delete a customer which is in use by any user
+      operationId: deleteCustomer
+      tags:
+        - customer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the customer
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Successfully deleted the customer
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
   /movies:
     get:
-      summary: Get the movies list with the pagination support
+      summary: Get the list of movies with the pagination support
       operationId: getMovies
       tags:
         - movie
       parameters:
         - in: query
-          name: pageNumber
+          name: page
           required: false
           description: |
             The page number (which starts with 1) to fetch the set of movies from.
@@ -327,47 +595,50 @@ paths:
           name: genres
           required: false
           description: |
-            The comma separated list of genres to filter the movies. The valid genres are action, adventure, animation, comedy, crime, documentary, drama, family, fantasy, history, horror, music , mystery, romance, science fiction, thriller, war and western.
+            The valid genres are action, adventure, animation, comedy, crime, documentary, drama, family, fantasy, history, horror, music , mystery, romance, science fiction, thriller, war and western. There are two variants of this query - comma separated genres and genres in array. For e.g., ?genres=action,thriller,sci_fi or ?genres=["action","thriller","sci_fi"]. The comma separated genres will query the movie having either of the genre. The genres in array will query the movie having the genres mentioned in the array. Example, ?genres=action,thriller,sci_fi will return movies having genre action, thriller or science fiction while ?genres=["action","thriller","sci_fi"] will return the movies having all genre i.e. action, thriller and science fiction.
           schema:
-            type: array
-            items:
-              type: string
+            oneOf:
+              - type: string
+              - type: array
+                items:
+                  type: string
         - in: query
-          name: releaseYear
+          name: release_date
           required: false
           description: |
-            The release year to use for filtering the movies by release date. If release year is specified then release from and release to are ignored.
-          schema:
-            type: integer
-        - in: query
-          name: releaseFrom
-          required: false
-          description: |
-            The release date as the starting point of date range to filter the movies by release date.
-            Use either release from / to or release year. If release year is specified then release from and release to are ignored.
-            The date format is yyy-mm-dd.
-            For example, 2024-01-01 for January 1st 2024 or 2024-12-31 for December 31st 2024.
+            Filters the movies by the release date (YYYY-MM-DD). This can be a single release date or a range. For e.g., ?release_date=2024-01-01 or ?release_date=2024-01-01,2024-06-30. The query string ?release_date=2024-01-01 will query movies with the given release date while ?release_date=2024-01-01,2024-06-30 will query movies released between 2024-01-01 and 2024-06-30.
           schema:
             type: string
             format: date
         - in: query
-          name: releaseTo
+          name: countries
           required: false
           description: |
-            The release date as the ending point of date range to filter the movies by release date.
-            The date format is yyy-mm-dd.
-            For example, 2024-01-01 for January 1st 2024 or 2024-12-31 for December 31st 2024.
+            Filters the movies by the countries of origin. There are two variants of this query - comma separated countries or countries in array. For e.g., ?countries=cl,br and ?countries=["cl","br"]. The comma separated countries will query the movie having either of the country of origin. The countries in array will query the movie having the countries of origin mentioned in the array. Example, ?countries=cl,br will return movies having countries of origin either Chile or Brazil while ?countries=["cl","br"] will return the movies having all provided countries i.e. Chile and Brazil.
+          schema:
+            oneOf:
+              - type: string
+              - type: array
+                items:
+                  type: string
+        - in: query
+          name: languages
+          required: false
+          description: |
+            Filters the movies by the languages. This can be a single value or a comma separated values. For e.g., ?languages=fr or ?languages=es,fr,hi. The query string ?languages=fr will query movies which are in French language while ?languages=es,fr,hi will query movies which are in either of the French, Spanish or Hindi languages.
           schema:
             type: string
-            format: date
+        - in: query
+          name: rating
+          required: false
+          description: |
+            Filters the movies by rating. This can be a single value or a range. For e.g., ?rating=7 or ?release_date=6,9. The query string ?rating=7 will query movies having rating 7 while ?rating=6,9 will query movies with ratings between 6 and 9, inclusive.
+          schema:
+            type: string
+            format: number
       responses:
         '200':
-          description: Successfully returned an array of movieItem for the given page
-          headers:
-            rf-page-number:
-              description: The page number that the list of movies returned belong to
-              schema:
-                type: integer
+          description: Successfully returned a list of movies (including pagination data) for the given page
           content:
             application/json:
               schema:
@@ -376,13 +647,11 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: '#/components/schemas/movieItem'
+                      $ref: '#/components/schemas/movieSummary'
                   length:
                     type: integer
-                  totalPages:
-                    type: integer
-                  totalItems:
-                    type: integer
+                  pagination:
+                    $ref: '#/components/schemas/pagination'
         '400':
           $ref: '#/components/responses/badRequest'
         '404':
@@ -397,7 +666,7 @@ paths:
         '500':
           $ref: '#/components/responses/internalServerError'
     post:
-      summary: Add new movie
+      summary: Add new movie (optionally with the actors)
       operationId: addMovie
       tags:
         - movie
@@ -456,9 +725,6 @@ paths:
                 rentalRate:
                   type: number
                   format: double
-                rentalDuration:
-                  type: integer
-                  format: int32
                 actors:
                   type: array
                   items:
@@ -565,17 +831,17 @@ paths:
         - in: path
           name: id
           required: true
-          description: The id of the movie that is requested
+          description: The id of the movie
           schema:
             type: integer
         - in: query
-          name: includeActors
+          name: include_actors
           required: false
           description: |
             Whether or not to include the actors of the movie. Accepted values are true, false, yes, no, 0 and 1.
-            If includeActors value is truthy then the movie object will contain actors array.
+            If include_actors value is truthy then the movie object will contain actors array.
             If this is not present in query then it will default to false. If any value other than the accepted ones are
-            given, then 400 is returned.
+            given, 400 is returned.
           schema:
             type: boolean
             default: false
@@ -659,9 +925,6 @@ paths:
                 rentalRate:
                   type: number
                   format: double
-                rentalDuration:
-                  type: integer
-                  format: int32
       responses:
         '204':
           description: Successfully updated the movie
@@ -793,64 +1056,6 @@ paths:
           $ref: '#/components/responses/notFound'
         '500':
           $ref: '#/components/responses/internalServerError'
-  /movies/search:
-    get:
-      summary: Search for the movie using query
-      operationId: searchMovies
-      tags:
-        - movie
-      parameters:
-        - in: query
-          name: pageNumber
-          required: false
-          description: |
-            The page number (which starts with 1) to fetch the set of movies from.
-            The movies are split into multiple pages with each page having a limited number of movies.
-          schema:
-            type: integer
-            default: 1
-        - in: query
-          name: q
-          required: true
-          description: The query for searching
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Successfully returned a list of movies matching the given query
-          headers:
-            rf-page-number:
-              description: The page number that the list of movies returned belong to
-              schema:
-                type: integer
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/movieItem'
-                  length:
-                    type: integer
-                  totalPages:
-                    type: integer
-                  totalItems:
-                    type: integer
-        '400':
-          $ref: '#/components/responses/badRequest'
-        '404':
-          description: The page number provided is out of range.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        '500':
-          $ref: '#/components/responses/internalServerError'
   /movies/{id}/stores:
     get:
       summary: Get stock count of the movie in all the stores
@@ -892,7 +1097,7 @@ paths:
         - actor
       parameters:
         - in: query
-          name: pageNumber
+          name: page
           required: false
           description: |
             The page number (which starts with 1) to fetch the set of actors from.
@@ -900,9 +1105,47 @@ paths:
           schema:
             type: integer
             default: 1
+        - in: query
+          name: name
+          required: false
+          description: |
+            The name of the actor. The api accepts ?name=keanu (for exact match) and ?name=%an% (for actor name having "an").
+          schema:
+            type: string
+        - in: query
+          name: birthday
+          required: false
+          description: |
+            Filters the actors by the birth date (YYYY-MM-DD). This can be a single date or a range. For e.g., ?birthday=1980-01-01 or ?birthday=1980-01-01,1990-06-30. The query string ?birthday=1980-01-01 will query actors with the given birth date while ?birthday=1980-01-01,1990-06-30 will query actors born between 1980-01-01 and 1990-06-30.
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: deathday
+          required: false
+          description: |
+            Filters the actors by the death date (YYYY-MM-DD). This can be a single date or a range. For e.g., ?deathday=1980-01-01 or ?deathday=1980-01-01,1990-06-30. The query string ?deathday=1980-01-01 will query actors with the given death date while ?deathday=1980-01-01,1990-06-30 will query actors died between 1980-01-01 and 1990-06-30.
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: place_of_birth
+          required: false
+          description: |
+            The place of birth of the actor. The api accepts ?place_of_birth=jakarta (for exact match) and ?place_of_birth=%art% (for place of birth having "art").
+          schema:
+            type: string
+        - in: query
+          name: popularity
+          required: false
+          description: |
+            The popularity index of the actor
+          schema:
+            type: integer
+            format: float
       responses:
         '200':
-          description: Successfully returned an array of actorItem
+          description: Successfully returned list of actor summary
           content:
             application/json:
               schema:
@@ -911,13 +1154,11 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: '#/components/schemas/actorItem'
+                      $ref: '#/components/schemas/actorSummary'
                   length:
                     type: integer
-                  totalPages:
-                    type: integer
-                  totalItems:
-                    type: integer
+                  pagination:
+                    $ref: '#/components/schemas/pagination'
         '400':
           $ref: '#/components/responses/badRequest'
         '500':
@@ -992,70 +1233,6 @@ paths:
           $ref: '#/components/responses/unauthorized'
         '500':
           $ref: '#/components/responses/internalServerError'
-  /actors/search:
-    get:
-      summary: Get the actor list with pagination support
-      operationId: searchActors
-      tags:
-        - actor
-      parameters:
-        - in: query
-          name: pageNumber
-          required: false
-          description: |
-            The page number (which starts with 1) to fetch the set of actors from.
-            The actors are split into multiple pages with each page having a limited number of actors.
-          schema:
-            type: integer
-            default: 1
-        - in: query
-          name: q
-          required: false
-          description: |
-            The sequence of characters to search for in the name of the actors.
-            Either this or name must be present in the query.
-          schema:
-            type: string
-        - in: query
-          name: name
-          required: false
-          description: The name of the actor to search for
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Successfully returned an array of actorItem
-          headers:
-            rf-page-number:
-              description: The page number for the page that is sent
-              schema:
-                type: integer
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/actorItem'
-                  length:
-                    type: integer
-                  totalPages:
-                    type: integer
-                  totalItems:
-                    type: integer
-        '400':
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        '401':
-          $ref: '#/components/responses/unauthorized'
   /actors/{id}:
     get:
       summary: Get actor detail using the id
@@ -1531,7 +1708,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: '#/components/schemas/movieItem'
+                      $ref: '#/components/schemas/movieSummary'
                   length:
                     type: integer
                   totalPages:
@@ -1659,7 +1836,7 @@ paths:
                   email:
                     type: string
                     format: email
-                  isActive:
+                  active:
                     type: boolean
                   phoneNumber:
                     type: string
@@ -1708,7 +1885,7 @@ paths:
                         email:
                           type: string
                           format: email
-                        isActive:
+                        active:
                           type: boolean
                         phoneNumber:
                           type: string
@@ -1968,7 +2145,134 @@ components:
           type: string
         languageCode:
           type: string
-    movieItem:
+    address:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: number
+          readOnly: true
+        addressLine:
+          type: string
+        cityName:
+          type: string
+        stateName:
+          type: string
+        country:
+          type: string
+        postalCode:
+          type: string
+    customerSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: number
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        phoneNumber:
+          type: string
+        preferredStoreId:
+          type: integer
+          format: number
+        active:
+          type: boolean
+        avatar:
+          type: string
+          format: uri
+        registeredOn:
+          type: string
+          format: date
+        address:
+          $ref: '#/components/schemas/address'
+    pagination:
+      type: object
+      properties:
+        pageNumber:
+          type: integer
+          description: Current page number
+        totalPages:
+          type: integer
+          description: Total pages available for pagination
+        totalItems:
+          type: integer
+          description: Total items across all the pages
+        itemsPerPage:
+          type: integer
+          description: Maximum number of items that the page can have
+        next:
+          type: string
+          description: Link to the next page
+        prev:
+          type: string
+          description: Link to the previous page
+        first:
+          type: string
+          description: Link to the first page
+        last:
+          type: string
+          description: Link to the last page
+    customerDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: number
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        active:
+          type: boolean
+        phoneNumber:
+          type: string
+        avatar:
+          type: string
+          format: uri
+        registeredOn:
+          type: string
+          format: date
+        preferredStore:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: number
+            phoneNumber:
+              type: string
+            storeManager:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: number
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                active:
+                  type: boolean
+                phoneNumber:
+                  type: string
+                avatar:
+                  type: string
+                  format: uri
+                address:
+                  $ref: '#/components/schemas/address'
+        address:
+          $ref: '#/components/schemas/address'
+    movieSummary:
       type: object
       properties:
         id:
@@ -1977,9 +2281,6 @@ components:
         title:
           type: string
           description: The title of the movie
-        overview:
-          type: string
-          description: A brief summary of the movie
         runtime:
           type: integer
           description: The length of the movie
@@ -2022,9 +2323,6 @@ components:
           type: number
           description: The rental rate of the movie
           format: float
-        rentalDuration:
-          type: integer
-          description: The number of days that the movie can be rented
     movieDetail:
       type: object
       properties:
@@ -2094,9 +2392,6 @@ components:
           type: number
           description: The rental rate of the movie
           format: float
-        rentalDuration:
-          type: integer
-          description: The number of days that the movie can be rented
         actors:
           type: array
           items:
@@ -2108,7 +2403,7 @@ components:
               actorName:
                 type: string
                 description: Name of the actor
-              characterNAme:
+              characterName:
                 type: string
                 description: The name of the character that the actor has played in the movie
               castOrder:
@@ -2148,10 +2443,12 @@ components:
             phoneNumber:
               type: string
               description: The phone number of the store
-    actorItem:
+    actorSummary:
       type: object
       properties:
         id:
+          type: integer
+        imdbId:
           type: integer
         actorName:
           type: string
@@ -2239,23 +2536,6 @@ components:
           type: string
         phoneNumber:
           type: string
-    address:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: number
-          readOnly: true
-        addressLine:
-          type: string
-        cityName:
-          type: string
-        stateName:
-          type: string
-        country:
-          type: string
-        postalCode:
-          type: string
     staffItem:
       type: object
       properties:
@@ -2272,7 +2552,7 @@ components:
           format: email
         isStoreManager:
           type: boolean
-        isActive:
+        active:
           type: boolean
         phoneNumber:
           type: string
@@ -2286,6 +2566,7 @@ components:
       properties:
         id:
           type: integer
+          format: number
         addressLine:
           type: string
         city:

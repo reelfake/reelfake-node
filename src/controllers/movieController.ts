@@ -143,6 +143,10 @@ export const getMovies = async (req: Request, res: Response) => {
   const filters = parseMoviesPaginationFilters(req);
   const { idOffset, totalMovies } = await getMoviesPaginationOffset(pageNumber, limitPerPage, filters);
 
+  if (totalMovies === 0) {
+    throw new AppError('No data found with the given query', 404);
+  }
+
   const totalPages = Math.ceil(totalMovies / limitPerPage);
   if (pageNumber > totalPages) {
     throw new AppError('Page out of range', 404);
@@ -202,7 +206,7 @@ export const getMovies = async (req: Request, res: Response) => {
 
 export const getMovieById = async (req: Request, res: Response) => {
   const { id: idText } = req.params;
-  const { includeActors: includeActorsText } = req.query;
+  const { include_actors: includeActorsText } = req.query;
 
   const id = Number(idText);
   const includeActors = includeActorsText === 'true';
@@ -246,45 +250,6 @@ export const getMovieById = async (req: Request, res: Response) => {
   }
 
   res.status(200).json(movie);
-};
-
-export const searchMovies = async (req: Request, res: Response) => {
-  const { q, pageNumber: pageNumberText = '1' } = req.query;
-  if (!q) {
-    throw new AppError('Query text is missing', 400);
-  }
-
-  const pageNumber = Number(pageNumberText);
-
-  const totalRows = await MovieModel.getRowsCountWhere([
-    {
-      title: {
-        [Op.like]: `%${q}%`,
-      },
-    },
-  ]);
-
-  const result = await MovieModel.findAll({
-    attributes: [...movieModelAttributes, [literal(`"movieLanguage"."iso_language_code"`), 'language']],
-    where: {
-      title: {
-        [Op.like]: `%${q}%`,
-      },
-    },
-    limit: ITEMS_PER_PAGE_FOR_PAGINATION,
-    offset: (pageNumber - 1) * ITEMS_PER_PAGE_FOR_PAGINATION,
-    order: [['title', 'ASC']],
-  });
-
-  res
-    .status(200)
-    .set('rf-page-number', String(pageNumber))
-    .json({
-      items: result,
-      length: result.length,
-      totalItems: totalRows,
-      totalPages: Math.ceil(totalRows / ITEMS_PER_PAGE_FOR_PAGINATION),
-    });
 };
 
 export const findInStores = async (req: Request, res: Response) => {
@@ -359,11 +324,24 @@ export const createMovie = async (req: CustomRequestWithBody<IncomingMovie & { a
   const hasActors = actors && actors.length > 0;
 
   const movieId = await sequelize.transaction(async (t) => {
+    const duplicateMoviesCount = await MovieModel.count({
+      where: {
+        title: req.body.title,
+        overview: req.body.overview,
+      },
+      transaction: t,
+    });
+
+    if (duplicateMoviesCount > 0) {
+      throw new AppError('Movie with the same title and overview already exist', 400);
+    }
+
     const movieInstance = MovieModel.build({ ...req.body });
     const newMovie = await movieInstance.save({
       fields: newMovieFields,
       transaction: t,
     });
+
     newMovie.setDataValue('genreIds', undefined);
     newMovie.setDataValue('originCountryIds', undefined);
     newMovie.setDataValue('languageId', undefined);
@@ -483,6 +461,28 @@ export const updateMovie = async (req: CustomRequestWithBody<Partial<IncomingMov
 
   if (!instance) {
     throw new AppError(ERROR_MESSAGES.RESOURCES_NOT_FOUND, 404);
+  }
+
+  const { title: existingTitle, overview: existingOverview } = instance;
+
+  const { title, overview } = req.body;
+
+  const duplicateMoviesCount = await MovieModel.count({
+    where: {
+      id: {
+        [Op.ne]: id,
+      },
+      title: {
+        [Op.eq]: title ?? existingTitle,
+      },
+      overview: {
+        [Op.eq]: overview ?? existingOverview,
+      },
+    },
+  });
+
+  if (duplicateMoviesCount > 0) {
+    throw new AppError('Movie with the same title and overview already exist', 400);
   }
 
   await instance.update({ ...moviePayload });

@@ -2,16 +2,7 @@ export { getGenres } from './genreController';
 export { getCities } from './cityController';
 export { getCountries } from './countryController';
 export { getMovieLanguages } from './movieLanguageController';
-export {
-  getMovies,
-  getMovieById,
-  searchMovies,
-  findInStores,
-  createMovie,
-  addActors,
-  updateMovie,
-  deleteMovie,
-} from './movieController';
+export { getMovies, getMovieById, findInStores, createMovie, addActors, updateMovie, deleteMovie } from './movieController';
 export { getActors, getActorById, updateActor, deleteActor, addActor, addToMovie } from './actorController';
 export {
   getStores,

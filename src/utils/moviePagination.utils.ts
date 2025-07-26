@@ -1,20 +1,59 @@
 import type { Request } from 'express';
 import { Op, WhereOptions } from 'sequelize';
-import { parseFilterRangeQuery } from '../utils';
-import { availableGenres } from '../constants';
+import { parseFilterRangeQuery, parsePaginationFilter } from '../utils';
+import { availableGenres, availableCountries, availableMovieLanguages } from '../constants';
 
-function parseGenresFilter(genresQuery: string | undefined) {
-  const genres = genresQuery ? genresQuery.toString().split(',') : [];
+function parseFilterForArrayTypeColumn(columnName: string, filterText: string | undefined) {
+  let availableItems: { [key: string]: number } = {};
 
-  const genreIds = Object.entries(availableGenres)
-    .filter(([key, value]) => genres.includes(value))
-    .map(([key]) => Number(key));
+  switch (columnName) {
+    case 'genreIds':
+      availableItems = { ...availableGenres };
+      break;
+    case 'originCountryIds':
+      availableItems = { ...availableCountries };
+      break;
+    default:
+      return undefined;
+  }
 
-  if (genres.length > 0) {
+  const jsonArr = [];
+  let isArray = false;
+
+  if (filterText && filterText.startsWith('[') && filterText.endsWith(']')) {
+    jsonArr.push(...JSON.parse(filterText));
+    isArray = true;
+  } else {
+    jsonArr.push(...(filterText ? filterText.split(',') : []));
+  }
+
+  const ids = jsonArr.map((item) => availableItems[item.toUpperCase()]);
+
+  if (ids.length === 0) return undefined;
+
+  if (isArray) {
     return {
-      genreIds: {
-        [Op.contains]: genreIds,
+      [columnName]: {
+        [Op.contains]: ids,
       },
+    };
+  }
+
+  return {
+    [columnName]: {
+      // array overlapping --> e.g. origin_country_ids && ARRAY[...]
+      [Op.overlap]: ids,
+    },
+  };
+}
+
+function parseMovieLanguageFilter(movieLanguages: string | undefined) {
+  const languages = movieLanguages ? movieLanguages.split(',') : [];
+  const languageIds = languages.map((l) => availableMovieLanguages[l.toUpperCase()]);
+
+  if (languages.length > 0) {
+    return {
+      languageId: languageIds,
     };
   }
 
@@ -22,11 +61,16 @@ function parseGenresFilter(genresQuery: string | undefined) {
 }
 
 export function parseMoviesPaginationFilters(req: Request) {
-  const { genres: genresText, release_date: releaseDate, rating } = req.query;
+  const { title, genres: genresText, release_date: releaseDate, countries, languages: movieLanguages, rating } = req.query;
 
   const conditions: WhereOptions[] = [];
 
-  const genresFilter = parseGenresFilter(genresText?.toString());
+  const titleFilter = parsePaginationFilter('title', title?.toString());
+  if (titleFilter) {
+    conditions.push(titleFilter);
+  }
+
+  const genresFilter = parseFilterForArrayTypeColumn('genreIds', genresText?.toString());
   if (genresFilter) {
     conditions.push(genresFilter);
   }
@@ -39,6 +83,16 @@ export function parseMoviesPaginationFilters(req: Request) {
   const ratingFilter = parseFilterRangeQuery<number>('ratingAverage', rating?.toString());
   if (ratingFilter) {
     conditions.push(ratingFilter);
+  }
+
+  const cuntriesFilter = parseFilterForArrayTypeColumn('originCountryIds', countries?.toString());
+  if (cuntriesFilter) {
+    conditions.push(cuntriesFilter);
+  }
+
+  const movieLanguageFilter = parseMovieLanguageFilter(movieLanguages?.toString());
+  if (movieLanguageFilter) {
+    conditions.push(movieLanguageFilter);
   }
 
   const where = conditions.reduce<WhereOptions>((acc, curr) => {

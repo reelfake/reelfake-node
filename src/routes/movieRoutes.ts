@@ -1,32 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
 import { Router } from 'express';
-import { routeFnWrapper, AppError, validateDateRangeInRequest } from '../utils';
-import {
-  findInStores,
-  getMovieById,
-  getMovies,
-  searchMovies,
-  createMovie,
-  addActors,
-  updateMovie,
-  deleteMovie,
-} from '../controllers';
+import { routeFnWrapper, AppError, validateDateRangeInRequest, validateArrayTypeQuery } from '../utils';
+import { findInStores, getMovieById, getMovies, createMovie, addActors, updateMovie, deleteMovie } from '../controllers';
 import { validateAuthToken, validateUserRole } from '../middlewares';
-import { GENRES, USER_ROLES, DATE_FORMAT_IN_REQUEST, ERROR_MESSAGES } from '../constants';
+import { USER_ROLES, ERROR_MESSAGES } from '../constants';
 import { CustomRequest } from '../types';
-
-const validGenres = Object.entries(GENRES).reduce<{ [key: string]: string }>((acc, curr) => {
-  const [key, value] = curr;
-  acc[key] = value;
-  return acc;
-}, {});
 
 const router = Router();
 
 function validateMovieByIdRouteQuery(req: Request, res: Response, next: NextFunction) {
   const { id: idText } = req.params;
-  let { includeActors: includeActorsText } = req.query;
-  includeActorsText = includeActorsText ? String(includeActorsText).trim().toLowerCase() : '';
+  const { include_actors: includeActors } = req.query;
+
+  const includeActorsText = includeActors ? String(includeActors).trim().toLowerCase() : '';
 
   const id = Number(idText);
 
@@ -48,10 +34,9 @@ function validateMovieByIdRouteQuery(req: Request, res: Response, next: NextFunc
 
 function validateMoviesRouteQuery(req: CustomRequest, res: Response, next: NextFunction) {
   const { page: pageNumberText = '1', release_date: releaseDate, rating } = req.query;
-  const genresText = (req.query.genres as string) || '';
 
-  // Validate page query
   if (pageNumberText !== 'first' && pageNumberText !== 'last' && (isNaN(Number(pageNumberText)) || Number(pageNumberText) < 1)) {
+    // Validate page query
     return next(new AppError(ERROR_MESSAGES.INVALID_PAGE_NUMBER, 400));
   }
 
@@ -63,24 +48,14 @@ function validateMoviesRouteQuery(req: CustomRequest, res: Response, next: NextF
     req.query.page = '-1';
   }
 
-  // Validate genres query
-  const updatedGenres = [];
-  const invalidGenres = [];
-  const requestedGenres = genresText ? genresText.split(',') : [];
-  for (const g of requestedGenres) {
-    const genreName = validGenres[g.toUpperCase()];
-    if (genreName) {
-      updatedGenres.push(genreName);
-    } else {
-      invalidGenres.push(g);
-    }
+  // Validate genres, countries and languages queries
+  try {
+    validateArrayTypeQuery(req, 'genres');
+    validateArrayTypeQuery(req, 'countries');
+    validateArrayTypeQuery(req, 'languages');
+  } catch (err) {
+    return next(err);
   }
-
-  if (invalidGenres.length > 0) {
-    return next(new AppError(`[${invalidGenres.join(',')}] are invalid genres`, 400));
-  }
-
-  req.query.genres = updatedGenres.join(',');
 
   // Validate release date query
   const releaseDateRange = releaseDate ? releaseDate.toString().split(',') : [];
@@ -107,13 +82,16 @@ function validateMoviesRouteQuery(req: CustomRequest, res: Response, next: NextF
   next();
 }
 
+// GET
 router.get('/', validateMoviesRouteQuery, routeFnWrapper(getMovies));
-router.post('/', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(createMovie));
 router.get('/:id', validateMovieByIdRouteQuery, routeFnWrapper(getMovieById));
-router.put('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(updateMovie));
-router.delete('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(deleteMovie));
-router.post('/:id/add_actors', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(addActors));
-router.get('/search', routeFnWrapper(searchMovies));
 router.get('/:id/stores', routeFnWrapper(findInStores));
+// POST
+router.post('/', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(createMovie));
+router.post('/:id/add_actors', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(addActors));
+// PUT
+router.put('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(updateMovie));
+// DELETE
+router.delete('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(deleteMovie));
 
 export default router;

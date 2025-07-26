@@ -6,9 +6,6 @@ properties:
   title:
     type: string
     description: The title of the movie
-  overview:
-    type: string
-    description: A brief summary of the movie
   runtime:
     type: integer
     description: The length of the movie
@@ -51,6 +48,3 @@ properties:
     type: number
     description: The rental rate of the movie
     format: float
-  rentalDuration:
-    type: integer
-    description: The number of days that the movie can be rented

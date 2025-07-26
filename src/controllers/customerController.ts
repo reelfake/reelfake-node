@@ -52,7 +52,12 @@ export const getCustomers = async (req: CustomRequest, res: Response) => {
 
   const { idOffset, totalCustomers } = await getCustomersPaginationOffset(pageNumber, limitPerPage, filters);
 
+  if (totalCustomers === 0) {
+    throw new AppError('No data found with the given query', 404);
+  }
+
   const totalPages = Math.ceil(totalCustomers / limitPerPage);
+
   if (pageNumber > totalPages) {
     throw new AppError('Page out of range', 404);
   }
