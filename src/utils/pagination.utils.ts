@@ -1,4 +1,60 @@
+import type { Request } from 'express';
 import { Op, WhereOptions } from 'sequelize';
+
+export function parseAddressFilters(req: Request) {
+  const { address_line: addressLine, city, state, country, postal_code: postalCode } = req.query;
+
+  const conditions: { whereAddress?: WhereOptions; whereCity?: WhereOptions; whereCountry?: WhereOptions } = {};
+
+  if (addressLine) {
+    conditions['whereAddress'] = {
+      addressLine: {
+        [Op.iLike]: addressLine,
+      },
+    };
+  }
+
+  if (postalCode) {
+    conditions['whereAddress'] = {
+      ...conditions['whereAddress'],
+
+      postalCode: {
+        [Op.iLike]: postalCode,
+      },
+    };
+  }
+
+  if (city) {
+    conditions['whereCity'] = {
+      cityName: {
+        [Op.iLike]: city,
+      },
+    };
+  }
+
+  if (state) {
+    conditions['whereCity'] = {
+      ...conditions['whereCity'],
+      stateName: {
+        [Op.iLike]: state,
+      },
+    };
+  }
+
+  if (country) {
+    conditions['whereCountry'] = {
+      countryName: {
+        [Op.iLike]: country,
+      },
+    };
+  }
+
+  if (Object.keys(conditions).length === 0) {
+    return undefined;
+  }
+
+  return conditions;
+}
 
 export function parsePaginationFilter<T extends string | number>(
   fieldName: string,

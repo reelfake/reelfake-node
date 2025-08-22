@@ -4,6 +4,8 @@ import app from '../app';
 import { cleanUserTable, execQuery, getRandomCharacters } from './testUtil';
 
 describe('User Controller', () => {
+  const firstName = 'Test';
+  const lastName = 'User';
   const email = `test${getRandomCharacters(10)}@example.com`;
   const password = 'test@12345';
   const server = supertest(app);
@@ -23,6 +25,8 @@ describe('User Controller', () => {
       const response = await server
         .post('/api/v1/user/register')
         .send({
+          firstName,
+          lastName,
           email: email,
           password: password,
         })
@@ -46,6 +50,8 @@ describe('User Controller', () => {
       await server
         .post('/api/v1/user/register')
         .send({
+          firstName,
+          lastName,
           email: email,
           password: password,
         })
@@ -61,7 +67,7 @@ describe('User Controller', () => {
         .set('Content-Type', 'application/json')
         .set('Accept', 'application/json');
       expect(response.status).toEqual(400);
-      expect(response.body.message).toStrictEqual('User already exist');
+      expect(response.body.message).toStrictEqual('User with the given email already exist');
     });
   });
 
@@ -70,6 +76,8 @@ describe('User Controller', () => {
       await server
         .post('/api/v1/user/register')
         .send({
+          firstName,
+          lastName,
           email: email,
           password: password,
         })
@@ -93,7 +101,9 @@ describe('User Controller', () => {
       });
 
       const cookie = response.get('Set-Cookie')?.at(0);
-      expect(cookie).toMatch(/^auth_token=([a-zA-Z0-9._-]*); Path=\/; HttpOnly; Secure; SameSite=Strict$/);
+      expect(cookie).toMatch(
+        /^auth_token=([a-zA-Z0-9._-]*); Max-Age=([0-9]*); Path=\/; Expires=(.*) HttpOnly; Secure; SameSite=Strict$/
+      );
     });
 
     it('POST /auth/login should return 401 when user try to login with invalid email', async () => {
@@ -119,7 +129,7 @@ describe('User Controller', () => {
         .set('Content-Type', 'application/json')
         .set('Accept', 'application/json');
       expect(response.status).toBe(401);
-      expect(response.body.message).toStrictEqual('Invalid credentials');
+      expect(response.body.message).toStrictEqual('Invalid email or password');
     });
 
     it('GET /auth/logout should log out the user by using the cookie in the request', async () => {
@@ -153,6 +163,8 @@ describe('User Controller', () => {
       await server
         .post('/api/v1/user/register')
         .send({
+          firstName,
+          lastName,
           email: email,
           password: password,
         })
@@ -171,15 +183,42 @@ describe('User Controller', () => {
 
     const verifyPatch = async (payload: { customerId?: number; staffId?: number; storeManagerId?: number }) => {
       const cookie = await login(email, password);
+      const { customerId, staffId, storeManagerId } = payload;
 
       const getUserResponseBefore = await server.get('/api/v1/user/me').set('Cookie', cookie);
 
+      let totalRentalsForCustomer = null;
+      if (customerId) {
+        [{ count: totalRentalsForCustomer }] = await execQuery(`SELECT COUNT(*) FROM rental WHERE customer_id = ${customerId}`);
+      }
+
+      let totalRentalsForStaff = null;
+      if (staffId) {
+        [{ count: totalRentalsForStaff }] = await execQuery(`SELECT COUNT(*) FROM rental WHERE staff_id = ${staffId}`);
+      }
+
+      let totalRentalsForStoreManager = null;
+      let totalStaffUnderStoreManager = null;
+      if (storeManagerId) {
+        [{ count: totalRentalsForStoreManager }] = await execQuery(
+          `SELECT COUNT(*) FROM rental WHERE staff_id = ${storeManagerId}`
+        );
+        [{ count: totalStaffUnderStoreManager }] = await execQuery(
+          `
+            SELECT COUNT(staff.id) FROM staff LEFT JOIN store ON staff.store_id = store.id
+            WHERE store.store_manager_id = ${storeManagerId} AND staff.id != ${storeManagerId}
+          `
+        );
+      }
+
       expect(getUserResponseBefore.body).toStrictEqual({
         id: expect.any(Number),
+        firstName,
+        lastName,
         email: email,
-        customerId: null,
-        staffId: null,
-        storeManagerId: null,
+        customer: null,
+        staff: null,
+        storeManager: null,
       });
 
       const patchResponse = await server
@@ -194,11 +233,18 @@ describe('User Controller', () => {
       const getUserResponseAfter = await server.get('/api/v1/user/me').set('Cookie', cookie);
       expect(getUserResponseAfter.body).toStrictEqual({
         id: expect.any(Number),
+        firstName,
+        lastName,
         email: email,
-        customerId: payload.customerId || null,
-        staffId: payload.staffId || null,
-        storeManagerId: payload.storeManagerId || null,
-        ...payload,
+        customer: customerId ? { id: customerId, totalRentals: Number(totalRentalsForCustomer) } : null,
+        staff: staffId ? { id: staffId, totalProcessedRentals: Number(totalRentalsForStaff) } : null,
+        storeManager: storeManagerId
+          ? {
+              id: storeManagerId,
+              totalProcessedRentals: Number(totalRentalsForStoreManager),
+              totalStaff: Number(totalStaffUnderStoreManager),
+            }
+          : null,
       });
     };
 
@@ -237,6 +283,8 @@ describe('User Controller', () => {
       });
 
       await server.post('/api/v1/user/register').send({
+        firstName,
+        lastName,
         email: email2,
         password: password2,
       });
@@ -250,17 +298,20 @@ describe('User Controller', () => {
       expect(patchResponse.body.message).toStrictEqual('Another user with the same config already exist');
     });
 
-    it('should return 400 when the request body is empty', async () => {
+    it('should unassign customer, staff and store manager', async () => {
       const cookie = await login(email, password);
 
-      const response = await server.patch('/api/v1/user/me').set('Cookie', cookie).send({
+      await server.patch('/api/v1/user/me').set('Cookie', cookie).send({
         customerId: null,
         staffId: null,
         storeManagerId: null,
       });
 
-      expect(response.status).toEqual(400);
-      expect(response.body.message).toStrictEqual('Either of customer, staff or manager staff id is required');
+      const userAfterUpdate = await server.get('/api/v1/user/me').set('Cookie', cookie);
+      expect(userAfterUpdate.status).toEqual(200);
+      expect(userAfterUpdate.body.customer).toBeNull();
+      expect(userAfterUpdate.body.staff).toBeNull();
+      expect(userAfterUpdate.body.storeManager).toBeNull();
     });
   });
 });

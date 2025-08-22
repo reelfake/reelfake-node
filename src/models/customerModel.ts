@@ -1,6 +1,5 @@
 import { WhereOptions, DataTypes } from 'sequelize';
 import sequelize from '../sequelize.config';
-import { addressUtils } from '../utils';
 import BaseModel from './baseModel';
 
 class Customer extends BaseModel {
@@ -10,17 +9,6 @@ class Customer extends BaseModel {
     });
     return countOfRows;
   }
-
-  // public static async getRecordIds(conditions?: WhereOptions) {
-  //   const results = await Customer.findAll({
-  //     attributes: ['id'],
-  //     include: [addressUtils.includeAddress({})],
-  //     where: conditions,
-  //     order: [['id', 'ASC']],
-  //   });
-  //   const ids = results.map<number>((res) => res.toJSON().id);
-  //   return ids;
-  // }
 }
 
 Customer.init(

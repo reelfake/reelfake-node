@@ -25,4 +25,5 @@ export default {
   REGISTERED_ON_FORMAT: 'Registered on date must be in format YYYY-MM-DD',
   INVALID_ACTOR_POPULARITY: 'Invalid actor popularity provided in query',
   INVALID_CUSTOMER_EMAIL_FORMAT: 'Customer email must be alpha numeric and only example.com domain is allowed',
+  INVALID_STAFF_EMAIL_FORMAT: 'Staff email must be alpha numeric and only example.com domain is allowed',
 };

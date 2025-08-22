@@ -2,7 +2,7 @@ import type { Request, Response } from 'express';
 import { literal, Op } from 'sequelize';
 import bcrypt from 'bcryptjs';
 import { CustomerModel, StaffModel, StoreModel, UserModel } from '../models';
-import { ERROR_MESSAGES, USER_ROLES } from '../constants';
+import { ERROR_MESSAGES, USER_ROLES, TOKEN_EXPIRING_IN_MS } from '../constants';
 import { AppError, generateAuthToken } from '../utils';
 
 async function findUser(email: string) {
@@ -98,14 +98,19 @@ export const login = async (req: Request, res: Response) => {
 
   const isPasswordMatch = await bcrypt.compare(password, user.password);
   if (!isPasswordMatch) {
-    throw new AppError('Invalid credentials', 401);
+    throw new AppError(ERROR_MESSAGES.INVALID_LOGIN_DETAIL, 401);
   }
 
   const authToken = generateAuthToken(user.email, user.role);
 
   res
     .status(201)
-    .cookie('auth_token', authToken, { httpOnly: true, secure: true, sameSite: 'strict' })
+    .cookie('auth_token', authToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: TOKEN_EXPIRING_IN_MS,
+    })
     .json({ message: 'Login successful' });
 };
 

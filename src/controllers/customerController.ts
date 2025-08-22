@@ -1,7 +1,7 @@
 import type { Response } from 'express';
 import { WhereOptions, literal, fn, Op } from 'sequelize';
 import bcrypt from 'bcryptjs';
-import { CustomerModel, StoreModel, AddressModel, StaffModel, CityModel, CountryModel, UserModel } from '../models';
+import { CustomerModel, StoreModel, AddressModel, StaffModel, CityModel, CountryModel, UserModel, RentalModel } from '../models';
 import {
   AppError,
   addressUtils,

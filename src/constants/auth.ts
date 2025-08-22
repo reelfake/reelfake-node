@@ -4,3 +4,5 @@ export enum USER_ROLES {
   STAFF = 'STAFF',
   STORE_MANAGER = 'STORE_MANAGER',
 }
+
+export const TOKEN_EXPIRING_IN_MS = 60 * 60 * 1000;

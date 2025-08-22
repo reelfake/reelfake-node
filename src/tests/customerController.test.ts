@@ -10,7 +10,6 @@ import {
   getStoreManagerCredential,
   getStaffCredential,
   getCustomerCredential,
-  getUserCredential,
   getRandomFirstName,
   getRandomLastName,
   getRandomPhoneNumber,
@@ -20,6 +19,8 @@ import { CustomerPayload } from '../types';
 
 describe('Customer Controller', () => {
   let cookie: string = '';
+  const firstName = 'Test';
+  const lastName = 'User';
   const server = supertest(app);
   const getCustomerPayload = (preferredStoreId: number | undefined = undefined) => {
     const firstName = getRandomFirstName();
@@ -1093,6 +1094,8 @@ describe('Customer Controller', () => {
 
       // Register a user
       const userRegistrationResponse = await server.post('/api/v1/user/register').send({
+        firstName,
+        lastName,
         email: userEmaiil,
         password: userPassword,
       });

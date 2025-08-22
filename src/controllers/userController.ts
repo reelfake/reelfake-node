@@ -1,10 +1,11 @@
 import { literal, Op, Includeable, col, fn } from 'sequelize';
 import type { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import { AddressModel, CityModel, CountryModel, CustomerModel, StaffModel, StoreModel, UserModel } from '../models';
-import { AppError, generateAuthToken } from '../utils';
+import { AddressModel, CityModel, CountryModel, CustomerModel, RentalModel, StaffModel, StoreModel, UserModel } from '../models';
+import { AppError } from '../utils';
 import { ERROR_MESSAGES, USER_ROLES } from '../constants';
 import { CustomRequest } from '../types';
+import sequelize from '../sequelize.config';
 
 const getAddressAssociation = (): Includeable => {
   return {
@@ -59,14 +60,86 @@ export const getUser = async (req: CustomRequest, res: Response) => {
       where: {
         email,
       },
-      attributes: ['id', 'email', 'customerId', 'staffId', 'storeManagerId'],
+      attributes: ['id', 'firstName', 'lastName', 'email', 'customerId', 'staffId', 'storeManagerId'],
     });
 
     if (!userInstance) {
       throw new AppError(ERROR_MESSAGES.USER_NOT_FOUND, 404);
     }
 
-    const userData = userInstance.toJSON();
+    const customerId: number | null = userInstance.getDataValue('customerId');
+    const staffId: number | null = userInstance.getDataValue('staffId');
+    const storeManagerId: number | null = userInstance.getDataValue('storeManagerId');
+
+    let rentalsCountForCustomer: number | null = null;
+    let rentalsCountProcessedByStaff: number | null = null;
+    let rentalsCountProcessedByStoreManager: number | null = null;
+    let staffCountUnderStoreManager: number | null = null;
+
+    if (customerId) {
+      rentalsCountForCustomer = await RentalModel.getRentalsCountForCustomer(customerId);
+    }
+
+    if (staffId) {
+      rentalsCountProcessedByStaff = await RentalModel.getRentalsCountProcessedByStaff(staffId);
+    }
+
+    if (storeManagerId) {
+      rentalsCountProcessedByStoreManager = await RentalModel.getRentalsCountProcessedByStaff(storeManagerId);
+
+      const staffCountQueryResult = await StaffModel.findAll({
+        attributes: [[fn('COUNT', col('Staff.id')), 'totalStaff']],
+        group: ['"Staff"."store_id"', '"store"."store_manager_id"'],
+        include: [
+          {
+            model: StoreModel,
+            as: 'store',
+            attributes: [],
+            where: {
+              storeManagerId,
+            },
+          },
+        ],
+        where: {
+          id: {
+            [Op.ne]: storeManagerId,
+          },
+        },
+      });
+
+      const staffCount = staffCountQueryResult.at(0);
+
+      if (staffCount) {
+        staffCountUnderStoreManager = Number(staffCount.getDataValue('totalStaff'));
+      }
+    }
+
+    const userJson = userInstance.toJSON();
+    const userData = {
+      id: userJson.id,
+      firstName: userJson.firstName,
+      lastName: userJson.lastName,
+      email: userJson.email,
+      customer: customerId
+        ? {
+            id: customerId,
+            totalRentals: rentalsCountForCustomer,
+          }
+        : null,
+      staff: staffId
+        ? {
+            id: staffId,
+            totalProcessedRentals: rentalsCountProcessedByStaff,
+          }
+        : null,
+      storeManager: storeManagerId
+        ? {
+            id: storeManagerId,
+            totalProcessedRentals: rentalsCountProcessedByStoreManager,
+            totalStaff: staffCountUnderStoreManager,
+          }
+        : null,
+    };
 
     res.status(200).json(userData);
     return;
@@ -101,22 +174,6 @@ export const getUser = async (req: CustomRequest, res: Response) => {
                 literal(`"preferredStore->staff"."phone_number"`),
                 'avatar',
                 literal(`"preferredStore->staff"."avatar"`)
-                // 'address',
-                // fn(
-                //   'json_build_object',
-                //   'id',
-                //   literal(`"preferredStore->staff->address"."id"`),
-                //   'addressLine',
-                //   literal(`"preferredStore->staff->address"."address_line"`),
-                //   'cityName',
-                //   literal(`"preferredStore->staff->address->city"."city_name"`),
-                //   'stateName',
-                //   literal(`"preferredStore->staff->address->city"."state_name"`),
-                //   'country',
-                //   literal(`"preferredStore->staff->address->city->country"."country_name"`),
-                //   'postalCode',
-                //   literal(`"preferredStore->staff->address"."postal_code"`)
-                // )
               ),
               'storeManager',
             ],
@@ -186,7 +243,11 @@ export const updateUser = async (req: CustomRequest, res: Response) => {
     storeManagerId?: number;
   };
 
-  if (!customerId && !staffId && !storeManagerId) {
+  const hasCustomerId = Object.hasOwn(req.body, 'customerId');
+  const hasStaffId = Object.hasOwn(req.body, 'staffId');
+  const hasStoreManagerId = Object.hasOwn(req.body, 'storeManagerId');
+
+  if (!hasCustomerId && !hasStaffId && !hasStoreManagerId) {
     throw new AppError('Either of customer, staff or manager staff id is required', 400);
   }
 
@@ -201,17 +262,30 @@ export const updateUser = async (req: CustomRequest, res: Response) => {
     throw new AppError('Error finding user with the given user remail', 500);
   }
 
-  const conditions = [];
   const changes: { customerId?: number; staffId?: number; storeManagerId?: number } = {};
+
+  if (hasCustomerId) {
+    changes.customerId = customerId;
+  }
+
+  if (hasStaffId) {
+    changes.staffId = staffId;
+  }
+
+  if (hasStoreManagerId) {
+    changes.storeManagerId = storeManagerId;
+  }
+
+  // If the request has either of customer id, staff id or store manager id
+  // verify it is not used by other users
+  const conditions = [];
 
   if (customerId) {
     conditions.push({ customerId });
-    changes.customerId = customerId;
   }
 
   if (staffId) {
     conditions.push({ staffId });
-    changes.staffId = staffId;
   }
 
   if (storeManagerId) {
@@ -227,22 +301,23 @@ export const updateUser = async (req: CustomRequest, res: Response) => {
     }
 
     conditions.push({ storeManagerId });
-    changes.storeManagerId = storeManagerId;
   }
 
-  const usersWithDuplicateSetup = await UserModel.count({
-    where: {
-      [Op.and]: {
-        [Op.or]: conditions,
-        [Op.not]: {
-          email: currentUser.email,
+  if (customerId || staffId || storeManagerId) {
+    const usersWithDuplicateSetup = await UserModel.count({
+      where: {
+        [Op.and]: {
+          [Op.or]: conditions,
+          [Op.not]: {
+            email: currentUser.email,
+          },
         },
       },
-    },
-  });
+    });
 
-  if (usersWithDuplicateSetup > 0) {
-    throw new AppError(`Another user with the same config already exist`, 400);
+    if (usersWithDuplicateSetup > 0) {
+      throw new AppError(`Another user with the same config already exist`, 400);
+    }
   }
 
   userToUpdate.set({ ...changes });
@@ -254,13 +329,11 @@ export const updateUser = async (req: CustomRequest, res: Response) => {
     throw new AppError('Error updating the user details', 500);
   }
 
-  const newAuthToken = generateAuthToken(currentUser.email, currentUser.role);
-
-  res.status(204).cookie('auth_token', newAuthToken, { httpOnly: true, secure: true, sameSite: 'strict' }).send();
+  res.status(204).send();
 };
 
 export const registerUser = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
+  const { firstName, lastName, email, password } = req.body;
 
   const user = await UserModel.findOne({
     where: {
@@ -269,11 +342,43 @@ export const registerUser = async (req: Request, res: Response) => {
   });
 
   if (user) {
-    throw new AppError('User already exist', 400);
+    throw new AppError('User with the given email already exist', 400);
   }
 
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
-  await UserModel.create({ email, userPassword: hashedPassword }, { fields: ['email', 'userPassword'] });
+  await UserModel.create(
+    { firstName, lastName, email, userPassword: hashedPassword },
+    { fields: ['firstName', 'lastName', 'email', 'userPassword'] }
+  );
   res.status(201).json({ message: 'User is registered successfully' });
+};
+
+export const changePassword = async (req: Request, res: Response) => {
+  const { id, email, password, confirmedPassword } = req.body;
+
+  if (password !== confirmedPassword) {
+    throw new AppError('Password is not same as confirmed password', 400);
+  }
+
+  const userInstance = await UserModel.findByPk(id, { attributes: ['id', 'email'] });
+
+  await sequelize.transaction(async (t) => {
+    if (!userInstance || userInstance.getDataValue('email') !== email) {
+      throw new AppError('User not found', 404);
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedConfirmedPassword = await bcrypt.hash(confirmedPassword, salt);
+
+    if (hashedPassword !== hashedConfirmedPassword) {
+      throw new AppError('Password is not same as confirmed password', 400);
+    }
+
+    await userInstance.update({ userPassword: hashedPassword });
+    await userInstance.save({ transaction: t, fields: ['userPassword'] });
+  });
+
+  res.status(204).send();
 };

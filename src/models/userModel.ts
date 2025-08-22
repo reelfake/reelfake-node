@@ -15,6 +15,14 @@ User.init(
       primaryKey: true,
       field: 'id',
     },
+    firstName: {
+      type: DataTypes.STRING(45),
+      field: 'first_name',
+    },
+    lastName: {
+      type: DataTypes.STRING(45),
+      field: 'last_name',
+    },
     customerId: {
       type: DataTypes.INTEGER,
       field: 'customer_id',
@@ -26,7 +34,6 @@ User.init(
     storeManagerId: {
       type: DataTypes.INTEGER,
       field: 'store_manager_id',
-      allowNull: false,
     },
     email: {
       type: DataTypes.STRING(150),

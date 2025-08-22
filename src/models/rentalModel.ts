@@ -2,19 +2,27 @@ import { DataTypes } from 'sequelize';
 import BaseModel from './baseModel';
 import sequelize from '../sequelize.config';
 
-// type RentalAttributes = {
-//   id: number;
-//   inventoryId: number;
-//   customerId: number;
-//   staffId: number;
-//   rentalDate: Date;
-//   returnDate: Date;
-//   rentalDuration: number;
-//   amount: number;
-//   paymentDate: Date;
-// };
+class Rental extends BaseModel {
+  public static async getRentalsCountForCustomer(customerId: number) {
+    const rentalsCount = await Rental.count({
+      where: {
+        customerId,
+      },
+    });
 
-class Rental extends BaseModel {}
+    return rentalsCount;
+  }
+
+  public static async getRentalsCountProcessedByStaff(staffId: number) {
+    const rentalsCount = await Rental.count({
+      where: {
+        staffId,
+      },
+    });
+
+    return rentalsCount;
+  }
+}
 
 Rental.init(
   {

@@ -1,9 +1,9 @@
 import type { Request } from 'express';
 import { WhereOptions } from 'sequelize';
-import { parseFilterRangeQuery, parsePaginationFilter, parseAddressFilters } from './pagination.utils';
+import { parsePaginationFilter, parseAddressFilters } from './pagination.utils';
 
-export function parseCustomersPaginationFilters(req: Request) {
-  const { first_name: firstName, last_name: lastName, email, phone_number: phoneNumber, registered_on: registeredOn } = req.query;
+export function parseStaffPaginationFilters(req: Request) {
+  const { first_name: firstName, last_name: lastName, email, phone_number: phoneNumber } = req.query;
 
   const conditions: WhereOptions[] = [];
 
@@ -27,11 +27,6 @@ export function parseCustomersPaginationFilters(req: Request) {
     conditions.push(phoneNumberFilter);
   }
 
-  const registeredOnFilter = parseFilterRangeQuery<string>('registeredOn', registeredOn?.toString());
-  if (registeredOnFilter) {
-    conditions.push(registeredOnFilter);
-  }
-
   const where = conditions.reduce<WhereOptions>((acc, curr) => {
     acc = { ...acc, ...curr };
     return acc;
@@ -39,11 +34,11 @@ export function parseCustomersPaginationFilters(req: Request) {
 
   const addressConditions = parseAddressFilters(req);
 
-  let customersConditions = undefined;
+  let staffConditions = undefined;
 
   if (Object.keys(where).length > 0) {
-    customersConditions = where;
+    staffConditions = where;
   }
 
-  return { customersFilter: customersConditions, addressFilter: addressConditions };
+  return { staffFilter: staffConditions, addressFilter: addressConditions };
 }

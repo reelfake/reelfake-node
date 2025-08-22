@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Request, Response, NextFunction, Router } from 'express';
 import {
   getStaff,
   getStaffById,
@@ -9,28 +9,65 @@ import {
   setStaffPassword,
 } from '../controllers';
 import { validateAuthToken, validateUserRole } from '../middlewares';
-import { routeFnWrapper } from '../utils';
-import { USER_ROLES } from '../constants';
+import { AppError, routeFnWrapper } from '../utils';
+import { STAFF_EMAIL_FORMAT, ERROR_MESSAGES, USER_ROLES } from '../constants';
 
 const router = Router();
 
-router.get(
-  '/',
-  validateAuthToken,
-  validateUserRole(USER_ROLES.STAFF, USER_ROLES.STORE_MANAGER),
-  routeFnWrapper(getStaff)
-);
+function validateStaffRouteQuery(req: Request, res: Response, next: NextFunction) {
+  const { page: pageNumberText = '1', active, email } = req.query;
+
+  if (email !== undefined) {
+    req.query.email = email.toString().toLowerCase();
+  }
+
+  if (active !== undefined) {
+    req.query.active = active.toString().toLowerCase();
+  }
+
+  // Validate page number
+  if (pageNumberText !== 'first' && pageNumberText !== 'last' && (isNaN(Number(pageNumberText)) || Number(pageNumberText) < 1)) {
+    throw new AppError(ERROR_MESSAGES.INVALID_PAGE_NUMBER, 400);
+  }
+
+  if (pageNumberText === 'first') {
+    req.query.page = '1';
+  }
+
+  if (pageNumberText === 'last') {
+    req.query.page = '-1';
+  }
+
+  // Validate email
+  if (
+    email &&
+    !email.toString().startsWith('%') &&
+    !email.toString().endsWith('%') &&
+    !STAFF_EMAIL_FORMAT.test(email.toString())
+  ) {
+    return next(new AppError(ERROR_MESSAGES.INVALID_STAFF_EMAIL_FORMAT, 400));
+  }
+
+  // Validate active
+  if ((active && active === 'true') || active === 'false') {
+    return next(new AppError('Active flag must be boolean (true or false)', 400));
+  }
+
+  next();
+}
+
+router.get('/', validateStaffRouteQuery, validateAuthToken, routeFnWrapper(getStaff));
 router.post('/', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(createStaff));
 router.get(
   '/managers',
   validateAuthToken,
-  validateUserRole(USER_ROLES.STAFF, USER_ROLES.STORE_MANAGER),
+  validateUserRole(USER_ROLES.USER, USER_ROLES.STAFF, USER_ROLES.STORE_MANAGER),
   routeFnWrapper(getStoreManagers)
 );
 router.get(
   '/:id',
   validateAuthToken,
-  validateUserRole(USER_ROLES.STAFF, USER_ROLES.STORE_MANAGER),
+  validateUserRole(USER_ROLES.USER, USER_ROLES.STAFF, USER_ROLES.STORE_MANAGER),
   routeFnWrapper(getStaffById)
 );
 router.put('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(updateStaff));

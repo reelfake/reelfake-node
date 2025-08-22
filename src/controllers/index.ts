@@ -1,3 +1,4 @@
+export { getStatistics } from './statsController';
 export { getGenres } from './genreController';
 export { getCities } from './cityController';
 export { getCountries } from './countryController';
@@ -15,7 +16,7 @@ export {
   deleteStore,
 } from './storeController';
 export { login, logout } from './authController';
-export { registerUser, getUser, updateUser } from './userController';
+export { registerUser, getUser, updateUser, changePassword } from './userController';
 export {
   getStaff,
   getStaffById,

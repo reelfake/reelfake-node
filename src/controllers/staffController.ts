@@ -2,27 +2,67 @@ import type { Response } from 'express';
 import { col, literal, Op, WhereOptions } from 'sequelize';
 import bcrypt from 'bcryptjs';
 import { StaffModel, AddressModel, CityModel, CountryModel, StoreModel, UserModel } from '../models';
-import { addressUtils, AppError, capitalize } from '../utils';
+import {
+  parseStaffPaginationFilters,
+  getPaginationOffsetWithFilters,
+  getPaginationOffset,
+  parseRequestQuery,
+  getPaginationMetadata,
+  addressUtils,
+  AppError,
+  capitalize,
+} from '../utils';
 import sequelize from '../sequelize.config';
-import { ERROR_MESSAGES } from '../constants';
+import { ERROR_MESSAGES, ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
 import type { Address, CustomRequest, CustomRequestWithBody, StaffPayload } from '../types';
 
+async function getStaffPaginationOffset(
+  pageNumber: number,
+  limitPerPage: number,
+  filters: {
+    staffFilter?: WhereOptions;
+    addressFilter?: { whereAddress?: WhereOptions; whereCity?: WhereOptions; whereCountry?: WhereOptions };
+  }
+) {
+  const { addressFilter, staffFilter } = filters;
+
+  if (staffFilter || addressFilter) {
+    const staffIdsQueryResult = await StaffModel.findAll({
+      attributes: ['id'],
+      where: staffFilter,
+      include: [addressUtils.includeAddress(addressFilter, true)],
+      order: [['id', 'ASC']],
+    });
+    const staffIds = staffIdsQueryResult.map<number>((id) => id.toJSON().id);
+    const idOffset = await getPaginationOffsetWithFilters(pageNumber, limitPerPage, staffIds);
+    return { idOffset, totalStaff: staffIds.length };
+  }
+
+  const totalStaff = await StaffModel.getRowsCountWhere();
+  const idOffset = await getPaginationOffset(pageNumber, limitPerPage);
+  return { idOffset, totalStaff };
+}
+
 export const getStaff = async (req: CustomRequest, res: Response) => {
-  const { state: stateName, city: cityName } = req.query;
+  const { page: pageNumberText = '1' } = req.query;
+  const limitPerPage = ITEMS_PER_PAGE_FOR_PAGINATION;
+  const pageNumber = Number(pageNumberText);
 
-  const where: WhereOptions = {};
+  const filters = parseStaffPaginationFilters(req);
 
-  if (stateName) {
-    where['stateName'] = {
-      [Op.eq]: capitalize(String(stateName)),
-    };
+  const { idOffset, totalStaff } = await getStaffPaginationOffset(pageNumber, limitPerPage, filters);
+
+  if (totalStaff === 0) {
+    throw new AppError('No data found with the given query', 404);
   }
 
-  if (cityName) {
-    where['cityName'] = {
-      [Op.eq]: capitalize(String(cityName)),
-    };
+  const totalPages = Math.ceil(totalStaff / limitPerPage);
+
+  if (pageNumber > totalPages) {
+    throw new AppError('Page out of range', 404);
   }
+
+  const { addressFilter, staffFilter } = filters;
 
   const staffInstance = await StaffModel.findAll({
     attributes: [
@@ -42,13 +82,30 @@ export const getStaff = async (req: CustomRequest, res: Response) => {
         as: 'store',
         attributes: [],
       },
-      addressUtils.includeAddress({ addressPath: 'address' }),
+      addressUtils.includeAddress({
+        addressPath: 'address',
+        ...addressFilter,
+      }),
     ],
+    order: [['id', idOffset >= 0 ? 'ASC' : 'DESC']],
+    where: {
+      id: {
+        [idOffset >= 0 ? Op.gte : Op.lte]: idOffset >= 0 ? idOffset : totalStaff,
+      },
+      ...staffFilter,
+    },
+    limit: idOffset >= 0 ? limitPerPage : totalStaff % limitPerPage,
   });
 
+  const hasFilters = !!staffFilter || !!addressFilter;
+
+  const queryObject = parseRequestQuery(req, ['page']);
+  const pagination = getPaginationMetadata(pageNumber, totalStaff, limitPerPage, totalPages, queryObject, hasFilters);
+
   res.status(200).json({
-    items: staffInstance,
+    items: pageNumber > 0 ? staffInstance : staffInstance.reverse(),
     length: staffInstance.length,
+    pagination,
   });
 };
 
@@ -133,10 +190,7 @@ export const updateStaff = async (req: CustomRequestWithBody<StaffPayload>, res:
 
   const { storeId, email, phoneNumber, address } = req.body;
 
-  if (
-    address &&
-    (!address.addressLine || !address.cityName || !address.stateName || !address.country || !address.postalCode)
-  ) {
+  if (address && (!address.addressLine || !address.cityName || !address.stateName || !address.country || !address.postalCode)) {
     throw new AppError('Incomplete address', 400);
   }
 
@@ -188,10 +242,7 @@ export const updateStaff = async (req: CustomRequestWithBody<StaffPayload>, res:
 
   if (address) {
     const staffStore = await StaffModel.getStore(staffId);
-    if (
-      staffStore &&
-      (staffStore.address.stateName !== address.stateName || staffStore.address.country !== address.country)
-    ) {
+    if (staffStore && (staffStore.address.stateName !== address.stateName || staffStore.address.country !== address.country)) {
       throw new AppError('Cannot assign staff to store outside state', 400);
     }
   }

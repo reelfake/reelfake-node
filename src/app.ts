@@ -6,6 +6,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { AppError } from './utils';
 import {
+  statsRoutes,
   addressRoutes,
   userRoutes,
   genreRoutes,
@@ -21,7 +22,6 @@ import {
   rentalRoutes,
 } from './routes';
 
-// app.use(cors());
 // app.use(helmet());
 // app.use(morgan('tiny', { stream: logStream }));
 // app.use(bodyParser.json());
@@ -29,7 +29,16 @@ import {
 const app = express();
 
 app.use(express.json());
-app.use(cors({ credentials: true }));
+
+if (process.env.NODE_ENV === 'production') {
+  app.use(
+    cors({
+      origin: 'http://localhost:3000',
+      credentials: true,
+    })
+  );
+}
+
 app.use(cookieParser());
 app.use(compression());
 
@@ -56,6 +65,9 @@ app.get('/api/v1/docs', (req, res) => {
 app.get('/api/v1/redocs', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'openapi', 'redocs.html'));
 });
+
+// Statistics
+app.use('/api/v1/stats', statsRoutes);
 
 // Login and logout
 app.use('/api/v1/auth', authRoutes);

@@ -18,7 +18,7 @@ export default function (req: Request, res: Response, next: NextFunction) {
     const userRole = (decodedToken as { [key: string]: USER_ROLES })['role'];
 
     if (!userRole) {
-      throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 403);
+      throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
     }
 
     (req as CustomRequest).user = {
@@ -42,11 +42,11 @@ export default function (req: Request, res: Response, next: NextFunction) {
 export function validateUserRole(...roles: USER_ROLES[]) {
   return (req: Request, res: Response, next: NextFunction) => {
     const { user } = req as CustomRequest;
-
+    // console.log('hello 1', user);
     if (!user) {
       throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
     }
-
+    // console.log('hello 2', roles, user.role);
     if (!roles.includes(user.role)) {
       throw new AppError(ERROR_MESSAGES.FORBIDDEN, 403);
     }

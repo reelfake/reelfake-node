@@ -13,6 +13,7 @@ export {
 export { parseActorsPaginationFilters } from './actorPagination.utils';
 export { parseMoviesPaginationFilters } from './moviePagination.utils';
 export { parseCustomersPaginationFilters } from './customerPagination.utils';
+export { parseStaffPaginationFilters } from './staffPagination.utils';
 export {
   parseFilterRangeQuery,
   getPaginationOffset,

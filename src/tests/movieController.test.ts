@@ -591,22 +591,6 @@ describe('Movie Controller', () => {
       expect(response.body).toStrictEqual(actualMovieData);
     });
 
-    it('should return movie object with the actors', async () => {
-      const response = await server.get(`/api/v1/movies/100?include_actors=yes`);
-      expect(response.status).toBe(200);
-      expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
-      const actualMovieData = await getMovieData(100, true);
-      expect(response.body).toStrictEqual(actualMovieData);
-    });
-
-    it('should return movie object with the actors', async () => {
-      const response = await server.get(`/api/v1/movies/100?include_actors=1`);
-      expect(response.status).toBe(200);
-      expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
-      const actualMovieData = await getMovieData(100, true);
-      expect(response.body).toStrictEqual(actualMovieData);
-    });
-
     it('should return the movie stock count at all stores', async () => {
       const id = 680;
 

@@ -9,6 +9,13 @@ import { AppError, addressUtils } from '../utils';
 import sequelize from '../sequelize.config';
 
 class Staff extends BaseModel {
+  public static async getRowsCountWhere(conditions?: WhereOptions) {
+    const countOfRows = await Staff.count({
+      where: conditions,
+    });
+    return countOfRows;
+  }
+
   public static async getAddress(staffId: number) {
     const staffInstance = await Staff.findOne({
       attributes: [
