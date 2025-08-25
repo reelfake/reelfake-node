@@ -1,4 +1,4 @@
-import type { Request } from 'express';
+import { Request } from 'express';
 import { AppError } from '../utils';
 import { DATE_FORMAT_IN_REQUEST, availableCountries, availableGenres, availableMovieLanguages } from '../constants';
 

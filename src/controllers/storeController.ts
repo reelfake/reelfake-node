@@ -1,17 +1,17 @@
 import type { Request, Response } from 'express';
-import { literal, Op } from 'sequelize';
+import { literal, Op, WhereOptions } from 'sequelize';
 import sequelize from '../sequelize.config';
-import {
-  StoreModel,
-  AddressModel,
-  CityModel,
-  InventoryModel,
-  MovieModel,
-  StaffModel,
-  MovieLanguageModel,
-} from '../models';
+import { StoreModel, AddressModel, CityModel, InventoryModel, MovieModel, StaffModel, MovieLanguageModel } from '../models';
 import { ERROR_MESSAGES, ITEMS_PER_PAGE_FOR_PAGINATION, movieModelAttributes } from '../constants';
-import { AppError, addressUtils } from '../utils';
+import {
+  AppError,
+  addressUtils,
+  parseMoviesPaginationFilters,
+  getPaginationOffsetWithFilters,
+  getPaginationOffset,
+  parseRequestQuery,
+  getPaginationMetadata,
+} from '../utils';
 import { StorePayload, CustomRequest, CustomRequestWithBody, KeyValuePair, Address } from '../types';
 
 async function getStoreData(storeId: number) {
@@ -32,6 +32,18 @@ async function getStoreData(storeId: number) {
   });
 
   return storeInstance;
+}
+
+async function getMoviesPaginationOffset(storeId: number, pageNumber: number, limitPerPage: number, filters?: WhereOptions) {
+  if (filters) {
+    const movieIds = await InventoryModel.getMovieIdsInStore(storeId);
+    const idOffset = await getPaginationOffsetWithFilters(pageNumber, limitPerPage, movieIds);
+    return { idOffset, totalMovies: movieIds.length };
+  }
+
+  const totalMovies = await InventoryModel.getRowsCountWhere({ storeId });
+  const idOffset = await getPaginationOffset(pageNumber, limitPerPage);
+  return { idOffset, totalMovies };
 }
 
 export const getStaffInStore = async (req: CustomRequest, res: Response) => {
@@ -119,13 +131,13 @@ export const getStockCount = async (req: Request, res: Response) => {
 };
 
 export const getMoviesInStore = async (req: Request, res: Response) => {
-  const { pageNumber: pageNumberText = '1' } = req.query;
+  const { page: pageNumberText = '1' } = req.query;
   const { id: idText } = req.params;
 
   const pageNumber = Number(pageNumberText);
 
   if (isNaN(pageNumber)) {
-    throw new AppError('Invalid page number', 400);
+    throw new AppError(ERROR_MESSAGES.INVALID_PAGE_NUMBER, 400);
   }
 
   const storeId = Number(idText);
@@ -134,60 +146,79 @@ export const getMoviesInStore = async (req: Request, res: Response) => {
     throw new AppError('Invalid store id', 400);
   }
 
-  const totalRows = await InventoryModel.count({
-    where: {
-      storeId,
-    },
-    include: [
-      {
-        model: MovieModel,
-        as: 'movie',
-      },
-    ],
-  });
+  const limitPerPage = ITEMS_PER_PAGE_FOR_PAGINATION;
+  const filters = parseMoviesPaginationFilters(req);
+  const { idOffset, totalMovies } = await getMoviesPaginationOffset(storeId, pageNumber, limitPerPage, filters);
+
+  if (totalMovies === 0) {
+    throw new AppError('No data found with the given query', 404);
+  }
+
+  const totalPages = Math.ceil(totalMovies / limitPerPage);
+  if (pageNumber > totalPages) {
+    throw new AppError('Page out of range', 404);
+  }
 
   const pageResult = await InventoryModel.findAll({
-    where: {
-      storeId,
-    },
     attributes: { exclude: ['movieId', 'storeId'] },
     include: [
       {
         model: MovieModel,
         as: 'movie',
         attributes: [...movieModelAttributes, [literal(`"movie->movieLanguage"."iso_language_code"`), 'language']],
+        required: true,
         include: [
           {
             model: MovieLanguageModel,
             as: 'movieLanguage',
+            required: true,
             attributes: [],
           },
         ],
       },
     ],
-    order: [['stock', 'DESC']],
-    limit: ITEMS_PER_PAGE_FOR_PAGINATION,
-    offset: (pageNumber - 1) * ITEMS_PER_PAGE_FOR_PAGINATION,
+    where: {
+      [Op.and]: {
+        id: {
+          [idOffset >= 0 ? Op.gte : Op.lte]: idOffset >= 0 ? idOffset : totalMovies,
+        },
+        storeId,
+        stock: {
+          [Op.gt]: 0,
+        },
+      },
+    },
+    order: [['id', idOffset >= 0 ? 'ASC' : 'DESC']],
+    limit: idOffset >= 0 ? limitPerPage : totalMovies % limitPerPage,
   });
 
-  if (pageResult.length === 0) {
-    throw new AppError(`No movies found in store ${storeId}`, 404);
-  }
+  const queryObject = parseRequestQuery(req, ['page']);
+  const pagination = getPaginationMetadata(pageNumber, totalMovies, limitPerPage, totalPages, queryObject, !!filters);
 
-  const moviesStock = pageResult.map((res) => ({
-    ...res.getDataValue('movie').dataValues,
-    stock: res.getDataValue('stock'),
-  }));
+  res.status(200).json({
+    items: pageNumber > 0 ? pageResult : pageResult.reverse(),
+    length: pageResult.length,
+    pagination,
+  });
 
-  res
-    .status(200)
-    .set('rf-page-number', String(pageNumber))
-    .json({
-      items: moviesStock,
-      length: moviesStock.length,
-      totalItems: totalRows,
-      totalPages: Math.ceil(totalRows / ITEMS_PER_PAGE_FOR_PAGINATION),
-    });
+  // if (pageResult.length === 0) {
+  //   throw new AppError(`No movies found in store ${storeId}`, 404);
+  // }
+
+  // const moviesStock = pageResult.map((res) => ({
+  //   ...res.getDataValue('movie').dataValues,
+  //   stock: res.getDataValue('stock'),
+  // }));
+
+  // res
+  //   .status(200)
+  //   .set('rf-page-number', String(pageNumber))
+  //   .json({
+  //     items: moviesStock,
+  //     length: moviesStock.length,
+  //     totalItems: totalMovies,
+  //     totalPages: Math.ceil(totalMovies / ITEMS_PER_PAGE_FOR_PAGINATION),
+  //   });
 };
 
 export const updateStore = async (req: CustomRequestWithBody<Partial<StorePayload>>, res: Response) => {
@@ -200,10 +231,7 @@ export const updateStore = async (req: CustomRequestWithBody<Partial<StorePayloa
 
   const { phoneNumber, address } = req.body;
 
-  if (
-    address &&
-    (!address.addressLine || !address.cityName || !address.stateName || !address.country || !address.postalCode)
-  ) {
+  if (address && (!address.addressLine || !address.cityName || !address.stateName || !address.country || !address.postalCode)) {
     throw new AppError('Incomplete address', 400);
   }
 
@@ -315,10 +343,7 @@ export const createStore = async (req: CustomRequestWithBody<StorePayload>, res:
     throw new AppError('Missing required data', 400);
   }
 
-  if (
-    address &&
-    (!address.addressLine || !address.cityName || !address.stateName || !address.country || !address.postalCode)
-  ) {
+  if (address && (!address.addressLine || !address.cityName || !address.stateName || !address.country || !address.postalCode)) {
     throw new AppError('Incomplete address', 400);
   }
 
@@ -448,8 +473,7 @@ export const deleteStore = async (req: CustomRequest, res: Response) => {
 
   const { forceDelete: forceDeleteQueryString } = req.query;
   const forceDelete =
-    forceDeleteQueryString?.toString().toLowerCase() === 'true' ||
-    forceDeleteQueryString?.toString().toLowerCase() === 'yes';
+    forceDeleteQueryString?.toString().toLowerCase() === 'true' || forceDeleteQueryString?.toString().toLowerCase() === 'yes';
 
   const storeData = await StoreModel.findByPk(storeId);
 

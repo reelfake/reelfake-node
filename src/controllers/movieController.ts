@@ -140,6 +140,10 @@ export const getMovies = async (req: Request, res: Response) => {
   const limitPerPage = ITEMS_PER_PAGE_FOR_PAGINATION;
   const pageNumber = Number(pageNumberText);
 
+  if (isNaN(pageNumber)) {
+    throw new AppError(ERROR_MESSAGES.INVALID_PAGE_NUMBER, 400);
+  }
+
   const filters = parseMoviesPaginationFilters(req);
   const { idOffset, totalMovies } = await getMoviesPaginationOffset(pageNumber, limitPerPage, filters);
 

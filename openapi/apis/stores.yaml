@@ -23,7 +23,7 @@ get:
       $ref: ../components/internalServerError.yaml
 post:
   summary: Create a store
-  operationId: addStore
+  operationId: createStore
   tags:
     - store
   requestBody:

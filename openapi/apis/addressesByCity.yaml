@@ -1,0 +1,51 @@
+get:
+  summary: Get the list of available addresses in a city
+  operationId: getAddressesInCity
+  tags:
+    - address
+  parameters:
+    - in: path
+      name: city
+      required: true
+      description: The name of the city
+      schema:
+        type: string
+        example: Melbourne
+  responses:
+    '200':
+      description: Successfully returned a list of available addresses in a city
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      format: number
+                    addressLine:
+                      type: string
+                    cityName:
+                      type: string
+                    stateName:
+                      type: string
+                    country:
+                      type: string
+                    postalCode:
+                      type: string
+              length:
+                type: integer
+                format: number
+    '400':
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string

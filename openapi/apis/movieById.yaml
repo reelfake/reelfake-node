@@ -56,8 +56,6 @@ put:
           properties:
             tmdbId:
               type: integer
-            imdbId:
-              type: string
             title:
               type: string
             originalTitle:

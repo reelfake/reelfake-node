@@ -13,6 +13,7 @@ export default {
   STAFF_NOT_STORE_MANAGER: 'Staff is not a store manager',
   REQUEST_BODY_MISSING: 'Request is missing required data',
   STORE_NOT_FOUND_FOR_STAFF: 'Store not found for the given staff',
+  PREF_STORE_NOT_FOUND_FOR_CUSTOMER: 'Preferred store not found for the customer',
   RELEASE_DATE_INVALID_FORMAT: 'Release date must be in format YYYY-MM-DD',
   INVALID_RELEASE_DATE: 'Invalid release date provided in query',
   INVALID_RATING: 'Invalid rating provided in query',

@@ -1,8 +1,33 @@
-import { DataTypes } from 'sequelize';
+import { DataTypes, Op, WhereOptions } from 'sequelize';
 import BaseModel from './baseModel';
 import sequelize from '../sequelize.config';
 
-class Inventory extends BaseModel {}
+class Inventory extends BaseModel {
+  public static async getMovieIdsInStore(storeId: number) {
+    const results = await Inventory.findAll({
+      attributes: ['movieId'],
+      where: {
+        [Op.and]: {
+          storeId,
+          stockCount: {
+            [Op.gt]: 0,
+          },
+        },
+      },
+      order: [['movieId', 'ASC']],
+    });
+
+    const ids = results.map<number>((res) => res.toJSON().id);
+    return ids;
+  }
+
+  public static async getRowsCountWhere(conditions?: WhereOptions) {
+    const countOfRows = await Inventory.count({
+      where: conditions,
+    });
+    return countOfRows;
+  }
+}
 
 Inventory.init(
   {

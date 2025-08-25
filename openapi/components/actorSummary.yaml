@@ -19,3 +19,4 @@ properties:
     format: float
   profilePictureUrl:
     type: string
+    format: uri

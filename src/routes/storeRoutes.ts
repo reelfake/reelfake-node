@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { validateAuthToken, validateUserRole } from '../middlewares';
+import { validateAuthToken, validateUserRole, validateMoviesRouteQuery } from '../middlewares';
 import { routeFnWrapper } from '../utils';
 import {
   getStores,
@@ -18,7 +18,7 @@ const router = Router();
 router.get('/', routeFnWrapper(getStores));
 router.get('/:id', routeFnWrapper(getStoreById));
 router.get('/:id/stock', routeFnWrapper(getStockCount));
-router.get('/:id/movies', routeFnWrapper(getMoviesInStore));
+router.get('/:id/movies', validateMoviesRouteQuery, routeFnWrapper(getMoviesInStore));
 router.get(
   '/:id/staff',
   validateAuthToken,

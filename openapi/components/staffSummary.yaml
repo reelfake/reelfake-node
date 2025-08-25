@@ -10,18 +10,17 @@ properties:
   email:
     type: string
     format: email
-  phoneNumber:
-    type: string
-  preferredStoreId:
-    type: integer
-    format: number
   active:
     type: boolean
+  phoneNumber:
+    type: string
   avatar:
     type: string
     format: uri
-  registeredOn:
-    type: string
-    format: date
+  storeId:
+    type: integer
+    format: number
+  isStoreManager:
+    type: boolean
   address:
     $ref: ./address.yaml

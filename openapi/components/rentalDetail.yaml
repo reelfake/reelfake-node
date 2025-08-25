@@ -1,0 +1,172 @@
+type: object
+properties:
+  id:
+    type: integer
+    format: number
+  inventoryId:
+    type: integer
+    format: number
+  customerId:
+    type: integer
+    format: number
+  staffId:
+    type: integer
+    format: number
+  rentalStartDate:
+    type: string
+    format: date
+  rentalEndDate:
+    type: string
+    format: date
+  returnDate:
+    type: string
+    format: date
+  rentalDuration:
+    type: integer
+    format: number
+  delayedByDays:
+    type: integer
+    format: number
+  amountPaid:
+    type: number
+    format: float
+  discountAmount:
+    type: number
+    format: float
+  paymentDate:
+    type: string
+    format: date
+  rentalType:
+    type: string
+    enum: [in-store, online]
+  processedBy:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: number
+      firstName:
+        type: string
+      lastName:
+        type: string
+      email:
+        type: string
+      phoneNumber:
+        type: string
+      avatar:
+        type: string
+      address:
+        type: object
+        properties:
+          id:
+            type: integer
+            format: number
+          addressLine:
+            type: string
+          cityName:
+            type: string
+          stateName:
+            type: string
+          country:
+            type: string
+          postalCode:
+            type: string
+  inventory:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: number
+      movieId:
+        type: integer
+        format: number
+      stock:
+        type: integer
+        format: number
+      store:
+        type: object
+        properties:
+          id:
+            type: integer
+            format: number
+          phoneNumber:
+            type: string
+          storeManager:
+            type: object
+            properties:
+              id:
+                type: integer
+                format: number
+              firstName:
+                type: string
+              lastName:
+                type: string
+              email:
+                type: string
+              addressId:
+                type: integer
+                format: number
+              storeId:
+                type: integer
+                format: number
+              active: true
+              phoneNumber:
+                type: string
+              avatar:
+                type: string
+          address:
+            type: object
+            properties:
+              id:
+                type: integer
+                format: number
+              addressLine:
+                type: string
+              cityName:
+                type: string
+              stateName:
+                type: string
+              country:
+                type: string
+              postalCode:
+                type: string
+  customer:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: number
+      firstName:
+        type: string
+      lastName:
+        type: string
+      email:
+        type: string
+      phoneNumber:
+        type: string
+      avatar:
+        type: string
+      active:
+        type: boolean
+      preferredStoreId:
+        type: integer
+        format: number
+      registeredOn:
+        type: string
+        format: date
+      address:
+        type: object
+        properties:
+          id:
+            type: integer
+            format: number
+          addressLine:
+            type: string
+          cityName:
+            type: string
+          stateName:
+            type: string
+          country:
+            type: string
+          postalCode:
+            type: string

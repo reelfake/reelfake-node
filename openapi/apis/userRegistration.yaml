@@ -12,6 +12,10 @@ post:
         schema:
           type: object
           properties:
+            firstName:
+              type: string
+            lastName:
+              type: string
             email:
               type: string
             password:
@@ -25,15 +29,8 @@ post:
           schema:
             type: object
             properties:
-              userEmail:
+              message:
                 type: string
-                format: email
-              customerId:
-                type: integer
-              staffId:
-                type: integer
-              storeManagerId:
-                type: integer
     '400':
       $ref: ../components/badRequest.yaml
     '500':

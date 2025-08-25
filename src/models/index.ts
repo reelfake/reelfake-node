@@ -77,5 +77,5 @@ StaffModel.hasMany(RentalModel, { as: 'processedBy', foreignKey: 'staffId' });
 RentalModel.belongsTo(StaffModel, { as: 'processedBy', foreignKey: 'staffId' });
 
 // Rental <-> Inventory relationship
-InventoryModel.hasMany(RentalModel, { as: 'inventory', foreignKey: 'inventoryId' });
+InventoryModel.hasMany(RentalModel, { as: 'rental', foreignKey: 'inventoryId' });
 RentalModel.belongsTo(InventoryModel, { as: 'inventory', foreignKey: 'inventoryId' });

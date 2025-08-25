@@ -1,5 +1,5 @@
 get:
-  summary: Get in-stock movies in a store page by page
+  summary: Get movies in a store
   operationId: getMoviesInStore
   tags:
     - store
@@ -7,26 +7,22 @@ get:
     - in: path
       name: id
       required: true
-      description: The id of the store
+      description: Store id
       schema:
         type: integer
     - in: query
-      name: pageNumber
+      name: page
       required: false
       description: |
         The page number (which starts with 1) to fetch the set of in-stock movies from.
         The movies are split into multiple pages with each page having a limited number of items.
+        This query also accepts first and last.
       schema:
         type: integer
         default: 1
   responses:
     '200':
-      description: Successfully returned in-stock movies in a store for the given page number
-      headers:
-        rf-page-number:
-          description: The page number that the data returned belong to
-          schema:
-            type: integer
+      description: Successfully returned movies in a store
       content:
         application/json:
           schema:
@@ -35,13 +31,20 @@ get:
               items:
                 type: array
                 items:
-                  $ref: ../components/movieSummary.yaml
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      format: number
+                    stock:
+                      type: integer
+                      format: number
+                    movie:
+                      $ref: ../components/movieSummary.yaml
               length:
                 type: integer
-              totalPages:
-                type: integer
-              totalItems:
-                type: integer
+              pagination:
+                $ref: ../components/pagination.yaml
     '400':
       $ref: ../components/badRequest.yaml
     '404':

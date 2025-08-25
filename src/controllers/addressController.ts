@@ -1,9 +1,9 @@
 import type { Request, Response } from 'express';
 import { Col } from 'sequelize/lib/utils';
-import { col, literal, Op, WhereOptions } from 'sequelize';
+import { col, Op, WhereOptions } from 'sequelize';
 import { AddressModel, CityModel, CountryModel } from '../models';
-import { ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
-import { AppError } from '../utils';
+import { ERROR_MESSAGES, ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
+import { AppError, getPaginationMetadata, getPaginationOffset } from '../utils';
 
 const attributes: (string | [Col, string])[] = [
   'id',
@@ -33,15 +33,15 @@ function getAssociations(where: WhereOptions | undefined = undefined) {
 }
 
 export const getAddresses = async (req: Request, res: Response) => {
-  const { pageNumber: pageNumberText = '1' } = req.query;
+  const { page: pageNumberText = '1' } = req.query;
 
   const pageNumber = Number(pageNumberText);
 
   if (isNaN(pageNumber)) {
-    throw new AppError('Invalid page number', 400);
+    throw new AppError(ERROR_MESSAGES.INVALID_PAGE_NUMBER, 400);
   }
 
-  const idOffset = pageNumber * ITEMS_PER_PAGE_FOR_PAGINATION - ITEMS_PER_PAGE_FOR_PAGINATION;
+  const idOffset = await getPaginationOffset(pageNumber, ITEMS_PER_PAGE_FOR_PAGINATION);
 
   const totalItems = await AddressModel.getTotalRowsCount();
   const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE_FOR_PAGINATION);
@@ -49,16 +49,21 @@ export const getAddresses = async (req: Request, res: Response) => {
   const addresses = await AddressModel.findAll({
     attributes,
     include: getAssociations(),
-    offset: idOffset,
+    order: [['id', idOffset >= 0 ? 'ASC' : 'DESC']],
+    where: {
+      id: {
+        [idOffset >= 0 ? Op.gte : Op.lte]: idOffset >= 0 ? idOffset : totalItems,
+      },
+    },
     limit: ITEMS_PER_PAGE_FOR_PAGINATION,
-    order: [['id', 'ASC']],
   });
 
+  const pagination = getPaginationMetadata(pageNumber, totalItems, ITEMS_PER_PAGE_FOR_PAGINATION, totalPages, {}, false);
+
   res.status(200).json({
-    items: addresses,
+    items: pageNumber > 0 ? addresses : addresses.reverse(),
     length: addresses.length,
-    totalItems,
-    totalPages,
+    pagination,
   });
 };
 

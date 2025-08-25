@@ -189,6 +189,15 @@ class Address extends BaseModel {
     await currentAddressInstance.update({ ...newAddressData });
     await currentAddressInstance.save({ transaction: t });
   }
+
+  public static async getRecordIds() {
+    const results = await Address.findAll({
+      attributes: ['id'],
+      order: [['id', 'ASC']],
+    });
+    const ids = results.map<number>((res) => res.toJSON().id);
+    return ids;
+  }
 }
 
 Address.init(

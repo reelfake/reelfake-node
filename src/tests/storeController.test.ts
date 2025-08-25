@@ -173,35 +173,51 @@ describe('Store Controller', () => {
       const pages = [1, 3, 5, 2];
 
       for (const page of pages) {
-        const response = await server.get(`/api/v1/stores/${storeId}/movies?pageNumber=${page}`);
+        const response = await server.get(`/api/v1/stores/${storeId}/movies?page=${page}`);
         expect(response.status).toBe(200);
         expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
 
         const expectedMovies = await execQuery(`
-                SELECT i.id AS "inventoryId", m.id, m.imdb_id AS "imdbId", m.title, m.original_title AS "originalTitle",
-                m.overview, m.runtime, m.release_date AS "releaseDate", 
-                (SELECT ARRAY_AGG(g.genre_name) FROM genre AS g JOIN UNNEST(m.genre_ids) AS gid ON g.id = gid) AS genres,
-                (SELECT ARRAY_AGG(c.iso_country_code) FROM country AS c JOIN UNNEST(m.origin_country_ids) AS cid ON c.id = cid) AS "countriesOfOrigin", 
-                (SELECT l.iso_language_code FROM movie_language AS l WHERE l.id = language_id) AS language,
-                m.movie_status AS "movieStatus", m.popularity, m.budget, m.revenue,
-                m.rating_average AS "ratingAverage", m.rating_count "ratingCount", m.poster_url AS "posterUrl",
-                m.rental_rate AS "rentalRate", i.stock_count AS stock
-                FROM inventory AS i LEFT OUTER JOIN movie AS m ON m.id = i.movie_id
-                WHERE i.store_id = ${storeId}
-                ORDER BY i.stock_count DESC
-                LIMIT ${ITEMS_COUNT_PER_PAGE_FOR_TEST}
-                OFFSET ${(page - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST}
+              SELECT i.id AS "id", i.stock_count AS "stock",
+              json_build_object(
+                'id', m.id, 
+                'title', m.title,
+                'originalTitle', m.original_title,
+                'overview', m.overview,
+                'runtime', m.runtime,
+                'releaseDate', m.release_date,
+                'genres', (SELECT ARRAY_AGG(g.genre_name) FROM genre AS g JOIN UNNEST(m.genre_ids) AS gid ON g.id = gid),
+                'countriesOfOrigin', (SELECT ARRAY_AGG(c.iso_country_code) FROM country AS c JOIN UNNEST(m.origin_country_ids) AS cid ON c.id = cid),
+                'movieStatus', m.movie_status,
+                'popularity', m.popularity,
+                'budget', m.budget::TEXT,
+                'revenue', m.revenue::TEXT,
+                'ratingAverage', m.rating_average,
+                'ratingCount', m.rating_count,
+                'posterUrl', m.poster_url,
+                'rentalRate', m.rental_rate::TEXT,
+                'language', (SELECT l.iso_language_code FROM movie_language AS l WHERE l.id = language_id)
+              ) AS "movie"
+              FROM inventory AS i LEFT OUTER JOIN movie AS m ON i.movie_id = m.id
+              WHERE i.store_id = ${storeId}
+              ORDER BY m.id ASC
+              LIMIT ${ITEMS_COUNT_PER_PAGE_FOR_TEST}
+              OFFSET ${(page - 1) * ITEMS_COUNT_PER_PAGE_FOR_TEST};
             `);
-
-        expectedMovies.forEach((m) => {
-          delete m['inventoryId'];
-        });
 
         expect(response.body).toStrictEqual({
           items: expectedMovies,
           length: ITEMS_COUNT_PER_PAGE_FOR_TEST,
-          totalItems: totalRows,
-          totalPages: Math.ceil(totalRows / ITEMS_COUNT_PER_PAGE_FOR_TEST),
+          pagination: {
+            pageNumber: page,
+            totalPages: Math.ceil(totalRows / ITEMS_COUNT_PER_PAGE_FOR_TEST),
+            totalItems: totalRows,
+            itemsPerPage: ITEMS_COUNT_PER_PAGE_FOR_TEST,
+            next: `?page=${page + 1}`,
+            prev: page > 1 ? `?page=${page - 1}` : null,
+            first: '?page=first',
+            last: '?page=last',
+          },
         });
       }
     });
@@ -298,7 +314,7 @@ describe('Store Controller', () => {
     });
 
     it('should return 400 when getting movies in a store but page number is not valid', async () => {
-      const response = await server.get('/api/v1/stores/1/movies?pageNumber=blah');
+      const response = await server.get('/api/v1/stores/1/movies?page=blah');
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('Invalid page number');
     });

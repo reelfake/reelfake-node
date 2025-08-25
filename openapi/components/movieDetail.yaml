@@ -3,9 +3,6 @@ properties:
   id:
     type: integer
     description: Unique id of the resource
-  imdbId:
-    type: string
-    description: Imdb id of the movie (using imdb id, we can visit imdb website using www.imdb.com/title/:imdb_id)
   title:
     type: string
     description: The title of the movie

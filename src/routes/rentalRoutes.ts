@@ -15,7 +15,7 @@ router.get(
 router.get(
   '/my_store',
   validateAuthToken,
-  validateUserRole(USER_ROLES.STAFF, USER_ROLES.STORE_MANAGER),
+  validateUserRole(USER_ROLES.CUSTOMER, USER_ROLES.STAFF, USER_ROLES.STORE_MANAGER),
   routeFnWrapper(getRentalsForStore)
 );
 router.get(

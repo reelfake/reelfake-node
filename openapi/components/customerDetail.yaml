@@ -49,6 +49,6 @@ properties:
             type: string
             format: uri
           address:
-            $ref: ../components/address.yaml
+            $ref: ./address.yaml
   address:
-    $ref: ../components/address.yaml
+    $ref: ./address.yaml

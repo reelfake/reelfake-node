@@ -1,6 +1,6 @@
 import type { Response } from 'express';
-import { Model, Op, literal, fn, WhereOptions, Includeable } from 'sequelize';
-import { AppError, addressUtils } from '../utils';
+import { Model, Op, literal, fn, WhereOptions, Includeable, col } from 'sequelize';
+import { AppError, addressUtils, getPaginationOffset, getPaginationMetadata } from '../utils';
 import { CustomerModel, InventoryModel, MovieModel, RentalModel, StaffModel, StoreModel } from '../models';
 import { ERROR_MESSAGES, USER_ROLES, ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
 import { CustomRequest } from '../types';
@@ -11,7 +11,7 @@ async function getUserAndStoreIdIfExist(email: string, role: USER_ROLES) {
   switch (role) {
     case USER_ROLES.CUSTOMER:
       modelInstance = await CustomerModel.findOne({
-        attributes: ['id', 'active', ['preferredStoreId', 'storeId']],
+        attributes: ['id', 'active', [col('preferred_store_id'), 'storeId']],
         where: {
           email,
         },
@@ -20,7 +20,7 @@ async function getUserAndStoreIdIfExist(email: string, role: USER_ROLES) {
     case USER_ROLES.STAFF:
     case USER_ROLES.STORE_MANAGER:
       modelInstance = await StaffModel.findOne({
-        attributes: ['id', 'active', 'storeId'],
+        attributes: ['id', 'active', [col('store_id'), 'storeId']],
         where: {
           email,
         },
@@ -38,8 +38,14 @@ async function getUserAndStoreIdIfExist(email: string, role: USER_ROLES) {
     throw new AppError(ERROR_MESSAGES.USER_NOT_ACTIVE, 403);
   }
 
+  const storeIdData = modelInstance.getDataValue('storeId');
+
+  if (storeIdData === null) {
+    throw new AppError(ERROR_MESSAGES.PREF_STORE_NOT_FOUND_FOR_CUSTOMER, 400);
+  }
+
   const userId = Number(modelInstance.getDataValue('id'));
-  const storeId = Number(modelInstance.getDataValue('storeId'));
+  const storeId = Number(storeIdData);
 
   return { userId, storeId };
 }
@@ -234,46 +240,16 @@ export const getRentalsForStore = async (req: CustomRequest, res: Response) => {
 
   const { email, role } = user;
 
-  const { pageNumber: pageNumberText = '1' } = req.query;
-  const pageNumber = Number(pageNumberText);
-  if (!pageNumber || pageNumber < 1) {
-    throw new AppError('Invalid page number', 400);
-  }
-
   const { storeId } = await getUserAndStoreIdIfExist(email, role);
   if (!storeId) {
     throw new AppError('Store not found for the user', 404);
   }
 
-  const limitPerPage = ITEMS_PER_PAGE_FOR_PAGINATION;
-  const pageOffset = (pageNumber - 1) * limitPerPage;
-
-  const totalRentals = await RentalModel.count({
-    include: [
-      {
-        model: InventoryModel,
-        as: 'inventory',
-        attributes: [],
-        include: [
-          {
-            model: StoreModel,
-            as: 'store',
-            attributes: [],
-            where: {
-              id: {
-                [Op.eq]: storeId,
-              },
-            },
-          },
-        ],
-      },
-    ],
-  });
-
   const rentals = await RentalModel.findAll({
     attributes: {
       exclude: ['inventoryId', 'customerId', 'staffId'],
       include: [
+        'id',
         [literal(`"inventory->store"."id"`), 'storeId'],
         [
           fn(
@@ -292,8 +268,8 @@ export const getRentalsForStore = async (req: CustomRequest, res: Response) => {
     include: [
       {
         model: InventoryModel,
-        as: 'inventory',
         attributes: [],
+        as: 'inventory',
         include: [
           {
             model: StoreModel,
@@ -311,21 +287,78 @@ export const getRentalsForStore = async (req: CustomRequest, res: Response) => {
             attributes: [],
           },
         ],
+        where: {
+          storeId: {
+            [Op.eq]: storeId,
+          },
+        },
       },
     ],
-    limit: limitPerPage,
-    offset: pageOffset,
   });
 
-  res
-    .status(200)
-    .set({
-      'rf-page-number': pageNumber,
-    })
-    .json({
-      items: rentals,
-      length: rentals.length,
-      totalPages: Math.ceil(totalRentals / limitPerPage),
-      totalItems: Number(totalRentals),
-    });
+  // const rentals = await RentalModel.findAll({
+  //   attributes: {
+  //     exclude: ['inventoryId', 'customerId', 'staffId'],
+  //     include: [
+  //       'id',
+  //       'storeId',
+  //       'inventoryId',
+  //       [literal(`"inventory->store"."id"`), 'storeId'],
+  //       [
+  //         fn(
+  //           'json_build_object',
+  //           'id',
+  //           literal(`"inventory->movie"."id"`),
+  //           'title',
+  //           literal(`"inventory->movie"."title"`),
+  //           'stock',
+  //           literal(`"inventory"."stock_count"`)
+  //         ),
+  //         'movie',
+  //       ],
+  //     ],
+  //   },
+  //   include: [
+  //     {
+  //       model: InventoryModel,
+  //       as: 'rentalInventory',
+  //       attributes: [],
+  //       required: true,
+  //       include: [
+  //         {
+  //           model: StoreModel,
+  //           as: 'store',
+  //           attributes: [],
+  //           where: {
+  //             id: {
+  //               [Op.eq]: storeId,
+  //             },
+  //           },
+  //         },
+  //         {
+  //           model: MovieModel,
+  //           as: 'movie',
+  //           attributes: [],
+  //         },
+  //       ],
+  //     },
+  //   ],
+  //   order: [['id', idOffset >= 0 ? 'ASC' : 'DESC']],
+  //   where: {
+  //     id: {
+  //       [idOffset >= 0 ? Op.gte : Op.lte]: idOffset >= 0 ? idOffset : totalItems,
+  //     },
+  //   },
+  //   limit: ITEMS_PER_PAGE_FOR_PAGINATION,
+  // });
+
+  res.status(200).json({ rentals, length: rentals.length });
+
+  // const pagination = getPaginationMetadata(pageNumber, totalItems, ITEMS_PER_PAGE_FOR_PAGINATION, totalPages, {}, false);
+
+  // res.status(200).json({
+  //   items: pageNumber > 0 ? rentals : rentals.reverse(),
+  //   length: rentals.length,
+  //   pagination,
+  // });
 };

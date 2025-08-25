@@ -515,7 +515,7 @@ describe('Movie Controller', () => {
   describe('GET /movies/:id', () => {
     const getMovieData = async (id: number, includeActors: boolean = false) => {
       const [actualMovieData] = await execQuery(`
-        SELECT m.id AS "id", m.imdb_id AS "imdbId", m.title AS "title", m.original_title AS "originalTitle",
+        SELECT m.id AS "id", m.title AS "title", m.original_title AS "originalTitle",
         m.overview, m.runtime, m.release_date AS "releaseDate",
         ml.iso_language_code AS "language",
         m.movie_status AS "movieStatus",
@@ -673,7 +673,7 @@ describe('Movie Controller', () => {
 
       const newMovieId = response.body.id;
       const [actualMovieData] = await execQuery(`
-        SELECT m.id, m.tmdb_id AS "tmdbId", m.imdb_id AS "imdbId", m.title, m.original_title AS "originalTitle",
+        SELECT m.id, m.tmdb_id AS "tmdbId", m.title, m.original_title AS "originalTitle",
         m.overview, m.runtime, m.release_date AS "releaseDate", array_agg(g.genre_name) AS "genres", 
         array_agg(DISTINCT c.iso_country_code) AS "countriesOfOrigin", l.iso_language_code AS "language",
         m.movie_status AS "movieStatus", m.popularity, m.budget, m.revenue,
@@ -710,7 +710,7 @@ describe('Movie Controller', () => {
       const newMovieId = response.body.id;
 
       const [actualMovieData] = await execQuery(`
-        SELECT m.id AS "id", m.imdb_id AS "imdbId", m.title AS "title", m.original_title AS "originalTitle",
+        SELECT m.id AS "id", m.title AS "title", m.original_title AS "originalTitle",
         m.overview, m.runtime, m.release_date AS "releaseDate",
         ml.iso_language_code AS "language",
         m.movie_status AS "movieStatus",
