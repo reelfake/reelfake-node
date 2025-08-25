@@ -24,6 +24,7 @@ get:
                   $ref: ../components/movieStock.yaml
               length:
                 type: integer
+                format: number
     '400':
       $ref: ../components/badRequest.yaml
     '404':
