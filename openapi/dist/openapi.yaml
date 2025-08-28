@@ -55,7 +55,7 @@ paths:
           $ref: '#/components/responses/badRequest'
         '500':
           $ref: '#/components/responses/internalServerError'
-  /user/login:
+  /auth/login:
     post:
       summary: Login user
       operationId: login
@@ -85,8 +85,6 @@ paths:
               schema:
                 type: string
                 example: auth_token=abcde12345
-        '400':
-          $ref: '#/components/responses/badRequest'
         '401':
           description: Invalid credentials
           content:
@@ -96,9 +94,7 @@ paths:
                 properties:
                   message:
                     type: string
-        '500':
-          $ref: '#/components/responses/internalServerError'
-  /user/logout:
+  /auth/logout:
     get:
       summary: Logout user
       operationId: logout
@@ -117,8 +113,6 @@ paths:
                 properties:
                   message:
                     type: string
-        '500':
-          $ref: '#/components/responses/internalServerError'
   /user/me:
     get:
       summary: Get the user detail
@@ -1297,6 +1291,7 @@ paths:
                       $ref: '#/components/schemas/movieStock'
                   length:
                     type: integer
+                    format: number
         '400':
           $ref: '#/components/responses/badRequest'
         '404':
@@ -1657,7 +1652,7 @@ paths:
           $ref: '#/components/responses/internalServerError'
     post:
       summary: Create a store
-      operationId: addStore
+      operationId: createStore
       tags:
         - store
       requestBody:
@@ -1887,7 +1882,7 @@ paths:
           $ref: '#/components/responses/unauthorized'
   /stores/{id}/movies:
     get:
-      summary: Get in-stock movies in a store page by page
+      summary: Get movies in a store
       operationId: getMoviesInStore
       tags:
         - store
@@ -1895,26 +1890,22 @@ paths:
         - in: path
           name: id
           required: true
-          description: The id of the store
+          description: Store id
           schema:
             type: integer
         - in: query
-          name: pageNumber
+          name: page
           required: false
           description: |
             The page number (which starts with 1) to fetch the set of in-stock movies from.
             The movies are split into multiple pages with each page having a limited number of items.
+            This query also accepts first and last.
           schema:
             type: integer
             default: 1
       responses:
         '200':
-          description: Successfully returned in-stock movies in a store for the given page number
-          headers:
-            rf-page-number:
-              description: The page number that the data returned belong to
-              schema:
-                type: integer
+          description: Successfully returned movies in a store
           content:
             application/json:
               schema:
@@ -2966,6 +2957,15 @@ components:
         store:
           type: object
           properties:
+            id:
+              type: integer
+              format: number
+            managerId:
+              type: integer
+              format: number
+            phoneNumber:
+              type: string
+              description: The phone number of the store
             addressLine:
               type: string
               description: This is typically street number and name (for e.g. 11 Reel Avenue)
@@ -2975,15 +2975,12 @@ components:
             state:
               type: string
               description: State name
-            postalCode:
-              type: string
-              description: Postal code
             country:
               type: string
               description: Country name
-            phoneNumber:
+            postalCode:
               type: string
-              description: The phone number of the store
+              description: Postal code
     actorSummary:
       type: object
       properties:

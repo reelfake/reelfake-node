@@ -36,7 +36,3 @@ post:
             properties:
               message:
                 type: string
-    '400':
-      $ref: ../components/badRequest.yaml
-    '500':
-      $ref: ../components/internalServerError.yaml

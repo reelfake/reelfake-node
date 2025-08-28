@@ -86,6 +86,10 @@ async function findUser(email: string) {
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
+  if (!email || !password) {
+    throw new AppError(ERROR_MESSAGES.INVALID_LOGIN_DETAIL, 401);
+  }
+
   const user = await findUser(email);
 
   if (!user) {

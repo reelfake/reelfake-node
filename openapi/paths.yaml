@@ -1,8 +1,8 @@
 /user/register:
   $ref: apis/userRegistration.yaml
-/user/login:
+/auth/login:
   $ref: apis/userLogin.yaml
-/user/logout:
+/auth/logout:
   $ref: apis/userLogout.yaml
 /user/me:
   $ref: apis/user.yaml
