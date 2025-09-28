@@ -13,6 +13,6 @@ COPY . .
 RUN yarn generate-api-specs
 RUN yarn build
 
-EXPOSE 8000 443
+EXPOSE 80 443
 
 CMD ["yarn", "start"]
