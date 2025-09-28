@@ -45,24 +45,6 @@ const sequelize = new Sequelize(db, user, password, {
   logging: enableLogs,
 });
 
-export async function testDbConnection() {
-  try {
-    await sequelize.authenticate();
-    console.log('Connection to the database has been established successfully.');
-  } catch (error: unknown) {
-    console.log('Error connecting to the database:', error);
-  }
-}
-
-export async function closeDbConnection() {
-  try {
-    await sequelize.close();
-    console.log('Connection to the database has been closed successfully.');
-  } catch (error: unknown) {
-    console.log('Error closing the database connection:', error);
-  }
-}
-
 if (envName !== 'test') {
   sequelize
     .authenticate()
