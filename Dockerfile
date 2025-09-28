@@ -1,4 +1,4 @@
-FROM node:22-bookworm-slim
+FROM node:24-alpine3.22
 
 RUN corepack enable
 
@@ -8,8 +8,9 @@ COPY .yarnrc.yml tsconfig.json package.json yarn.lock webpack.dev.config.js webp
 
 RUN yarn cache clean && yarn install
 
-COPY ./src ./src
+COPY . .
 
+RUN yarn generate-api-specs
 RUN yarn build
 
 EXPOSE 8000
