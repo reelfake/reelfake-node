@@ -56,7 +56,7 @@ describe('Store Controller', () => {
     `;
   const server = supertest(app);
   const login = async (email: string, password: string) => {
-    const loginResponse = await server.post('/api/v1/auth/login').send({ email, password });
+    const loginResponse = await server.post('/api/auth/login').send({ email, password });
     cookie = loginResponse.get('Set-Cookie')?.at(0) || '';
   };
 
@@ -122,7 +122,7 @@ describe('Store Controller', () => {
 
   describe('GET /stores', () => {
     it('should get all the stores', async () => {
-      const response = await server.get('/api/v1/stores');
+      const response = await server.get('/api/stores');
       const expectedStores = await execQuery(
         `
           SELECT s.id AS "id", s.phone_number AS "phoneNumber", s.store_manager_id AS "storeManagerId",
@@ -152,7 +152,7 @@ describe('Store Controller', () => {
   describe('GET /stores/:id', () => {
     it('should get the stock count for the given store', async () => {
       const id = 1;
-      const response = await server.get('/api/v1/stores/1/stock');
+      const response = await server.get('/api/stores/1/stock');
       expect(response.status).toBe(200);
       expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
 
@@ -173,7 +173,7 @@ describe('Store Controller', () => {
       const pages = [1, 3, 5, 2];
 
       for (const page of pages) {
-        const response = await server.get(`/api/v1/stores/${storeId}/movies?page=${page}`);
+        const response = await server.get(`/api/stores/${storeId}/movies?page=${page}`);
         expect(response.status).toBe(200);
         expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
 
@@ -227,7 +227,7 @@ describe('Store Controller', () => {
       await login(credential.email, credential.password);
 
       const storeId = 1;
-      const response = await server.get(`/api/v1/stores/${storeId}/staff`).set('Cookie', cookie);
+      const response = await server.get(`/api/stores/${storeId}/staff`).set('Cookie', cookie);
       expect(response.status).toEqual(200);
 
       const expectedItems = await execQuery(`
@@ -255,7 +255,7 @@ describe('Store Controller', () => {
       await login(credential.email, credential.password);
 
       const storeId = 1;
-      const response = await server.get(`/api/v1/stores/${storeId}/staff`).set('Cookie', cookie);
+      const response = await server.get(`/api/stores/${storeId}/staff`).set('Cookie', cookie);
       expect(response.status).toEqual(200);
 
       const expectedItems = await execQuery(`
@@ -283,7 +283,7 @@ describe('Store Controller', () => {
       await login(credential.email, credential.password);
 
       const storeId = 1;
-      const response = await server.get(`/api/v1/stores/${storeId}/staff`).set('Cookie', cookie);
+      const response = await server.get(`/api/stores/${storeId}/staff`).set('Cookie', cookie);
       expect(response.status).toEqual(403);
       expect(response.body).toEqual({
         status: 'error',
@@ -293,7 +293,7 @@ describe('Store Controller', () => {
 
     it('should not return staff employed at the store without authentication', async () => {
       const storeId = 1;
-      const response = await server.get(`/api/v1/stores/${storeId}/staff`).set('Cookie', cookie);
+      const response = await server.get(`/api/stores/${storeId}/staff`).set('Cookie', cookie);
       expect(response.status).toEqual(401);
       expect(response.body).toEqual({
         status: 'error',
@@ -302,19 +302,19 @@ describe('Store Controller', () => {
     });
 
     it('should return 400 when getting stock count but id is not a valid number', async () => {
-      const response = await server.get('/api/v1/stores/blah/stock');
+      const response = await server.get('/api/stores/blah/stock');
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('Invalid store id');
     });
 
     it('should return 400 when getting movies in a store but id is not a valid number', async () => {
-      const response = await server.get('/api/v1/stores/blah/movies');
+      const response = await server.get('/api/stores/blah/movies');
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('Invalid store id');
     });
 
     it('should return 400 when getting movies in a store but page number is not valid', async () => {
-      const response = await server.get('/api/v1/stores/1/movies?page=blah');
+      const response = await server.get('/api/stores/1/movies?page=blah');
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('Invalid page number');
     });
@@ -326,7 +326,7 @@ describe('Store Controller', () => {
       await login(credential.email, credential.password);
 
       const payload = getStorePayload();
-      const response = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
+      const response = await server.post('/api/stores').set('Cookie', cookie).send(payload);
       expect(response.status).toBe(201);
       const newStoreId = response.body.id;
 
@@ -342,7 +342,7 @@ describe('Store Controller', () => {
       const payload = getStorePayload();
 
       const response = await server
-        .post('/api/v1/stores')
+        .post('/api/stores')
         .set('Cookie', cookie)
         .send({
           ...payload,
@@ -363,7 +363,7 @@ describe('Store Controller', () => {
 
       const payload = getStorePayload();
 
-      const staffResponse = await server.post('/api/v1/staff').set('Cookie', cookie).send(payload.storeManager);
+      const staffResponse = await server.post('/api/staff').set('Cookie', cookie).send(payload.storeManager);
       const newStaffId = staffResponse.body.id;
 
       let [storeIdQueryResult] = await execQuery(`SELECT store_id AS "storeId" FROM staff WHERE id = ${newStaffId}`);
@@ -371,7 +371,7 @@ describe('Store Controller', () => {
       expect(storeIdOfNewStaff).toBeNull();
 
       const response = await server
-        .post('/api/v1/stores')
+        .post('/api/stores')
         .set('Cookie', cookie)
         .send({
           ...payload,
@@ -398,7 +398,7 @@ describe('Store Controller', () => {
       const payload = getStorePayload();
 
       const response = await server
-        .post('/api/v1/stores')
+        .post('/api/stores')
         .set('Cookie', cookie)
         .send({
           ...payload,
@@ -418,7 +418,7 @@ describe('Store Controller', () => {
       const payload = getStorePayload();
 
       const response = await server
-        .post('/api/v1/stores')
+        .post('/api/stores')
         .set('Cookie', cookie)
         .send({
           ...payload,
@@ -435,14 +435,14 @@ describe('Store Controller', () => {
 
       let payload = getStorePayload();
 
-      await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
+      await server.post('/api/stores').set('Cookie', cookie).send(payload);
 
       payload = {
         ...getStorePayload(),
         address: { ...payload.address },
       };
 
-      const response = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
+      const response = await server.post('/api/stores').set('Cookie', cookie).send(payload);
       expect(response.status).toEqual(400);
       expect(response.body.message).toEqual('The address is in use by other store');
     });
@@ -453,14 +453,14 @@ describe('Store Controller', () => {
 
       let payload = getStorePayload();
 
-      await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
+      await server.post('/api/stores').set('Cookie', cookie).send(payload);
 
       payload = {
         ...getStorePayload(),
         phoneNumber: payload.phoneNumber,
       };
 
-      const response = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
+      const response = await server.post('/api/stores').set('Cookie', cookie).send(payload);
       expect(response.status).toEqual(400);
       expect(response.body.message).toEqual('The phone number is in use by other store');
     });
@@ -472,11 +472,11 @@ describe('Store Controller', () => {
       const paylaod = getStorePayload();
       const staffPayload = getStaffPayload();
 
-      const newStaffResponse = await server.post('/api/v1/staff').set('Cookie', cookie).send(staffPayload);
+      const newStaffResponse = await server.post('/api/staff').set('Cookie', cookie).send(staffPayload);
       const newStaff = newStaffResponse.body;
 
       const response = await server
-        .post('/api/v1/stores')
+        .post('/api/stores')
         .set('Cookie', cookie)
         .send({
           ...paylaod,
@@ -492,11 +492,11 @@ describe('Store Controller', () => {
 
       const payload = getStorePayload();
 
-      let response = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
+      let response = await server.post('/api/stores').set('Cookie', cookie).send(payload);
       const storeManagerId = response.body.storeManager.id;
 
       response = await server
-        .post('/api/v1/stores')
+        .post('/api/stores')
         .set('Cookie', cookie)
         .send({
           ...getStorePayload(),
@@ -513,10 +513,10 @@ describe('Store Controller', () => {
 
       const payload = getStorePayload();
 
-      let response = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
+      let response = await server.post('/api/stores').set('Cookie', cookie).send(payload);
 
       response = await server
-        .post('/api/v1/stores')
+        .post('/api/stores')
         .set('Cookie', cookie)
         .send({
           ...getStorePayload(),
@@ -539,12 +539,12 @@ describe('Store Controller', () => {
 
       const payload = getStorePayload();
 
-      let response = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
+      let response = await server.post('/api/stores').set('Cookie', cookie).send(payload);
 
       const newPayload = getStorePayload();
 
       response = await server
-        .post('/api/v1/stores')
+        .post('/api/stores')
         .set('Cookie', cookie)
         .send({
           ...newPayload,
@@ -566,12 +566,12 @@ describe('Store Controller', () => {
 
       const payload = getStorePayload();
 
-      let response = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
+      let response = await server.post('/api/stores').set('Cookie', cookie).send(payload);
 
       const newPayload = getStorePayload();
 
       response = await server
-        .post('/api/v1/stores')
+        .post('/api/stores')
         .set('Cookie', cookie)
         .send({
           ...newPayload,
@@ -597,7 +597,7 @@ describe('Store Controller', () => {
       const staffPhoneNumber = staffPhoneNumberQueryResult['phoneNumber'];
 
       const response = await server
-        .post('/api/v1/stores')
+        .post('/api/stores')
         .set('Cookie', cookie)
         .send({
           ...payload,
@@ -614,7 +614,7 @@ describe('Store Controller', () => {
 
       const payload = getStorePayload();
 
-      const response = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
+      const response = await server.post('/api/stores').set('Cookie', cookie).send(payload);
       expect(response.status).toEqual(403);
       expect(response.body).toEqual({
         status: 'error',
@@ -628,7 +628,7 @@ describe('Store Controller', () => {
 
       const payload = getStorePayload();
 
-      const response = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
+      const response = await server.post('/api/stores').set('Cookie', cookie).send(payload);
       expect(response.status).toEqual(403);
       expect(response.body).toEqual({
         status: 'error',
@@ -674,7 +674,7 @@ describe('Store Controller', () => {
       await login(credential.email, credential.password);
 
       const payload = getStorePayload();
-      const newStoreResponse = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
+      const newStoreResponse = await server.post('/api/stores').set('Cookie', cookie).send(payload);
       const storeBeforeUpdate = newStoreResponse.body;
       const storeAddressId = newStoreResponse.body.address.id;
 
@@ -683,7 +683,7 @@ describe('Store Controller', () => {
       const newCityName = await getDifferentCity(storeBeforeUpdate.address.cityName, storeBeforeUpdate.address.stateName);
 
       const response = await server
-        .put(`/api/v1/stores/${storeBeforeUpdate.id}`)
+        .put(`/api/stores/${storeBeforeUpdate.id}`)
         .set('Cookie', cookie)
         .send({
           address: {
@@ -724,13 +724,13 @@ describe('Store Controller', () => {
       await login(credential.email, credential.password);
 
       const payload = getStorePayload();
-      const newStoreResponse = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
+      const newStoreResponse = await server.post('/api/stores').set('Cookie', cookie).send(payload);
       const storeBeforeUpdate = newStoreResponse.body;
       const storeAddressId = newStoreResponse.body.address.id;
 
       const newAddressLine = `${storeBeforeUpdate.address.addressLine} UPDATED`;
       const response = await server
-        .put(`/api/v1/stores/${storeBeforeUpdate.id}`)
+        .put(`/api/stores/${storeBeforeUpdate.id}`)
         .set('Cookie', cookie)
         .send({
           address: {
@@ -770,14 +770,14 @@ describe('Store Controller', () => {
       await login(credential.email, credential.password);
 
       const payload = getStorePayload();
-      const newStoreResponse = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
+      const newStoreResponse = await server.post('/api/stores').set('Cookie', cookie).send(payload);
       const storeBeforeUpdate = newStoreResponse.body;
       const storeAddressId = newStoreResponse.body.address.id;
 
       const newCityName = await getDifferentCity(storeBeforeUpdate.address.cityName, storeBeforeUpdate.address.stateName);
 
       const response = await server
-        .put(`/api/v1/stores/${storeBeforeUpdate.id}`)
+        .put(`/api/stores/${storeBeforeUpdate.id}`)
         .set('Cookie', cookie)
         .send({
           address: {
@@ -824,10 +824,10 @@ describe('Store Controller', () => {
         country: storePayload.address.country,
       };
 
-      const storeResponse = await server.post('/api/v1/stores').set('Cookie', cookie).send(storePayload);
+      const storeResponse = await server.post('/api/stores').set('Cookie', cookie).send(storePayload);
       const storeId = storeResponse.body.id;
 
-      const staffResponse = await server.post('/api/v1/staff').set('Cookie', cookie).send(staffPayload);
+      const staffResponse = await server.post('/api/staff').set('Cookie', cookie).send(staffPayload);
       const staffId = staffResponse.body.id;
 
       let [storeQueryResult] = await execQuery(`
@@ -836,7 +836,7 @@ describe('Store Controller', () => {
 
       expect(Number(storeQueryResult.storeManagerId)).not.toEqual(Number(staffId));
 
-      const response = await server.put(`/api/v1/stores/${storeId}`).set('Cookie', cookie).send({
+      const response = await server.put(`/api/stores/${storeId}`).set('Cookie', cookie).send({
         storeManagerId: staffId,
       });
       expect(response.status).toEqual(204);
@@ -853,11 +853,11 @@ describe('Store Controller', () => {
       await login(credential.email, credential.password);
 
       const payload = getStorePayload();
-      const newStoreResponse = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
+      const newStoreResponse = await server.post('/api/stores').set('Cookie', cookie).send(payload);
       const storeBeforeUpdate = newStoreResponse.body;
 
       const response = await server
-        .put(`/api/v1/stores/${storeBeforeUpdate.id}`)
+        .put(`/api/stores/${storeBeforeUpdate.id}`)
         .set('Cookie', cookie)
         .send({
           address: {
@@ -877,11 +877,11 @@ describe('Store Controller', () => {
       await login(credential.email, credential.password);
 
       const payload = getStorePayload();
-      const newStoreResponse = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
+      const newStoreResponse = await server.post('/api/stores').set('Cookie', cookie).send(payload);
       const storeBeforeUpdate = newStoreResponse.body;
 
       const response = await server
-        .put(`/api/v1/stores/${storeBeforeUpdate.id}`)
+        .put(`/api/stores/${storeBeforeUpdate.id}`)
         .set('Cookie', cookie)
         .send({
           address: {
@@ -901,11 +901,11 @@ describe('Store Controller', () => {
       await login(credential.email, credential.password);
 
       const payload = getStorePayload();
-      const newStoreResponse = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
+      const newStoreResponse = await server.post('/api/stores').set('Cookie', cookie).send(payload);
       const storeBeforeUpdate = newStoreResponse.body;
 
       const response = await server
-        .put(`/api/v1/stores/${storeBeforeUpdate.id}`)
+        .put(`/api/stores/${storeBeforeUpdate.id}`)
         .set('Cookie', cookie)
         .send({
           address: {
@@ -923,11 +923,11 @@ describe('Store Controller', () => {
       await login(credential.email, credential.password);
 
       const payload = getStorePayload();
-      const newStoreResponse = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
+      const newStoreResponse = await server.post('/api/stores').set('Cookie', cookie).send(payload);
       const storeBeforeUpdate = newStoreResponse.body;
 
       const response = await server
-        .put(`/api/v1/stores/${storeBeforeUpdate.id}`)
+        .put(`/api/stores/${storeBeforeUpdate.id}`)
         .set('Cookie', cookie)
         .send({
           address: {
@@ -945,11 +945,11 @@ describe('Store Controller', () => {
       await login(credential.email, credential.password);
 
       const payload = getStorePayload();
-      const newStoreResponse = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
+      const newStoreResponse = await server.post('/api/stores').set('Cookie', cookie).send(payload);
       const storeBeforeUpdate = newStoreResponse.body;
 
       const response = await server
-        .put(`/api/v1/stores/${storeBeforeUpdate.id}`)
+        .put(`/api/stores/${storeBeforeUpdate.id}`)
         .set('Cookie', cookie)
         .send({
           storeManagerId: storeBeforeUpdate.storeManager.id,
@@ -966,11 +966,11 @@ describe('Store Controller', () => {
 
       const payload1 = getStorePayload();
       const payload2 = getStorePayload();
-      const store1Response = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload1);
-      const store2Response = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload2);
+      const store1Response = await server.post('/api/stores').set('Cookie', cookie).send(payload1);
+      const store2Response = await server.post('/api/stores').set('Cookie', cookie).send(payload2);
 
       const response = await server
-        .put(`/api/v1/stores/${store2Response.body.id}`)
+        .put(`/api/stores/${store2Response.body.id}`)
         .set('Cookie', cookie)
         .send({
           address: {
@@ -988,10 +988,10 @@ describe('Store Controller', () => {
 
       const payload1 = getStorePayload();
       const payload2 = getStorePayload();
-      const store1Response = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload1);
-      const store2Response = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload2);
+      const store1Response = await server.post('/api/stores').set('Cookie', cookie).send(payload1);
+      const store2Response = await server.post('/api/stores').set('Cookie', cookie).send(payload2);
 
-      const response = await server.put(`/api/v1/stores/${store2Response.body.id}`).set('Cookie', cookie).send({
+      const response = await server.put(`/api/stores/${store2Response.body.id}`).set('Cookie', cookie).send({
         phoneNumber: store1Response.body.phoneNumber,
       });
 
@@ -1005,10 +1005,10 @@ describe('Store Controller', () => {
 
       const payload1 = getStorePayload();
       const payload2 = getStorePayload();
-      const store1Response = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload1);
-      const store2Response = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload2);
+      const store1Response = await server.post('/api/stores').set('Cookie', cookie).send(payload1);
+      const store2Response = await server.post('/api/stores').set('Cookie', cookie).send(payload2);
 
-      const response = await server.put(`/api/v1/stores/${store2Response.body.id}`).set('Cookie', cookie).send({
+      const response = await server.put(`/api/stores/${store2Response.body.id}`).set('Cookie', cookie).send({
         storeManagerId: store1Response.body.storeManager.id,
       });
 
@@ -1022,8 +1022,8 @@ describe('Store Controller', () => {
 
       const payload1 = getStorePayload();
       const payload2 = getStorePayload();
-      const store1Response = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload1);
-      const store2Response = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload2);
+      const store1Response = await server.post('/api/stores').set('Cookie', cookie).send(payload1);
+      const store2Response = await server.post('/api/stores').set('Cookie', cookie).send(payload2);
 
       await execQuery(`
         UPDATE store SET store_manager_id = null WHERE id = ${store1Response.body.id}
@@ -1035,7 +1035,7 @@ describe('Store Controller', () => {
         staff.id = ${store1Response.body.storeManager.id}
       `);
 
-      const response = await server.put(`/api/v1/stores/${store2Response.body.id}`).set('Cookie', cookie).send({
+      const response = await server.put(`/api/stores/${store2Response.body.id}`).set('Cookie', cookie).send({
         storeManagerId: store1Response.body.storeManager.id,
       });
 
@@ -1048,13 +1048,13 @@ describe('Store Controller', () => {
       await login(storeManagerCredential.email, storeManagerCredential.password);
 
       const payload = getStorePayload();
-      const storeResponse = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
+      const storeResponse = await server.post('/api/stores').set('Cookie', cookie).send(payload);
       const storeId = storeResponse.body.id;
 
       const staffCredential = await getStaffCredential();
       await login(staffCredential.email, staffCredential.password);
 
-      const response = await server.put(`/api/v1/stores/${storeId}`).set('Cookie', cookie).send({
+      const response = await server.put(`/api/stores/${storeId}`).set('Cookie', cookie).send({
         phoneNumber: '472-482-382',
       });
 
@@ -1070,13 +1070,13 @@ describe('Store Controller', () => {
       await login(storeManagerCredential.email, storeManagerCredential.password);
 
       const payload = getStorePayload();
-      const storeResponse = await server.post('/api/v1/stores').set('Cookie', cookie).send(payload);
+      const storeResponse = await server.post('/api/stores').set('Cookie', cookie).send(payload);
       const storeId = storeResponse.body.id;
 
       const customerCredential = await getCustomerCredential();
       await login(customerCredential.email, customerCredential.password);
 
-      const response = await server.put(`/api/v1/stores/${storeId}`).set('Cookie', cookie).send({
+      const response = await server.put(`/api/stores/${storeId}`).set('Cookie', cookie).send({
         phoneNumber: '472-482-382',
       });
 
@@ -1096,7 +1096,7 @@ describe('Store Controller', () => {
       const payload = getStorePayload();
 
       const newStoreResponse = await server
-        .post('/api/v1/stores')
+        .post('/api/stores')
         .set('Cookie', cookie)
         .send({
           ...payload,
@@ -1121,7 +1121,7 @@ describe('Store Controller', () => {
       const storeCountBeforeDelete = storeCountResultBeforeDelete.count;
       expect(Number(storeCountBeforeDelete)).toEqual(1);
 
-      const response = await server.delete(`/api/v1/stores/${newStore.id}`).set('Cookie', cookie);
+      const response = await server.delete(`/api/stores/${newStore.id}`).set('Cookie', cookie);
       expect(response.status).toEqual(204);
 
       // Address count after delete
@@ -1149,7 +1149,7 @@ describe('Store Controller', () => {
       const storePayload = getStorePayload();
 
       const newStoreResponse = await server
-        .post('/api/v1/stores')
+        .post('/api/stores')
         .set('Cookie', cookie)
         .send({
           ...storePayload,
@@ -1159,14 +1159,14 @@ describe('Store Controller', () => {
       const newStoreId = newStoreResponse.body.id;
 
       await server
-        .post('/api/v1/staff')
+        .post('/api/staff')
         .set('Cookie', cookie)
         .send({
           ...payload,
           storeId: newStoreId,
         });
 
-      const response = await server.delete(`/api/v1/stores/${newStoreId}`).set('Cookie', cookie);
+      const response = await server.delete(`/api/stores/${newStoreId}`).set('Cookie', cookie);
       expect(response.status).toEqual(400);
       expect(response.body.message).toEqual('There are staff employed at the given store');
 
@@ -1188,30 +1188,30 @@ describe('Store Controller', () => {
       const staff4Payload = getStaffPayload();
       const staff5Payload = getStaffPayload();
 
-      const newStoreResponse = await server.post('/api/v1/stores').set('Cookie', cookie).send(storePayload);
+      const newStoreResponse = await server.post('/api/stores').set('Cookie', cookie).send(storePayload);
       const storeId = newStoreResponse.body.id;
       await server
-        .post('/api/v1/staff')
+        .post('/api/staff')
         .set('Cookie', cookie)
         .send({ ...staff1Payload, storeId });
       await server
-        .post('/api/v1/staff')
+        .post('/api/staff')
         .set('Cookie', cookie)
         .send({ ...staff2Payload, storeId });
       await server
-        .post('/api/v1/staff')
+        .post('/api/staff')
         .set('Cookie', cookie)
         .send({ ...staff3Payload, storeId });
       await server
-        .post('/api/v1/staff')
+        .post('/api/staff')
         .set('Cookie', cookie)
         .send({ ...staff4Payload, storeId });
       await server
-        .post('/api/v1/staff')
+        .post('/api/staff')
         .set('Cookie', cookie)
         .send({ ...staff5Payload, storeId });
 
-      const response = await server.delete(`/api/v1/stores/${storeId}?forceDelete=true`).set('Cookie', cookie);
+      const response = await server.delete(`/api/stores/${storeId}?forceDelete=true`).set('Cookie', cookie);
       expect(response.status).toEqual(204);
     });
 
@@ -1222,7 +1222,7 @@ describe('Store Controller', () => {
       const payload = getStorePayload();
 
       const newStoreResponse = await server
-        .post('/api/v1/stores')
+        .post('/api/stores')
         .set('Cookie', cookie)
         .send({
           ...payload,
@@ -1234,7 +1234,7 @@ describe('Store Controller', () => {
       const credential = await getCustomerCredential();
       await login(credential.email, credential.password);
 
-      const response = await server.delete(`/api/v1/stores/${storeId}`).set('Cookie', cookie);
+      const response = await server.delete(`/api/stores/${storeId}`).set('Cookie', cookie);
       expect(response.status).toEqual(403);
       expect(response.body).toEqual({
         status: 'error',
@@ -1249,7 +1249,7 @@ describe('Store Controller', () => {
       const payload = getStorePayload();
 
       const newStoreResponse = await server
-        .post('/api/v1/stores')
+        .post('/api/stores')
         .set('Cookie', cookie)
         .send({
           ...payload,
@@ -1261,7 +1261,7 @@ describe('Store Controller', () => {
       const credential = await getCustomerCredential();
       await login(credential.email, credential.password);
 
-      const response = await server.delete(`/api/v1/stores/${storeId}`).set('Cookie', cookie);
+      const response = await server.delete(`/api/stores/${storeId}`).set('Cookie', cookie);
       expect(response.status).toEqual(403);
       expect(response.body).toEqual({
         status: 'error',

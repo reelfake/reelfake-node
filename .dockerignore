@@ -1,8 +1,6 @@
 .vscode
 config
-dist
 node_modules
 .git
 .gitignore
-openapi/dist
 src/tests

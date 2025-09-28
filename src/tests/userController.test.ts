@@ -23,7 +23,7 @@ describe('User Controller', () => {
       const server = supertest(app);
 
       const response = await server
-        .post('/api/v1/user/register')
+        .post('/api/user/register')
         .send({
           firstName,
           lastName,
@@ -48,7 +48,7 @@ describe('User Controller', () => {
       const server = supertest(app);
 
       await server
-        .post('/api/v1/user/register')
+        .post('/api/user/register')
         .send({
           firstName,
           lastName,
@@ -59,7 +59,7 @@ describe('User Controller', () => {
         .set('Accept', 'application/json');
 
       const response = await server
-        .post('/api/v1/user/register')
+        .post('/api/user/register')
         .send({
           email: email,
           password: password,
@@ -74,7 +74,7 @@ describe('User Controller', () => {
   describe('User login/logout', () => {
     beforeEach(async () => {
       await server
-        .post('/api/v1/user/register')
+        .post('/api/user/register')
         .send({
           firstName,
           lastName,
@@ -87,7 +87,7 @@ describe('User Controller', () => {
 
     it('POST /auth/login should log in the user send the token in cookie', async () => {
       const response = await server
-        .post('/api/v1/auth/login')
+        .post('/api/auth/login')
         .send({
           email: email,
           password: password,
@@ -108,7 +108,7 @@ describe('User Controller', () => {
 
     it('POST /auth/login should return 401 when user try to login with invalid email', async () => {
       const response = await server
-        .post('/api/v1/auth/login')
+        .post('/api/auth/login')
         .send({
           email: 'doesnotexist@example.com',
           password: password,
@@ -121,7 +121,7 @@ describe('User Controller', () => {
 
     it('POST /auth/login should return 401 when user try to login with invalid password', async () => {
       const response = await server
-        .post('/api/v1/auth/login')
+        .post('/api/auth/login')
         .send({
           email: email,
           password: 'blah@12345',
@@ -134,7 +134,7 @@ describe('User Controller', () => {
 
     it('GET /auth/logout should log out the user by using the cookie in the request', async () => {
       let response = await server
-        .post('/api/v1/auth/login')
+        .post('/api/auth/login')
         .send({
           email: email,
           password: password,
@@ -144,12 +144,12 @@ describe('User Controller', () => {
 
       const cookie = response.get('Set-Cookie')?.at(0);
 
-      response = await server.get('/api/v1/auth/logout').set('Cookie', cookie || '');
+      response = await server.get('/api/auth/logout').set('Cookie', cookie || '');
       expect(response.body.message).toStrictEqual('Logged out successfully');
     });
 
     it('GET /auth/logout should return 401 is user has not logged in', async () => {
-      const response = await server.get('/api/v1/auth/logout');
+      const response = await server.get('/api/auth/logout');
       expect(response.status).toEqual(401);
       expect(response.body).toEqual({
         status: 'error',
@@ -161,7 +161,7 @@ describe('User Controller', () => {
   describe('Assign customer, staff or manager staff to user', () => {
     beforeEach(async () => {
       await server
-        .post('/api/v1/user/register')
+        .post('/api/user/register')
         .send({
           firstName,
           lastName,
@@ -173,7 +173,7 @@ describe('User Controller', () => {
     });
 
     const login = async (email: string, password: string) => {
-      const response = await server.post('/api/v1/auth/login').send({
+      const response = await server.post('/api/auth/login').send({
         email,
         password,
       });
@@ -185,7 +185,7 @@ describe('User Controller', () => {
       const cookie = await login(email, password);
       const { customerId, staffId, storeManagerId } = payload;
 
-      const getUserResponseBefore = await server.get('/api/v1/user/me').set('Cookie', cookie);
+      const getUserResponseBefore = await server.get('/api/user/me').set('Cookie', cookie);
 
       let totalRentalsForCustomer = null;
       if (customerId) {
@@ -222,7 +222,7 @@ describe('User Controller', () => {
       });
 
       const patchResponse = await server
-        .patch('/api/v1/user/me')
+        .patch('/api/user/me')
         .set('Cookie', cookie)
         .send({
           ...payload,
@@ -230,7 +230,7 @@ describe('User Controller', () => {
 
       expect(patchResponse.status).toBe(204);
 
-      const getUserResponseAfter = await server.get('/api/v1/user/me').set('Cookie', cookie);
+      const getUserResponseAfter = await server.get('/api/user/me').set('Cookie', cookie);
       expect(getUserResponseAfter.body).toStrictEqual({
         id: expect.any(Number),
         firstName,
@@ -278,11 +278,11 @@ describe('User Controller', () => {
       const password2 = 'test1@12345';
       const cookie = await login(email, password);
 
-      await server.patch('/api/v1/user/me').set('Cookie', cookie).send({
+      await server.patch('/api/user/me').set('Cookie', cookie).send({
         customerId: 100,
       });
 
-      await server.post('/api/v1/user/register').send({
+      await server.post('/api/user/register').send({
         firstName,
         lastName,
         email: email2,
@@ -290,7 +290,7 @@ describe('User Controller', () => {
       });
 
       const cookie2 = await login(email2, password2);
-      const patchResponse = await server.patch('/api/v1/user/me').set('Cookie', cookie2).send({
+      const patchResponse = await server.patch('/api/user/me').set('Cookie', cookie2).send({
         customerId: 100,
       });
 
@@ -301,13 +301,13 @@ describe('User Controller', () => {
     it('should unassign customer, staff and store manager', async () => {
       const cookie = await login(email, password);
 
-      await server.patch('/api/v1/user/me').set('Cookie', cookie).send({
+      await server.patch('/api/user/me').set('Cookie', cookie).send({
         customerId: null,
         staffId: null,
         storeManagerId: null,
       });
 
-      const userAfterUpdate = await server.get('/api/v1/user/me').set('Cookie', cookie);
+      const userAfterUpdate = await server.get('/api/user/me').set('Cookie', cookie);
       expect(userAfterUpdate.status).toEqual(200);
       expect(userAfterUpdate.body.customer).toBeNull();
       expect(userAfterUpdate.body.staff).toBeNull();

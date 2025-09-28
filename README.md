@@ -70,8 +70,8 @@ docker-compose up --build
 
 ### API Documentation
 
-- Swagger UI: [http://localhost:8000/api/v1/docs](http://localhost:8000/api/v1/docs)
-- Redoc: [http://localhost:8000/api/v1/redocs](http://localhost:8000/api/v1/redocs)
+- Swagger UI: [http://localhost:8000/api/docs](http://localhost:8000/api/docs)
+- Redoc: [http://localhost:8000/api/redocs](http://localhost:8000/api/redocs)
 - OpenAPI Spec: [http://localhost:8000/openapi/v1](http://localhost:8000/openapi/v1)
 
 ## Deployment

@@ -50,7 +50,7 @@ describe('Customer Controller', () => {
   };
 
   const login = async (email: string, password: string) => {
-    const loginResponse = await server.post('/api/v1/auth/login').send({ email, password });
+    const loginResponse = await server.post('/api/auth/login').send({ email, password });
     cookie = loginResponse.get('Set-Cookie')?.at(0) || '';
   };
 
@@ -122,7 +122,7 @@ describe('Customer Controller', () => {
       const { totalCustomers } = countQueryResult.at(0) || {};
 
       for (let i of pages) {
-        const response = await server.get(`/api/v1/customers?page=${i}`).set('Cookie', cookie);
+        const response = await server.get(`/api/customers?page=${i}`).set('Cookie', cookie);
         expect(response.status).toEqual(200);
 
         const queryResult = await getExpectedCustomersPage(i);
@@ -149,7 +149,7 @@ describe('Customer Controller', () => {
       const pages = [1, 3, 6, 4, 2];
 
       for (let i of pages) {
-        const response = await server.get(`/api/v1/customers?page=${i}&first_name=%tin%`).set('Cookie', cookie);
+        const response = await server.get(`/api/customers?page=${i}&first_name=%tin%`).set('Cookie', cookie);
         expect(response.status).toEqual(200);
 
         const queryResult = await getExpectedCustomersPage(i, "cu.first_name ILIKE '%tin%'");
@@ -182,7 +182,7 @@ describe('Customer Controller', () => {
       const pages = [1, 3, 5, 4];
 
       for (let i of pages) {
-        const response = await server.get(`/api/v1/customers?page=${i}&last_name=%tin%`).set('Cookie', cookie);
+        const response = await server.get(`/api/customers?page=${i}&last_name=%tin%`).set('Cookie', cookie);
         expect(response.status).toEqual(200);
 
         const queryResult = await getExpectedCustomersPage(i, "cu.last_name ILIKE '%tin%'");
@@ -215,7 +215,7 @@ describe('Customer Controller', () => {
       const pages = [1, 2];
 
       for (let i of pages) {
-        const response = await server.get(`/api/v1/customers?page=${i}&first_name=%le%&last_name=%le%`).set('Cookie', cookie);
+        const response = await server.get(`/api/customers?page=${i}&first_name=%le%&last_name=%le%`).set('Cookie', cookie);
         expect(response.status).toEqual(200);
 
         const queryResult = await getExpectedCustomersPage(i, "cu.first_name ILIKE '%le%' AND cu.last_name ILIKE '%le%'");
@@ -250,7 +250,7 @@ describe('Customer Controller', () => {
       const pages = [1, 4, 2];
 
       for (let i of pages) {
-        const response = await server.get(`/api/v1/customers?page=${i}&city=maryborough`).set('Cookie', cookie);
+        const response = await server.get(`/api/customers?page=${i}&city=maryborough`).set('Cookie', cookie);
         expect(response.status).toEqual(200);
 
         const queryResult = await getExpectedCustomersPage(i, "c.city_name ILIKE 'maryborough'");
@@ -285,7 +285,7 @@ describe('Customer Controller', () => {
       const pages = [1, 2, 5, 6, 3];
 
       for (let i of pages) {
-        const response = await server.get(`/api/v1/customers?page=${i}&state=victoria`).set('Cookie', cookie);
+        const response = await server.get(`/api/customers?page=${i}&state=victoria`).set('Cookie', cookie);
         expect(response.status).toEqual(200);
 
         const queryResult = await getExpectedCustomersPage(i, "c.state_name ILIKE 'victoria'");
@@ -320,7 +320,7 @@ describe('Customer Controller', () => {
       const pages = [1, 2];
 
       for (let i of pages) {
-        const response = await server.get(`/api/v1/customers?page=${i}&city=melbourne&state=victoria`).set('Cookie', cookie);
+        const response = await server.get(`/api/customers?page=${i}&city=melbourne&state=victoria`).set('Cookie', cookie);
         expect(response.status).toEqual(200);
 
         const queryResult = await getExpectedCustomersPage(i, "c.city_name ILIKE 'melbourne' AND c.state_name ILIKE 'victoria'");
@@ -350,7 +350,7 @@ describe('Customer Controller', () => {
       const credential = await getStoreManagerCredential();
       await login(credential.email, credential.password);
 
-      const response = await server.get(`/api/v1/customers?registered_on=2024-01-01`).set('Cookie', cookie);
+      const response = await server.get(`/api/customers?registered_on=2024-01-01`).set('Cookie', cookie);
       expect(response.status).toEqual(200);
 
       const queryResult = await getExpectedCustomersPage(1, "cu.registered_on = '2024-01-01'");
@@ -374,10 +374,10 @@ describe('Customer Controller', () => {
       const credential = await getStoreManagerCredential();
       await login(credential.email, credential.password);
 
-      let response = await server.get('/api/v1/customers').set('Cookie', cookie);
+      let response = await server.get('/api/customers').set('Cookie', cookie);
       expect(response.status).toEqual(200);
       const totalPages = response.body.pagination.totalPages;
-      response = await server.get(`/api/v1/customers?page=${Number(totalPages) + 1}`).set('Cookie', cookie);
+      response = await server.get(`/api/customers?page=${Number(totalPages) + 1}`).set('Cookie', cookie);
       expect(response.status).toEqual(404);
       expect(response.body.message).toEqual('Page out of range');
     });
@@ -390,10 +390,10 @@ describe('Customer Controller', () => {
 
       const payload = getCustomerPayload(1);
 
-      const newCustomerResponse = await server.post('/api/v1/customers').set('Cookie', cookie).send(payload);
+      const newCustomerResponse = await server.post('/api/customers').set('Cookie', cookie).send(payload);
       const customerId = newCustomerResponse.body.id;
 
-      const response = await server.get(`/api/v1/customers/${customerId}`).set('Cookie', cookie);
+      const response = await server.get(`/api/customers/${customerId}`).set('Cookie', cookie);
       expect(response.status).toEqual(200);
 
       const [customerQueryResult] = await execQuery(`
@@ -472,7 +472,7 @@ describe('Customer Controller', () => {
           SELECT max(id) FROM customer
         `);
       const customerId = Number(customerQueryResult.max);
-      const response = await server.get(`/api/v1/customers/${customerId + 1}`).set('Cookie', cookie);
+      const response = await server.get(`/api/customers/${customerId + 1}`).set('Cookie', cookie);
       expect(response.status).toEqual(404);
       expect(response.body.message).toEqual('Resources not found');
     });
@@ -486,7 +486,7 @@ describe('Customer Controller', () => {
       const payload = getCustomerPayload(1);
 
       const response = await server
-        .post('/api/v1/customers')
+        .post('/api/customers')
         .set('Cookie', cookie)
         .send({
           ...payload,
@@ -521,7 +521,7 @@ describe('Customer Controller', () => {
       const payload: Omit<CustomerPayload, 'preferredStoreId'> = getCustomerPayload();
 
       const response = await server
-        .post('/api/v1/customers')
+        .post('/api/customers')
         .set('Cookie', cookie)
         .send({
           ...payload,
@@ -557,7 +557,7 @@ describe('Customer Controller', () => {
 
       // Missing first name
       let response = await server
-        .post('/api/v1/customers')
+        .post('/api/customers')
         .set('Cookie', cookie)
         .send({
           ...payload,
@@ -568,7 +568,7 @@ describe('Customer Controller', () => {
 
       // Missing last name
       response = await server
-        .post('/api/v1/customers')
+        .post('/api/customers')
         .set('Cookie', cookie)
         .send({
           ...payload,
@@ -579,7 +579,7 @@ describe('Customer Controller', () => {
 
       // Missing email
       response = await server
-        .post('/api/v1/customers')
+        .post('/api/customers')
         .set('Cookie', cookie)
         .send({
           ...payload,
@@ -590,7 +590,7 @@ describe('Customer Controller', () => {
 
       // Missing phone number
       response = await server
-        .post('/api/v1/customers')
+        .post('/api/customers')
         .set('Cookie', cookie)
         .send({
           ...payload,
@@ -601,7 +601,7 @@ describe('Customer Controller', () => {
 
       // Missing address
       response = await server
-        .post('/api/v1/customers')
+        .post('/api/customers')
         .set('Cookie', cookie)
         .send({
           ...payload,
@@ -618,7 +618,7 @@ describe('Customer Controller', () => {
       const payload = getCustomerPayload(1);
 
       const response = await server
-        .post('/api/v1/customers')
+        .post('/api/customers')
         .set('Cookie', cookie)
         .send({
           ...payload,
@@ -641,7 +641,7 @@ describe('Customer Controller', () => {
 
       const payload = getCustomerPayload(1);
       const response = await server
-        .post('/api/v1/customers')
+        .post('/api/customers')
         .set('Cookie', cookie)
         .send({
           ...payload,
@@ -662,7 +662,7 @@ describe('Customer Controller', () => {
 
       const payload = getCustomerPayload(1);
       const response = await server
-        .post('/api/v1/customers')
+        .post('/api/customers')
         .set('Cookie', cookie)
         .send({
           ...payload,
@@ -693,7 +693,7 @@ describe('Customer Controller', () => {
 
       const payload = getCustomerPayload(1);
       const response = await server
-        .post('/api/v1/customers')
+        .post('/api/customers')
         .set('Cookie', cookie)
         .send({
           ...payload,
@@ -710,7 +710,7 @@ describe('Customer Controller', () => {
 
       const payload = getCustomerPayload(1);
 
-      const response = await server.post('/api/v1/customers').set('Cookie', cookie).send(payload);
+      const response = await server.post('/api/customers').set('Cookie', cookie).send(payload);
       expect(response.status).toEqual(403);
       expect(response.body).toEqual({
         status: 'error',
@@ -724,7 +724,7 @@ describe('Customer Controller', () => {
 
       const payload = getCustomerPayload(1);
 
-      const response = await server.post('/api/v1/customers').set('Cookie', cookie).send(payload);
+      const response = await server.post('/api/customers').set('Cookie', cookie).send(payload);
       expect(response.status).toEqual(403);
       expect(response.body).toEqual({
         status: 'error',
@@ -741,11 +741,11 @@ describe('Customer Controller', () => {
       const payload1 = getCustomerPayload(1);
       const payload2 = getCustomerPayload(1);
 
-      const newCustomerResponse = await server.post('/api/v1/customers').set('Cookie', cookie).send(payload1);
+      const newCustomerResponse = await server.post('/api/customers').set('Cookie', cookie).send(payload1);
       const newCustomerId = newCustomerResponse.body.id;
 
       const response = await server
-        .put(`/api/v1/customers/${newCustomerId}`)
+        .put(`/api/customers/${newCustomerId}`)
         .set('Cookie', cookie)
         .send({
           ...payload2,
@@ -781,10 +781,10 @@ describe('Customer Controller', () => {
 
       const payload = getCustomerPayload(1);
 
-      const newCustomerResponse = await server.post('/api/v1/customers').set('Cookie', cookie).send(payload);
+      const newCustomerResponse = await server.post('/api/customers').set('Cookie', cookie).send(payload);
       const newCustomerId = newCustomerResponse.body.id;
 
-      const response = await server.put(`/api/v1/customers/${newCustomerId}`).set('Cookie', cookie).send({
+      const response = await server.put(`/api/customers/${newCustomerId}`).set('Cookie', cookie).send({
         preferredStoreId: 2,
       });
       expect(response.status).toEqual(204);
@@ -814,7 +814,7 @@ describe('Customer Controller', () => {
       };
 
       const newCustomerResponse = await server
-        .post('/api/v1/customers')
+        .post('/api/customers')
         .set('Cookie', cookie)
         .send({
           ...payload1,
@@ -840,7 +840,7 @@ describe('Customer Controller', () => {
 
       expect(addressQueryResult.address).toEqual(address1Payload);
 
-      const response = await server.put(`/api/v1/customers/${newCustomerId}`).set('Cookie', cookie).send({
+      const response = await server.put(`/api/customers/${newCustomerId}`).set('Cookie', cookie).send({
         address: address2Payload,
       });
       expect(response.status).toEqual(204);
@@ -869,10 +869,10 @@ describe('Customer Controller', () => {
             SELECT email FROM customer LIMIT 1
         `);
 
-      const newCustomerResponse = await server.post('/api/v1/customers').set('Cookie', cookie).send(payload);
+      const newCustomerResponse = await server.post('/api/customers').set('Cookie', cookie).send(payload);
       const newCustomerId = newCustomerResponse.body.id;
 
-      const response = await server.put(`/api/v1/customers/${newCustomerId}`).set('Cookie', cookie).send({
+      const response = await server.put(`/api/customers/${newCustomerId}`).set('Cookie', cookie).send({
         email: existingCustEmailAddress.email,
       });
       expect(response.status).toEqual(400);
@@ -888,10 +888,10 @@ describe('Customer Controller', () => {
               SELECT phone_number AS "phoneNumber" FROM customer LIMIT 1
           `);
 
-      const newCustomerResponse = await server.post('/api/v1/customers').set('Cookie', cookie).send(payload);
+      const newCustomerResponse = await server.post('/api/customers').set('Cookie', cookie).send(payload);
       const newCustomerId = newCustomerResponse.body.id;
 
-      const response = await server.put(`/api/v1/customers/${newCustomerId}`).set('Cookie', cookie).send({
+      const response = await server.put(`/api/customers/${newCustomerId}`).set('Cookie', cookie).send({
         phoneNumber: existingCustPhoneNumber.phoneNumber,
       });
       expect(response.status).toEqual(400);
@@ -918,10 +918,10 @@ describe('Customer Controller', () => {
       const existingAddress = existingAddressQueryResult.address;
 
       const payload = getCustomerPayload(1);
-      const newCustomerResponse = await server.post('/api/v1/customers').set('Cookie', cookie).send(payload);
+      const newCustomerResponse = await server.post('/api/customers').set('Cookie', cookie).send(payload);
       const newCustomerId = newCustomerResponse.body.id;
 
-      const response = await server.put(`/api/v1/customers/${newCustomerId}`).set('Cookie', cookie).send({
+      const response = await server.put(`/api/customers/${newCustomerId}`).set('Cookie', cookie).send({
         address: existingAddress,
       });
       expect(response.status).toEqual(400);
@@ -934,14 +934,14 @@ describe('Customer Controller', () => {
 
       const payload = getCustomerPayload(1);
 
-      const newCustomerResponse = await server.post('/api/v1/customers').set('Cookie', cookie).send(payload);
+      const newCustomerResponse = await server.post('/api/customers').set('Cookie', cookie).send(payload);
       const custId = newCustomerResponse.body.id;
 
       const staffCredential = await getStaffCredential();
       await login(staffCredential.email, staffCredential.password);
 
       const response = await server
-        .put(`/api/v1/customers/${custId}`)
+        .put(`/api/customers/${custId}`)
         .set('Cookie', cookie)
         .send({
           firstName: `${payload.firstName} UPDATED`,
@@ -960,14 +960,14 @@ describe('Customer Controller', () => {
 
       const payload = getCustomerPayload(1);
 
-      const newCustomerResponse = await server.post('/api/v1/customers').set('Cookie', cookie).send(payload);
+      const newCustomerResponse = await server.post('/api/customers').set('Cookie', cookie).send(payload);
       const custId = newCustomerResponse.body.id;
 
       const custCredential = await getCustomerCredential();
       await login(custCredential.email, custCredential.password);
 
       const response = await server
-        .put(`/api/v1/customers/${custId}`)
+        .put(`/api/customers/${custId}`)
         .set('Cookie', cookie)
         .send({
           firstName: `${payload.firstName} UPDATED`,
@@ -988,13 +988,13 @@ describe('Customer Controller', () => {
       await login(credential.email, credential.password);
 
       const payload = getCustomerPayload();
-      const newCustomerResponse = await server.post('/api/v1/customers').set('Cookie', cookie).send(payload);
+      const newCustomerResponse = await server.post('/api/customers').set('Cookie', cookie).send(payload);
       const customerId = newCustomerResponse.body.id;
 
       let [queryResult] = await execQuery(`SELECT COUNT(*) FROM customer WHERE id = ${customerId}`);
       expect(Number(queryResult.count)).toEqual(1);
 
-      const response = await server.delete(`/api/v1/customers/${customerId}`).set('Cookie', cookie);
+      const response = await server.delete(`/api/customers/${customerId}`).set('Cookie', cookie);
       expect(response.status).toEqual(204);
       expect(response.body).toEqual({});
       [queryResult] = await execQuery(`SELECT COUNT(*) FROM customer WHERE id = ${customerId}`);
@@ -1006,7 +1006,7 @@ describe('Customer Controller', () => {
       await login(credential.email, credential.password);
 
       const payload = getCustomerPayload();
-      const newCustomerResponse = await server.post('/api/v1/customers').set('Cookie', cookie).send(payload);
+      const newCustomerResponse = await server.post('/api/customers').set('Cookie', cookie).send(payload);
       const customerId = newCustomerResponse.body.id;
       const addressId = newCustomerResponse.body.address.id;
 
@@ -1015,7 +1015,7 @@ describe('Customer Controller', () => {
       expect(Number(custCountQueryResult.count)).toEqual(1);
       expect(Number(addrCountQueryResult.count)).toEqual(1);
 
-      const response = await server.delete(`/api/v1/customers/${customerId}`).set('Cookie', cookie);
+      const response = await server.delete(`/api/customers/${customerId}`).set('Cookie', cookie);
       expect(response.status).toEqual(204);
       expect(response.body).toEqual({});
 
@@ -1031,7 +1031,7 @@ describe('Customer Controller', () => {
 
       const [queryResult] = await execQuery(`SELECT max(id) FROM customer`);
       const customerId = Number(queryResult.max) + 1;
-      const response = await server.delete(`/api/v1/customers/${customerId}`).set('Cookie', cookie);
+      const response = await server.delete(`/api/customers/${customerId}`).set('Cookie', cookie);
       expect(response.status).toEqual(404);
       expect(response.body.message).toEqual('Resources not found');
     });
@@ -1041,13 +1041,13 @@ describe('Customer Controller', () => {
       await login(storeManagerCredential.email, storeManagerCredential.password);
 
       const payload = getCustomerPayload();
-      const newCustomerResponse = await server.post('/api/v1/customers').set('Cookie', cookie).send(payload);
+      const newCustomerResponse = await server.post('/api/customers').set('Cookie', cookie).send(payload);
       const customerId = newCustomerResponse.body.id;
 
       const staffCredential = await getStaffCredential();
       await login(staffCredential.email, staffCredential.password);
 
-      const response = await server.delete(`/api/v1/customers/${customerId}`).set('Cookie', cookie);
+      const response = await server.delete(`/api/customers/${customerId}`).set('Cookie', cookie);
       expect(response.status).toEqual(403);
       expect(response.body).toEqual({
         status: 'error',
@@ -1060,13 +1060,13 @@ describe('Customer Controller', () => {
       await login(storeManagerCredential.email, storeManagerCredential.password);
 
       const payload = getCustomerPayload();
-      const newCustomerResponse = await server.post('/api/v1/customers').set('Cookie', cookie).send(payload);
+      const newCustomerResponse = await server.post('/api/customers').set('Cookie', cookie).send(payload);
       const customerId = newCustomerResponse.body.id;
 
       const customerCredential = await getCustomerCredential();
       await login(customerCredential.email, customerCredential.password);
 
-      const response = await server.delete(`/api/v1/customers/${customerId}`).set('Cookie', cookie);
+      const response = await server.delete(`/api/customers/${customerId}`).set('Cookie', cookie);
       expect(response.status).toEqual(403);
       expect(response.body).toEqual({
         status: 'error',
@@ -1085,7 +1085,7 @@ describe('Customer Controller', () => {
       const payload = getCustomerPayload(1);
 
       const newCustomerResponse = await server
-        .post('/api/v1/customers')
+        .post('/api/customers')
         .set('Cookie', cookie)
         .send({
           ...payload,
@@ -1093,7 +1093,7 @@ describe('Customer Controller', () => {
       expect(newCustomerResponse.status).toEqual(201);
 
       // Register a user
-      const userRegistrationResponse = await server.post('/api/v1/user/register').send({
+      const userRegistrationResponse = await server.post('/api/user/register').send({
         firstName,
         lastName,
         email: userEmaiil,
@@ -1105,7 +1105,7 @@ describe('Customer Controller', () => {
       await login(userEmaiil, userPassword);
 
       const updateUserResponse = await server
-        .patch('/api/v1/user/me')
+        .patch('/api/user/me')
         .send({
           customerId: newCustomerResponse.body.id,
         })
@@ -1115,7 +1115,7 @@ describe('Customer Controller', () => {
       // Login as store manager and try deleting the customer
       await login(credential.email, credential.password);
 
-      const response = await server.delete(`/api/v1/customers/${newCustomerResponse.body.id}`).set('Cookie', cookie);
+      const response = await server.delete(`/api/customers/${newCustomerResponse.body.id}`).set('Cookie', cookie);
       expect(response.body.message).toEqual('Customer is assigned to one of the user');
       expect(response.status).toEqual(400);
     });

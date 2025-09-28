@@ -4,7 +4,7 @@ import compression from 'compression';
 import path from 'path';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import { AppError } from './utils';
+import { AppError, getOpenApiDocsHtmlString, getOpenApiReDocsHtmlString } from './utils';
 import {
   statsRoutes,
   addressRoutes,
@@ -46,7 +46,7 @@ app.get('/', (req: Request, res: Response) => {
   res.status(200).send('Welcome to Reelfake API...');
 });
 
-app.get('/api/v1', (req: Request, res: Response) => {
+app.get('/api', (req: Request, res: Response) => {
   res.status(200).json({
     name: 'reelfake-api',
     version: '1.0.0',
@@ -58,55 +58,63 @@ app.get('/openapi/v1', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'openapi', 'dist', 'openapi.yaml'));
 });
 
-app.get('/api/v1/docs', (req, res) => {
-  res.sendFile(path.join(process.cwd(), 'openapi', 'docs.html'));
+app.get('/api/docs', (req, res) => {
+  if (req.protocol === 'https') {
+    res.render(getOpenApiDocsHtmlString(true));
+  } else {
+    res.send(getOpenApiDocsHtmlString(false));
+  }
 });
 
-app.get('/api/v1/redocs', (req, res) => {
-  res.sendFile(path.join(process.cwd(), 'openapi', 'redocs.html'));
+app.get('/api/redocs', (req, res) => {
+  if (req.protocol === 'https') {
+    res.render(getOpenApiReDocsHtmlString(true));
+  } else {
+    res.send(getOpenApiReDocsHtmlString(false));
+  }
 });
 
 // Statistics
-app.use('/api/v1/stats', statsRoutes);
+app.use('/api/stats', statsRoutes);
 
 // Login and logout
-app.use('/api/v1/auth', authRoutes);
+app.use('/api/auth', authRoutes);
 
 // Register user and get/update user
-app.use('/api/v1/user', userRoutes);
+app.use('/api/user', userRoutes);
 
 // Addresses
-app.use('/api/v1/addresses', addressRoutes);
+app.use('/api/addresses', addressRoutes);
 
 // Genres
-app.use('/api/v1/genres', genreRoutes);
+app.use('/api/genres', genreRoutes);
 
 // Countries
-app.use('/api/v1/countries', countryRoutes);
+app.use('/api/countries', countryRoutes);
 
 // Movie languages
-app.use('/api/v1/movie_languages', movieLanguageRoutes);
+app.use('/api/movie_languages', movieLanguageRoutes);
 
 // Cities
-app.use('/api/v1/cities', cityRoutes);
+app.use('/api/cities', cityRoutes);
 
 // Movies
-app.use('/api/v1/movies', movieRoutes);
+app.use('/api/movies', movieRoutes);
 
 // Actors
-app.use('/api/v1/actors', actorRoutes);
+app.use('/api/actors', actorRoutes);
 
 // Stores
-app.use('/api/v1/stores', storeRoutes);
+app.use('/api/stores', storeRoutes);
 
 // Staff
-app.use('/api/v1/staff', staffRoutes);
+app.use('/api/staff', staffRoutes);
 
 // Customers
-app.use('/api/v1/customers', customerRoutes);
+app.use('/api/customers', customerRoutes);
 
 // Rentals
-app.use('/api/v1/rentals', rentalRoutes);
+app.use('/api/rentals', rentalRoutes);
 
 app.use('*', (req: Request, res: Response) => {
   res.status(404).json({

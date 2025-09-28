@@ -17,7 +17,7 @@ describe('Actor Controller', () => {
   const server = supertest(app);
 
   const login = async (email: string, password: string) => {
-    const loginResponse = await server.post('/api/v1/auth/login').send({ email, password });
+    const loginResponse = await server.post('/api/auth/login').send({ email, password });
     cookie = loginResponse.get('Set-Cookie')?.at(0) || '';
   };
 
@@ -35,7 +35,7 @@ describe('Actor Controller', () => {
       const iterations = 3;
 
       for (let i = startingPage; i < iterations + startingPage; i++) {
-        const response = await server.get(`/api/v1/actors?page=${i}`);
+        const response = await server.get(`/api/actors?page=${i}`);
         const expectedActors = await execQuery(
           `
             SELECT id, imdb_id AS "imdbId", actor_name AS "actorName", birthday, deathday,
@@ -73,7 +73,7 @@ describe('Actor Controller', () => {
       const iterations = 3;
 
       for (let i = startingPage; i < iterations + startingPage; i++) {
-        const response = await server.get(`/api/v1/actors?page=${i}&birthday=1980-01-01,1990-01-01`);
+        const response = await server.get(`/api/actors?page=${i}&birthday=1980-01-01,1990-01-01`);
         const expectedActors = await execQuery(
           `
             SELECT id, imdb_id AS "imdbId", actor_name AS "actorName", birthday, deathday,
@@ -112,7 +112,7 @@ describe('Actor Controller', () => {
       const iterations = 3;
 
       for (let i = startingPage; i < iterations + startingPage; i++) {
-        const response = await server.get(`/api/v1/actors?page=${i}&popularity=1,2`);
+        const response = await server.get(`/api/actors?page=${i}&popularity=1,2`);
         const expectedActors = await execQuery(
           `
             SELECT id, imdb_id AS "imdbId", actor_name AS "actorName", birthday, deathday,
@@ -151,7 +151,7 @@ describe('Actor Controller', () => {
       const iterations = 3;
 
       for (let i = startingPage; i < iterations + startingPage; i++) {
-        const response = await server.get(`/api/v1/actors?page=${i}&name=%jennifer%`);
+        const response = await server.get(`/api/actors?page=${i}&name=%jennifer%`);
         const expectedActors = await execQuery(
           `
             SELECT id, imdb_id AS "imdbId", actor_name AS "actorName", birthday, deathday,
@@ -188,7 +188,7 @@ describe('Actor Controller', () => {
       const pages = [2, 5, 3];
 
       for (const page of pages) {
-        const response = await server.get(`/api/v1/actors?page=${page}`);
+        const response = await server.get(`/api/actors?page=${page}`);
         const expectedActors = await execQuery(
           `
             SELECT id, imdb_id AS "imdbId", actor_name AS "actorName", birthday, deathday,
@@ -219,7 +219,7 @@ describe('Actor Controller', () => {
     });
 
     it('should return 400 when page number is 0', async () => {
-      const response = await server.get(`/api/v1/actors?page=0`);
+      const response = await server.get(`/api/actors?page=0`);
 
       expect(response.status).toBe(400);
       expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
@@ -227,7 +227,7 @@ describe('Actor Controller', () => {
     });
 
     it('should return 400 when page number is not a number', async () => {
-      const response = await server.get(`/api/v1/actors?page=a`);
+      const response = await server.get(`/api/actors?page=a`);
 
       expect(response.status).toBe(400);
       expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
@@ -237,7 +237,7 @@ describe('Actor Controller', () => {
 
   describe('GET /actors/:id', () => {
     it('should return actor without the movies', async () => {
-      const response = await server.get(`/api/v1/actors/928365`);
+      const response = await server.get(`/api/actors/928365`);
       const expectedActor = await execQuery(
         `
           SELECT * FROM actor WHERE id = 928365
@@ -253,7 +253,7 @@ describe('Actor Controller', () => {
     it('should return actor with the movies', async () => {
       const actorId = 928365;
 
-      const response = await server.get(`/api/v1/actors/${actorId}?includeMovies=true`);
+      const response = await server.get(`/api/actors/${actorId}?includeMovies=true`);
       const expectedActor = await execQuery(
         `
           SELECT jsonb_build_object(
@@ -287,7 +287,7 @@ describe('Actor Controller', () => {
       await login(credential.email, credential.password);
 
       const response = await server
-        .post('/api/v1/actors')
+        .post('/api/actors')
         .set('Cookie', cookie)
         .send({
           ...payload,
@@ -332,7 +332,7 @@ describe('Actor Controller', () => {
       await login(credential.email, credential.password);
 
       const response = await server
-        .post('/api/v1/actors')
+        .post('/api/actors')
         .set('Cookie', cookie)
         .send({
           ...payload2,
@@ -349,7 +349,7 @@ describe('Actor Controller', () => {
       await login(credential.email, credential.password);
 
       const response = await server
-        .post('/api/v1/actors')
+        .post('/api/actors')
         .set('Cookie', cookie)
         .send({
           ...payload,
@@ -371,7 +371,7 @@ describe('Actor Controller', () => {
       await login(credential.email, credential.password);
 
       const response = await server
-        .post('/api/v1/actors')
+        .post('/api/actors')
         .set('Cookie', cookie)
         .send({
           ...payload,
@@ -416,7 +416,7 @@ describe('Actor Controller', () => {
       await login(credential.email, credential.password);
 
       const response = await server
-        .put(`/api/v1/actors/${newActorId}`)
+        .put(`/api/actors/${newActorId}`)
         .set('Cookie', cookie)
         .send({
           ...payload2,
@@ -460,7 +460,7 @@ describe('Actor Controller', () => {
       await login(credential.email, credential.password);
 
       const response = await server
-        .put(`/api/v1/actors/${Number(actorQueryResult.id) + 1}`)
+        .put(`/api/actors/${Number(actorQueryResult.id) + 1}`)
         .set('Cookie', cookie)
         .send(payload);
       expect(response.status).toEqual(404);
@@ -494,7 +494,7 @@ describe('Actor Controller', () => {
       await login(credential.email, credential.password);
 
       const response = await server
-        .put(`/api/v1/actors/${Number(newActorId) + 1}`)
+        .put(`/api/actors/${Number(newActorId) + 1}`)
         .set('Cookie', cookie)
         .send({ actorName: 'New Actor Name' });
       expect(response.status).toEqual(403);
@@ -528,7 +528,7 @@ describe('Actor Controller', () => {
       await login(credential.email, credential.password);
 
       const response = await server
-        .put(`/api/v1/actors/${Number(newActorId) + 1}`)
+        .put(`/api/actors/${Number(newActorId) + 1}`)
         .set('Cookie', cookie)
         .send({ actorName: 'New Actor Name' });
       expect(response.status).toEqual(403);
@@ -543,13 +543,13 @@ describe('Actor Controller', () => {
       const credential = await getStoreManagerCredential();
       await login(credential.email, credential.password);
 
-      const newActorResponse = await server.post('/api/v1/actors').set('Cookie', cookie).send(payload);
+      const newActorResponse = await server.post('/api/actors').set('Cookie', cookie).send(payload);
       const newActorId = Number(newActorResponse.body.id);
 
       let [actorQueryResult] = await execQuery(`SELECT COUNT(*) AS count FROM actor WHERE id = ${newActorId}`);
       expect(Number(actorQueryResult.count)).toEqual(1);
 
-      const response = await server.delete(`/api/v1/actors/${newActorId}`).set('Cookie', cookie);
+      const response = await server.delete(`/api/actors/${newActorId}`).set('Cookie', cookie);
       expect(response.status).toEqual(204);
 
       [actorQueryResult] = await execQuery(`SELECT COUNT(*) AS count FROM actor WHERE id = ${newActorId}`);
@@ -562,7 +562,7 @@ describe('Actor Controller', () => {
       const credential = await getStoreManagerCredential();
       await login(credential.email, credential.password);
 
-      const response = await server.delete(`/api/v1/actors/${Number(actorQueryResult.id) + 1}`).set('Cookie', cookie);
+      const response = await server.delete(`/api/actors/${Number(actorQueryResult.id) + 1}`).set('Cookie', cookie);
       expect(response.status).toEqual(404);
       expect(response.body.message).toEqual('Resources not found');
     });
@@ -573,13 +573,13 @@ describe('Actor Controller', () => {
       const storeManagerCredential = await getStoreManagerCredential();
       await login(storeManagerCredential.email, storeManagerCredential.password);
 
-      const newActorResponse = await server.post('/api/v1/actors').set('Cookie', cookie).send(payload);
+      const newActorResponse = await server.post('/api/actors').set('Cookie', cookie).send(payload);
       const newActorId = Number(newActorResponse.body.id);
 
       const staffCredential = await getStaffCredential();
       await login(staffCredential.email, staffCredential.password);
 
-      const response = await server.delete(`/api/v1/actors/${newActorId}`).set('Cookie', cookie);
+      const response = await server.delete(`/api/actors/${newActorId}`).set('Cookie', cookie);
       expect(response.status).toEqual(403);
       expect(response.body).toEqual({
         status: 'error',
@@ -593,13 +593,13 @@ describe('Actor Controller', () => {
       const storeManagerCredential = await getStoreManagerCredential();
       await login(storeManagerCredential.email, storeManagerCredential.password);
 
-      const newActorResponse = await server.post('/api/v1/actors').set('Cookie', cookie).send(payload);
+      const newActorResponse = await server.post('/api/actors').set('Cookie', cookie).send(payload);
       const newActorId = Number(newActorResponse.body.id);
 
       const customerCredential = await getCustomerCredential();
       await login(customerCredential.email, customerCredential.password);
 
-      const response = await server.delete(`/api/v1/actors/${newActorId}`).set('Cookie', cookie);
+      const response = await server.delete(`/api/actors/${newActorId}`).set('Cookie', cookie);
       expect(response.status).toEqual(403);
       expect(response.body).toEqual({
         status: 'error',

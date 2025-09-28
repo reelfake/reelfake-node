@@ -18,7 +18,7 @@ import { MovieActorPayload } from '../types';
 describe('Movie Controller', () => {
   let cookie: string;
   const login = async (email: string, password: string) => {
-    const loginResponse = await server.post('/api/v1/auth/login').send({ email, password });
+    const loginResponse = await server.post('/api/auth/login').send({ email, password });
     cookie = loginResponse.get('Set-Cookie')?.at(0) || '';
   };
 
@@ -67,7 +67,7 @@ describe('Movie Controller', () => {
       const iterations = 3;
 
       for (let i = startingPage; i < iterations + startingPage; i++) {
-        const response = await server.get(`/api/v1/movies?page=${i}`);
+        const response = await server.get(`/api/movies?page=${i}`);
         expect(response.status).toBe(200);
         expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
 
@@ -109,7 +109,7 @@ describe('Movie Controller', () => {
       const totalRows = await getRowsCount('movie');
 
       for (const i of pages) {
-        const response = await server.get(`/api/v1/movies?page=${i}`);
+        const response = await server.get(`/api/movies?page=${i}`);
         expect(response.status).toBe(200);
         expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
 
@@ -145,7 +145,7 @@ describe('Movie Controller', () => {
       }
     });
 
-    it('GET /api/v1/movies?release_date=2020-01-01,2020-12-31 should return movies release in 2020 with pagination support', async () => {
+    it('GET /api/movies?release_date=2020-01-01,2020-12-31 should return movies release in 2020 with pagination support', async () => {
       const startingPage = 1;
       const pageLimit = ITEMS_COUNT_PER_PAGE_FOR_TEST;
       const totalRows = await getRowsCount('movie', "release_date BETWEEN '2020-01-01' AND '2020-12-31'");
@@ -154,9 +154,7 @@ describe('Movie Controller', () => {
 
       for (let i = startingPage; i < iterations + startingPage; i++) {
         const url =
-          i > 1
-            ? `/api/v1/movies?release_date=2020-01-01,2020-12-31&page=${i}`
-            : '/api/v1/movies?release_date=2020-01-01,2020-12-31';
+          i > 1 ? `/api/movies?release_date=2020-01-01,2020-12-31&page=${i}` : '/api/movies?release_date=2020-01-01,2020-12-31';
 
         const response = await server.get(url);
         expect(response.status).toBe(200);
@@ -194,13 +192,13 @@ describe('Movie Controller', () => {
       }
     });
 
-    it('GET /api/v1/movies?release_date=2020-01-01,2020-12-31 should return for the correct page when jumping between pages', async () => {
+    it('GET /api/movies?release_date=2020-01-01,2020-12-31 should return for the correct page when jumping between pages', async () => {
       const pages = [3, 7, 4];
       const pageLimit = ITEMS_COUNT_PER_PAGE_FOR_TEST;
       const totalRows = await getRowsCount('movie', "release_date BETWEEN '2020-01-01' AND '2020-12-31'");
 
       for (const i of pages) {
-        const response = await server.get(`/api/v1/movies?release_date=2020-01-01,2020-12-31&page=${i}`);
+        const response = await server.get(`/api/movies?release_date=2020-01-01,2020-12-31&page=${i}`);
         expect(response.status).toBe(200);
         expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
         const expectedMovies = await execQuery(`
@@ -236,7 +234,7 @@ describe('Movie Controller', () => {
       }
     });
 
-    it('GET /api/v1/movies?genres=action,sci_fi should return movies matching either of the given genres', async () => {
+    it('GET /api/movies?genres=action,sci_fi should return movies matching either of the given genres', async () => {
       const startingPage = 1;
       const pageLimit = ITEMS_COUNT_PER_PAGE_FOR_TEST;
 
@@ -245,7 +243,7 @@ describe('Movie Controller', () => {
       const iterations = 3;
 
       for (let i = startingPage; i < iterations + startingPage; i++) {
-        const url = i > 1 ? `/api/v1/movies?genres=action,sci_fi&page=${i}` : '/api/v1/movies?genres=action,sci_fi';
+        const url = i > 1 ? `/api/movies?genres=action,sci_fi&page=${i}` : '/api/movies?genres=action,sci_fi';
 
         const response = await server.get(url);
 
@@ -284,7 +282,7 @@ describe('Movie Controller', () => {
       }
     });
 
-    it('GET /api/v1/movies?genres=["action","sci_fi"] should return movies that belongs to all the given genres', async () => {
+    it('GET /api/movies?genres=["action","sci_fi"] should return movies that belongs to all the given genres', async () => {
       const startingPage = 1;
       const pageLimit = ITEMS_COUNT_PER_PAGE_FOR_TEST;
 
@@ -293,7 +291,7 @@ describe('Movie Controller', () => {
       const iterations = 3;
 
       for (let i = startingPage; i < iterations + startingPage; i++) {
-        const url = i > 1 ? `/api/v1/movies?genres=["action","sci_fi"]&page=${i}` : '/api/v1/movies?genres=["action","sci_fi"]';
+        const url = i > 1 ? `/api/movies?genres=["action","sci_fi"]&page=${i}` : '/api/movies?genres=["action","sci_fi"]';
 
         const response = await server.get(url);
 
@@ -332,7 +330,7 @@ describe('Movie Controller', () => {
       }
     });
 
-    it('GET /api/v1/movies?countries=fr,us should return movies matching either of the given countries', async () => {
+    it('GET /api/movies?countries=fr,us should return movies matching either of the given countries', async () => {
       const startingPage = 1;
       const pageLimit = ITEMS_COUNT_PER_PAGE_FOR_TEST;
 
@@ -341,7 +339,7 @@ describe('Movie Controller', () => {
       const iterations = 3;
 
       for (let i = startingPage; i < iterations + startingPage; i++) {
-        const url = i > 1 ? `/api/v1/movies?countries=fr,us&page=${i}` : '/api/v1/movies?countries=fr,us';
+        const url = i > 1 ? `/api/movies?countries=fr,us&page=${i}` : '/api/movies?countries=fr,us';
 
         const response = await server.get(url);
 
@@ -380,7 +378,7 @@ describe('Movie Controller', () => {
       }
     });
 
-    it('GET /api/v1/movies?countries=["fr","us"] should return movies that belongs to all the given countries', async () => {
+    it('GET /api/movies?countries=["fr","us"] should return movies that belongs to all the given countries', async () => {
       const startingPage = 1;
       const pageLimit = ITEMS_COUNT_PER_PAGE_FOR_TEST;
 
@@ -389,7 +387,7 @@ describe('Movie Controller', () => {
       const iterations = 3;
 
       for (let i = startingPage; i < iterations + startingPage; i++) {
-        const url = i > 1 ? `/api/v1/movies?countries=["fr","us"]&page=${i}` : '/api/v1/movies?countries=["fr","us"]';
+        const url = i > 1 ? `/api/movies?countries=["fr","us"]&page=${i}` : '/api/movies?countries=["fr","us"]';
 
         const response = await server.get(url);
 
@@ -428,7 +426,7 @@ describe('Movie Controller', () => {
       }
     });
 
-    it('GET /api/v1/movies?languages=en,fr should return a list of movies matching the given query', async () => {
+    it('GET /api/movies?languages=en,fr should return a list of movies matching the given query', async () => {
       const startingPage = 1;
       const pageLimit = ITEMS_COUNT_PER_PAGE_FOR_TEST;
 
@@ -437,7 +435,7 @@ describe('Movie Controller', () => {
       const iterations = 3;
 
       for (let i = startingPage; i < iterations + startingPage; i++) {
-        const url = i > 1 ? `/api/v1/movies?languages=fr,en&page=${i}` : '/api/v1/movies?languages=fr,en';
+        const url = i > 1 ? `/api/movies?languages=fr,en&page=${i}` : '/api/movies?languages=fr,en';
 
         const response = await server.get(url);
         expect(response.status).toBe(200);
@@ -475,38 +473,38 @@ describe('Movie Controller', () => {
       }
     });
 
-    it('GET /api/v1/movies should return 404 when there are no more pages available', async () => {
-      let response = await server.get('/api/v1/movies');
+    it('GET /api/movies should return 404 when there are no more pages available', async () => {
+      let response = await server.get('/api/movies');
       const totalPages = Number(response.body.pagination.totalPages);
-      response = await server.get(`/api/v1/movies?page=${totalPages + 1}`);
+      response = await server.get(`/api/movies?page=${totalPages + 1}`);
       expect(response.status).toBe(404);
       expect(response.body.message).toBe('Page out of range');
     });
 
-    it('GET /api/v1/movies should return 500 on exception', async () => {
-      jest.spyOn(MovieModel, 'getRowsCountWhere').mockRejectedValue({ message: 'unit testing exception for /api/v1/movies' });
-      const response = await server.get('/api/v1/movies?page=1');
+    it('GET /api/movies should return 500 on exception', async () => {
+      jest.spyOn(MovieModel, 'getRowsCountWhere').mockRejectedValue({ message: 'unit testing exception for /api/movies' });
+      const response = await server.get('/api/movies?page=1');
       expect(response.status).toBe(500);
-      expect(response.body.message).toEqual('unit testing exception for /api/v1/movies');
+      expect(response.body.message).toEqual('unit testing exception for /api/movies');
     });
 
-    it('GET /api/v1/movies should return 400 for invalid page number', async () => {
+    it('GET /api/movies should return 400 for invalid page number', async () => {
       const pageNumber = 'x';
-      const response = await server.get(`/api/v1/movies?page=${pageNumber}`);
+      const response = await server.get(`/api/movies?page=${pageNumber}`);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('Invalid page number');
     });
 
-    it('GET /api/v1/movies should return 400 when page number is 0', async () => {
+    it('GET /api/movies should return 400 when page number is 0', async () => {
       const pageNumber = 0;
-      const response = await server.get(`/api/v1/movies?page=${pageNumber}`);
+      const response = await server.get(`/api/movies?page=${pageNumber}`);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('Invalid page number');
     });
 
     it('GET /movies should return 400 when genres in query is invalid', async () => {
       const invalidGenres = 'action,drama,invalid_genre';
-      const response = await server.get(`/api/v1/movies?genres=${invalidGenres}`);
+      const response = await server.get(`/api/movies?genres=${invalidGenres}`);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('[invalid_genre] are invalid genres');
     });
@@ -552,7 +550,7 @@ describe('Movie Controller', () => {
     };
 
     it('should return movie object with the actors', async () => {
-      const response = await server.get(`/api/v1/movies/100?include_actors=true`);
+      const response = await server.get(`/api/movies/100?include_actors=true`);
       expect(response.status).toBe(200);
       expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
       const actualMovieData = await getMovieData(100, true);
@@ -560,7 +558,7 @@ describe('Movie Controller', () => {
     });
 
     it('should return movie object without the actors', async () => {
-      const response = await server.get(`/api/v1/movies/100?include_actors=false`);
+      const response = await server.get(`/api/movies/100?include_actors=false`);
       expect(response.status).toBe(200);
       expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
       const actualMovieData = await getMovieData(100);
@@ -568,7 +566,7 @@ describe('Movie Controller', () => {
     });
 
     it('should return movie object without the actors', async () => {
-      const response = await server.get(`/api/v1/movies/100?include_actors=no`);
+      const response = await server.get(`/api/movies/100?include_actors=no`);
       expect(response.status).toBe(200);
       expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
       const actualMovieData = await getMovieData(100);
@@ -576,7 +574,7 @@ describe('Movie Controller', () => {
     });
 
     it('should return movie object without the actors', async () => {
-      const response = await server.get(`/api/v1/movies/100?include_actors=0`);
+      const response = await server.get(`/api/movies/100?include_actors=0`);
       expect(response.status).toBe(200);
       expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
       const actualMovieData = await getMovieData(100);
@@ -584,7 +582,7 @@ describe('Movie Controller', () => {
     });
 
     it('should return movie object with the actors', async () => {
-      const response = await server.get(`/api/v1/movies/100?include_actors=true`);
+      const response = await server.get(`/api/movies/100?include_actors=true`);
       expect(response.status).toBe(200);
       expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
       const actualMovieData = await getMovieData(100, true);
@@ -594,7 +592,7 @@ describe('Movie Controller', () => {
     it('should return the movie stock count at all stores', async () => {
       const id = 680;
 
-      const response = await server.get(`/api/v1/movies/${id}/stores`);
+      const response = await server.get(`/api/movies/${id}/stores`);
       expect(response.status).toBe(200);
       expect(response.get('Content-Type')).toBe('application/json; charset=utf-8');
 
@@ -624,13 +622,13 @@ describe('Movie Controller', () => {
     });
 
     it('should return 400 since the movie id is not valid', async () => {
-      const response = await server.get(`/api/v1/movies/abc`);
+      const response = await server.get(`/api/movies/abc`);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('Invalid movie id. Movie id must be a non-zero positive number.');
     });
 
     it('should return 400 since the includeActors flag has invalid value', async () => {
-      const response = await server.get(`/api/v1/movies/100?include_actors=blahblahck`);
+      const response = await server.get(`/api/movies/100?include_actors=blahblahck`);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
         'Invalid value for includeActors in query. Please refer to api specs for more information.'
@@ -639,19 +637,19 @@ describe('Movie Controller', () => {
 
     it('should return 404 since movie with the given id does not exist', async () => {
       const id = 10394829;
-      const response = await server.get(`/api/v1/movies/${id}`);
+      const response = await server.get(`/api/movies/${id}`);
       expect(response.status).toBe(404);
       expect(response.body.message).toBe(`Movie with id ${id} does not exist`);
     });
 
     it('should return 400 if id is invalid', async () => {
-      const response = await server.get(`/api/v1/movies/blah/stores`);
+      const response = await server.get(`/api/movies/blah/stores`);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('Invalid movie id');
     });
 
     it('should return 404 if movie is out of stock', async () => {
-      const response = await server.get(`/api/v1/movies/4294292372/stores`);
+      const response = await server.get(`/api/movies/4294292372/stores`);
       expect(response.status).toBe(404);
       expect(response.body.message).toBe('Movie is out of stock');
     });
@@ -665,7 +663,7 @@ describe('Movie Controller', () => {
       await login(credential.email, credential.password);
 
       const response = await server
-        .post('/api/v1/movies')
+        .post('/api/movies')
         .send(moviePayload)
         .set('Cookie', cookie)
         .set('Content-Type', 'application/json')
@@ -700,7 +698,7 @@ describe('Movie Controller', () => {
       await login(credential.email, credential.password);
 
       const response = await server
-        .post('/api/v1/movies')
+        .post('/api/movies')
         .send({
           ...moviePayload,
           actors,
@@ -748,7 +746,7 @@ describe('Movie Controller', () => {
       const credential = await getStaffCredential();
       await login(credential.email, credential.password);
 
-      const response = await server.post('/api/v1/movies').send(moviePayload).set('Cookie', cookie);
+      const response = await server.post('/api/movies').send(moviePayload).set('Cookie', cookie);
       expect(response.status).toEqual(403);
       expect(response.body).toEqual({
         status: 'error',
@@ -762,7 +760,7 @@ describe('Movie Controller', () => {
       const credential = await getCustomerCredential();
       await login(credential.email, credential.password);
 
-      const response = await server.post('/api/v1/movies').send(moviePayload).set('Cookie', cookie);
+      const response = await server.post('/api/movies').send(moviePayload).set('Cookie', cookie);
       expect(response.status).toEqual(403);
       expect(response.body).toEqual({
         status: 'error',
@@ -782,7 +780,7 @@ describe('Movie Controller', () => {
       const credential = await getStoreManagerCredential();
       await login(credential.email, credential.password);
 
-      const newMovieResponse = await server.post('/api/v1/movies').set('Cookie', cookie).send(newMoviePayload);
+      const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
       const newMovieId = newMovieResponse.body.id;
 
       const [beforeUpdate] = await execQuery(`
@@ -793,7 +791,7 @@ describe('Movie Controller', () => {
       expect(beforeUpdate.originalTitle).toEqual(newMovieResponse.body.originalTitle);
 
       const newMovieTitle = `${getRandomCharacters(5)} ${getRandomCharacters(10)} ${Date.now()}`;
-      const response = await server.put(`/api/v1/movies/${newMovieId}`).set('Cookie', cookie).send({
+      const response = await server.put(`/api/movies/${newMovieId}`).set('Cookie', cookie).send({
         title: newMovieTitle,
         originalTitle: newMovieTitle,
       });
@@ -821,7 +819,7 @@ describe('Movie Controller', () => {
         WHERE genre_name IN (${newMoviePayload.genres.map((g) => `'${g}'`)})
       `);
 
-      const newMovieResponse = await server.post('/api/v1/movies').set('Cookie', cookie).send(newMoviePayload);
+      const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
       const newMovieId = newMovieResponse.body.id;
 
       const [beforeUpdate] = await execQuery(`
@@ -834,7 +832,7 @@ describe('Movie Controller', () => {
         SELECT json_agg(id) AS ids FROM genre WHERE genre_name IN (${newGenres.map((g) => `'${g}'`)})
       `);
 
-      const response = await server.put(`/api/v1/movies/${newMovieId}`).set('Cookie', cookie).send({
+      const response = await server.put(`/api/movies/${newMovieId}`).set('Cookie', cookie).send({
         genres: newGenres,
       });
 
@@ -860,7 +858,7 @@ describe('Movie Controller', () => {
         WHERE genre_name IN (${newMoviePayload.genres.map((g) => `INITCAP('${g}')`)})
       `);
 
-      const newMovieResponse = await server.post('/api/v1/movies').set('Cookie', cookie).send(newMoviePayload);
+      const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
       const newMovieId = newMovieResponse.body.id;
 
       const [beforeUpdate] = await execQuery(`
@@ -875,7 +873,7 @@ describe('Movie Controller', () => {
         WHERE genre_name IN (${newGenres.map((g) => `INITCAP('${g}')`)})
       `);
 
-      const response = await server.put(`/api/v1/movies/${newMovieId}`).set('Cookie', cookie).send({
+      const response = await server.put(`/api/movies/${newMovieId}`).set('Cookie', cookie).send({
         genres: newGenres,
       });
 
@@ -901,7 +899,7 @@ describe('Movie Controller', () => {
         WHERE iso_country_code IN (${newMoviePayload.countriesOfOrigin.map((c) => `UPPER('${c}')`)})
       `);
 
-      const newMovieResponse = await server.post('/api/v1/movies').set('Cookie', cookie).send(newMoviePayload);
+      const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
       const newMovieId = newMovieResponse.body.id;
 
       const [beforeUpdate] = await execQuery(`
@@ -915,7 +913,7 @@ describe('Movie Controller', () => {
         WHERE iso_country_code IN (${newOriginCountries.map((c) => `UPPER('${c}')`)})
       `);
 
-      const response = await server.put(`/api/v1/movies/${newMovieId}`).set('Cookie', cookie).send({
+      const response = await server.put(`/api/movies/${newMovieId}`).set('Cookie', cookie).send({
         countriesOfOrigin: newOriginCountries,
       });
 
@@ -941,7 +939,7 @@ describe('Movie Controller', () => {
         WHERE iso_country_code IN (${newMoviePayload.countriesOfOrigin.map((c) => `UPPER('${c}')`)})
       `);
 
-      const newMovieResponse = await server.post('/api/v1/movies').set('Cookie', cookie).send(newMoviePayload);
+      const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
       const newMovieId = newMovieResponse.body.id;
 
       const [beforeUpdate] = await execQuery(`
@@ -955,7 +953,7 @@ describe('Movie Controller', () => {
         WHERE iso_country_code IN (${newOriginCountries.map((c) => `UPPER('${c}')`)})
       `);
 
-      const response = await server.put(`/api/v1/movies/${newMovieId}`).set('Cookie', cookie).send({
+      const response = await server.put(`/api/movies/${newMovieId}`).set('Cookie', cookie).send({
         countriesOfOrigin: newOriginCountries,
       });
 
@@ -981,7 +979,7 @@ describe('Movie Controller', () => {
         WHERE iso_language_code = LOWER('${newMoviePayload.language}')
       `);
 
-      const newMovieResponse = await server.post('/api/v1/movies').set('Cookie', cookie).send(newMoviePayload);
+      const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
       const newMovieId = newMovieResponse.body.id;
 
       const [beforeUpdate] = await execQuery(`
@@ -995,7 +993,7 @@ describe('Movie Controller', () => {
         WHERE iso_language_code = LOWER('${newMovieLanguage}')
       `);
 
-      const response = await server.put(`/api/v1/movies/${newMovieId}`).set('Cookie', cookie).send({
+      const response = await server.put(`/api/movies/${newMovieId}`).set('Cookie', cookie).send({
         language: newMovieLanguage,
       });
 
@@ -1021,7 +1019,7 @@ describe('Movie Controller', () => {
       const credential = await getStoreManagerCredential();
       await login(credential.email, credential.password);
 
-      const newMovieResponse = await server.post('/api/v1/movies').set('Cookie', cookie).send(newMoviePayload);
+      const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
       expect(newMovieResponse.status).toEqual(201);
       const newMovieId = newMovieResponse.body.id;
 
@@ -1036,7 +1034,7 @@ describe('Movie Controller', () => {
         WHERE iso_language_code = LOWER('${newMovieLanguage}')
       `);
 
-      const response = await server.put(`/api/v1/movies/${newMovieId}`).set('Cookie', cookie).send({
+      const response = await server.put(`/api/movies/${newMovieId}`).set('Cookie', cookie).send({
         language: newMovieLanguage,
       });
 
@@ -1055,14 +1053,14 @@ describe('Movie Controller', () => {
       let credential = await getStoreManagerCredential();
       await login(credential.email, credential.password);
 
-      const newMovieResponse = await server.post('/api/v1/movies').set('Cookie', cookie).send(newMoviePayload);
+      const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
       const newMovieId = newMovieResponse.body.id;
 
       credential = await getStaffCredential();
       await login(credential.email, credential.password);
 
       const response = await server
-        .put(`/api/v1/movies/${newMovieId}`)
+        .put(`/api/movies/${newMovieId}`)
         .set('Cookie', cookie)
         .send({
           title: `${newMoviePayload.title} UPDATED`,
@@ -1081,14 +1079,14 @@ describe('Movie Controller', () => {
       let credential = await getStoreManagerCredential();
       await login(credential.email, credential.password);
 
-      const newMovieResponse = await server.post('/api/v1/movies').set('Cookie', cookie).send(newMoviePayload);
+      const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
       const newMovieId = newMovieResponse.body.id;
 
       credential = await getCustomerCredential();
       await login(credential.email, credential.password);
 
       const response = await server
-        .put(`/api/v1/movies/${newMovieId}`)
+        .put(`/api/movies/${newMovieId}`)
         .set('Cookie', cookie)
         .send({
           title: `${newMoviePayload.title} UPDATED`,
@@ -1105,7 +1103,7 @@ describe('Movie Controller', () => {
   describe('DELETE /movies/:id', () => {
     const createTestActor = async (actorPayload: MovieActorPayload, movieId?: number) => {
       const newActorResponse = await server
-        .post('/api/v1/actors')
+        .post('/api/actors')
         .set('Cookie', cookie)
         .send({
           ...actorPayload,
@@ -1115,7 +1113,7 @@ describe('Movie Controller', () => {
       expect(newActorResponse.status).toEqual(201);
       if (movieId) {
         const newMovieActorResponse = await server
-          .post(`/api/v1/actors/${newActorResponse.body.id}/add_to_movie`)
+          .post(`/api/actors/${newActorResponse.body.id}/add_to_movie`)
           .set('Cookie', cookie)
           .send({ movieId, characterName: actorPayload.characterName, castOrder: actorPayload.castOrder });
         expect(newMovieActorResponse.status).toEqual(201);
@@ -1130,7 +1128,7 @@ describe('Movie Controller', () => {
       await login(credential.email, credential.password);
 
       const newMoviePayload = await getMoviePayload();
-      const newMovieResponse = await server.post('/api/v1/movies').set('Cookie', cookie).send(newMoviePayload);
+      const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
       const newMovieId = newMovieResponse.body.id;
 
       let [movieQueryResult] = await execQuery(`
@@ -1138,7 +1136,7 @@ describe('Movie Controller', () => {
       `);
       expect(Number(movieQueryResult.count)).toEqual(1);
 
-      const response = await server.delete(`/api/v1/movies/${newMovieId}`).set('Cookie', cookie);
+      const response = await server.delete(`/api/movies/${newMovieId}`).set('Cookie', cookie);
       expect(response.status).toEqual(204);
 
       [movieQueryResult] = await execQuery(`
@@ -1153,7 +1151,7 @@ describe('Movie Controller', () => {
 
       const newMoviePayload = await getMoviePayload();
       const newActors = await getRandomActors(5);
-      const newMovieResponse = await server.post('/api/v1/movies').set('Cookie', cookie).send(newMoviePayload);
+      const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
       const newMovieId = newMovieResponse.body.id;
 
       // Verify new movie count
@@ -1181,7 +1179,7 @@ describe('Movie Controller', () => {
       expect(Number(movieActorsQueryResult.count)).toEqual(newActorIds.length);
 
       // Delete movie
-      await server.delete(`/api/v1/movies/${newMovieId}`).set('Cookie', cookie);
+      await server.delete(`/api/movies/${newMovieId}`).set('Cookie', cookie);
       [movieQueryResult] = await execQuery(`
         SELECT COUNT(*) FROM movie WHERE id = ${newMovieId}  
       `);
@@ -1206,7 +1204,7 @@ describe('Movie Controller', () => {
 
       const newMoviePayload = await getMoviePayload();
       const newActors = await getRandomActors(5);
-      const newMovieResponse = await server.post('/api/v1/movies').set('Cookie', cookie).send(newMoviePayload);
+      const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
       const newMovieId = newMovieResponse.body.id;
 
       // Verify new movie count
@@ -1245,7 +1243,7 @@ describe('Movie Controller', () => {
       expect(Number(inventoryQueryResult.count)).toEqual(1);
 
       // Delete movie
-      await server.delete(`/api/v1/movies/${newMovieId}`).set('Cookie', cookie);
+      await server.delete(`/api/movies/${newMovieId}`).set('Cookie', cookie);
       [movieQueryResult] = await execQuery(`
         SELECT COUNT(*) FROM movie WHERE id = ${newMovieId}  
       `);
@@ -1275,12 +1273,12 @@ describe('Movie Controller', () => {
       await login(credential.email, credential.password);
 
       const newMoviePayload = await getMoviePayload();
-      const newMovieResponse = await server.post('/api/v1/movies').set('Cookie', cookie).send(newMoviePayload);
+      const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
       const newMovieId = newMovieResponse.body.id;
 
       credential = await getStaffCredential();
       await login(credential.email, credential.password);
-      const response = await server.delete(`/api/v1/movies/${newMovieId}`).set('Cookie', cookie);
+      const response = await server.delete(`/api/movies/${newMovieId}`).set('Cookie', cookie);
       expect(response.status).toEqual(403);
       expect(response.body).toEqual({
         status: 'error',
@@ -1293,12 +1291,12 @@ describe('Movie Controller', () => {
       await login(credential.email, credential.password);
 
       const newMoviePayload = await getMoviePayload();
-      const newMovieResponse = await server.post('/api/v1/movies').set('Cookie', cookie).send(newMoviePayload);
+      const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
       const newMovieId = newMovieResponse.body.id;
 
       credential = await getCustomerCredential();
       await login(credential.email, credential.password);
-      const response = await server.delete(`/api/v1/movies/${newMovieId}`).set('Cookie', cookie);
+      const response = await server.delete(`/api/movies/${newMovieId}`).set('Cookie', cookie);
       expect(response.status).toEqual(403);
       expect(response.body).toEqual({
         status: 'error',
