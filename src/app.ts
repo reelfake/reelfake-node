@@ -21,6 +21,7 @@ import {
   authRoutes,
   rentalRoutes,
 } from './routes';
+import { DEFAULT_PORT } from './constants';
 
 // app.use(helmet());
 // app.use(morgan('tiny', { stream: logStream }));
@@ -54,24 +55,18 @@ app.get('/api', (req: Request, res: Response) => {
 });
 
 // OpenAPI routes
-app.get('/openapi/v1', (req, res) => {
+app.get('/openapi', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'openapi', 'dist', 'openapi.yaml'));
 });
 
 app.get('/api/docs', (req, res) => {
-  if (req.protocol === 'https') {
-    res.render(getOpenApiDocsHtmlString(true));
-  } else {
-    res.send(getOpenApiDocsHtmlString(false));
-  }
+  const docsUrl = `${req.protocol}://${req.hostname}:${process.env.PORT || DEFAULT_PORT}/openapi`;
+  res.send(getOpenApiDocsHtmlString(docsUrl));
 });
 
 app.get('/api/redocs', (req, res) => {
-  if (req.protocol === 'https') {
-    res.render(getOpenApiReDocsHtmlString(true));
-  } else {
-    res.send(getOpenApiReDocsHtmlString(false));
-  }
+  const docsUrl = `${req.protocol}://${req.hostname}:${process.env.PORT || DEFAULT_PORT}/openapi`;
+  res.send(getOpenApiReDocsHtmlString(docsUrl));
 });
 
 // Statistics

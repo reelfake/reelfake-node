@@ -1,7 +1,4 @@
-export function getOpenApiDocsHtmlString(isHttps: boolean) {
-  const port = process.env.PORT || 8000;
-  const protocol = isHttps ? 'https' : 'http';
-
+export function getOpenApiDocsHtmlString(docsUrl: string) {
   return `
     <!doctype html>
     <html lang="en">
@@ -18,7 +15,7 @@ export function getOpenApiDocsHtmlString(isHttps: boolean) {
         <script>
         window.onload = () => {
             window.ui = SwaggerUIBundle({
-            url: '${protocol}://localhost:${port}/openapi/v1',
+            url: "${docsUrl}",
             dom_id: '#swagger-ui',
             });
         };
@@ -28,10 +25,7 @@ export function getOpenApiDocsHtmlString(isHttps: boolean) {
     `;
 }
 
-export function getOpenApiReDocsHtmlString(isHttps: boolean) {
-  const port = process.env.PORT || 8000;
-  const protocol = isHttps ? 'https' : 'http';
-
+export function getOpenApiReDocsHtmlString(docsUrl: string) {
   return `
     <!doctype html>
     <html>
@@ -49,7 +43,7 @@ export function getOpenApiReDocsHtmlString(isHttps: boolean) {
     </head>
     <body>
         <redoc
-        spec-url="${protocol}://localhost:${port}/openapi/v1"
+        spec-url="${docsUrl}"
         theme='{
             "sidebar": {
             "backgroundColor": "#263238",
