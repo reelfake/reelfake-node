@@ -2,7 +2,7 @@ import supertest from 'supertest';
 
 import app from '../app';
 import * as dbQuery from '../utils/dbQuery';
-import { execQuery, FIELD_MAP } from './testUtil';
+import { execQuery } from './testUtil';
 
 describe('Genre Controller', () => {
   it('GET /api/genres should return a list of available movie genres', async () => {
@@ -10,7 +10,7 @@ describe('Genre Controller', () => {
     const response = await server.get('/api/genres');
     expect(response.status).toBe(200);
     expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
-    const expectedGenres = await execQuery('SELECT * FROM genre', FIELD_MAP.genre);
+    const expectedGenres = await execQuery('SELECT id, genre_name AS "genreName" FROM genre');
     expect(response.body).toStrictEqual({
       items: expectedGenres,
       length: expectedGenres.length,

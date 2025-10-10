@@ -6,7 +6,6 @@ import {
   execQuery,
   getRowsCount,
   getRandomActors,
-  FIELD_MAP,
   getStoreManagerCredential,
   getCustomerCredential,
   getStaffCredential,
@@ -240,9 +239,10 @@ describe('Actor Controller', () => {
       const response = await server.get(`/api/actors/928365`);
       const expectedActor = await execQuery(
         `
-          SELECT * FROM actor WHERE id = 928365
-        `,
-        FIELD_MAP.actor
+          SELECT id, tmdb_id AS "tmdbId", imdb_id AS "imdbId", actor_name AS "actorName", biography, 
+          birthday, deathday, place_of_birth AS "placeOfBirth", popularity, profile_picture_url AS "profilePictureUrl"
+          FROM actor WHERE id = 928365
+        `
       );
 
       expect(response.status).toBe(200);
@@ -269,8 +269,7 @@ describe('Actor Controller', () => {
               WHERE ma.actor_id = ${actorId}
             )
           ) FROM actor a WHERE a.id = ${actorId};
-        `,
-        FIELD_MAP.actor
+        `
       );
 
       expect(response.status).toBe(200);

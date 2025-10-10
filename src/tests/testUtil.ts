@@ -2,7 +2,6 @@ import { QueryTypes } from 'sequelize';
 import { faker } from '@faker-js/faker';
 import bcrypt from 'bcryptjs';
 import sequelize from '../sequelize.config';
-export * from './fieldMap';
 import { MovieActorPayload } from '../types';
 
 export const ITEMS_COUNT_PER_PAGE_FOR_TEST = 50;
