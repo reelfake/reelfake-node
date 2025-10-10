@@ -17,3 +17,15 @@ export async function closeDbConnection(sequelize: Sequelize) {
     console.log('Error closing the database connection:', error);
   }
 }
+
+export function getDbConnectionProps(isUsersDatabase: boolean) {
+  const prefix = isUsersDatabase && process.env.NODE_ENV !== 'test' ? 'REELFAKE_USERS_' : '';
+
+  const db = process.env[`${prefix}DB_NAME`];
+  const user = process.env[`${prefix}DB_USER`];
+  const password = process.env[`${prefix}DB_PASSWORD`];
+  const host = process.env[`${prefix}DB_HOST`];
+  const port = process.env[`${prefix}DB_PORT`];
+
+  return { db, user, password, host, port };
+}

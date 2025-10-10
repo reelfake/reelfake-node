@@ -1,6 +1,6 @@
 import { DataTypes } from 'sequelize';
 import BaseModel from './baseModel';
-import sequelize from '../sequelize.config';
+import sequelize, { sequelize_users } from '../sequelize.config';
 
 class User extends BaseModel {
   declare customerId: number;
@@ -13,6 +13,8 @@ User.init(
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
+      autoIncrement: true,
+      autoIncrementIdentity: true,
       field: 'id',
     },
     firstName: {
@@ -38,17 +40,19 @@ User.init(
     email: {
       type: DataTypes.STRING(150),
       field: 'email',
+      allowNull: false,
     },
     userPassword: {
-      type: DataTypes.STRING(10),
+      type: DataTypes.STRING(60),
       field: 'user_password',
+      allowNull: false,
     },
   },
   {
-    sequelize,
+    sequelize: sequelize_users,
     modelName: 'User',
     tableName: 'user',
-    timestamps: false,
+    timestamps: process.env.NODE_ENV !== 'test',
   }
 );
 

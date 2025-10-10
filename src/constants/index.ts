@@ -7,3 +7,4 @@ export { movieModelAttributes } from './expandedAttributes';
 export { USER_ROLES, TOKEN_EXPIRING_IN_MS } from './auth';
 
 export const DEFAULT_PORT = 8000;
+export const SECURE_PORT = 443;

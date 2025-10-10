@@ -1,5 +1,5 @@
-import { execQuery } from './tests/testUtil';
+import { UserModel } from './models';
 
 export default async function () {
-  await execQuery('DELETE FROM public.user');
+  await UserModel.truncate();
 }

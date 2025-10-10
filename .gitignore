@@ -7,3 +7,4 @@ dist
 testReport
 src/tests/test_db
 script
+certs

@@ -29,16 +29,8 @@ import { DEFAULT_PORT } from './constants';
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
-
-if (process.env.NODE_ENV === 'production') {
-  app.use(
-    cors({
-      origin: 'http://localhost:3000',
-      credentials: true,
-    })
-  );
-}
 
 app.use(cookieParser());
 app.use(compression());
