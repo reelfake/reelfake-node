@@ -1,7 +1,19 @@
 import { Request, Response, NextFunction } from 'express';
 import { Router } from 'express';
+import multer from 'multer';
 import { routeFnWrapper, AppError } from '../utils';
-import { findInStores, getMovieById, getMovies, createMovie, addActors, updateMovie, deleteMovie } from '../controllers';
+import {
+  findInStores,
+  getMovieById,
+  getMovies,
+  createMovie,
+  addActors,
+  updateMovie,
+  deleteMovie,
+  uploadMovies,
+  trackUpload,
+  validateUpload,
+} from '../controllers';
 import { validateMoviesRouteQuery, validateAuthToken, validateUserRole } from '../middlewares';
 import { USER_ROLES } from '../constants';
 
@@ -31,8 +43,13 @@ function validateMovieByIdRouteQuery(req: Request, res: Response, next: NextFunc
   next();
 }
 
+const upload = multer({ dest: '/Users/pratap.reddy/repos/reelfake-node/movie_uploads' });
+
 // GET
 router.get('/', validateMoviesRouteQuery, routeFnWrapper(getMovies));
+router.get('/upload/track', trackUpload);
+router.post('/upload/validate', upload.single('file'), validateUpload);
+router.post('/upload', upload.single('file'), uploadMovies);
 router.get('/:id', validateMovieByIdRouteQuery, routeFnWrapper(getMovieById));
 router.get('/:id/stores', routeFnWrapper(findInStores));
 // POST

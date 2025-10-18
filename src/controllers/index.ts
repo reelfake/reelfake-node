@@ -4,6 +4,7 @@ export { getCities } from './cityController';
 export { getCountries } from './countryController';
 export { getMovieLanguages } from './movieLanguageController';
 export { getMovies, getMovieById, findInStores, createMovie, addActors, updateMovie, deleteMovie } from './movieController';
+export { uploadMovies, trackUpload, validateUpload } from './movieUploadController';
 export { getActors, getActorById, updateActor, deleteActor, addActor, addToMovie } from './actorController';
 export {
   getStores,
