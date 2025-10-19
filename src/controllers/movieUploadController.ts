@@ -89,6 +89,7 @@ export const trackUpload = async (req: Request, res: Response) => {
   res.flushHeaders();
 
   try {
+    const failedRows: { status: string; data: { rowIndex: number; errors: string[] } }[] = [];
     const { totalRows, processedRows, invalidRows } = await UploadUtil.process(
       3,
       async (rows: CsvRowWithIndex[], totalRows: number) => {
@@ -97,6 +98,7 @@ export const trackUpload = async (req: Request, res: Response) => {
         // await new Promise((resolve) => setTimeout(resolve, 1000));
       },
       (rowIndex: number, errors: string[]) => {
+        failedRows.push({ status: 'error', data: { rowIndex, errors } });
         res.write(`data: ${JSON.stringify({ status: 'error', data: { rowIndex, errors } })}\n\n`);
       }
     );
@@ -107,9 +109,9 @@ export const trackUpload = async (req: Request, res: Response) => {
           totalRows,
           processedRows,
           invalidRows,
-          failed: 0,
-          success: 0,
-          failedRows: [{ rowIndex: 0, errorMessage: '' }],
+          failed: failedRows.length,
+          success: processedRows.length,
+          failedRows,
         },
       })}\n\n`
     );
