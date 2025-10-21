@@ -1,4 +1,4 @@
-FROM node:24.9-slim
+FROM node:24.9-slim AS build
 
 WORKDIR /app
 
@@ -13,6 +13,12 @@ COPY . .
 RUN yarn generate-api-specs
 RUN yarn build
 
+FROM node:24.9-slim
+
+WORKDIR /app
+
+COPY --from=build /app/dist/server.js ./
+
 EXPOSE 8080 8000
 
-CMD ["yarn", "start"]
+CMD [ "node", "server.js" ]

@@ -36,7 +36,8 @@ describe('User Controller', () => {
       expect(response.body.message).toBe('User is registered successfully');
 
       const result = await execQuery(
-        `SELECT email as "userEmail", user_password as "userPassword" FROM public.user WHERE email = '${email}'`
+        `SELECT email as "userEmail", user_password as "userPassword" FROM public.user WHERE email = '${email}'`,
+        true
       );
       expect(result.length).toBe(1);
       expect(result[0].userEmail).toBe(email);

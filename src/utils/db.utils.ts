@@ -18,14 +18,13 @@ export async function closeDbConnection(sequelize: Sequelize) {
   }
 }
 
-export function getDbConnectionProps(isUsersDatabase: boolean) {
-  const prefix = isUsersDatabase && process.env.NODE_ENV !== 'test' ? 'REELFAKE_USERS_' : '';
+export function getDbConnectionProps() {
+  const db = process.env['DB_NAME'];
+  const usersDb = process.env['REELFAKE_USERS_DB_NAME'];
+  const user = process.env['DB_USER'];
+  const password = process.env['DB_PASSWORD'];
+  const host = process.env['DB_HOST'];
+  const port = process.env['DB_PORT'];
 
-  const db = process.env[`${prefix}DB_NAME`];
-  const user = process.env[`${prefix}DB_USER`];
-  const password = process.env[`${prefix}DB_PASSWORD`];
-  const host = process.env[`${prefix}DB_HOST`];
-  const port = process.env[`${prefix}DB_PORT`];
-
-  return { db, user, password, host, port };
+  return { db, usersDb, user, password, host, port };
 }

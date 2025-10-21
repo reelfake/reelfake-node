@@ -1,7 +1,7 @@
 import { QueryTypes } from 'sequelize';
 import { faker } from '@faker-js/faker';
 import bcrypt from 'bcryptjs';
-import sequelize from '../sequelize.config';
+import sequelize, { sequelize_users } from '../sequelize.config';
 import { MovieActorPayload } from '../types';
 
 export const ITEMS_COUNT_PER_PAGE_FOR_TEST = 50;
@@ -89,18 +89,19 @@ export function getRandomDate(yearFrom: number, yearTo: number) {
 }
 
 export async function cleanUserTable() {
-  await sequelize.query('DELETE FROM public.user');
+  await sequelize_users.query('DELETE FROM public.user');
 }
 
 export async function execQuery(
   queryText: string,
+  isUsersDb: boolean = false,
   fieldMap: Record<string, string> = {},
   excludeTimestamps: boolean = true,
   removeTmdbId: boolean = true
 ) {
   let result: object[] | undefined = undefined;
   try {
-    result = await sequelize.query(queryText, {
+    result = await (isUsersDb ? sequelize_users : sequelize).query(queryText, {
       type: QueryTypes.SELECT,
       raw: true,
       plain: false,
@@ -237,10 +238,13 @@ export async function getCustomerCredential() {
 }
 
 export async function getUserCredential() {
-  const [user] = await execQuery(`
+  const [user] = await execQuery(
+    `
     SELECT email, user_password as "userPassword"
     FROM public.user LIMIT 1
-  `);
+  `,
+    true
+  );
 
   const email = user.email;
   const password = user.userPassword;
