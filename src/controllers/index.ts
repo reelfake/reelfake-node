@@ -31,9 +31,11 @@ export { getAddresses, getAddressesInCity, getAddressesInState } from './address
 export {
   getCustomers,
   getCustomerById,
-  createCustomer,
   deleteCustomer,
   updateCustomer,
-  setCustomerPassword,
+  resetCustomerPassword,
+  registerCustomer,
+  deactivateCustomer,
+  activateCustomer,
 } from './customerController';
 export { getRentals, getRentalById, getRentalsForStore } from './rentalController';

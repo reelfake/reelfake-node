@@ -3,10 +3,12 @@ import { validateAuthToken, validateUserRole } from '../middlewares';
 import {
   getCustomers,
   getCustomerById,
-  createCustomer,
   deleteCustomer,
   updateCustomer,
-  setCustomerPassword,
+  resetCustomerPassword,
+  registerCustomer,
+  deactivateCustomer,
+  activateCustomer,
 } from '../controllers';
 import { routeFnWrapper, AppError, validateDateRangeInRequest } from '../utils';
 import { USER_ROLES, CUSTOMER_EMAIL_FORMAT, ERROR_MESSAGES } from '../constants';
@@ -74,7 +76,7 @@ function validateCustomersRouteQuery(req: Request, res: Response, next: NextFunc
 router.get('/', validateCustomersRouteQuery, validateAuthToken, routeFnWrapper(getCustomers));
 router.get('/:id', validateAuthToken, routeFnWrapper(getCustomerById));
 // POST
-router.post('/', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(createCustomer));
+router.post('/register', routeFnWrapper(registerCustomer));
 // PUT
 router.put(
   '/:id',
@@ -82,7 +84,16 @@ router.put(
   validateUserRole(USER_ROLES.CUSTOMER, USER_ROLES.STORE_MANAGER),
   routeFnWrapper(updateCustomer)
 );
-router.put('/:id/set_password', validateAuthToken, validateUserRole(USER_ROLES.USER), routeFnWrapper(setCustomerPassword));
+router.put('/reset_password', validateAuthToken, validateUserRole(USER_ROLES.CUSTOMER), routeFnWrapper(resetCustomerPassword));
+// PATCH - Deactivate customer
+router.patch(
+  '/:id/deactivate',
+  validateAuthToken,
+  validateUserRole(USER_ROLES.STORE_MANAGER),
+  routeFnWrapper(deactivateCustomer)
+);
+// PATCH - Activate customer
+router.patch('/:id/activate', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(activateCustomer));
 // DELETE
 router.delete(
   '/:id',

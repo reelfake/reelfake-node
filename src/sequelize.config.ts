@@ -19,6 +19,7 @@ switch (process.env.NODE_ENV) {
 dotenv.config({ path: `${process.cwd()}/.env.${envName}` });
 
 import { Sequelize } from 'sequelize';
+import pg from 'pg';
 import { getDbConnectionProps } from './utils';
 
 const dbConnectionProps = getDbConnectionProps();
@@ -34,6 +35,7 @@ const sequelize = new Sequelize(db, user, password, {
   host,
   port: parseInt(port, 10),
   dialect: 'postgres',
+  dialectModule: pg,
   pool: {
     min: 2,
     max: 10,
@@ -48,6 +50,7 @@ export const sequelize_users = new Sequelize(usersDb, user, password, {
   host,
   port: parseInt(port, 10),
   dialect: 'postgres',
+  dialectModule: pg,
   pool: {
     min: 2,
     max: 10,
