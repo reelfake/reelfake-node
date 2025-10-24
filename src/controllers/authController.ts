@@ -1,27 +1,11 @@
 import type { Request, Response } from 'express';
 import { literal, Op } from 'sequelize';
 import bcrypt from 'bcryptjs';
-import { CustomerModel, StaffModel, StoreModel, UserModel } from '../models';
+import { CustomerModel, StaffModel, StoreModel } from '../models';
 import { ERROR_MESSAGES, USER_ROLES, TOKEN_EXPIRING_IN_MS } from '../constants';
 import { AppError, generateAuthToken } from '../utils';
 
 async function findUser(email: string) {
-  const user = await UserModel.findOne({
-    attributes: ['id', 'userPassword'],
-    where: {
-      email,
-    },
-  });
-
-  if (user) {
-    return {
-      id: user.getDataValue('id'),
-      email,
-      password: user.getDataValue('userPassword'),
-      role: USER_ROLES.USER,
-    };
-  }
-
   const customer = await CustomerModel.findOne({
     attributes: ['id', 'userPassword'],
     where: {

@@ -6,9 +6,10 @@ import {
   getStoreManagers,
   updateStaff,
   deleteStaff,
-  setStaffPassword,
+  changeStaffPassword,
+  forgotStaffPassword,
 } from '../controllers';
-import { validateAuthToken, validateUserRole } from '../middlewares';
+import { validateAuthToken, validateUserRole, validateNewPassword } from '../middlewares';
 import { AppError, routeFnWrapper } from '../utils';
 import { STAFF_EMAIL_FORMAT, ERROR_MESSAGES, USER_ROLES } from '../constants';
 
@@ -61,17 +62,21 @@ router.post('/', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), 
 router.get(
   '/managers',
   validateAuthToken,
-  validateUserRole(USER_ROLES.USER, USER_ROLES.STAFF, USER_ROLES.STORE_MANAGER),
+  validateUserRole(USER_ROLES.STAFF, USER_ROLES.STORE_MANAGER),
   routeFnWrapper(getStoreManagers)
 );
-router.get(
-  '/:id',
+router.get('/:id', validateAuthToken, validateUserRole(USER_ROLES.STAFF, USER_ROLES.STORE_MANAGER), routeFnWrapper(getStaffById));
+
+router.put('/:id/forgot_password', validateNewPassword, routeFnWrapper(forgotStaffPassword));
+router.put(
+  '/change_password',
   validateAuthToken,
-  validateUserRole(USER_ROLES.USER, USER_ROLES.STAFF, USER_ROLES.STORE_MANAGER),
-  routeFnWrapper(getStaffById)
+  validateUserRole(USER_ROLES.STAFF),
+  validateNewPassword,
+  routeFnWrapper(changeStaffPassword)
 );
+
 router.put('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(updateStaff));
-router.put('/:id/set_password', validateAuthToken, validateUserRole(USER_ROLES.USER), routeFnWrapper(setStaffPassword));
 router.delete('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(deleteStaff));
 
 export default router;

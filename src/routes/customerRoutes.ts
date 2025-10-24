@@ -1,14 +1,15 @@
 import { Request, Response, Router, NextFunction } from 'express';
-import { validateAuthToken, validateUserRole } from '../middlewares';
+import { validateAuthToken, validateUserRole, validateNewPassword } from '../middlewares';
 import {
   getCustomers,
   getCustomerById,
   deleteCustomer,
   updateCustomer,
-  resetCustomerPassword,
+  changeCustomerPassword,
   registerCustomer,
   deactivateCustomer,
   activateCustomer,
+  forgotCustomerPassword,
 } from '../controllers';
 import { routeFnWrapper, AppError, validateDateRangeInRequest } from '../utils';
 import { USER_ROLES, CUSTOMER_EMAIL_FORMAT, ERROR_MESSAGES } from '../constants';
@@ -84,7 +85,14 @@ router.put(
   validateUserRole(USER_ROLES.CUSTOMER, USER_ROLES.STORE_MANAGER),
   routeFnWrapper(updateCustomer)
 );
-router.put('/reset_password', validateAuthToken, validateUserRole(USER_ROLES.CUSTOMER), routeFnWrapper(resetCustomerPassword));
+router.put('/:id/forgot_password', validateNewPassword, routeFnWrapper(forgotCustomerPassword));
+router.put(
+  '/change_password',
+  validateAuthToken,
+  validateUserRole(USER_ROLES.CUSTOMER),
+  validateNewPassword,
+  routeFnWrapper(changeCustomerPassword)
+);
 // PATCH - Deactivate customer
 router.patch(
   '/:id/deactivate',

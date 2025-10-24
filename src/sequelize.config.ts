@@ -46,26 +46,4 @@ const sequelize = new Sequelize(db, user, password, {
   logging: enableLogs,
 });
 
-export const sequelize_users = new Sequelize(usersDb, user, password, {
-  host,
-  port: parseInt(port, 10),
-  dialect: 'postgres',
-  dialectModule: pg,
-  pool: {
-    min: 2,
-    max: 10,
-    acquire: 10000,
-    idle: 20000,
-  },
-  sync: { alter: false, force: false },
-  logging: enableLogs,
-});
-
-if (envName !== 'test') {
-  sequelize
-    .authenticate()
-    .then(() => console.log(`[${envName}] Successfully connected to postgres db...`))
-    .catch((err) => console.log('Db connection error', err));
-}
-
 export default sequelize;

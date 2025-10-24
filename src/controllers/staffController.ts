@@ -1,7 +1,6 @@
 import type { Response } from 'express';
 import { col, literal, Op, WhereOptions } from 'sequelize';
-import bcrypt from 'bcryptjs';
-import { StaffModel, AddressModel, CityModel, CountryModel, StoreModel, UserModel } from '../models';
+import { StaffModel, AddressModel, CityModel, CountryModel, StoreModel } from '../models';
 import {
   parseStaffPaginationFilters,
   getPaginationOffsetWithFilters,
@@ -10,7 +9,7 @@ import {
   getPaginationMetadata,
   addressUtils,
   AppError,
-  capitalize,
+  updateUserPassword,
 } from '../utils';
 import sequelize from '../sequelize.config';
 import { ERROR_MESSAGES, ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
@@ -394,60 +393,33 @@ export const deleteStaff = async (req: CustomRequest, res: Response) => {
   res.status(204).send();
 };
 
-export const setStaffPassword = async (req: CustomRequestWithBody<{ password: string }>, res: Response) => {
-  const { user } = req;
-
-  if (!user) {
-    throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
-  }
-
-  const { password: newPassword } = req.body;
-
-  if (!newPassword) {
-    throw new AppError(ERROR_MESSAGES.REQUEST_BODY_MISSING, 400);
-  }
-
-  const userEmail = user.email;
-
-  const userInstance = await UserModel.findOne({
-    attributes: ['id', 'staffId', 'storeManagerId'],
-    where: {
-      email: userEmail,
-    },
-  });
-
-  if (!userInstance) {
-    throw new AppError(ERROR_MESSAGES.USER_NOT_FOUND, 404);
-  }
-
+export const changeStaffPassword = async (req: CustomRequestWithBody<{ newPassword: string }>, res: Response) => {
   const { id: idText } = req.params;
+  const { newPassword } = req.body;
+
   const id = Number(idText);
   if (isNaN(id) || id <= 0) {
-    throw new AppError('Invalid staff id', 400);
+    throw new AppError('Invalid resource id', 400);
   }
 
-  const staffId = Number(userInstance.getDataValue('staffId'));
-  const storeManagerId = Number(userInstance.getDataValue('storeManagerId'));
+  await updateUserPassword<StaffModel>(StaffModel, id, newPassword);
 
-  if (id !== staffId && id !== storeManagerId) {
-    throw new AppError(ERROR_MESSAGES.STAFF_NOT_ASSIGNED, 400);
+  res.status(204).send();
+};
+
+export const forgotStaffPassword = async (
+  req: CustomRequestWithBody<{ newPassword: string; confirmedNewPassword: string }>,
+  res: Response
+) => {
+  const { id: idText } = req.params;
+
+  const id = Number(idText);
+  if (isNaN(id) || id <= 0) {
+    throw new AppError('Invalid customer id', 400);
   }
 
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(newPassword, salt);
-
-  await sequelize.transaction(async (t) => {
-    const staffInstance = await StaffModel.findByPk(id, { transaction: t });
-
-    if (!staffInstance) {
-      throw new AppError(ERROR_MESSAGES.RESOURCES_NOT_FOUND, 404);
-    }
-
-    await staffInstance.update({
-      userPassword: hashedPassword,
-    });
-    await staffInstance.save({ transaction: t });
-  });
+  const { newPassword } = req.body;
+  await updateUserPassword(StaffModel, id, newPassword);
 
   res.status(204).send();
 };

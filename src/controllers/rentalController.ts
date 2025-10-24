@@ -1,8 +1,8 @@
 import type { Response } from 'express';
 import { Model, Op, literal, fn, WhereOptions, Includeable, col } from 'sequelize';
-import { AppError, addressUtils, getPaginationOffset, getPaginationMetadata } from '../utils';
+import { AppError, addressUtils } from '../utils';
 import { CustomerModel, InventoryModel, MovieModel, RentalModel, StaffModel, StoreModel } from '../models';
-import { ERROR_MESSAGES, USER_ROLES, ITEMS_PER_PAGE_FOR_PAGINATION } from '../constants';
+import { ERROR_MESSAGES, USER_ROLES } from '../constants';
 import { CustomRequest } from '../types';
 
 async function getUserAndStoreIdIfExist(email: string, role: USER_ROLES) {

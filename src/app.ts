@@ -8,7 +8,6 @@ import { AppError, getOpenApiDocsHtmlString, getOpenApiReDocsHtmlString } from '
 import {
   statsRoutes,
   addressRoutes,
-  userRoutes,
   genreRoutes,
   cityRoutes,
   countryRoutes,
@@ -70,9 +69,6 @@ app.use('/api/stats', statsRoutes);
 
 // Login and logout
 app.use('/api/auth', authRoutes);
-
-// Register user and get/update user
-app.use('/api/user', userRoutes);
 
 // Addresses
 app.use('/api/addresses', addressRoutes);

@@ -1,7 +1,7 @@
 import { QueryTypes } from 'sequelize';
 import { faker } from '@faker-js/faker';
 import bcrypt from 'bcryptjs';
-import sequelize, { sequelize_users } from '../sequelize.config';
+import sequelize from '../sequelize.config';
 import { MovieActorPayload } from '../types';
 
 export const ITEMS_COUNT_PER_PAGE_FOR_TEST = 50;
@@ -88,10 +88,6 @@ export function getRandomDate(yearFrom: number, yearTo: number) {
   return faker.date.between({ from: `${yearFrom}-01-01T00:00:00.000Z`, to: `${yearTo}-01-01T00:00:00.000Z` });
 }
 
-export async function cleanUserTable() {
-  await sequelize_users.query('DELETE FROM public.user');
-}
-
 export async function execQuery(
   queryText: string,
   isUsersDb: boolean = false,
@@ -101,7 +97,7 @@ export async function execQuery(
 ) {
   let result: object[] | undefined = undefined;
   try {
-    result = await (isUsersDb ? sequelize_users : sequelize).query(queryText, {
+    result = await sequelize.query(queryText, {
       type: QueryTypes.SELECT,
       raw: true,
       plain: false,
@@ -235,19 +231,4 @@ export async function getCustomerCredential() {
     `);
 
   return { email, password: passwordMock };
-}
-
-export async function getUserCredential() {
-  const [user] = await execQuery(
-    `
-    SELECT email, user_password as "userPassword"
-    FROM public.user LIMIT 1
-  `,
-    true
-  );
-
-  const email = user.email;
-  const password = user.userPassword;
-
-  return { email, password };
 }

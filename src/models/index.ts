@@ -1,3 +1,4 @@
+import BaseModel from './baseModel';
 import GenreModel from './genreModel';
 import CityModel from './cityModel';
 import CountryModel from './countryModel';
@@ -10,10 +11,10 @@ import StoreModel from './storeModel';
 import InventoryModel from './inventoryModel';
 import CustomerModel from './customerModel';
 import StaffModel from './staffModel';
-import UserModel from './userModel';
 import RentalModel from './rentalModel';
 
 export {
+  BaseModel,
   GenreModel,
   CityModel,
   CountryModel,
@@ -25,7 +26,6 @@ export {
   StoreModel,
   InventoryModel,
   CustomerModel,
-  UserModel,
   StaffModel,
   RentalModel,
 };

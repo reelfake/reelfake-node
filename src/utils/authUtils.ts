@@ -1,5 +1,10 @@
 import jwt from 'jsonwebtoken';
-import { USER_ROLES } from '../constants';
+import sequelize from '../sequelize.config';
+import bcrypt from 'bcryptjs';
+import { USER_ROLES, ERROR_MESSAGES } from '../constants';
+import { BaseModel, CustomerModel } from '../models';
+import { AppError } from '../utils';
+import type { GenericModelConstraint } from '../types';
 
 const JWT_SECRET = process.env.JWT_SECRET || '';
 
@@ -15,4 +20,44 @@ export function generateAuthToken(email: string, role: USER_ROLES) {
   );
 
   return auth_token;
+}
+
+export async function comparePasswordWithActual<T extends BaseModel & CustomerModel>(
+  model: GenericModelConstraint<T>,
+  id: number,
+  password: string | null
+) {
+  const userInstance = await model.findByPk(id, { attributes: ['userPassword'] });
+
+  if (!userInstance) {
+    throw new AppError(ERROR_MESSAGES.RESOURCES_NOT_FOUND, 400);
+  }
+
+  const userPassword = userInstance.getDataValue('userPassword');
+
+  const hashedActualPassword = String(userPassword);
+  const isPasswordVadlid = await bcrypt.compare(String(password), hashedActualPassword);
+  return isPasswordVadlid;
+}
+
+export async function updateUserPassword<T extends BaseModel & CustomerModel>(
+  modelStatic: GenericModelConstraint<T>,
+  id: number,
+  newPassword: string
+) {
+  await sequelize.transaction(async (t) => {
+    const modelInstance = await modelStatic.findByPk(id, { transaction: t });
+
+    if (!modelInstance) {
+      throw new AppError(ERROR_MESSAGES.RESOURCES_NOT_FOUND, 404);
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedNewPassword = await bcrypt.hash(newPassword, salt);
+
+    await modelInstance.update({
+      userPassword: hashedNewPassword,
+    });
+    await modelInstance.save({ transaction: t });
+  });
 }

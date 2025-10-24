@@ -27,4 +27,7 @@ export default {
   INVALID_ACTOR_POPULARITY: 'Invalid actor popularity provided in query',
   INVALID_CUSTOMER_EMAIL_FORMAT: 'Customer email must be alpha numeric and only example.com domain is allowed',
   INVALID_STAFF_EMAIL_FORMAT: 'Staff email must be alpha numeric and only example.com domain is allowed',
+  RESET_PASSWORD_MISMATCH: 'New password is not same as confirmed password',
+  RESET_PASSWORD_CURRENT_ACTUAL_MISMATCH: 'Current password is not same as actual password',
+  PASSWORD_LENGTH_NOT_MET: 'Password must be at least 8 characters long',
 };

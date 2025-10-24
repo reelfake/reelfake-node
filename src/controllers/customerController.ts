@@ -1,7 +1,7 @@
 import type { Response } from 'express';
 import { WhereOptions, Op } from 'sequelize';
 import bcrypt from 'bcryptjs';
-import { CustomerModel, StoreModel, AddressModel, StaffModel, CityModel, CountryModel, UserModel, RentalModel } from '../models';
+import { CustomerModel, StoreModel, AddressModel, StaffModel } from '../models';
 import {
   AppError,
   addressUtils,
@@ -11,6 +11,7 @@ import {
   parseRequestQuery,
   getPaginationMetadata,
   generateAuthToken,
+  updateUserPassword,
 } from '../utils';
 import sequelize from '../sequelize.config';
 import { ERROR_MESSAGES, ITEMS_PER_PAGE_FOR_PAGINATION, USER_ROLES, TOKEN_EXPIRING_IN_MS } from '../constants';
@@ -61,7 +62,7 @@ const toggleCustomerStatus = async (id: number, isActive: boolean) => {
       throw new AppError('Cannot deactivate already inactive customer', 400);
     }
 
-    await existingCustInstance.update({ active: false });
+    await existingCustInstance.update({ active: !isActive });
     await existingCustInstance.save({ transaction: t });
   });
 };
@@ -176,6 +177,7 @@ export const registerCustomer = async (req: CustomRequest, res: Response) => {
         where: {
           email,
         },
+        transaction: t,
       });
 
       if (existingCustomer) {
@@ -187,7 +189,7 @@ export const registerCustomer = async (req: CustomRequest, res: Response) => {
 
       await CustomerModel.create(
         { firstName, lastName, email, userPassword: hashedPassword, registeredOn: new Date().toISOString().split('T')[0] },
-        { fields: ['firstName', 'lastName', 'email', 'userPassword', 'registeredOn'] }
+        { fields: ['firstName', 'lastName', 'email', 'userPassword', 'registeredOn'], transaction: t }
       );
 
       const authToken = generateAuthToken(email, USER_ROLES.CUSTOMER);
@@ -299,44 +301,33 @@ export const updateCustomer = async (req: CustomRequestWithBody<Partial<Customer
   res.status(204).send();
 };
 
-export const resetCustomerPassword = async (req: CustomRequestWithBody<{ password: string }>, res: Response) => {
-  const { user } = req;
+export const changeCustomerPassword = async (req: CustomRequestWithBody<{ newPassword: string }>, res: Response) => {
+  const { id: idText } = req.params;
+  const { newPassword } = req.body;
 
-  if (!user) {
-    throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
+  const id = Number(idText);
+  if (isNaN(id) || id <= 0) {
+    throw new AppError('Invalid resource id', 400);
   }
 
-  const { password: newPassword } = req.body;
+  await updateUserPassword<CustomerModel>(CustomerModel, id, newPassword);
 
-  if (!newPassword) {
-    throw new AppError(ERROR_MESSAGES.REQUEST_BODY_MISSING, 400);
+  res.status(204).send();
+};
+
+export const forgotCustomerPassword = async (
+  req: CustomRequestWithBody<{ newPassword: string; confirmedNewPassword: string }>,
+  res: Response
+) => {
+  const { id: idText } = req.params;
+
+  const id = Number(idText);
+  if (isNaN(id) || id <= 0) {
+    throw new AppError('Invalid customer id', 400);
   }
 
-  if (String(newPassword).length < 8) {
-    throw new AppError('Password must be at least 8 characters long', 400);
-  }
-
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(newPassword, salt);
-
-  await sequelize.transaction(async (t) => {
-    const userEmail = user.email;
-    const customerInstance = await CustomerModel.findOne({
-      attributes: ['id'],
-      where: {
-        email: userEmail,
-      },
-    });
-
-    if (!customerInstance) {
-      throw new AppError(ERROR_MESSAGES.RESOURCES_NOT_FOUND, 404);
-    }
-
-    await customerInstance.update({
-      userPassword: hashedPassword,
-    });
-    await customerInstance.save({ transaction: t });
-  });
+  const { newPassword } = req.body;
+  await updateUserPassword(CustomerModel, id, newPassword);
 
   res.status(204).send();
 };
@@ -393,20 +384,10 @@ export const deleteCustomer = async (req: CustomRequest, res: Response) => {
     throw new AppError(ERROR_MESSAGES.FORBIDDEN, 403);
   }
 
-  const userCountWithCustomerId = await UserModel.count({
-    where: {
-      customerId: existingCusInstance.getDataValue('id'),
-    },
-  });
-
-  if (userCountWithCustomerId > 0) {
-    throw new AppError(ERROR_MESSAGES.CUSTOMER_IN_USE_BY_USER, 400);
-  }
-
   await sequelize.transaction(async (t) => {
     const custAddressId = existingCusInstance.getDataValue('addressId');
 
-    const custAddressInstance = await AddressModel.findByPk(custAddressId);
+    const custAddressInstance = await AddressModel.findByPk(custAddressId, { transaction: t });
 
     if (!custAddressInstance) {
       throw new AppError('Address for the customer not found', 404);

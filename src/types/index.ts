@@ -1,7 +1,12 @@
 import type { Locals, Request } from 'express';
-import { DataType, Model } from 'sequelize';
+import { Optional, BuildOptions, DataType, Model } from 'sequelize';
 import type { Sequelize } from 'sequelize';
+import { BaseModel, CustomerModel } from '../models';
 import { USER_ROLES } from '../constants';
+
+export type GenericModelConstraint<T extends BaseModel & CustomerModel> = typeof BaseModel & {
+  new (values?: Optional<any, string>, options?: BuildOptions): T;
+};
 
 export type KeyValuePair = {
   [key: string]: string | number | boolean | KeyValuePair;

@@ -1,11 +1,20 @@
+// Stats
 export { getStatistics } from './statsController';
+// Genres
 export { getGenres } from './genreController';
+// City
 export { getCities } from './cityController';
+// Country
 export { getCountries } from './countryController';
+// Movie language
 export { getMovieLanguages } from './movieLanguageController';
+// Movie
 export { getMovies, getMovieById, findInStores, createMovie, addActors, updateMovie, deleteMovie } from './movieController';
+// Movie actor
 export { uploadMovies, trackUpload, validateUpload } from './movieUploadController';
+// Actor
 export { getActors, getActorById, updateActor, deleteActor, addActor, addToMovie } from './actorController';
+// Store
 export {
   getStores,
   getStockCount,
@@ -16,8 +25,9 @@ export {
   updateStore,
   deleteStore,
 } from './storeController';
+// Auth
 export { login, logout } from './authController';
-export { registerUser, getUser, updateUser, changePassword } from './userController';
+// Staff
 export {
   getStaff,
   getStaffById,
@@ -25,17 +35,22 @@ export {
   updateStaff,
   createStaff,
   deleteStaff,
-  setStaffPassword,
+  changeStaffPassword,
+  forgotStaffPassword,
 } from './staffController';
+// Address
 export { getAddresses, getAddressesInCity, getAddressesInState } from './addressController';
+// Customer
 export {
   getCustomers,
   getCustomerById,
   deleteCustomer,
   updateCustomer,
-  resetCustomerPassword,
   registerCustomer,
   deactivateCustomer,
   activateCustomer,
+  changeCustomerPassword,
+  forgotCustomerPassword,
 } from './customerController';
+// Rental
 export { getRentals, getRentalById, getRentalsForStore } from './rentalController';
