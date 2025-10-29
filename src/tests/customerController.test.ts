@@ -15,12 +15,12 @@ import {
   getRandomPhoneNumber,
 } from './testUtil';
 import { ITEMS_COUNT_PER_PAGE_FOR_TEST } from './testUtil';
-import { CustomerPayload } from '../types';
 
 describe('Customer Controller', () => {
   let cookie: string = '';
   const firstName = 'Test';
   const lastName = 'User';
+
   const server = supertest(app);
   const getCustomerPayload = (preferredStoreId: number | undefined = undefined) => {
     const firstName = getRandomFirstName();
@@ -29,7 +29,6 @@ describe('Customer Controller', () => {
     const payload = {
       firstName: firstName,
       lastName: lastName,
-      email: getRandomEmail(firstName, lastName),
       phoneNumber: getRandomPhoneNumber(),
       preferredStoreId,
       avatar: getRandomCharacters(100),
@@ -47,6 +46,15 @@ describe('Customer Controller', () => {
     }
 
     return payload;
+  };
+
+  const getCustomerRegistrationPayload = () => {
+    const firstName = getRandomFirstName();
+    const lastName = getRandomLastName();
+    const email = getRandomEmail(firstName, lastName);
+    const password = 'test@123';
+
+    return { firstName, lastName, email, password };
   };
 
   const login = async (email: string, password: string) => {
@@ -86,14 +94,18 @@ describe('Customer Controller', () => {
         SELECT cu.id, cu.first_name AS "firstName", cu.last_name AS "lastName",
         cu.email, cu.phone_number AS "phoneNumber", cu.preferred_store_id AS "preferredStoreId",
         cu.active, cu.avatar, cu.registered_on AS "registeredOn",
-        json_build_object(
-          'id', a.id,
-          'addressLine', a.address_line,
-          'cityName', c.city_name,
-          'stateName', c.state_name,
-          'country', cy.country_name,
-          'postalCode', a.postal_code
-        ) AS "address"
+        CASE
+          WHEN a.id IS NULL THEN null
+          ELSE
+            json_build_object(
+              'id', a.id,
+              'addressLine', a.address_line,
+              'cityName', c.city_name,
+              'stateName', c.state_name,
+              'country', cy.country_name,
+              'postalCode', a.postal_code
+            )
+        END AS "address"
         FROM customer AS cu LEFT JOIN address AS a ON cu.address_id = a.id
         LEFT JOIN city AS c ON a.city_id = c.id
         LEFT JOIN country AS cy ON c.country_id = cy.id
@@ -388,10 +400,21 @@ describe('Customer Controller', () => {
       const credential = await getStoreManagerCredential();
       await login(credential.email, credential.password);
 
-      const payload = getCustomerPayload(1);
+      const payload = getCustomerRegistrationPayload();
 
-      const newCustomerResponse = await server.post('/api/customers').set('Cookie', cookie).send(payload);
+      const newCustomerResponse = await server.post('/api/customers/register').send(payload);
       const customerId = newCustomerResponse.body.id;
+      cookie = newCustomerResponse.get('Set-Cookie')?.at(0) || '';
+
+      await server
+        .put(`/api/customers/${customerId}`)
+        .set('Cookie', cookie)
+        .send({
+          ...getCustomerPayload(1),
+          firstName: undefined,
+          lastName: undefined,
+          email: undefined,
+        });
 
       const response = await server.get(`/api/customers/${customerId}`).set('Cookie', cookie);
       expect(response.status).toEqual(200);
@@ -479,85 +502,43 @@ describe('Customer Controller', () => {
   });
 
   describe('POST /customers', () => {
-    it('should create customer with the given payload', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
+    it('should register customer with the given payload', async () => {
+      const payload = getCustomerRegistrationPayload();
 
-      const payload = getCustomerPayload(1);
-
-      const response = await server
-        .post('/api/customers')
-        .set('Cookie', cookie)
-        .send({
-          ...payload,
-        });
+      const response = await server.post('/api/customers/register').send(payload);
       expect(response.status).toEqual(201);
-      const newCustomerId = response.body.id;
-
-      const [actualData] = await execQuery(`
-        SELECT cu.id, cu.first_name AS "firstName", cu.last_name AS "lastName", cu.email,
-        cu.preferred_store_id AS "preferredStoreId", cu.active, cu.phone_number AS "phoneNumber",
-        cu.avatar, cu.registered_on AS "registeredOn", json_build_object(
-            'id', a.id,
-            'addressLine', a.address_line,
-            'cityName', c.city_name,
-            'stateName', c.state_name,
-            'country', cy.country_name,
-            'postalCode', a.postal_code
-        ) AS "address"
-        FROM customer AS cu LEFT JOIN address AS a ON cu.address_id = a.id
-        LEFT JOIN city AS c ON a.city_id = c.id
-        LEFT JOIN country AS cy ON c.country_id = cy.id
-        WHERE cu.id = ${newCustomerId}
-    `);
-
-      expect(response.body).toEqual(actualData);
-    });
-
-    it('should create customer without preferred store', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
-
-      const payload: Omit<CustomerPayload, 'preferredStoreId'> = getCustomerPayload();
-
-      const response = await server
-        .post('/api/customers')
-        .set('Cookie', cookie)
-        .send({
-          ...payload,
-        });
-      expect(response.status).toEqual(201);
-      const newCustomerId = response.body.id;
+      const customerId = response.body.id;
 
       const [actualData] = await execQuery(`
           SELECT cu.id, cu.first_name AS "firstName", cu.last_name AS "lastName", cu.email,
           cu.preferred_store_id AS "preferredStoreId", cu.active, cu.phone_number AS "phoneNumber",
-          cu.avatar, cu.registered_on AS "registeredOn", json_build_object(
-              'id', a.id,
-              'addressLine', a.address_line,
-              'cityName', c.city_name,
-              'stateName', c.state_name,
-              'country', cy.country_name,
-              'postalCode', a.postal_code
-          ) AS "address"
+          cu.avatar, cu.registered_on AS "registeredOn", cu.address_id AS "addressId"
           FROM customer AS cu LEFT JOIN address AS a ON cu.address_id = a.id
           LEFT JOIN city AS c ON a.city_id = c.id
           LEFT JOIN country AS cy ON c.country_id = cy.id
-          WHERE cu.id = ${newCustomerId}
+          WHERE cu.id = ${customerId}
       `);
 
-      expect(response.body).toEqual(actualData);
+      expect({
+        id: customerId,
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        email: payload.email,
+        preferredStoreId: null,
+        active: true,
+        phoneNumber: null,
+        avatar: null,
+        registeredOn: new Date().toISOString().split('T')[0],
+        addressId: null,
+      }).toEqual(actualData);
     });
 
-    it('should not create customer if data required for new customer is missing', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
-
-      const payload: Omit<CustomerPayload, 'preferredStoreId'> = getCustomerPayload();
+    it('should not register customer if data required for new customer is missing', async () => {
+      const payload = getCustomerRegistrationPayload();
 
       // Missing first name
       let response = await server
-        .post('/api/customers')
+        .post('/api/customers/register')
         .set('Cookie', cookie)
         .send({
           ...payload,
@@ -568,7 +549,7 @@ describe('Customer Controller', () => {
 
       // Missing last name
       response = await server
-        .post('/api/customers')
+        .post('/api/customers/register')
         .set('Cookie', cookie)
         .send({
           ...payload,
@@ -579,7 +560,7 @@ describe('Customer Controller', () => {
 
       // Missing email
       response = await server
-        .post('/api/customers')
+        .post('/api/customers/register')
         .set('Cookie', cookie)
         .send({
           ...payload,
@@ -588,160 +569,41 @@ describe('Customer Controller', () => {
       expect(response.status).toEqual(400);
       expect(response.body.message).toEqual('Missing required data');
 
-      // Missing phone number
+      // Missing password
       response = await server
-        .post('/api/customers')
+        .post('/api/customers/register')
         .set('Cookie', cookie)
         .send({
           ...payload,
-          phoneNumber: undefined,
-        });
-      expect(response.status).toEqual(400);
-      expect(response.body.message).toEqual('Missing required data');
-
-      // Missing address
-      response = await server
-        .post('/api/customers')
-        .set('Cookie', cookie)
-        .send({
-          ...payload,
-          address: undefined,
+          password: undefined,
         });
       expect(response.status).toEqual(400);
       expect(response.body.message).toEqual('Missing required data');
     });
 
-    it('should not create customer if the address is in complete', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
-
-      const payload = getCustomerPayload(1);
-
-      const response = await server
-        .post('/api/customers')
-        .set('Cookie', cookie)
-        .send({
-          ...payload,
-          address: {
-            ...payload.address,
-            addressLine: undefined,
-          },
-        });
-      expect(response.status).toEqual(400);
-      expect(response.body.message).toEqual('Incomplete address');
-    });
-
-    it('should not create customer if the email address is already in use', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
-
+    it('should not register customer if the email address is already in use', async () => {
       const [existingEmailAddress] = await execQuery(`
             SELECT email FROM customer LIMIT 1
         `);
 
-      const payload = getCustomerPayload(1);
-      const response = await server
-        .post('/api/customers')
-        .set('Cookie', cookie)
-        .send({
-          ...payload,
-          email: existingEmailAddress.email,
-        });
+      const payload = getCustomerRegistrationPayload();
+      const response = await server.post('/api/customers/register').send({
+        ...payload,
+        email: existingEmailAddress.email,
+      });
 
       expect(response.status).toEqual(400);
       expect(response.body.message).toEqual('Customer with the same email already exist');
-    });
-
-    it('should not create customer if the phone number is already in use', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
-
-      const [existingPhoneNumber] = await execQuery(`
-            SELECT phone_number AS "phoneNumber" FROM customer LIMIT 1
-        `);
-
-      const payload = getCustomerPayload(1);
-      const response = await server
-        .post('/api/customers')
-        .set('Cookie', cookie)
-        .send({
-          ...payload,
-          phoneNumber: existingPhoneNumber.phoneNumber,
-        });
-
-      expect(response.status).toEqual(400);
-      expect(response.body.message).toEqual('Customer with the same phone number already exist');
-    });
-
-    it('should not create customer if the residential address is already in use', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
-
-      const [existingAddress] = await execQuery(`
-            SELECT json_build_object(
-                'addressLine', a.address_line,
-                'cityName', c.city_name,
-                'stateName', c.state_name,
-                'country', cy.country_name,
-                'postalCode', a.postal_code
-            ) AS "address"
-            FROM address AS a LEFT JOIN city AS c
-            ON a.city_id = c.id LEFT JOIN country AS cy
-            ON c.country_id = cy.id
-            LIMIT 1
-        `);
-
-      const payload = getCustomerPayload(1);
-      const response = await server
-        .post('/api/customers')
-        .set('Cookie', cookie)
-        .send({
-          ...payload,
-          address: existingAddress.address,
-        });
-
-      expect(response.status).toEqual(400);
-      expect(response.body.message).toEqual('Customer with the same address already exist');
-    });
-
-    it('should not let staff to create customer', async () => {
-      const credential = await getStaffCredential();
-      await login(credential.email, credential.password);
-
-      const payload = getCustomerPayload(1);
-
-      const response = await server.post('/api/customers').set('Cookie', cookie).send(payload);
-      expect(response.status).toEqual(403);
-      expect(response.body).toEqual({
-        status: 'error',
-        message: 'You are not authorized to perform this operation',
-      });
-    });
-
-    it('should not let customer to create customer', async () => {
-      const credential = await getCustomerCredential();
-      await login(credential.email, credential.password);
-
-      const payload = getCustomerPayload(1);
-
-      const response = await server.post('/api/customers').set('Cookie', cookie).send(payload);
-      expect(response.status).toEqual(403);
-      expect(response.body).toEqual({
-        status: 'error',
-        message: 'You are not authorized to perform this operation',
-      });
     });
   });
 
   describe('PUT /customers/:id', () => {
     it('should update the customer with the given payload', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
-
-      const payload1 = getCustomerPayload(1);
+      const payload1 = getCustomerRegistrationPayload();
       const payload2 = getCustomerPayload(1);
 
-      const newCustomerResponse = await server.post('/api/customers').set('Cookie', cookie).send(payload1);
+      const newCustomerResponse = await server.post('/api/customers/register').send(payload1);
+      cookie = newCustomerResponse.get('Set-Cookie')?.at(0) || '';
       const newCustomerId = newCustomerResponse.body.id;
 
       const response = await server
@@ -770,6 +632,7 @@ describe('Customer Controller', () => {
         `);
       expect(actualData).toEqual({
         ...payload2,
+        email: payload1.email,
         active: true,
         registeredOn: new Date().toISOString().split('T')[0],
       });
@@ -779,10 +642,11 @@ describe('Customer Controller', () => {
       const credential = await getStoreManagerCredential();
       await login(credential.email, credential.password);
 
-      const payload = getCustomerPayload(1);
+      const payload = getCustomerRegistrationPayload();
 
-      const newCustomerResponse = await server.post('/api/customers').set('Cookie', cookie).send(payload);
+      const newCustomerResponse = await server.post('/api/customers/register').send(payload);
       const newCustomerId = newCustomerResponse.body.id;
+      cookie = newCustomerResponse.get('Set-Cookie')?.at(0) || '';
 
       const response = await server.put(`/api/customers/${newCustomerId}`).set('Cookie', cookie).send({
         preferredStoreId: 2,
@@ -796,100 +660,15 @@ describe('Customer Controller', () => {
       expect(actualData.preferredStoreId).toEqual(2);
     });
 
-    it('should update address of the customer', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
-
-      const payload1 = getCustomerPayload(1);
-      const address1Payload = {
-        ...payload1.address,
-        cityName: 'Sydney',
-        stateName: 'New South Wales',
-      };
-      const payload2 = getCustomerPayload(1);
-      const address2Payload = {
-        ...payload2.address,
-        cityName: 'Melbourne',
-        stateName: 'Victoria',
-      };
-
-      const newCustomerResponse = await server
-        .post('/api/customers')
-        .set('Cookie', cookie)
-        .send({
-          ...payload1,
-          address: address1Payload,
-        });
-      const newCustomerId = newCustomerResponse.body.id;
-
-      let [addressIdQueryResult] = await execQuery(`
-            SELECT address_id AS "addressId" FROM customer WHERE id = ${newCustomerId}
-        `);
-      let [addressQueryResult] = await execQuery(`
-            SELECT json_build_object(
-                'addressLine', a.address_line,
-                'cityName', c.city_name,
-                'stateName', c.state_name,
-                'country', cy.country_name,
-                'postalCode', a.postal_code
-            ) AS "address"
-            FROM address AS a LEFT JOIN city AS c ON a.city_id = c.id
-            LEFT JOIN country AS cy ON c.country_id = cy.id
-            WHERE a.id = ${addressIdQueryResult.addressId}
-        `);
-
-      expect(addressQueryResult.address).toEqual(address1Payload);
-
-      const response = await server.put(`/api/customers/${newCustomerId}`).set('Cookie', cookie).send({
-        address: address2Payload,
-      });
-      expect(response.status).toEqual(204);
-
-      [addressQueryResult] = await execQuery(`
-            SELECT json_build_object(
-                'addressLine', a.address_line,
-                'cityName', c.city_name,
-                'stateName', c.state_name,
-                'country', cy.country_name,
-                'postalCode', a.postal_code
-            ) AS "address"
-            FROM address AS a LEFT JOIN city AS c ON a.city_id = c.id
-            LEFT JOIN country AS cy ON c.country_id = cy.id
-            WHERE a.id = ${addressIdQueryResult.addressId}
-        `);
-      expect(addressQueryResult.address).toEqual(address2Payload);
-    });
-
-    it('should not update the customer with duplicate email address', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
-
-      const payload = getCustomerPayload(1);
-      const [existingCustEmailAddress] = await execQuery(`
-            SELECT email FROM customer LIMIT 1
-        `);
-
-      const newCustomerResponse = await server.post('/api/customers').set('Cookie', cookie).send(payload);
-      const newCustomerId = newCustomerResponse.body.id;
-
-      const response = await server.put(`/api/customers/${newCustomerId}`).set('Cookie', cookie).send({
-        email: existingCustEmailAddress.email,
-      });
-      expect(response.status).toEqual(400);
-      expect(response.body.message).toEqual('Customer with the same email already exist');
-    });
-
     it('should not update the customer with duplicate phone number', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
-
-      const payload = getCustomerPayload(1);
+      const payload = getCustomerRegistrationPayload();
       const [existingCustPhoneNumber] = await execQuery(`
               SELECT phone_number AS "phoneNumber" FROM customer LIMIT 1
           `);
 
-      const newCustomerResponse = await server.post('/api/customers').set('Cookie', cookie).send(payload);
+      const newCustomerResponse = await server.post('/api/customers/register').set('Cookie', cookie).send(payload);
       const newCustomerId = newCustomerResponse.body.id;
+      cookie = newCustomerResponse.get('Set-Cookie')?.at(0) || '';
 
       const response = await server.put(`/api/customers/${newCustomerId}`).set('Cookie', cookie).send({
         phoneNumber: existingCustPhoneNumber.phoneNumber,
@@ -898,43 +677,13 @@ describe('Customer Controller', () => {
       expect(response.body.message).toEqual('Customer with the same phone number already exist');
     });
 
-    it('should not update the customer with duplicate residential address', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
-
-      const [existingAddressQueryResult] = await execQuery(`
-            SELECT json_build_object(
-                'addressLine', a.address_line,
-                'cityName', c.city_name,
-                'stateName', c.state_name,
-                'country', cy.country_name,
-                'postalCode', a.postal_code
-            ) AS "address"
-            FROM address AS a LEFT JOIN city AS c
-            ON a.city_id = c.id LEFT JOIN country AS cy
-            ON c.country_id = cy.id
-            LIMIT 1
-        `);
-      const existingAddress = existingAddressQueryResult.address;
-
-      const payload = getCustomerPayload(1);
-      const newCustomerResponse = await server.post('/api/customers').set('Cookie', cookie).send(payload);
-      const newCustomerId = newCustomerResponse.body.id;
-
-      const response = await server.put(`/api/customers/${newCustomerId}`).set('Cookie', cookie).send({
-        address: existingAddress,
-      });
-      expect(response.status).toEqual(400);
-      expect(response.body.message).toEqual('Customer with the same address already exist');
-    });
-
     it('should not let staff to update customer', async () => {
       const storeManagerCredential = await getStoreManagerCredential();
       await login(storeManagerCredential.email, storeManagerCredential.password);
 
-      const payload = getCustomerPayload(1);
+      const payload = getCustomerRegistrationPayload();
 
-      const newCustomerResponse = await server.post('/api/customers').set('Cookie', cookie).send(payload);
+      const newCustomerResponse = await server.post('/api/customers/register').send(payload);
       const custId = newCustomerResponse.body.id;
 
       const staffCredential = await getStaffCredential();
@@ -955,12 +704,9 @@ describe('Customer Controller', () => {
     });
 
     it('should not let customer to update other customer data', async () => {
-      const storeManagerCredential = await getStoreManagerCredential();
-      await login(storeManagerCredential.email, storeManagerCredential.password);
+      const payload = getCustomerRegistrationPayload();
 
-      const payload = getCustomerPayload(1);
-
-      const newCustomerResponse = await server.post('/api/customers').set('Cookie', cookie).send(payload);
+      const newCustomerResponse = await server.post('/api/customers/register').send(payload);
       const custId = newCustomerResponse.body.id;
 
       const custCredential = await getCustomerCredential();
@@ -984,12 +730,12 @@ describe('Customer Controller', () => {
 
   describe('DELETE /customers/:id', () => {
     it('should delete the customer', async () => {
+      const payload = getCustomerRegistrationPayload();
+      const newCustomerResponse = await server.post('/api/customers/register').send(payload);
+      const customerId = newCustomerResponse.body.id;
+
       const credential = await getStoreManagerCredential();
       await login(credential.email, credential.password);
-
-      const payload = getCustomerPayload();
-      const newCustomerResponse = await server.post('/api/customers').set('Cookie', cookie).send(payload);
-      const customerId = newCustomerResponse.body.id;
 
       let [queryResult] = await execQuery(`SELECT COUNT(*) FROM customer WHERE id = ${customerId}`);
       expect(Number(queryResult.count)).toEqual(1);
@@ -1001,28 +747,39 @@ describe('Customer Controller', () => {
       expect(Number(queryResult.count)).toEqual(0);
     });
 
-    it('should delete the customer along with the address', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
+    it('should delete the customer and unassign the associated address', async () => {
+      const payloadForNewCustomer = getCustomerRegistrationPayload();
+      const newCustomerResponse = await server.post('/api/customers/register').send(payloadForNewCustomer);
+      cookie = newCustomerResponse.get('Set-Cookie')?.at(0) || '';
+      const customerId = newCustomerResponse.body.id;
 
       const payload = getCustomerPayload();
-      const newCustomerResponse = await server.post('/api/customers').set('Cookie', cookie).send(payload);
-      const customerId = newCustomerResponse.body.id;
-      const addressId = newCustomerResponse.body.address.id;
+      await server
+        .put(`/api/customers/${customerId}`)
+        .set('Cookie', cookie)
+        .send({
+          address: { ...payload.address },
+        });
+
+      const customerData = await server.get(`/api/customers/${customerId}`).set('Cookie', cookie);
+      const addressId = customerData.body.address.id;
 
       let [custCountQueryResult] = await execQuery(`SELECT COUNT(*) FROM customer WHERE id = ${customerId}`);
-      let [addrCountQueryResult] = await execQuery(`SELECT COUNT(*) FROM address WHERE id = ${addressId}`);
+      let [addressInUseBy] = await execQuery(`SELECT in_use_by AS "inUseBy" FROM address WHERE id = ${addressId}`);
       expect(Number(custCountQueryResult.count)).toEqual(1);
-      expect(Number(addrCountQueryResult.count)).toEqual(1);
+      expect(addressInUseBy.inUseBy).toEqual('customer');
+
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
 
       const response = await server.delete(`/api/customers/${customerId}`).set('Cookie', cookie);
       expect(response.status).toEqual(204);
       expect(response.body).toEqual({});
 
       [custCountQueryResult] = await execQuery(`SELECT COUNT(*) FROM customer WHERE id = ${customerId}`);
-      [addrCountQueryResult] = await execQuery(`SELECT COUNT(*) FROM address WHERE id = ${addressId}`);
+      [addressInUseBy] = await execQuery(`SELECT in_use_by FROM address WHERE id = ${addressId}`);
       expect(Number(custCountQueryResult.count)).toEqual(0);
-      expect(Number(addrCountQueryResult.count)).toEqual(0);
+      expect(addressInUseBy.inUseBy).toBeUndefined();
     });
 
     it('should return 404 when deleting customer with id that does not exist', async () => {
@@ -1072,52 +829,6 @@ describe('Customer Controller', () => {
         status: 'error',
         message: 'You are not authorized to perform this operation',
       });
-    });
-
-    it('should not allow store manager to delete customer if it is in use by any user', async () => {
-      const userEmaiil = `test${getRandomCharacters(10)}@example.com`;
-      const userPassword = 'test@12345';
-
-      // Login as store manager to create customer
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
-
-      const payload = getCustomerPayload(1);
-
-      const newCustomerResponse = await server
-        .post('/api/customers')
-        .set('Cookie', cookie)
-        .send({
-          ...payload,
-        });
-      expect(newCustomerResponse.status).toEqual(201);
-
-      // Register a user
-      const userRegistrationResponse = await server.post('/api/user/register').send({
-        firstName,
-        lastName,
-        email: userEmaiil,
-        password: userPassword,
-      });
-      expect(userRegistrationResponse.statusCode).toBe(201);
-
-      // Login as new user and set customer id
-      await login(userEmaiil, userPassword);
-
-      const updateUserResponse = await server
-        .patch('/api/user/me')
-        .send({
-          customerId: newCustomerResponse.body.id,
-        })
-        .set('Cookie', cookie);
-      expect(updateUserResponse.statusCode).toBe(204);
-
-      // Login as store manager and try deleting the customer
-      await login(credential.email, credential.password);
-
-      const response = await server.delete(`/api/customers/${newCustomerResponse.body.id}`).set('Cookie', cookie);
-      expect(response.body.message).toEqual('Customer is assigned to one of the user');
-      expect(response.status).toEqual(400);
     });
   });
 });

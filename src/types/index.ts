@@ -80,6 +80,7 @@ export type Address = {
   stateName: string;
   country: string;
   postalCode: string;
+  inUseBy?: 'customer' | 'staff' | 'store';
 };
 
 export type ActorPayload = {

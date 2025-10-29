@@ -20,12 +20,14 @@ dotenv.config({ path: `${process.cwd()}/.env.${envName}` });
 
 import { Sequelize } from 'sequelize';
 import pg from 'pg';
-import { getDbConnectionProps } from './utils';
 
-const dbConnectionProps = getDbConnectionProps();
-const { db, usersDb, user, password, host, port } = dbConnectionProps;
+const db = process.env['DB_NAME'];
+const user = process.env['DB_USER'];
+const password = process.env['DB_PASSWORD'];
+const host = process.env['DB_HOST'];
+const port = process.env['DB_PORT'];
 
-if (!db || !usersDb || !user || !password || !host || !port) {
+if (!db || !user || !password || !host || !port) {
   throw new Error('Missing environment variables required for connecting to the database');
 }
 

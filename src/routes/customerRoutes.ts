@@ -10,6 +10,7 @@ import {
   deactivateCustomer,
   activateCustomer,
   forgotCustomerPassword,
+  setPreferredStore,
 } from '../controllers';
 import { routeFnWrapper, AppError, validateDateRangeInRequest } from '../utils';
 import { USER_ROLES, CUSTOMER_EMAIL_FORMAT, ERROR_MESSAGES } from '../constants';
@@ -102,12 +103,14 @@ router.patch(
 );
 // PATCH - Activate customer
 router.patch('/:id/activate', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(activateCustomer));
-// DELETE
-router.delete(
-  '/:id',
+// PATCH - Set preferred store
+router.patch(
+  '/:id/preferred_store/:store_id',
   validateAuthToken,
-  validateUserRole(USER_ROLES.CUSTOMER, USER_ROLES.STORE_MANAGER),
-  routeFnWrapper(deleteCustomer)
+  validateUserRole(USER_ROLES.CUSTOMER),
+  routeFnWrapper(setPreferredStore)
 );
+// DELETE
+router.delete('/:id', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(deleteCustomer));
 
 export default router;

@@ -1,7 +1,7 @@
 import type { Response } from 'express';
-import { WhereOptions, Op } from 'sequelize';
+import { WhereOptions, Op, Transaction } from 'sequelize';
 import bcrypt from 'bcryptjs';
-import { CustomerModel, StoreModel, AddressModel, StaffModel } from '../models';
+import { CustomerModel, StoreModel, AddressModel, StaffModel, CityModel, CountryModel } from '../models';
 import {
   AppError,
   addressUtils,
@@ -15,7 +15,7 @@ import {
 } from '../utils';
 import sequelize from '../sequelize.config';
 import { ERROR_MESSAGES, ITEMS_PER_PAGE_FOR_PAGINATION, USER_ROLES, TOKEN_EXPIRING_IN_MS } from '../constants';
-import { CustomRequest, CustomRequestWithBody, CustomerPayload } from '../types';
+import { CustomRequest, CustomRequestWithBody, CustomerPayload, Address as AddressType } from '../types';
 
 async function getCustomersPaginationOffset(
   pageNumber: number,
@@ -31,7 +31,7 @@ async function getCustomersPaginationOffset(
     const customerIdsQueryResult = await CustomerModel.findAll({
       attributes: ['id'],
       where: customersFilter,
-      include: [addressUtils.includeAddress(addressFilter, true)],
+      include: addressFilter ? [addressUtils.includeAddress(addressFilter, true)] : undefined,
       order: [['id', 'ASC']],
     });
     const customerIds = customerIdsQueryResult.map<number>((id) => id.toJSON().id);
@@ -66,6 +66,38 @@ const toggleCustomerStatus = async (id: number, isActive: boolean) => {
     await existingCustInstance.save({ transaction: t });
   });
 };
+
+async function getAddressIdForUpdate(customer: CustomerModel, newAddress: AddressType, t: Transaction) {
+  // Number(null) is 0 and Number(undefined) is NaN
+  const customerAddressId = Number(customer.getDataValue('addressId'));
+
+  const existingAddress = await AddressModel.findAddress(newAddress, t);
+
+  const isAddressAlreadyInUse = existingAddress ? existingAddress.inUseBy && existingAddress.id !== customerAddressId : false;
+
+  if (isAddressAlreadyInUse) {
+    // The address is either used by staff, store or customer
+    throw new AppError('The address is not available for use', 400);
+  }
+
+  if (existingAddress && customerAddressId) {
+    await AddressModel.unassignAddress(customerAddressId, t);
+  }
+
+  if (existingAddress) {
+    // The address exist but it is not in use by any user
+    await AddressModel.updateAddress(existingAddress.id, { ...existingAddress, inUseBy: 'customer' }, t);
+    return existingAddress.id;
+  }
+
+  if (customerAddressId) {
+    await AddressModel.updateAddress(customerAddressId, { ...newAddress, inUseBy: 'customer' }, t);
+    return customerAddressId;
+  }
+
+  const { address } = await AddressModel.findOrCreateAddress({ ...newAddress, inUseBy: 'customer' }, t);
+  return Number(address.id);
+}
 
 export const getCustomers = async (req: CustomRequest, res: Response) => {
   const { page: pageNumberText = '1' } = req.query;
@@ -133,17 +165,19 @@ export const getCustomerById = async (req: CustomRequest, res: Response) => {
         model: StoreModel,
         as: 'preferredStore',
         attributes: ['id', 'phoneNumber'],
+        required: false,
         include: [
           {
             model: StaffModel,
             as: 'storeManager',
             attributes: ['id', 'firstName', 'lastName', 'email', 'active', 'phoneNumber', 'avatar'],
+            required: false,
             include: [addressUtils.includeAddress({ addressPath: 'preferredStore->storeManager->address' })],
           },
           addressUtils.includeAddress({ addressPath: 'preferredStore->address' }),
         ],
       },
-      addressUtils.includeAddress({ addressPath: 'address' }),
+      addressUtils.includeAddress({ addressPath: 'address' }, false),
     ],
   });
 
@@ -163,7 +197,8 @@ export const registerCustomer = async (req: CustomRequest, res: Response) => {
     throw new AppError('Missing required data', 400);
   }
 
-  if (/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
+  // if (/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
+  if (!email.includes('@')) {
     throw new AppError('Please provide a valid email', 400);
   }
 
@@ -171,8 +206,18 @@ export const registerCustomer = async (req: CustomRequest, res: Response) => {
     throw new AppError('Password must be at least 8 characters long', 400);
   }
 
+  const existingCustWithSameEmail = await CustomerModel.count({
+    where: {
+      email,
+    },
+  });
+
+  if (existingCustWithSameEmail > 0) {
+    throw new AppError(ERROR_MESSAGES.CUSTOMER_EXIST_WITH_EMAIL, 400);
+  }
+
   try {
-    const authToken = await sequelize.transaction(async (t) => {
+    const { newCustomer, authToken } = await sequelize.transaction(async (t) => {
       const existingCustomer = await CustomerModel.findOne({
         where: {
           email,
@@ -187,14 +232,14 @@ export const registerCustomer = async (req: CustomRequest, res: Response) => {
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
 
-      await CustomerModel.create(
+      const newCustomer = await CustomerModel.create(
         { firstName, lastName, email, userPassword: hashedPassword, registeredOn: new Date().toISOString().split('T')[0] },
-        { fields: ['firstName', 'lastName', 'email', 'userPassword', 'registeredOn'], transaction: t }
+        { returning: ['id'], fields: ['firstName', 'lastName', 'email', 'userPassword', 'registeredOn'], transaction: t }
       );
 
       const authToken = generateAuthToken(email, USER_ROLES.CUSTOMER);
 
-      return authToken;
+      return { newCustomer, authToken };
     });
 
     res
@@ -205,7 +250,7 @@ export const registerCustomer = async (req: CustomRequest, res: Response) => {
         sameSite: 'strict',
         maxAge: TOKEN_EXPIRING_IN_MS,
       })
-      .json({ message: 'Registration successful' });
+      .json({ id: newCustomer.getDataValue('id') });
   } catch {
     res.status(500).json({ message: 'Error registering customer' });
   }
@@ -266,18 +311,13 @@ export const updateCustomer = async (req: CustomRequestWithBody<Partial<Customer
   }
 
   await sequelize.transaction(async (t) => {
+    const newCustomerData: { [key: string]: string | boolean | number } = {};
+
     if (address) {
-      const custAddressId = existingCustInstance.getDataValue('addressId');
-
-      const isDuplicateAddress = await AddressModel.isAddressExist(address, t, custAddressId);
-      if (isDuplicateAddress) {
-        throw new AppError('Customer with the same address already exist', 400);
-      }
-
-      await AddressModel.updateAddress(custAddressId, address);
+      const addressId = await getAddressIdForUpdate(existingCustInstance, address, t);
+      newCustomerData['addressId'] = addressId;
     }
 
-    const newCustomerData: { [key: string]: string | boolean | number } = {};
     if (firstName) {
       newCustomerData['firstName'] = firstName;
     }
@@ -294,7 +334,7 @@ export const updateCustomer = async (req: CustomRequestWithBody<Partial<Customer
       newCustomerData['avatar'] = avatar;
     }
 
-    await existingCustInstance.update({ ...newCustomerData });
+    await existingCustInstance.update({ ...newCustomerData }, { transaction: t });
     await existingCustInstance.save({ transaction: t });
   });
 
@@ -380,22 +420,55 @@ export const deleteCustomer = async (req: CustomRequest, res: Response) => {
     throw new AppError(ERROR_MESSAGES.RESOURCES_NOT_FOUND, 404);
   }
 
-  if (user.role === USER_ROLES.CUSTOMER && existingCusInstance.getDataValue('email') !== user.email) {
-    throw new AppError(ERROR_MESSAGES.FORBIDDEN, 403);
-  }
-
   await sequelize.transaction(async (t) => {
     const custAddressId = existingCusInstance.getDataValue('addressId');
-
+    // If customer address id is null, findByPk will return null
     const custAddressInstance = await AddressModel.findByPk(custAddressId, { transaction: t });
-
-    if (!custAddressInstance) {
-      throw new AppError('Address for the customer not found', 404);
+    if (custAddressInstance) {
+      await custAddressInstance.update({ ...custAddressInstance, inUseBy: null });
+      await custAddressInstance.save({ transaction: t });
     }
 
     await existingCusInstance.destroy({ transaction: t });
-    await custAddressInstance?.destroy({ transaction: t });
   });
+
+  res.status(204).send();
+};
+
+export const setPreferredStore = async (req: CustomRequest, res: Response) => {
+  const { user } = req;
+
+  if (!user) {
+    throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
+  }
+
+  const { id: idText, store_id: storeIdText } = req.params;
+
+  const id = Number(idText);
+  if (isNaN(id) || id <= 0) {
+    throw new AppError('Invalid customer id', 400);
+  }
+
+  const storeId = Number(storeIdText);
+  if (isNaN(storeId) || storeId <= 0) {
+    throw new AppError('Invalid store id', 400);
+  }
+
+  const existingCustInstance = await CustomerModel.findByPk(id, {
+    attributes: ['id', 'preferredStoreId'],
+  });
+
+  if (!existingCustInstance) {
+    throw new AppError(ERROR_MESSAGES.RESOURCES_NOT_FOUND, 404);
+  }
+
+  const storeInstance = await StoreModel.findByPk(storeId);
+  if (!storeInstance) {
+    throw new AppError(ERROR_MESSAGES.RESOURCES_NOT_FOUND, 404);
+  }
+
+  await existingCustInstance.update({ preferredStoreId: storeId });
+  await existingCustInstance.save();
 
   res.status(204).send();
 };

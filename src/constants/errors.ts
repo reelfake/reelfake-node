@@ -30,4 +30,5 @@ export default {
   RESET_PASSWORD_MISMATCH: 'New password is not same as confirmed password',
   RESET_PASSWORD_CURRENT_ACTUAL_MISMATCH: 'Current password is not same as actual password',
   PASSWORD_LENGTH_NOT_MET: 'Password must be at least 8 characters long',
+  CUSTOMER_EXIST_WITH_EMAIL: 'Customer with the same email already exist',
 };

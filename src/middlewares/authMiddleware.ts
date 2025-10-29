@@ -50,35 +50,35 @@ export async function validateNewPassword(
 
   const id = Number(idText);
   if (isNaN(id) || id <= 0) {
-    throw new AppError('Invalid resource id', 400);
+    return next(new AppError('Invalid resource id', 400));
   }
 
-  const forgotPassword = req.path.endsWith('/forgot_password');
+  const isChangingPassword = req.path.endsWith('/change_password');
 
-  if ((!forgotPassword && !currentPassword) || !newPassword || !confirmedNewPassword) {
-    throw new AppError(ERROR_MESSAGES.REQUEST_BODY_MISSING, 400);
+  if ((isChangingPassword && !currentPassword) || !newPassword || !confirmedNewPassword) {
+    return next(new AppError(ERROR_MESSAGES.REQUEST_BODY_MISSING, 400));
   }
 
   let isPasswordInRequestCorrect = true;
 
-  if (!forgotPassword && req.originalUrl.startsWith('/api/customers')) {
+  if (isChangingPassword && req.originalUrl.startsWith('/api/customers')) {
     isPasswordInRequestCorrect = await comparePasswordWithActual<CustomerModel>(CustomerModel, id, currentPassword);
   }
 
-  if (!forgotPassword && req.originalUrl.startsWith('/api/staff')) {
+  if (isChangingPassword && req.originalUrl.startsWith('/api/staff')) {
     isPasswordInRequestCorrect = await comparePasswordWithActual<StaffModel>(StaffModel, id, currentPassword);
   }
 
   if (!isPasswordInRequestCorrect) {
-    throw new AppError(ERROR_MESSAGES.RESET_PASSWORD_CURRENT_ACTUAL_MISMATCH, 400);
+    return next(new AppError(ERROR_MESSAGES.RESET_PASSWORD_CURRENT_ACTUAL_MISMATCH, 400));
   }
 
   if (newPassword !== confirmedNewPassword) {
-    throw new AppError(ERROR_MESSAGES.RESET_PASSWORD_MISMATCH, 400);
+    return next(new AppError(ERROR_MESSAGES.RESET_PASSWORD_MISMATCH, 400));
   }
 
   if (String(newPassword).length < 8 || String(confirmedNewPassword).length < 8) {
-    throw new AppError(ERROR_MESSAGES.PASSWORD_LENGTH_NOT_MET, 400);
+    return next(new AppError(ERROR_MESSAGES.PASSWORD_LENGTH_NOT_MET, 400));
   }
 
   next();
@@ -87,11 +87,9 @@ export async function validateNewPassword(
 export function validateUserRole(...roles: USER_ROLES[]) {
   return (req: Request, res: Response, next: NextFunction) => {
     const { user } = req as CustomRequest;
-    // console.log('hello 1', user);
     if (!user) {
       throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
     }
-    // console.log('hello 2', roles, user.role);
     if (!roles.includes(user.role)) {
       throw new AppError(ERROR_MESSAGES.FORBIDDEN, 403);
     }

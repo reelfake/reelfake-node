@@ -59,8 +59,57 @@ class Address extends BaseModel {
     return isDuplicateAddress;
   }
 
+  public static async findAddress(address: AddressType, t?: Transaction): Promise<({ id: number } & AddressType) | null> {
+    const existingAddressInstance = await Address.findOne({
+      include: [
+        {
+          model: CityModel,
+          as: 'city',
+          where: {
+            cityName: address.cityName,
+            stateName: address.stateName,
+          },
+          include: [
+            {
+              model: CountryModel,
+              as: 'country',
+              where: {
+                countryName: address.country,
+              },
+            },
+          ],
+        },
+      ],
+      where: {
+        addressLine: address.addressLine,
+        postalCode: address.postalCode,
+      },
+      transaction: t,
+    });
+
+    if (!existingAddressInstance) return null;
+
+    const existingAddressInstanceJSON = existingAddressInstance.toJSON();
+
+    const existingAddress: { id: number } & AddressType = {
+      id: Number(existingAddressInstanceJSON.id),
+      addressLine: String(existingAddressInstanceJSON.addressLine),
+      cityName: String(existingAddressInstanceJSON.city.cityName),
+      stateName: String(existingAddressInstanceJSON.city.stateName),
+      country: String(existingAddressInstanceJSON.city.country.countryName),
+      postalCode: String(existingAddressInstanceJSON.postalCode),
+    };
+
+    const inUseBy = existingAddressInstanceJSON.inUseBy as 'customer' | 'staff' | 'store' | undefined;
+    if (inUseBy) {
+      existingAddress.inUseBy = inUseBy;
+    }
+
+    return existingAddress;
+  }
+
   public static async findOrCreateAddress(address: AddressType, t: Transaction | undefined = undefined) {
-    const { addressLine, cityName, stateName, country, postalCode } = address;
+    const { addressLine, cityName, stateName, country, postalCode, inUseBy } = address;
 
     if (!addressLine || !cityName || !stateName || !country || !postalCode) {
       throw new AppError('Incomplete address', 400);
@@ -100,13 +149,19 @@ class Address extends BaseModel {
         cityId,
         postalCode,
       },
-      fields: ['addressLine', 'cityId', 'postalCode'],
+      defaults: {
+        // addressLine,
+        // cityId,
+        // postalCode,
+        inUseBy,
+      },
+      fields: ['addressLine', 'cityId', 'postalCode', 'inUseBy'],
       transaction: t,
     });
 
-    const addressId: number = addressInstance.getDataValue('id');
+    const addressJSON = addressInstance.toJSON();
 
-    return { addressId, isNew: isCreated };
+    return { address: addressJSON, isNew: isCreated };
   }
 
   public static async getUnusedAddresses() {
@@ -127,7 +182,7 @@ class Address extends BaseModel {
   }
 
   public static async updateAddress(id: number, address: Partial<AddressType>, t: Transaction | undefined = undefined) {
-    const { addressLine, cityName, stateName, country, postalCode } = address;
+    const { addressLine, cityName, stateName, country, postalCode, inUseBy } = address;
 
     if (!addressLine || !cityName || !stateName || !country || !postalCode) {
       throw new AppError('Incomplete address', 400);
@@ -138,52 +193,42 @@ class Address extends BaseModel {
       throw new AppError('Address not found', 404);
     }
 
-    let cityId, countryId;
+    const countryInstance = await CountryModel.findOne({
+      where: {
+        countryName: country,
+      },
+      transaction: t,
+    });
 
-    if (country) {
-      const countryInstance = await CountryModel.findOne({
-        where: {
-          countryName: country,
-        },
-        transaction: t,
-      });
-
-      if (!countryInstance) {
-        throw new AppError('Country not found', 404);
-      }
-
-      countryId = countryInstance.getDataValue('id');
+    if (!countryInstance) {
+      throw new AppError('Country not found', 404);
     }
 
-    if (cityName) {
-      const cityInstance = await CityModel.findOne({
-        where: {
-          cityName,
-          stateName: stateName || currentAddressInstance.getDataValue('stateName'),
-          countryId: countryId || currentAddressInstance.getDataValue('countryId'),
-        },
-        transaction: t,
-      });
+    const countryId = countryInstance.getDataValue('id');
 
-      if (!cityInstance) {
-        throw new AppError('City not found', 404);
-      }
+    const cityInstance = await CityModel.findOne({
+      where: {
+        cityName,
+        stateName: stateName || currentAddressInstance.getDataValue('stateName'),
+        countryId: countryId || currentAddressInstance.getDataValue('countryId'),
+      },
+      transaction: t,
+    });
 
-      cityId = cityInstance.getDataValue('id');
+    if (!cityInstance) {
+      throw new AppError('City not found', 404);
     }
+
+    const cityId = cityInstance.getDataValue('id');
 
     const newAddressData: { [key: string]: string } = {};
-    if (addressLine) {
-      newAddressData['addressLine'] = addressLine;
-    }
-    if (cityId) {
-      newAddressData['cityId'] = cityId;
-    }
-    if (countryId) {
-      newAddressData['countryId'] = countryId;
-    }
-    if (postalCode) {
-      newAddressData['postalCode'] = postalCode;
+    newAddressData['addressLine'] = addressLine;
+    newAddressData['cityId'] = cityId;
+    newAddressData['countryId'] = countryId;
+    newAddressData['postalCode'] = postalCode;
+
+    if (inUseBy) {
+      newAddressData['inUseBy'] = inUseBy;
     }
 
     await currentAddressInstance.update({ ...newAddressData });
@@ -197,6 +242,16 @@ class Address extends BaseModel {
     });
     const ids = results.map<number>((res) => res.toJSON().id);
     return ids;
+  }
+
+  public static async unassignAddress(id: number, t: Transaction | undefined = undefined) {
+    const currentAddressInstance = await Address.findByPk(id, { transaction: t });
+    if (!currentAddressInstance) {
+      throw new AppError('Address not found', 404);
+    }
+
+    await currentAddressInstance.update({ ...currentAddressInstance, inUseBy: null });
+    await currentAddressInstance.save({ transaction: t });
   }
 }
 
@@ -218,6 +273,10 @@ Address.init(
     postalCode: {
       type: DataTypes.STRING(10),
       field: 'postal_code',
+    },
+    inUseBy: {
+      type: DataTypes.ENUM('customer', 'staff', 'store'),
+      field: 'in_use_by',
     },
   },
   {

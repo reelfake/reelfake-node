@@ -387,7 +387,9 @@ export const createStore = async (req: CustomRequestWithBody<StorePayload>, res:
 
   const newStoreId = await sequelize.transaction(async (t) => {
     if (storeManager) {
-      const { addressId } = await AddressModel.findOrCreateAddress(storeManager.address, t);
+      const {
+        address: { id: addressId },
+      } = await AddressModel.findOrCreateAddress(storeManager.address, t);
       const newStaffInstance = await StaffModel.create(
         {
           firstName: storeManager.firstName,
@@ -407,7 +409,9 @@ export const createStore = async (req: CustomRequestWithBody<StorePayload>, res:
       newStoreManagerId = Number(newStaffInstance.getDataValue('id'));
     }
 
-    const { addressId } = await AddressModel.findOrCreateAddress(address, t);
+    const {
+      address: { id: addressId },
+    } = await AddressModel.findOrCreateAddress(address, t);
 
     const newStoreData: KeyValuePair = {};
     if (newStoreManagerId) {

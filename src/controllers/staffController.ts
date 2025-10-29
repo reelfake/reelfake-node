@@ -1,5 +1,5 @@
 import type { Response } from 'express';
-import { col, literal, Op, WhereOptions } from 'sequelize';
+import { col, literal, Op, WhereOptions, Transaction } from 'sequelize';
 import { StaffModel, AddressModel, CityModel, CountryModel, StoreModel } from '../models';
 import {
   parseStaffPaginationFilters,
@@ -40,6 +40,46 @@ async function getStaffPaginationOffset(
   const totalStaff = await StaffModel.getRowsCountWhere();
   const idOffset = await getPaginationOffset(pageNumber, limitPerPage);
   return { idOffset, totalStaff };
+}
+
+async function getAddressIdForUpdate(staff: StaffModel, newAddress: Address, t: Transaction) {
+  // Number(null) is 0 and Number(undefined) is NaN
+  // modelInstance.getDataValue returns null if value does not exist
+  const staffAddressId = Number(staff.getDataValue('addressId'));
+
+  const existingAddress = await AddressModel.findAddress(newAddress, t);
+
+  const isAddressAlreadyInUse = existingAddress ? existingAddress.inUseBy && existingAddress.id !== staffAddressId : false;
+
+  if (isAddressAlreadyInUse) {
+    // The address is either used by staff, store or customer
+    throw new AppError('The address is not available for use', 400);
+  }
+
+  if (existingAddress && staffAddressId) {
+    await AddressModel.unassignAddress(staffAddressId, t);
+  }
+
+  if (existingAddress) {
+    // The address exist but it is not in use by any user
+    await AddressModel.updateAddress(existingAddress.id, { ...existingAddress, inUseBy: 'staff' }, t);
+    return existingAddress.id;
+  }
+
+  if (staffAddressId) {
+    await AddressModel.updateAddress(staffAddressId, { ...newAddress, inUseBy: 'staff' }, t);
+    return staffAddressId;
+  }
+
+  const newAddressInstance = await AddressModel.create(
+    { ...newAddress, inUseBy: 'staff' },
+    {
+      isNewRecord: true,
+      fields: ['addressLine', 'cityName', 'stateName', 'country', 'postalCode', 'inUseBy'],
+      transaction: t,
+    }
+  );
+  return Number(newAddressInstance.getDataValue('id'));
 }
 
 export const getStaff = async (req: CustomRequest, res: Response) => {
@@ -198,16 +238,6 @@ export const updateStaff = async (req: CustomRequestWithBody<StaffPayload>, res:
     throw new AppError(ERROR_MESSAGES.RESOURCES_NOT_FOUND, 404);
   }
 
-  if (address) {
-    if (await StoreModel.isAddressInUse(address)) {
-      throw new AppError('The address is in use by a store', 400);
-    }
-
-    if (await StaffModel.isAddressInUse(address)) {
-      throw new AppError('The address is in use by other staff', 400);
-    }
-  }
-
   if (phoneNumber) {
     if (await StoreModel.isPhoneNumberInUse(phoneNumber)) {
       throw new AppError('The phone number is in use by a store', 400);
@@ -253,8 +283,8 @@ export const updateStaff = async (req: CustomRequestWithBody<StaffPayload>, res:
     };
 
     if (address) {
-      const addressId = currentStaffInstance.getDataValue('addressId');
-      await AddressModel.updateAddress(addressId, address, t);
+      const addressId = await getAddressIdForUpdate(currentStaffInstance, address, t);
+      staffData.addressId = addressId;
     }
 
     await StaffModel.update(
@@ -294,7 +324,9 @@ export const createStaff = async (req: CustomRequestWithBody<StaffPayload>, res:
   }
 
   const newStaffId = await sequelize.transaction(async (t) => {
-    const { addressId } = await AddressModel.findOrCreateAddress(address, t);
+    const {
+      address: { id: addressId },
+    } = await AddressModel.findOrCreateAddress(address, t);
 
     const staffInstance = await StaffModel.create(
       {

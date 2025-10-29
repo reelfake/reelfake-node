@@ -51,6 +51,7 @@ export {
   activateCustomer,
   changeCustomerPassword,
   forgotCustomerPassword,
+  setPreferredStore,
 } from './customerController';
 // Rental
 export { getRentals, getRentalById, getRentalsForStore } from './rentalController';

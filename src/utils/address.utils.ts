@@ -13,12 +13,12 @@ export function includeAddress(
     whereCountry?: WhereOptions;
     addressPath?: string;
   } = { addressPath: '', whereAddress: undefined, whereCity: undefined, whereCountry: undefined },
-  useInnerJoin: boolean = true
+  useInnerJoin?: boolean
 ) {
   const associations: Includeable = {
     model: AddressModel,
     as: 'address',
-    required: useInnerJoin,
+    required: useInnerJoin === undefined ? undefined : useInnerJoin,
     attributes: addressPath
       ? [
           'id',

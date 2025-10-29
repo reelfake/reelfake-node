@@ -471,7 +471,7 @@ describe('Staff Controller', () => {
       });
 
       expect(response.status).toEqual(400);
-      expect(response.body.message).toEqual('The address is in use by a store');
+      expect(response.body.message).toEqual('The address is not available for use');
     });
 
     it('should not update staff with the address that belongs to other staff', async () => {
@@ -496,7 +496,7 @@ describe('Staff Controller', () => {
       });
 
       expect(response.status).toEqual(400);
-      expect(response.body.message).toEqual('The address is in use by other staff');
+      expect(response.body.message).toEqual('The address is not available for use');
     });
 
     it('should not update staff with the phone number that is used by a store', async () => {

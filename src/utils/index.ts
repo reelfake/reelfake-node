@@ -1,4 +1,4 @@
-export { testDbConnection, closeDbConnection, getDbConnectionProps } from './db.utils';
+export { testDbConnection, closeDbConnection } from './db.utils';
 export { getOpenApiDocsHtmlString, getOpenApiReDocsHtmlString } from './openapi.utils';
 export { executeQuery, queryGenres, queryCities, queryCountries, queryMovieLanguages } from './dbQuery';
 export { AppError } from './appError';

@@ -90,7 +90,6 @@ export function getRandomDate(yearFrom: number, yearTo: number) {
 
 export async function execQuery(
   queryText: string,
-  isUsersDb: boolean = false,
   fieldMap: Record<string, string> = {},
   excludeTimestamps: boolean = true,
   removeTmdbId: boolean = true

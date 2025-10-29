@@ -433,7 +433,6 @@ describe('Actor Controller', () => {
         FROM actor
         WHERE id = ${newActorId}
       `,
-        false,
         {},
         true,
         false
