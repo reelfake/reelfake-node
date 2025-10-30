@@ -18,8 +18,6 @@ import { ITEMS_COUNT_PER_PAGE_FOR_TEST } from './testUtil';
 
 describe('Customer Controller', () => {
   let cookie: string = '';
-  const firstName = 'Test';
-  const lastName = 'User';
 
   const server = supertest(app);
   const getCustomerPayload = (preferredStoreId: number | undefined = undefined) => {
@@ -724,6 +722,220 @@ describe('Customer Controller', () => {
       expect(response.body).toEqual({
         status: 'error',
         message: 'You are not authorized to perform this operation',
+      });
+    });
+
+    describe('PUT (change address) /customers/:id', () => {
+      const registerCustomer = async (withAddress: boolean) => {
+        const newCustPayload = getCustomerRegistrationPayload();
+
+        const newCustomerResponse = await server.post('/api/customers/register').send(newCustPayload);
+        const custId = newCustomerResponse.body.id;
+        cookie = newCustomerResponse.get('Set-Cookie')?.at(0) || '';
+
+        if (withAddress) {
+          const { address } = getCustomerPayload();
+
+          await server.put(`/api/customers/${custId}`).set('Cookie', cookie).send({
+            address,
+          });
+        }
+
+        const getCustomerResponse = await server.get(`/api/customers/${custId}`).set('Cookie', cookie);
+        const customerData = getCustomerResponse.body;
+
+        return customerData;
+      };
+
+      const getAnyUnassignedAddress = async () => {
+        const [unusedAddressQueryResult] = await execQuery(`
+          SELECT json_build_object(
+            'id', address.id,
+            'addressLine', address.address_line,
+            'cityName', city.city_name,
+            'stateName', city.state_name,
+            'country', country.country_name,
+            'postalCode', address.postal_code
+          ) AS "address"
+          FROM address LEFT OUTER JOIN city ON address.city_id = city.id 
+          LEFT OUTER JOIN country ON city.country_id = country.id
+          WHERE in_use_by IS NULL LIMIT 1
+        `);
+
+        return unusedAddressQueryResult.address as any as {
+          id: number;
+          addressLine: string;
+          cityName: string;
+          stateName: string;
+          country: string;
+          postalCode: string;
+        };
+      };
+
+      const queryAddress = async (id: number) => {
+        const [addressQueryResult] = await execQuery(`
+            SELECT json_build_object(
+              'id', address.id,
+              'addressLine', address.address_line,
+              'cityName', city.city_name,
+              'stateName', city.state_name,
+              'country', country.country_name,
+              'postalCode', address.postal_code
+            ) AS "address"
+            FROM address LEFT OUTER JOIN city ON address.city_id = city.id 
+            LEFT OUTER JOIN country ON city.country_id = country.id
+            WHERE address.id = ${id}
+          `);
+        return addressQueryResult.address as any as {
+          id: number;
+          addressLine: string;
+          cityName: string;
+          stateName: string;
+          country: string;
+          postalCode: string;
+        };
+      };
+
+      it('should update address which already exist but not assigned to any user', async () => {
+        const newCustomer = await registerCustomer(true);
+        const {
+          id: custId,
+          address: { id: custAddressId },
+        } = newCustomer;
+
+        const unusedAddress = await getAnyUnassignedAddress();
+
+        await server.put(`/api/customers/${custId}`).set('Cookie', cookie).send({
+          address: unusedAddress,
+        });
+
+        const customerData = await server.get(`/api/customers/${custId}`).set('Cookie', cookie);
+        expect(customerData.body.address.id).toEqual(unusedAddress.id);
+
+        const [prevAddrInUseByQueryResult] = await execQuery(`
+          SELECT in_use_by AS "inUseBy" FROM address WHERE id = ${custAddressId}
+        `);
+
+        expect(prevAddrInUseByQueryResult.inUseBy).toBeNull();
+      });
+
+      it('should update address which does not exist and is new', async () => {
+        const newCustomer = await registerCustomer(true);
+        const {
+          id: custId,
+          address: { id: custAddressId },
+        } = newCustomer;
+
+        const { address: newAddress } = getCustomerPayload();
+        let apiResponse = await server.put(`/api/customers/${custId}`).set('Cookie', cookie).send({
+          address: newAddress,
+        });
+        expect(apiResponse.status).toEqual(204);
+        apiResponse = await server.get(`/api/customers/${custId}`).set('Cookie', cookie);
+        expect(apiResponse.status).toEqual(200);
+        expect(apiResponse.body).toEqual({
+          ...newCustomer,
+          address: {
+            id: expect.any(Number),
+            ...newAddress,
+          },
+        });
+
+        const updatedAddress = await queryAddress(custAddressId);
+        expect(updatedAddress).toEqual({
+          id: apiResponse.body.address.id,
+          ...newAddress,
+        });
+      });
+
+      it('should not update address which is already in use by other staff', async () => {
+        const credential = await getStoreManagerCredential();
+        await login(credential.email, credential.password);
+
+        let apiResponse = await server.get('/api/staff/1').set('Cookie', cookie);
+
+        const newCustomer = await registerCustomer(false);
+        apiResponse = await server
+          .put(`/api/customers/${newCustomer.id}`)
+          .set('Cookie', cookie)
+          .send({
+            address: {
+              ...apiResponse.body.address,
+            },
+          });
+        expect(apiResponse.status).toEqual(400);
+        expect(apiResponse.body.message).toEqual('The address is not available for use');
+
+        apiResponse = await server.get(`/api/customers/${newCustomer.id}`).set('Cookie', cookie);
+        expect(apiResponse.body.address).toBeNull();
+      });
+
+      it('should not update address which is already in use by other store', async () => {
+        const credential = await getStoreManagerCredential();
+        await login(credential.email, credential.password);
+
+        let apiResponse = await server.get('/api/stores/1').set('Cookie', cookie);
+        const storeAddress = apiResponse.body.address;
+
+        const newCustomer = await registerCustomer(false);
+        apiResponse = await server
+          .put(`/api/customers/${newCustomer.id}`)
+          .set('Cookie', cookie)
+          .send({
+            address: {
+              ...storeAddress,
+            },
+          });
+        expect(apiResponse.status).toEqual(400);
+        expect(apiResponse.body.message).toEqual('The address is not available for use');
+
+        apiResponse = await server.get(`/api/customers/${newCustomer.id}`).set('Cookie', cookie);
+        expect(apiResponse.body.address).toBeNull();
+      });
+
+      it('should not update address which is already in use by other customer', async () => {
+        const credential = await getStoreManagerCredential();
+        await login(credential.email, credential.password);
+
+        let apiResponse = await server.get('/api/customers/1').set('Cookie', cookie);
+        const existingCustAddress = apiResponse.body.address;
+
+        const newCustomer = await registerCustomer(false);
+        apiResponse = await server
+          .put(`/api/customers/${newCustomer.id}`)
+          .set('Cookie', cookie)
+          .send({
+            address: {
+              ...existingCustAddress,
+            },
+          });
+        expect(apiResponse.status).toEqual(400);
+        expect(apiResponse.body.message).toEqual('The address is not available for use');
+
+        apiResponse = await server.get(`/api/customers/${newCustomer.id}`).set('Cookie', cookie);
+        expect(apiResponse.body.address).toBeNull();
+      });
+
+      it('should update address for customer which does not have any address assigned', async () => {
+        const newCustomer = await registerCustomer(false);
+
+        const payload = getCustomerPayload();
+
+        let apiResponse = await server
+          .put(`/api/customers/${newCustomer.id}`)
+          .set('Cookie', cookie)
+          .send({
+            address: {
+              ...payload.address,
+            },
+          });
+        expect(apiResponse.status).toEqual(204);
+
+        apiResponse = await server.get(`/api/customers/${newCustomer.id}`).set('Cookie', cookie);
+        expect(apiResponse.body.address).toEqual({
+          id: expect.any(Number),
+          ...payload.address,
+        });
       });
     });
   });
