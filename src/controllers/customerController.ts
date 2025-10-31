@@ -218,17 +218,6 @@ export const registerCustomer = async (req: CustomRequest, res: Response) => {
 
   try {
     const { newCustomer, authToken } = await sequelize.transaction(async (t) => {
-      const existingCustomer = await CustomerModel.findOne({
-        where: {
-          email,
-        },
-        transaction: t,
-      });
-
-      if (existingCustomer) {
-        throw new AppError('Customer with the given email already exist', 400);
-      }
-
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -237,7 +226,7 @@ export const registerCustomer = async (req: CustomRequest, res: Response) => {
         { returning: ['id'], fields: ['firstName', 'lastName', 'email', 'userPassword', 'registeredOn'], transaction: t }
       );
 
-      const authToken = generateAuthToken(email, USER_ROLES.CUSTOMER);
+      const authToken = generateAuthToken(Number(newCustomer.getDataValue('id')), email, USER_ROLES.CUSTOMER);
 
       return { newCustomer, authToken };
     });

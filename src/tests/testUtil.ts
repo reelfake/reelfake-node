@@ -184,8 +184,7 @@ export async function getStoreManagerCredential() {
 
   const email = storeManager.email;
 
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(passwordMock, salt);
+  const hashedPassword = await hashPassword(passwordMock);
 
   await execQuery(`
       UPDATE staff SET user_password = '${hashedPassword}' WHERE id = ${storeManager.id}
@@ -204,8 +203,7 @@ export async function getStaffCredential() {
 
   const email = staff.email;
 
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(passwordMock, salt);
+  const hashedPassword = await hashPassword(passwordMock);
 
   await execQuery(`
       UPDATE staff SET user_password = '${hashedPassword}' WHERE id = ${staff.id}
@@ -222,12 +220,18 @@ export async function getCustomerCredential() {
 
   const email = customer.email;
 
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(passwordMock, salt);
+  const hashedPassword = await hashPassword(passwordMock);
 
   await execQuery(`
       UPDATE customer SET user_password = '${hashedPassword}' WHERE id = ${customer.id}
     `);
 
   return { email, password: passwordMock };
+}
+
+export async function hashPassword(password: string) {
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(password, salt);
+
+  return hashedPassword;
 }

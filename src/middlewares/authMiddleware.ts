@@ -15,6 +15,7 @@ export default function (req: Request, res: Response, next: NextFunction) {
       ignoreExpiration: false, // default
     });
 
+    const userId = (decodedToken as { [key: string]: string })['id'];
     const userEmail = (decodedToken as { [key: string]: string })['email'];
     const userRole = (decodedToken as { [key: string]: USER_ROLES })['role'];
 
@@ -23,6 +24,7 @@ export default function (req: Request, res: Response, next: NextFunction) {
     }
 
     (req as CustomRequest).user = {
+      id: Number(userId),
       email: userEmail,
       role: userRole,
     };
@@ -45,10 +47,11 @@ export async function validateNewPassword(
   res: Response,
   next: NextFunction
 ) {
+  const { user } = req;
   const { currentPassword, newPassword, confirmedNewPassword } = req.body;
   const { id: idText } = req.params;
+  const id = idText ? Number(idText) : Number(user?.id);
 
-  const id = Number(idText);
   if (isNaN(id) || id <= 0) {
     return next(new AppError('Invalid resource id', 400));
   }

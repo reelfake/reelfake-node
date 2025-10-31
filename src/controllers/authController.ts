@@ -89,7 +89,7 @@ export const login = async (req: Request, res: Response) => {
     throw new AppError(ERROR_MESSAGES.INVALID_LOGIN_DETAIL, 401);
   }
 
-  const authToken = generateAuthToken(user.email, user.role);
+  const authToken = generateAuthToken(user.id, user.email, user.role);
 
   res
     .status(201)

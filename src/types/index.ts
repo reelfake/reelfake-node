@@ -1,10 +1,10 @@
-import type { Locals, Request } from 'express';
+import type { Request } from 'express';
 import { Optional, BuildOptions, DataType, Model } from 'sequelize';
 import type { Sequelize } from 'sequelize';
-import { BaseModel, CustomerModel } from '../models';
+import { BaseModel, CustomerModel, StaffModel } from '../models';
 import { USER_ROLES } from '../constants';
 
-export type GenericModelConstraint<T extends BaseModel & CustomerModel> = typeof BaseModel & {
+export type GenericModelConstraint<T extends BaseModel & (StaffModel | CustomerModel)> = typeof BaseModel & {
   new (values?: Optional<any, string>, options?: BuildOptions): T;
 };
 
@@ -35,6 +35,7 @@ export type TransactionResult = {
 
 export interface CustomRequest extends Request {
   user?: {
+    id: number;
     email: string;
     role: USER_ROLES;
   };
@@ -45,6 +46,7 @@ export interface CustomRequest extends Request {
 
 export interface CustomRequestWithBody<M> extends Request<{ [key: string]: string }, {}, M> {
   user?: {
+    id: number;
     email: string;
     role: USER_ROLES;
   };

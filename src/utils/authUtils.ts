@@ -1,16 +1,18 @@
 import jwt from 'jsonwebtoken';
+import { Op } from 'sequelize';
 import sequelize from '../sequelize.config';
 import bcrypt from 'bcryptjs';
 import { USER_ROLES, ERROR_MESSAGES } from '../constants';
-import { BaseModel, CustomerModel } from '../models';
+import { BaseModel, CustomerModel, StaffModel } from '../models';
 import { AppError } from '../utils';
 import type { GenericModelConstraint } from '../types';
 
 const JWT_SECRET = process.env.JWT_SECRET || '';
 
-export function generateAuthToken(email: string, role: USER_ROLES) {
+export function generateAuthToken(id: number, email: string, role: USER_ROLES) {
   const auth_token = jwt.sign(
     {
+      id,
       email,
       role,
       createdAt: new Date().toISOString(),
@@ -22,7 +24,7 @@ export function generateAuthToken(email: string, role: USER_ROLES) {
   return auth_token;
 }
 
-export async function comparePasswordWithActual<T extends BaseModel & CustomerModel>(
+export async function comparePasswordWithActual<T extends BaseModel & (StaffModel | CustomerModel)>(
   model: GenericModelConstraint<T>,
   id: number,
   password: string | null

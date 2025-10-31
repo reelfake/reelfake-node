@@ -426,13 +426,14 @@ export const deleteStaff = async (req: CustomRequest, res: Response) => {
 };
 
 export const changeStaffPassword = async (req: CustomRequestWithBody<{ newPassword: string }>, res: Response) => {
-  const { id: idText } = req.params;
+  const { user } = req;
   const { newPassword } = req.body;
 
-  const id = Number(idText);
-  if (isNaN(id) || id <= 0) {
-    throw new AppError('Invalid resource id', 400);
+  if (!user) {
+    throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
   }
+
+  const { id } = user;
 
   await updateUserPassword<StaffModel>(StaffModel, id, newPassword);
 

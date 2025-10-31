@@ -9,6 +9,7 @@ import {
   getStoreManagerCredential,
   getStaffCredential,
   getCustomerCredential,
+  hashPassword,
 } from './testUtil';
 
 describe('Staff Controller', () => {
@@ -742,6 +743,152 @@ describe('Staff Controller', () => {
         status: 'error',
         message: 'You are not authorized to perform this operation',
       });
+    });
+  });
+
+  describe('PUT /:id/forgot_password', () => {
+    const getStaffIdWithoutPassword = async () => {
+      const queryText = `
+        SELECT staff.id
+        FROM staff LEFT OUTER JOIN store ON staff.store_id = store.id
+        WHERE store.store_manager_id <> staff.id AND staff.active = true
+        AND staff.user_password IS NULL LIMIT 1;
+      `;
+      const [queryResult] = await execQuery(queryText);
+      const staffId = queryResult.id;
+      return Number(staffId);
+    };
+
+    it('should be able to update password without providing current password', async () => {
+      const id = await getStaffIdWithoutPassword();
+
+      const apiResponse = await server.put(`/api/staff/${id}/forgot_password`).send({
+        newPassword: 'hello@123',
+        confirmedNewPassword: 'hello@123',
+      });
+      expect(apiResponse.status).toEqual(204);
+    });
+
+    it('should return error if new password is not same as confirmed new password', async () => {
+      const id = await getStaffIdWithoutPassword();
+
+      const apiResponse = await server.put(`/api/staff/${id}/forgot_password`).send({
+        newPassword: 'hello@123',
+        confirmedNewPassword: 'hello@111',
+      });
+      expect(apiResponse.status).toEqual(400);
+      expect(apiResponse.body.message).toEqual('New password is not same as confirmed password');
+    });
+
+    it('should return error if new password length is less than 8 characters', async () => {
+      const id = await getStaffIdWithoutPassword();
+
+      const apiResponse = await server.put(`/api/staff/${id}/forgot_password`).send({
+        newPassword: 'test',
+        confirmedNewPassword: 'test',
+      });
+      expect(apiResponse.status).toEqual(400);
+      expect(apiResponse.body.message).toEqual('Password must be at least 8 characters long');
+    });
+  });
+
+  describe('PUT /:id/change_password', () => {
+    const passwordMock = 'hello_old@123';
+    const newPassword = 'hello_new@123';
+
+    const getStaffIdWithPassword = async () => {
+      const queryText = `
+        SELECT staff.id, staff.email
+        FROM staff LEFT OUTER JOIN store ON staff.store_id = store.id
+        WHERE store.store_manager_id <> staff.id AND staff.active = true
+        AND staff.user_password IS NULL LIMIT 1;      
+      `;
+      const [queryResult] = await execQuery(queryText);
+      const staffId = queryResult.id;
+      const staffEmail = queryResult.email;
+
+      const hashedPassword = await hashPassword(passwordMock);
+
+      await execQuery(`UPDATE staff SET user_password = '${hashedPassword}' WHERE id = ${staffId}`);
+      return { id: Number(staffId), email: staffEmail, password: passwordMock };
+    };
+
+    it('should be able to update password by providing current and new password', async () => {
+      const { id, email, password } = await getStaffIdWithPassword();
+      await login(email, password);
+
+      const apiResponse = await server.put(`/api/staff/change_password`).set('Cookie', cookie).send({
+        currentPassword: password,
+        newPassword,
+        confirmedNewPassword: newPassword,
+      });
+      expect(apiResponse.status).toEqual(204);
+    });
+
+    it('should return error when changing password and request does not have current password', async () => {
+      const { id, email, password } = await getStaffIdWithPassword();
+      await login(email, password);
+
+      const apiResponse = await server.put(`/api/staff/change_password`).set('Cookie', cookie).send({
+        newPassword,
+        confirmedNewPassword: newPassword,
+      });
+      expect(apiResponse.status).toEqual(400);
+      expect(apiResponse.body.message).toEqual('Request is missing required data');
+    });
+
+    it('should return error when changing password and request does not have confirmed password', async () => {
+      const { id, email, password } = await getStaffIdWithPassword();
+      await login(email, password);
+
+      const apiResponse = await server.put(`/api/staff/change_password`).set('Cookie', cookie).send({
+        currentPassword: password,
+        newPassword,
+      });
+      expect(apiResponse.status).toEqual(400);
+      expect(apiResponse.body.message).toEqual('Request is missing required data');
+    });
+
+    it('should return error when changing password and new and confirmed password are not same', async () => {
+      const { id, email, password } = await getStaffIdWithPassword();
+      await login(email, password);
+
+      const apiResponse = await server
+        .put(`/api/staff/change_password`)
+        .set('Cookie', cookie)
+        .send({
+          currentPassword: password,
+          newPassword,
+          confirmedNewPassword: newPassword + '1',
+        });
+      expect(apiResponse.status).toEqual(400);
+      expect(apiResponse.body.message).toEqual('New password is not same as confirmed password');
+    });
+
+    it('should return error when changing password and current password is not correct', async () => {
+      const { id, email, password } = await getStaffIdWithPassword();
+      await login(email, password);
+
+      const apiResponse = await server.put(`/api/staff/change_password`).set('Cookie', cookie).send({
+        currentPassword: 'incorrect_password',
+        newPassword,
+        confirmedNewPassword: newPassword,
+      });
+      expect(apiResponse.status).toEqual(400);
+      expect(apiResponse.body.message).toEqual('Current password is not same as actual password');
+    });
+
+    it('should return error when changing password and new password is less than 8 characters', async () => {
+      const { id, email, password } = await getStaffIdWithPassword();
+      await login(email, password);
+
+      const apiResponse = await server.put(`/api/staff/change_password`).set('Cookie', cookie).send({
+        currentPassword: password,
+        newPassword: 'test',
+        confirmedNewPassword: 'test',
+      });
+      expect(apiResponse.status).toEqual(400);
+      expect(apiResponse.body.message).toEqual('Password must be at least 8 characters long');
     });
   });
 });
