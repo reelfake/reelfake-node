@@ -82,7 +82,7 @@ post:
                 type: integer
                 format: number
             required:
-              - Id
+              - id
               - actorId
               - movieId
               - characterName
