@@ -508,10 +508,10 @@ paths:
                     type: string
   /auth/login:
     post:
-      summary: Login user
+      summary: Login user (token valid for 1 hour)
       operationId: login
       tags:
-        - user
+        - authentication
       security: []
       requestBody:
         description: Provide the user email and password for login
@@ -528,14 +528,22 @@ paths:
                   type: string
                   format: password
       responses:
-        '204':
+        '201':
           description: User logged in successfully
           headers:
             Set-Cookie:
               description: The token generated on successful login is sent in a cookie
               schema:
                 type: string
-                example: auth_token=abcde12345
+                example: auth_token=abcde12345; Path=/; HttpOnly
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Login successful
         '401':
           description: Invalid credentials
           content:
@@ -550,11 +558,19 @@ paths:
       summary: Logout user
       operationId: logout
       tags:
-        - user
+        - authentication
       security: []
       responses:
-        '204':
+        '200':
           description: User logged out successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Logged out successfully
         '400':
           description: Bad request
           content:
@@ -670,8 +686,19 @@ paths:
                   type: string
                   format: password
       responses:
-        '204':
+        '200':
           description: Successfully changed the password
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    format: number
+                  email:
+                    type: string
+                    format: email
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -713,8 +740,19 @@ paths:
                   type: string
                   format: password
       responses:
-        '204':
+        '200':
           description: Successfully changed the password
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    format: number
+                  email:
+                    type: string
+                    format: email
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -1699,8 +1737,19 @@ paths:
                   type: string
                   format: password
       responses:
-        '204':
+        '200':
           description: Successfully changed the password
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    format: number
+                  email:
+                    type: string
+                    format: email
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -1740,8 +1789,19 @@ paths:
                   type: string
                   format: password
       responses:
-        '204':
+        '200':
           description: Successfully changed the password
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    format: number
+                  email:
+                    type: string
+                    format: email
         '400':
           $ref: '#/components/responses/badRequest'
         '401':

@@ -47,7 +47,7 @@ export async function updateUserPassword<T extends BaseModel & CustomerModel>(
   id: number,
   newPassword: string
 ) {
-  await sequelize.transaction(async (t) => {
+  const email = await sequelize.transaction(async (t) => {
     const modelInstance = await modelStatic.findByPk(id, { transaction: t });
 
     if (!modelInstance) {
@@ -61,5 +61,10 @@ export async function updateUserPassword<T extends BaseModel & CustomerModel>(
       userPassword: hashedNewPassword,
     });
     await modelInstance.save({ transaction: t });
+
+    const email = modelInstance.getDataValue('email');
+    return email;
   });
+
+  return email;
 }

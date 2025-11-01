@@ -344,9 +344,9 @@ export const changeCustomerPassword = async (req: CustomRequestWithBody<{ newPas
     throw new AppError('Invalid resource id', 400);
   }
 
-  await updateUserPassword<CustomerModel>(CustomerModel, id, newPassword);
+  const email = await updateUserPassword<CustomerModel>(CustomerModel, id, newPassword);
 
-  res.status(204).send();
+  res.status(200).send({ id, email });
 };
 
 export const forgotCustomerPassword = async (
@@ -361,9 +361,9 @@ export const forgotCustomerPassword = async (
   }
 
   const { newPassword } = req.body;
-  await updateUserPassword(CustomerModel, id, newPassword);
+  const email = await updateUserPassword(CustomerModel, id, newPassword);
 
-  res.status(204).send();
+  res.status(200).send({ id, email });
 };
 
 export const deactivateCustomer = async (req: CustomRequest, res: Response) => {

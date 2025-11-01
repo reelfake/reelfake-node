@@ -2,11 +2,19 @@ get:
   summary: Logout user
   operationId: logout
   tags:
-    - user
+    - authentication
   security: []
   responses:
-    '204':
+    '200':
       description: User logged out successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Logged out successfully
     '400':
       description: Bad request
       content:

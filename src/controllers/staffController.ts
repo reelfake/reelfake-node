@@ -435,9 +435,9 @@ export const changeStaffPassword = async (req: CustomRequestWithBody<{ newPasswo
 
   const { id } = user;
 
-  await updateUserPassword<StaffModel>(StaffModel, id, newPassword);
+  const email = await updateUserPassword<StaffModel>(StaffModel, id, newPassword);
 
-  res.status(204).send();
+  res.status(200).send({ id, email });
 };
 
 export const forgotStaffPassword = async (
@@ -452,7 +452,7 @@ export const forgotStaffPassword = async (
   }
 
   const { newPassword } = req.body;
-  await updateUserPassword(StaffModel, id, newPassword);
+  const email = await updateUserPassword(StaffModel, id, newPassword);
 
-  res.status(204).send();
+  res.status(200).send({ id, email });
 };

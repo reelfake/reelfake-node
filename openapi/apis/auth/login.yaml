@@ -1,8 +1,8 @@
 post:
-  summary: Login user
+  summary: Login user (token valid for 1 hour)
   operationId: login
   tags:
-    - user
+    - authentication
   security: []
   requestBody:
     description: Provide the user email and password for login
@@ -19,14 +19,22 @@ post:
               type: string
               format: password
   responses:
-    '204':
+    '201':
       description: User logged in successfully
       headers:
         Set-Cookie:
           description: The token generated on successful login is sent in a cookie
           schema:
             type: string
-            example: auth_token=abcde12345
+            example: auth_token=abcde12345; Path=/; HttpOnly
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Login successful
     '401':
       description: Invalid credentials
       content:
