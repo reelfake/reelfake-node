@@ -1,6 +1,8 @@
 get:
   summary: Get the customer list with pagination support
   operationId: getCustomers
+  security:
+    - cookieAuth: []
   tags:
     - customer
   parameters:
@@ -126,86 +128,5 @@ get:
                 $ref: ../components/pagination.yaml
     '400':
       $ref: ../components/badRequest.yaml
-    '500':
-      $ref: ../components/internalServerError.yaml
-post:
-  summary: Add new customer
-  operationId: createCustomer
-  tags:
-    - customer
-  requestBody:
-    description: Payload for the new customer
-    required: true
-    content:
-      application/json:
-        schema:
-          type: object
-          properties:
-            firstName:
-              type: string
-            lastName:
-              type: string
-            email:
-              type: string
-              format: email
-            address:
-              type: object
-              properties:
-                addressLine:
-                  type: string
-                cityName:
-                  type: string
-                stateName:
-                  type: string
-                country:
-                  type: string
-                postalCode:
-                  type: string
-            active:
-              type: boolean
-            preferredStoreId:
-              type: integer
-              format: number
-            phoneNumber:
-              type: string
-            avatar:
-              type: string
-              format: uri
-  responses:
-    '201':
-      description: Successfully added new customer
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              id:
-                type: integer
-              firstName:
-                type: string
-              lastName:
-                type: string
-              email:
-                type: string
-                format: email
-              preferredStoreId:
-                type: integer
-                format: number
-              active:
-                type: boolean
-              phoneNumber:
-                type: string
-              avatar:
-                type: string
-                format: uri
-              registeredOn:
-                type: string
-                format: date
-              address:
-                $ref: ../components/address.yaml
-    '400':
-      $ref: ../components/badRequest.yaml
-    '401':
-      $ref: ../components/unauthorized.yaml
     '500':
       $ref: ../components/internalServerError.yaml

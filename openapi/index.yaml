@@ -10,7 +10,7 @@ info:
     name: Pratap Reddy
     email: pratapreddy15@gmail.com
 servers:
-  - url: http://reelfakeapi.link/api
+  - url: http://reelfake.cloud/api
     description: Production server
   - url: http://127.0.0.1:8000/api
     description: Local server

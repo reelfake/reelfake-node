@@ -1,60 +1,72 @@
-/user/register:
-  $ref: apis/userRegistration.yaml
-/auth/login:
-  $ref: apis/userLogin.yaml
-/auth/logout:
-  $ref: apis/userLogout.yaml
-/user/me:
-  $ref: apis/user.yaml
-/addresses:
-  $ref: apis/addresses.yaml
-/addresses/city/{city}:
-  $ref: apis/addressesByCity.yaml
-/addresses/state/{state}:
-  $ref: apis/addressesByState.yaml
-/genres:
-  $ref: apis/genres.yaml
-/cities:
-  $ref: apis/cities.yaml
-/countries:
-  $ref: apis/countries.yaml
-/movie_languages:
-  $ref: apis/movieLanguages.yaml
+# /user/register:
+#   $ref: apis/userRegistration.yaml
+# /auth/login:
+#   $ref: apis/userLogin.yaml
+# /auth/logout:
+#   $ref: apis/userLogout.yaml
+# /user/me:
+#   $ref: apis/user.yaml
+# /addresses:
+#   $ref: apis/addresses.yaml
+# /addresses/city/{city}:
+#   $ref: apis/addressesByCity.yaml
+# /addresses/state/{state}:
+#   $ref: apis/addressesByState.yaml
+# /genres:
+#   $ref: apis/genres.yaml
+# /cities:
+#   $ref: apis/cities.yaml
+# /countries:
+#   $ref: apis/countries.yaml
+# /movie_languages:
+#   $ref: apis/movieLanguages.yaml
 /customers:
   $ref: apis/customers.yaml
+/customers/register:
+  $ref: apis/customerRegistration.yaml
 /customers/{id}:
   $ref: apis/customerById.yaml
-/movies:
-  $ref: apis/movies.yaml
-/movies/{id}:
-  $ref: apis/movieById.yaml
-/movies/{id}/add_actors:
-  $ref: apis/addActorsToMovie.yaml
-/movies/{id}/stores:
-  $ref: apis/movieInStores.yaml
-/actors:
-  $ref: apis/actors.yaml
-/actors/{id}:
-  $ref: apis/actorById.yaml
-/stores:
-  $ref: apis/stores.yaml
-/stores/{id}:
-  $ref: apis/storeById.yaml
-/stores/{id}/stock:
-  $ref: apis/stockCountInStore.yaml
-/stores/{id}/movies:
-  $ref: apis/moviesInStore.yaml
-/stores/{id}/staff:
-  $ref: apis/staffInStore.yaml
-/staff:
-  $ref: apis/staff.yaml
-/staff/managers:
-  $ref: apis/storeManagers.yaml
-/staff/{id}:
-  $ref: apis/staffById.yaml
-/rentals:
-  $ref: apis/rentals.yaml
-/rentals/my_store:
-  $ref: apis/rentalsByStore.yaml
-/rentals/{id}:
-  $ref: apis/rentalDetail.yaml
+/customers/{id}/activate:
+  $ref: apis/activateCustomer.yaml
+/customers/{id}/deactivate:
+  $ref: apis/deactivateCustomer.yaml
+/customers/{id}/preferred_store/{store_id}:
+  $ref: apis/setPreferredStore.yaml
+/customers/{id}/forgot_password:
+  $ref: apis/forgotCustomerPassword.yaml
+/customers/{id}/change_password:
+  $ref: apis/changeCustomerPassword.yaml
+# /movies:
+#   $ref: apis/movies.yaml
+# /movies/{id}:
+#   $ref: apis/movieById.yaml
+# /movies/{id}/add_actors:
+#   $ref: apis/addActorsToMovie.yaml
+# /movies/{id}/stores:
+#   $ref: apis/movieInStores.yaml
+# /actors:
+#   $ref: apis/actors.yaml
+# /actors/{id}:
+#   $ref: apis/actorById.yaml
+# /stores:
+#   $ref: apis/stores.yaml
+# /stores/{id}:
+#   $ref: apis/storeById.yaml
+# /stores/{id}/stock:
+#   $ref: apis/stockCountInStore.yaml
+# /stores/{id}/movies:
+#   $ref: apis/moviesInStore.yaml
+# /stores/{id}/staff:
+#   $ref: apis/staffInStore.yaml
+# /staff:
+#   $ref: apis/staff.yaml
+# /staff/managers:
+#   $ref: apis/storeManagers.yaml
+# /staff/{id}:
+#   $ref: apis/staffById.yaml
+# /rentals:
+#   $ref: apis/rentals.yaml
+# /rentals/my_store:
+#   $ref: apis/rentalsByStore.yaml
+# /rentals/{id}:
+#   $ref: apis/rentalDetail.yaml

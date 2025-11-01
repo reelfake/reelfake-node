@@ -47,9 +47,6 @@ put:
               type: string
             lastName:
               type: string
-            email:
-              type: string
-              format: email
             address:
               type: object
               properties:
@@ -63,11 +60,6 @@ put:
                   type: string
                 postalCode:
                   type: string
-            active:
-              type: boolean
-            preferredStoreId:
-              type: integer
-              format: number
             phoneNumber:
               type: string
             avatar:

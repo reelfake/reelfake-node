@@ -1,0 +1,88 @@
+post:
+  summary: Register a customer
+  operationId: registerCustomer
+  tags:
+    - customer
+  requestBody:
+    description: Payload for the new customer
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            firstName:
+              type: string
+            lastName:
+              type: string
+            email:
+              type: string
+              format: email
+            password:
+              type: string
+              format: password
+            # address:
+            #   type: object
+            #   properties:
+            #     addressLine:
+            #       type: string
+            #     cityName:
+            #       type: string
+            #     stateName:
+            #       type: string
+            #     country:
+            #       type: string
+            #     postalCode:
+            #       type: string
+            # active:
+            #   type: boolean
+            # preferredStoreId:
+            #   type: integer
+            #   format: number
+            # phoneNumber:
+            #   type: string
+            # avatar:
+            #   type: string
+            #   format: uri
+  responses:
+    '201':
+      description: Successfully registered customer
+      headers:
+        Set-Cookie:
+          description: The token generated from successful registration of customer
+          schema:
+            type: string
+            example: auth_token=abcde12345
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              id:
+                type: integer
+              # firstName:
+              #   type: string
+              # lastName:
+              #   type: string
+              # email:
+              #   type: string
+              #   format: email
+              # preferredStoreId:
+              #   type: integer
+              #   format: number
+              # active:
+              #   type: boolean
+              # phoneNumber:
+              #   type: string
+              # avatar:
+              #   type: string
+              #   format: uri
+              # registeredOn:
+              #   type: string
+              #   format: date
+              # address:
+              #   $ref: ../components/address.yaml
+    '400':
+      $ref: ../components/badRequest.yaml
+    '500':
+      $ref: ../components/internalServerError.yaml
