@@ -1,0 +1,78 @@
+get:
+  summary: Get the list of rentals for the store
+  operationId: getRentalsForStore
+  tags:
+    - rental
+  responses:
+    '200':
+      description: Successfully returned a list of rentals for the store
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  properties:
+                    id:
+                      type: integer
+                      format: number
+                    rentalStartDate:
+                      type: string
+                      format: date
+                    rentalEndDate:
+                      type: string
+                      format: date
+                    returnDate:
+                      type: string
+                      format: date
+                    rentalDuration:
+                      type: integer
+                      format: number
+                    delayedByDays:
+                      type: integer
+                      format: number
+                    amountPaid:
+                      type: number
+                      format: float
+                    discountAmount:
+                      type: number
+                      format: float
+                    paymentDate:
+                      type: string
+                      format: date
+                    rentalType:
+                      type: string
+                      enum: [in-store, online]
+                    storeId:
+                      type: integer
+                      format: number
+                    movie:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          format: number
+                        title:
+                          type: string
+              length:
+                type: integer
+                format: number
+    '400':
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    '401':
+      $ref: ../../components/error/unauthorized.yaml
+    '403':
+      $ref: ../../components/error/forbidden.yaml
+    '404':
+      $ref: ../../components/error/notFound.yaml
+    '500':
+      $ref: ../../components/error/internalServerError.yaml

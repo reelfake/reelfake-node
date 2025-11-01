@@ -152,10 +152,15 @@ export const getCustomers = async (req: CustomRequest, res: Response) => {
 
 export const getCustomerById = async (req: CustomRequest, res: Response) => {
   const { id: idText } = req.params;
+  const { user } = req;
 
   const id = Number(idText);
   if (isNaN(id) || id <= 0) {
     throw new AppError('Invalid id', 400);
+  }
+
+  if (user?.role === USER_ROLES.CUSTOMER && user?.id !== id) {
+    throw new AppError(ERROR_MESSAGES.FORBIDDEN, 403);
   }
 
   const customerInstance = await CustomerModel.findByPk(id, {

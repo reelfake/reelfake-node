@@ -1,0 +1,248 @@
+get:
+  summary: Get the list of movies with the pagination support
+  operationId: getMovies
+  tags:
+    - movie
+  parameters:
+    - in: query
+      name: page
+      required: false
+      description: |
+        The page number (which starts with 1) to fetch the set of movies from.
+        The movies are split into multiple pages with each page having a limited number of movies.
+      schema:
+        type: integer
+        default: 1
+    - in: query
+      name: genres
+      required: false
+      description: |
+        The valid genres are action, adventure, animation, comedy, crime, documentary, drama, family, fantasy, history, horror, music , mystery, romance, science fiction, thriller, war and western. There are two variants of this query - comma separated genres and genres in array. For e.g., ?genres=action,thriller,sci_fi or ?genres=["action","thriller","sci_fi"]. The comma separated genres will query the movie having either of the genre. The genres in array will query the movie having the genres mentioned in the array. Example, ?genres=action,thriller,sci_fi will return movies having genre action, thriller or science fiction while ?genres=["action","thriller","sci_fi"] will return the movies having all genre i.e. action, thriller and science fiction.
+      schema:
+        oneOf:
+          - type: string
+          - type: array
+            items:
+              type: string
+    - in: query
+      name: release_date
+      required: false
+      description: |
+        Filters the movies by the release date (YYYY-MM-DD). This can be a single release date or a range. For e.g., ?release_date=2024-01-01 or ?release_date=2024-01-01,2024-06-30. The query string ?release_date=2024-01-01 will query movies with the given release date while ?release_date=2024-01-01,2024-06-30 will query movies released between 2024-01-01 and 2024-06-30.
+      schema:
+        type: string
+        format: date
+    - in: query
+      name: countries
+      required: false
+      description: |
+        Filters the movies by the countries of origin. There are two variants of this query - comma separated countries or countries in array. For e.g., ?countries=cl,br and ?countries=["cl","br"]. The comma separated countries will query the movie having either of the country of origin. The countries in array will query the movie having the countries of origin mentioned in the array. Example, ?countries=cl,br will return movies having countries of origin either Chile or Brazil while ?countries=["cl","br"] will return the movies having all provided countries i.e. Chile and Brazil.
+      schema:
+        oneOf:
+          - type: string
+          - type: array
+            items:
+              type: string
+    - in: query
+      name: languages
+      required: false
+      description: |
+        Filters the movies by the languages. This can be a single value or a comma separated values. For e.g., ?languages=fr or ?languages=es,fr,hi. The query string ?languages=fr will query movies which are in French language while ?languages=es,fr,hi will query movies which are in either of the French, Spanish or Hindi languages.
+      schema:
+        type: string
+    - in: query
+      name: rating
+      required: false
+      description: |
+        Filters the movies by rating. This can be a single value or a range. For e.g., ?rating=7 or ?release_date=6,9. The query string ?rating=7 will query movies having rating 7 while ?rating=6,9 will query movies with ratings between 6 and 9, inclusive.
+      schema:
+        type: string
+        format: number
+  responses:
+    '200':
+      description: Successfully returned a list of movies (including pagination data) for the given page
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  $ref: ../../components/movie/movieSummary.yaml
+              length:
+                type: integer
+              pagination:
+                $ref: ../../components/pagination.yaml
+
+    '400':
+      $ref: ../../components/error/badRequest.yaml
+    '404':
+      description: The page number provided is out of range.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    '500':
+      $ref: ../../components/error/internalServerError.yaml
+post:
+  summary: Add new movie (optionally with the actors)
+  operationId: addMovie
+  tags:
+    - movie
+  requestBody:
+    description: Payload for the new movie
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            tmdbId:
+              type: integer
+            imdbId:
+              type: string
+            title:
+              type: string
+            originalTitle:
+              type: string
+            overview:
+              type: string
+            runtime:
+              type: integer
+            releaseDate:
+              type: string
+              format: date
+            genres:
+              type: array
+              items:
+                type: string
+            countriesOfOrigin:
+              type: array
+              items:
+                type: string
+            language:
+              type: string
+            movieStatus:
+              type: string
+            popularity:
+              type: number
+              format: float
+            budget:
+              type: integer
+              format: int64
+            revenue:
+              type: integer
+              format: int64
+            ratingAverage:
+              type: number
+              format: float
+            ratingCount:
+              type: integer
+            posterUrl:
+              type: string
+              format: uri
+            rentalRate:
+              type: number
+              format: double
+            actors:
+              type: array
+              items:
+                type: object
+                properties:
+                  tmdbId:
+                    type: integer
+                  imdbId:
+                    type: string
+                  actorName:
+                    type: string
+                  biography:
+                    type: string
+                  birthday:
+                    type: string
+                    format: date
+                  deathday:
+                    type: string
+                    format: date
+                  placeOfBirth:
+                    type: string
+                  popularity:
+                    type: number
+                    format: float
+                  profilePictureUrl:
+                    type: string
+                    format: uri
+                  characterName:
+                    type: string
+                  castOrder:
+                    type: integer
+  responses:
+    '201':
+      description: Successfully add new movie
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              id:
+                type: integer
+              imdbId:
+                type: integer
+              title:
+                type: string
+              originalTitle:
+                type: string
+              overview:
+                type: string
+              runtime:
+                type: integer
+              releaseDate:
+                type: string
+                format: date
+              genres:
+                type: array
+                items:
+                  type: string
+              countriesOfOrigin:
+                type: array
+                items:
+                  type: string
+              language:
+                type: string
+              movieStatus:
+                type: string
+              popularity:
+                type: number
+                format: float
+              budget:
+                type: integer
+                format: int64
+              revenue:
+                type: integer
+                format: int64
+              ratingAverage:
+                type: number
+                format: float
+              ratingCount:
+                type: integer
+              posterUrl:
+                type: string
+                format: uri
+              rentalRate:
+                type: number
+                format: double
+              rentalDuration:
+                type: integer
+    '400':
+      $ref: ../../components/error/badRequest.yaml
+    '401':
+      $ref: ../../components/error/unauthorized.yaml
+    '403':
+      $ref: ../../components/error/forbidden.yaml
+    '404':
+      $ref: ../../components/error/notFound.yaml
+    '500':
+      $ref: ../../components/error/internalServerError.yaml

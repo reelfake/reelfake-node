@@ -1,0 +1,30 @@
+get:
+  summary: Get all available movie languages
+  operationId: getMovieLanguages
+  tags:
+    - movie_language
+  responses:
+    '200':
+      description: Successfully returned a list of available movie languages
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  $ref: ../../components/movie_language/movieLanguage.yaml
+              length:
+                type: integer
+    '400':
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    '401':
+      $ref: ../../components/error/unauthorized.yaml

@@ -1,0 +1,43 @@
+post:
+  summary: Register a customer
+  operationId: registerCustomer
+  tags:
+    - customer
+  requestBody:
+    description: Payload for the new customer
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            firstName:
+              type: string
+            lastName:
+              type: string
+            email:
+              type: string
+              format: email
+            password:
+              type: string
+              format: password
+  responses:
+    '201':
+      description: Successfully registered customer
+      headers:
+        Set-Cookie:
+          description: The token generated from successful registration of customer
+          schema:
+            type: string
+            example: auth_token=abcde12345
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              id:
+                type: integer
+    '400':
+      $ref: ../../components/error/badRequest.yaml
+    '500':
+      $ref: ../../components/error/internalServerError.yaml

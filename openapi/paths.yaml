@@ -1,72 +1,96 @@
-# /user/register:
-#   $ref: apis/userRegistration.yaml
-# /auth/login:
-#   $ref: apis/userLogin.yaml
-# /auth/logout:
-#   $ref: apis/userLogout.yaml
-# /user/me:
-#   $ref: apis/user.yaml
-# /addresses:
-#   $ref: apis/addresses.yaml
-# /addresses/city/{city}:
-#   $ref: apis/addressesByCity.yaml
-# /addresses/state/{state}:
-#   $ref: apis/addressesByState.yaml
-# /genres:
-#   $ref: apis/genres.yaml
-# /cities:
-#   $ref: apis/cities.yaml
-# /countries:
-#   $ref: apis/countries.yaml
-# /movie_languages:
-#   $ref: apis/movieLanguages.yaml
-/customers:
-  $ref: apis/customers.yaml
-/customers/register:
-  $ref: apis/customerRegistration.yaml
-/customers/{id}:
-  $ref: apis/customerById.yaml
-/customers/{id}/activate:
-  $ref: apis/activateCustomer.yaml
-/customers/{id}/deactivate:
-  $ref: apis/deactivateCustomer.yaml
-/customers/{id}/preferred_store/{store_id}:
-  $ref: apis/setPreferredStore.yaml
+# ##################################
+# ACTOR API
+/actors:
+  $ref: apis/actor/actors.yaml
+/actors/{id}:
+  $ref: apis/actor/actorById.yaml
+# ##################################
+# ADDRESS API
+/addresses:
+  $ref: apis/address/addresses.yaml
+/addresses/city/{city}:
+  $ref: apis/address/addressesByCity.yaml
+/addresses/state/{state}:
+  $ref: apis/address/addressesByState.yaml
+# ##################################
+# AUTH API (Login / Logout)
+/auth/login:
+  $ref: apis/auth/login.yaml
+/auth/logout:
+  $ref: apis/auth/logout.yaml
+# ##################################
+# CITY API
+/cities:
+  $ref: apis/city/cities.yaml
+# ##################################
+# COUNTRY API
+/countries:
+  $ref: apis/country/countries.yaml
+# ##################################
+# CUSTOMER API
 /customers/{id}/forgot_password:
-  $ref: apis/forgotCustomerPassword.yaml
+  $ref: apis/customer/forgotCustomerPassword.yaml
 /customers/{id}/change_password:
-  $ref: apis/changeCustomerPassword.yaml
-# /movies:
-#   $ref: apis/movies.yaml
-# /movies/{id}:
-#   $ref: apis/movieById.yaml
-# /movies/{id}/add_actors:
-#   $ref: apis/addActorsToMovie.yaml
-# /movies/{id}/stores:
-#   $ref: apis/movieInStores.yaml
-# /actors:
-#   $ref: apis/actors.yaml
-# /actors/{id}:
-#   $ref: apis/actorById.yaml
-# /stores:
-#   $ref: apis/stores.yaml
-# /stores/{id}:
-#   $ref: apis/storeById.yaml
-# /stores/{id}/stock:
-#   $ref: apis/stockCountInStore.yaml
-# /stores/{id}/movies:
-#   $ref: apis/moviesInStore.yaml
-# /stores/{id}/staff:
-#   $ref: apis/staffInStore.yaml
-# /staff:
-#   $ref: apis/staff.yaml
-# /staff/managers:
-#   $ref: apis/storeManagers.yaml
-# /staff/{id}:
-#   $ref: apis/staffById.yaml
-# /rentals:
-#   $ref: apis/rentals.yaml
-# /rentals/my_store:
-#   $ref: apis/rentalsByStore.yaml
-# /rentals/{id}:
-#   $ref: apis/rentalDetail.yaml
+  $ref: apis/customer/changeCustomerPassword.yaml
+/customers:
+  $ref: apis/customer/customers.yaml
+/customers/register:
+  $ref: apis/customer/customerRegistration.yaml
+/customers/{id}:
+  $ref: apis/customer/customerById.yaml
+/customers/{id}/activate:
+  $ref: apis/customer/activateCustomer.yaml
+/customers/{id}/deactivate:
+  $ref: apis/customer/deactivateCustomer.yaml
+/customers/{id}/preferred_store/{store_id}:
+  $ref: apis/customer/setPreferredStore.yaml
+# ##################################
+# GENRE API
+/genres:
+  $ref: apis/genre/genres.yaml
+# ##################################
+# MOVIE LANGUAGE API
+/movie_languages:
+  $ref: apis/movie_language/movieLanguages.yaml
+# ##################################
+# MOVIE API
+/movies:
+  $ref: apis/movie/movies.yaml
+/movies/{id}:
+  $ref: apis/movie/movieById.yaml
+/movies/{id}/add_actors:
+  $ref: apis/movie/addActorsToMovie.yaml
+/movies/{id}/stores:
+  $ref: apis/movie/movieInStores.yaml
+# ##################################
+# STAFF API
+/staff/{id}/forgot_password:
+  $ref: apis/staff/forgotStaffPassword.yaml
+/staff/{id}/change_password:
+  $ref: apis/staff/changeStaffPassword.yaml
+/staff:
+  $ref: apis/staff/staff.yaml
+/staff/managers:
+  $ref: apis/staff/storeManagers.yaml
+/staff/{id}:
+  $ref: apis/staff/staffById.yaml
+# ##################################
+# STORES API
+/stores:
+  $ref: apis/store/stores.yaml
+/stores/{id}:
+  $ref: apis/store/storeById.yaml
+/stores/{id}/stock:
+  $ref: apis/store/stockCountInStore.yaml
+/stores/{id}/movies:
+  $ref: apis/store/moviesInStore.yaml
+/stores/{id}/staff:
+  $ref: apis/store/staffInStore.yaml
+# ##################################
+# RENTAL API
+/rentals:
+  $ref: apis/rental/rentals.yaml
+/rentals/my_store:
+  $ref: apis/rental/rentalsByStore.yaml
+/rentals/{id}:
+  $ref: apis/rental/rentalDetail.yaml

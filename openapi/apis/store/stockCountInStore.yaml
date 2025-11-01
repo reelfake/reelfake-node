@@ -1,0 +1,35 @@
+get:
+  summary: Get the number of in-stock movies in a given store
+  operationId: getStockCount
+  tags:
+    - store
+  parameters:
+    - in: path
+      name: id
+      required: true
+      description: The id of the store
+      schema:
+        type: integer
+  responses:
+    '200':
+      description: Successfully returned the number of in-stock movies in a given store
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              id:
+                type: integer
+              stockCount:
+                type: string
+    '400':
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    '401':
+      $ref: ../../components/error/unauthorized.yaml

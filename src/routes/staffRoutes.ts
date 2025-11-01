@@ -57,7 +57,13 @@ function validateStaffRouteQuery(req: Request, res: Response, next: NextFunction
   next();
 }
 
-router.get('/', validateStaffRouteQuery, validateAuthToken, routeFnWrapper(getStaff));
+router.get(
+  '/',
+  validateStaffRouteQuery,
+  validateAuthToken,
+  validateUserRole(USER_ROLES.STAFF, USER_ROLES.STORE_MANAGER),
+  routeFnWrapper(getStaff)
+);
 router.post('/', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(createStaff));
 router.get(
   '/managers',

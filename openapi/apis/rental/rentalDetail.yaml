@@ -1,0 +1,36 @@
+get:
+  summary: Get rental detail by id
+  operationId: getRentalById
+  tags:
+    - rental
+  parameters:
+    - in: path
+      name: id
+      required: true
+      description: The id of the rental
+      schema:
+        type: string
+  responses:
+    '200':
+      description: Successfully returned a rental detail
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/rental/rentalDetail.yaml
+    '400':
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    '401':
+      $ref: ../../components/error/unauthorized.yaml
+    '403':
+      $ref: ../../components/error/forbidden.yaml
+    '404':
+      $ref: ../../components/error/notFound.yaml
+    '500':
+      $ref: ../../components/error/internalServerError.yaml

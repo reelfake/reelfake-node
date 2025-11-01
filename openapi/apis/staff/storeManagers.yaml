@@ -1,0 +1,54 @@
+get:
+  summary: Get list of store managers
+  operationId: getStoreManagers
+  tags:
+    - staff
+  responses:
+    '200':
+      description: Successfully returned list of store managers
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      format: number
+                    firstName:
+                      type: string
+                    lastName:
+                      type: string
+                    email:
+                      type: string
+                      format: email
+                    active:
+                      type: boolean
+                    phoneNumber:
+                      type: string
+                    avatar:
+                      type: string
+                    address:
+                      $ref: ../../components/address/address.yaml
+                    store:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          format: number
+                        phoneNumber:
+                          type: string
+                        address:
+                          $ref: ../../components/address/address.yaml
+    '400':
+      $ref: ../../components/error/badRequest.yaml
+    '401':
+      $ref: ../../components/error/unauthorized.yaml
+    '403':
+      $ref: ../../components/error/forbidden.yaml
+    '500':
+      $ref: ../../components/error/internalServerError.yaml

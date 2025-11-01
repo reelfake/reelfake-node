@@ -1,0 +1,69 @@
+get:
+  summary: Get staff employed in a store
+  operationId: getStaffInStore
+  tags:
+    - store
+  parameters:
+    - in: path
+      name: id
+      required: true
+      description: The id of the store
+      schema:
+        type: integer
+  responses:
+    '200':
+      description: Successfully returned staff employed in a store
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      format: number
+                    firstName:
+                      type: string
+                    lastName:
+                      type: string
+                    email:
+                      type: string
+                    addressId:
+                      type: integer
+                      format: number
+                    storeId:
+                      type: integer
+                      format: number
+                    active: true
+                    phoneNumber:
+                      type: string
+                    avatar:
+                      type: string
+                    isStoreManager:
+                      type: boolean
+                    store:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          format: number
+                        storeManagerId:
+                          type: integer
+                          format: number
+                        addressId:
+                          type: integer
+                          format: number
+                        phoneNumber:
+                          type: string
+              length:
+                type: integer
+    '400':
+      $ref: ../../components/error/badRequest.yaml
+    '404':
+      $ref: ../../components/error/notFound.yaml
+    '500':
+      $ref: ../../components/error/internalServerError.yaml

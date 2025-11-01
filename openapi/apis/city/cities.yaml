@@ -1,0 +1,46 @@
+get:
+  summary: Get the list of the cities
+  operationId: getCities
+  tags:
+    - city
+  parameters:
+    - in: query
+      name: includeCountry
+      description: Include the country data for each city (if true will each city will contain country object)
+      required: false
+      schema:
+        type: boolean
+  responses:
+    '200':
+      description: Successfully returned a list of the cities
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: ../../components/city/cityWithCountry.yaml
+                  length:
+                    type: integer
+              - type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: ../../components/city/city.yaml
+                  length:
+                    type: integer
+    '400':
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    '401':
+      $ref: ../../components/error/unauthorized.yaml

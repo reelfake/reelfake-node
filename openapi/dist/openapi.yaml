@@ -17,6 +17,712 @@ servers:
 security:
   - cookieAuth: []
 paths:
+  /actors:
+    get:
+      summary: Get the actor list with pagination support
+      operationId: getActors
+      tags:
+        - actor
+      parameters:
+        - in: query
+          name: page
+          required: false
+          description: |
+            The page number (which starts with 1) to fetch the set of actors from.
+            The actors are split into multiple pages with each page having a limited number of actors.
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: name
+          required: false
+          description: |
+            The name of the actor. The api accepts ?name=keanu (for exact match) and ?name=%an% (for actor name having "an").
+          schema:
+            type: string
+        - in: query
+          name: birthday
+          required: false
+          description: |
+            Filters the actors by the birth date (YYYY-MM-DD). This can be a single date or a range. For e.g., ?birthday=1980-01-01 or ?birthday=1980-01-01,1990-06-30. The query string ?birthday=1980-01-01 will query actors with the given birth date while ?birthday=1980-01-01,1990-06-30 will query actors born between 1980-01-01 and 1990-06-30.
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: deathday
+          required: false
+          description: |
+            Filters the actors by the death date (YYYY-MM-DD). This can be a single date or a range. For e.g., ?deathday=1980-01-01 or ?deathday=1980-01-01,1990-06-30. The query string ?deathday=1980-01-01 will query actors with the given death date while ?deathday=1980-01-01,1990-06-30 will query actors died between 1980-01-01 and 1990-06-30.
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: place_of_birth
+          required: false
+          description: |
+            The place of birth of the actor. The api accepts ?place_of_birth=jakarta (for exact match) and ?place_of_birth=%art% (for place of birth having "art").
+          schema:
+            type: string
+        - in: query
+          name: popularity
+          required: false
+          description: |
+            The popularity index of the actor
+          schema:
+            type: integer
+            format: float
+      responses:
+        '200':
+          description: Successfully returned list of actor summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/actorSummary'
+                  length:
+                    type: integer
+                  pagination:
+                    $ref: '#/components/schemas/pagination'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    post:
+      summary: Add new actor
+      operationId: addActor
+      tags:
+        - actor
+      requestBody:
+        description: Payload for the new actor
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tmdbId:
+                  type: string
+                imdbId:
+                  type: string
+                actorName:
+                  type: string
+                biography:
+                  type: string
+                birthday:
+                  type: string
+                  format: date
+                deathday:
+                  type: string
+                  format: date
+                placeOfBirth:
+                  type: string
+                popularity:
+                  type: number
+                  format: float
+                profilePictureUrl:
+                  type: string
+                  format: uri
+      responses:
+        '201':
+          description: Successfully added new actor
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  imdbId:
+                    type: string
+                  actorName:
+                    type: string
+                  biography:
+                    type: string
+                  birthday:
+                    type: string
+                    format: date
+                  deathday:
+                    type: string
+                    format: date
+                  placeOfBirth:
+                    type: string
+                  popularity:
+                    type: number
+                    format: float
+                  profilePictureUrl:
+                    type: string
+                    format: uri
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /actors/{id}:
+    get:
+      summary: Get actor detail using the id
+      operationId: getActorById
+      tags:
+        - actor
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the actor that is requested
+          schema:
+            type: integer
+        - in: query
+          name: includeMovies
+          required: false
+          description: |
+            Whether or not to include the movies for the actor. Accepted values are true, false, yes, no, 0 and 1.
+            If includeMovies value is truthy then the actor object with the movies are returned.
+            If this is not present in query then it will default to false. If any value other than the accepted ones are
+            given, then 400 is returned.
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Successfully returned actorDetail object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/actorDetail'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    post:
+      summary: Add the actor to the movie
+      operationId: addToMovie
+      tags:
+        - actor
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the actor
+          schema:
+            type: integer
+      requestBody:
+        description: Payload for the actor to add to the movie
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                movieId:
+                  type: integer
+                  format: number
+                characterName:
+                  type: string
+                castOrder:
+                  type: integer
+                  format: number
+      responses:
+        '201':
+          description: Successfully added the actor the movie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  actorId:
+                    type: integer
+                  movieId:
+                    type: integer
+                  characterName:
+                    type: string
+                  castOrder:
+                    type: integer
+                    format: number
+                required:
+                  - id
+                  - actorId
+                  - movieId
+                  - characterName
+                  - castOrder
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    put:
+      summary: Update actor
+      operationId: updateActor
+      tags:
+        - actor
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Id of the actor
+          schema:
+            type: integer
+      requestBody:
+        description: Payload of the actor to update
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tmdbId:
+                  type: integer
+                  format: number
+                imdbId:
+                  type: integer
+                  format: number
+                actorName:
+                  type: string
+                biography:
+                  type: string
+                birthday:
+                  type: string
+                  format: date
+                deathday:
+                  type: string
+                  format: date
+                placeOfBirth:
+                  type: string
+                popularity:
+                  type: string
+                profilePictureUrl:
+                  type: string
+                  format: uri
+      responses:
+        '204':
+          description: Successfully updated actor
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    delete:
+      summary: |
+        Delete the actor.
+        Note: This operation will delete movie actors for the movie as well.
+      operationId: deleteActor
+      tags:
+        - actor
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the actor
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Successfully deleted the movie
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /addresses:
+    get:
+      summary: Get the list of available addresses
+      operationId: getAddresses
+      tags:
+        - address
+      parameters:
+        - in: query
+          name: page
+          required: false
+          description: |
+            The page number (which starts with 1) to fetch the set of customers from.
+            This parameter accepts the string first and last for the first and last pages, respectively.
+            The addresses are split into multiple pages with each page having a limited number of customers.
+          schema:
+            type: integer
+            default: 1
+      responses:
+        '200':
+          description: Successfully returned a list of available addresses
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          format: number
+                        addressLine:
+                          type: string
+                        cityName:
+                          type: string
+                        stateName:
+                          type: string
+                        country:
+                          type: string
+                        postalCode:
+                          type: string
+                  length:
+                    type: integer
+                    format: number
+                  pagination:
+                    $ref: '#/components/schemas/pagination'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /addresses/city/{city}:
+    get:
+      summary: Get the list of available addresses in a city
+      operationId: getAddressesInCity
+      tags:
+        - address
+      parameters:
+        - in: path
+          name: city
+          required: true
+          description: The name of the city
+          schema:
+            type: string
+            example: Melbourne
+      responses:
+        '200':
+          description: Successfully returned a list of available addresses in a city
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          format: number
+                        addressLine:
+                          type: string
+                        cityName:
+                          type: string
+                        stateName:
+                          type: string
+                        country:
+                          type: string
+                        postalCode:
+                          type: string
+                  length:
+                    type: integer
+                    format: number
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /addresses/state/{state}:
+    get:
+      summary: Get the list of available addresses in a state
+      operationId: getAddressesInState
+      tags:
+        - address
+      parameters:
+        - in: path
+          name: state
+          required: true
+          description: The name of the state
+          schema:
+            type: string
+            example: New South Wales
+      responses:
+        '200':
+          description: Successfully returned a list of available addresses in a state
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          format: number
+                        addressLine:
+                          type: string
+                        cityName:
+                          type: string
+                        stateName:
+                          type: string
+                        country:
+                          type: string
+                        postalCode:
+                          type: string
+                  length:
+                    type: integer
+                    format: number
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /auth/login:
+    post:
+      summary: Login user
+      operationId: login
+      tags:
+        - user
+      security: []
+      requestBody:
+        description: Provide the user email and password for login
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+      responses:
+        '204':
+          description: User logged in successfully
+          headers:
+            Set-Cookie:
+              description: The token generated on successful login is sent in a cookie
+              schema:
+                type: string
+                example: auth_token=abcde12345
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /auth/logout:
+    get:
+      summary: Logout user
+      operationId: logout
+      tags:
+        - user
+      security: []
+      responses:
+        '204':
+          description: User logged out successfully
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /cities:
+    get:
+      summary: Get the list of the cities
+      operationId: getCities
+      tags:
+        - city
+      parameters:
+        - in: query
+          name: includeCountry
+          description: Include the country data for each city (if true will each city will contain country object)
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Successfully returned a list of the cities
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/cityWithCountry'
+                      length:
+                        type: integer
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/city'
+                      length:
+                        type: integer
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/unauthorized'
+  /countries:
+    get:
+      summary: Get all the countries
+      operationId: getCountries
+      tags:
+        - country
+      responses:
+        '200':
+          description: Successfully returned a list of countries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/country'
+                  length:
+                    type: integer
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/unauthorized'
+  /customers/{id}/forgot_password:
+    put:
+      summary: Change the customer password which is forgotten
+      operationId: forgotCustomerPassword
+      tags:
+        - customer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the customer
+          schema:
+            type: integer
+      requestBody:
+        description: New password in the payload
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newPassword:
+                  type: string
+                  format: password
+                confirmedNewPassword:
+                  type: string
+                  format: password
+      responses:
+        '204':
+          description: Successfully changed the password
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /customers/{id}/change_password:
+    put:
+      summary: Change the customer password
+      operationId: changeCustomerPassword
+      security:
+        - cookieAuth: []
+      tags:
+        - customer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the customer
+          schema:
+            type: integer
+      requestBody:
+        description: Payload for the current and new password
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                currentPassword:
+                  type: string
+                  format: password
+                newPassword:
+                  type: string
+                  format: password
+                confirmedNewPassword:
+                  type: string
+                  format: password
+      responses:
+        '204':
+          description: Successfully changed the password
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
   /customers:
     get:
       summary: Get the customer list with pagination support
@@ -198,6 +904,8 @@ paths:
     get:
       summary: Get customer detail using the id
       operationId: getCustomerById
+      security:
+        - cookieAuth: []
       tags:
         - customer
       parameters:
@@ -304,6 +1012,8 @@ paths:
     patch:
       summary: Activate customer
       operationId: activateCustomer
+      security:
+        - cookieAuth: []
       tags:
         - customer
       parameters:
@@ -384,21 +1094,598 @@ paths:
           $ref: '#/components/responses/notFound'
         '500':
           $ref: '#/components/responses/internalServerError'
-  /customers/{id}/forgot_password:
-    put:
-      summary: Change the customer password which is forgotten
-      operationId: forgotCustomerPassword
+  /genres:
+    get:
+      summary: Get all available genres
+      operationId: getGenres
       tags:
-        - customer
+        - genre
+      responses:
+        '200':
+          description: Successfully returned a list of available movie genres
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/genre'
+                  length:
+                    type: integer
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/unauthorized'
+  /movie_languages:
+    get:
+      summary: Get all available movie languages
+      operationId: getMovieLanguages
+      tags:
+        - movie_language
+      responses:
+        '200':
+          description: Successfully returned a list of available movie languages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/movieLanguage'
+                  length:
+                    type: integer
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/unauthorized'
+  /movies:
+    get:
+      summary: Get the list of movies with the pagination support
+      operationId: getMovies
+      tags:
+        - movie
+      parameters:
+        - in: query
+          name: page
+          required: false
+          description: |
+            The page number (which starts with 1) to fetch the set of movies from.
+            The movies are split into multiple pages with each page having a limited number of movies.
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: genres
+          required: false
+          description: |
+            The valid genres are action, adventure, animation, comedy, crime, documentary, drama, family, fantasy, history, horror, music , mystery, romance, science fiction, thriller, war and western. There are two variants of this query - comma separated genres and genres in array. For e.g., ?genres=action,thriller,sci_fi or ?genres=["action","thriller","sci_fi"]. The comma separated genres will query the movie having either of the genre. The genres in array will query the movie having the genres mentioned in the array. Example, ?genres=action,thriller,sci_fi will return movies having genre action, thriller or science fiction while ?genres=["action","thriller","sci_fi"] will return the movies having all genre i.e. action, thriller and science fiction.
+          schema:
+            oneOf:
+              - type: string
+              - type: array
+                items:
+                  type: string
+        - in: query
+          name: release_date
+          required: false
+          description: |
+            Filters the movies by the release date (YYYY-MM-DD). This can be a single release date or a range. For e.g., ?release_date=2024-01-01 or ?release_date=2024-01-01,2024-06-30. The query string ?release_date=2024-01-01 will query movies with the given release date while ?release_date=2024-01-01,2024-06-30 will query movies released between 2024-01-01 and 2024-06-30.
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: countries
+          required: false
+          description: |
+            Filters the movies by the countries of origin. There are two variants of this query - comma separated countries or countries in array. For e.g., ?countries=cl,br and ?countries=["cl","br"]. The comma separated countries will query the movie having either of the country of origin. The countries in array will query the movie having the countries of origin mentioned in the array. Example, ?countries=cl,br will return movies having countries of origin either Chile or Brazil while ?countries=["cl","br"] will return the movies having all provided countries i.e. Chile and Brazil.
+          schema:
+            oneOf:
+              - type: string
+              - type: array
+                items:
+                  type: string
+        - in: query
+          name: languages
+          required: false
+          description: |
+            Filters the movies by the languages. This can be a single value or a comma separated values. For e.g., ?languages=fr or ?languages=es,fr,hi. The query string ?languages=fr will query movies which are in French language while ?languages=es,fr,hi will query movies which are in either of the French, Spanish or Hindi languages.
+          schema:
+            type: string
+        - in: query
+          name: rating
+          required: false
+          description: |
+            Filters the movies by rating. This can be a single value or a range. For e.g., ?rating=7 or ?release_date=6,9. The query string ?rating=7 will query movies having rating 7 while ?rating=6,9 will query movies with ratings between 6 and 9, inclusive.
+          schema:
+            type: string
+            format: number
+      responses:
+        '200':
+          description: Successfully returned a list of movies (including pagination data) for the given page
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/movieSummary'
+                  length:
+                    type: integer
+                  pagination:
+                    $ref: '#/components/schemas/pagination'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '404':
+          description: The page number provided is out of range.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    post:
+      summary: Add new movie (optionally with the actors)
+      operationId: addMovie
+      tags:
+        - movie
+      requestBody:
+        description: Payload for the new movie
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tmdbId:
+                  type: integer
+                imdbId:
+                  type: string
+                title:
+                  type: string
+                originalTitle:
+                  type: string
+                overview:
+                  type: string
+                runtime:
+                  type: integer
+                releaseDate:
+                  type: string
+                  format: date
+                genres:
+                  type: array
+                  items:
+                    type: string
+                countriesOfOrigin:
+                  type: array
+                  items:
+                    type: string
+                language:
+                  type: string
+                movieStatus:
+                  type: string
+                popularity:
+                  type: number
+                  format: float
+                budget:
+                  type: integer
+                  format: int64
+                revenue:
+                  type: integer
+                  format: int64
+                ratingAverage:
+                  type: number
+                  format: float
+                ratingCount:
+                  type: integer
+                posterUrl:
+                  type: string
+                  format: uri
+                rentalRate:
+                  type: number
+                  format: double
+                actors:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      tmdbId:
+                        type: integer
+                      imdbId:
+                        type: string
+                      actorName:
+                        type: string
+                      biography:
+                        type: string
+                      birthday:
+                        type: string
+                        format: date
+                      deathday:
+                        type: string
+                        format: date
+                      placeOfBirth:
+                        type: string
+                      popularity:
+                        type: number
+                        format: float
+                      profilePictureUrl:
+                        type: string
+                        format: uri
+                      characterName:
+                        type: string
+                      castOrder:
+                        type: integer
+      responses:
+        '201':
+          description: Successfully add new movie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  imdbId:
+                    type: integer
+                  title:
+                    type: string
+                  originalTitle:
+                    type: string
+                  overview:
+                    type: string
+                  runtime:
+                    type: integer
+                  releaseDate:
+                    type: string
+                    format: date
+                  genres:
+                    type: array
+                    items:
+                      type: string
+                  countriesOfOrigin:
+                    type: array
+                    items:
+                      type: string
+                  language:
+                    type: string
+                  movieStatus:
+                    type: string
+                  popularity:
+                    type: number
+                    format: float
+                  budget:
+                    type: integer
+                    format: int64
+                  revenue:
+                    type: integer
+                    format: int64
+                  ratingAverage:
+                    type: number
+                    format: float
+                  ratingCount:
+                    type: integer
+                  posterUrl:
+                    type: string
+                    format: uri
+                  rentalRate:
+                    type: number
+                    format: double
+                  rentalDuration:
+                    type: integer
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /movies/{id}:
+    get:
+      summary: Get movie detail using the id
+      operationId: getMovieById
+      tags:
+        - movie
       parameters:
         - in: path
           name: id
           required: true
-          description: The id of the customer
+          description: The id of the movie
+          schema:
+            type: integer
+        - in: query
+          name: include_actors
+          required: false
+          description: |
+            Whether or not to include the actors of the movie. Accepted values are true, false, yes, no, 0 and 1.
+            If include_actors value is truthy then the movie object will contain actors array.
+            If this is not present in query then it will default to false. If any value other than the accepted ones are
+            given, 400 is returned.
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Successfully returned the movie data with or without the actors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/movieDetail'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    put:
+      summary: Update movie
+      operationId: updateMovie
+      tags:
+        - movie
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the movie
           schema:
             type: integer
       requestBody:
         description: Payload of the movie to update
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tmdbId:
+                  type: integer
+                title:
+                  type: string
+                originalTitle:
+                  type: string
+                overview:
+                  type: string
+                runtime:
+                  type: integer
+                releaseDate:
+                  type: string
+                  format: date
+                genres:
+                  type: array
+                  items:
+                    type: string
+                countriesOfOrigin:
+                  type: array
+                  items:
+                    type: string
+                language:
+                  type: string
+                movieStatus:
+                  type: string
+                popularity:
+                  type: number
+                  format: float
+                budget:
+                  type: integer
+                  format: int64
+                revenue:
+                  type: integer
+                  format: int64
+                ratingAverage:
+                  type: number
+                  format: float
+                ratingCount:
+                  type: integer
+                posterUrl:
+                  type: string
+                  format: uri
+                rentalRate:
+                  type: number
+                  format: double
+      responses:
+        '204':
+          description: Successfully updated the movie
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    delete:
+      summary: |
+        Delete the movie.
+        Note: This operation will delete movie actors and inventory for the movie as well.
+      operationId: deleteMovie
+      tags:
+        - movie
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the movie
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Successfully deleted the movie
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /movies/{id}/add_actors:
+    post:
+      summary: Add actors to movie
+      operationId: addActors
+      tags:
+        - movie
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Id of the movie
+          schema:
+            type: integer
+      requestBody:
+        description: Payload for the new actors
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  tmdbId:
+                    type: integer
+                  imdbId:
+                    type: string
+                  actorName:
+                    type: string
+                  biography:
+                    type: string
+                  birthday:
+                    type: string
+                    format: date
+                  deathday:
+                    type: string
+                    format: date
+                  placeOfBirth:
+                    type: string
+                  popularity:
+                    type: number
+                    format: float
+                  profilePictureUrl:
+                    type: string
+                    format: uri
+                  characterName:
+                    type: string
+                  castOrder:
+                    type: integer
+      responses:
+        '201':
+          description: Successfully add actors to the movie
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    imdbId:
+                      type: integer
+                    actorName:
+                      type: string
+                    biography:
+                      type: string
+                    birthday:
+                      type: string
+                      format: date
+                    deathday:
+                      type: string
+                      format: date
+                    placeOfBirth:
+                      type: string
+                    popularity:
+                      type: number
+                      format: float
+                    profilePictureUrl:
+                      type: string
+                      format: uri
+                    characterName:
+                      type: string
+                    castOrder:
+                      type: integer
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /movies/{id}/stores:
+    get:
+      summary: Get stock count of the movie in all the stores
+      operationId: findInStores
+      tags:
+        - movie
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the movie
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully returned the stock count in all the stores
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/movieStock'
+                  length:
+                    type: integer
+                    format: number
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /staff/{id}/forgot_password:
+    put:
+      summary: Change the staff password which is forgotten
+      operationId: forgotStaffPassword
+      tags:
+        - staff
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the staff
+          schema:
+            type: integer
+      requestBody:
+        description: Payload for the new password
         required: true
         content:
           application/json:
@@ -413,7 +1700,7 @@ paths:
                   format: password
       responses:
         '204':
-          description: Successfully updated the customer
+          description: Successfully changed the password
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -422,21 +1709,21 @@ paths:
           $ref: '#/components/responses/notFound'
         '500':
           $ref: '#/components/responses/internalServerError'
-  /customers/{id}/change_password:
+  /staff/{id}/change_password:
     put:
-      summary: Change the customer password
-      operationId: changeCustomerPassword
+      summary: Change the staff password
+      operationId: changeStaffPassword
       tags:
-        - customer
+        - staff
       parameters:
         - in: path
           name: id
           required: true
-          description: The id of the customer
+          description: Staff id
           schema:
             type: integer
       requestBody:
-        description: Payload of the movie to update
+        description: Payload for the current and new password
         required: true
         content:
           application/json:
@@ -454,11 +1741,953 @@ paths:
                   format: password
       responses:
         '204':
-          description: Successfully updated the customer
+          description: Successfully changed the password
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
           $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /staff:
+    get:
+      summary: Get list of all staff (optionally filter by residential state and city)
+      operationId: getStaff
+      tags:
+        - staff
+      parameters:
+        - in: query
+          name: page
+          required: false
+          description: |
+            The page number (which starts with 1) to fetch the set of staff from.
+            The staff are split into multiple pages with each page having a limited number of staff.
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: first_name
+          required: false
+          description: |
+            The first name of the staff.
+            Prefix % for starts with search, suffix % for ends with search and enclose with % for contains search.
+            Example: first_name=%tap, first_name=pra% and first_name=%ata%.
+          schema:
+            type: string
+        - in: query
+          name: last_name
+          required: false
+          description: |
+            The last name of the staff.
+            Prefix % for starts with search, suffix % for ends with search and enclose with % for contains search.
+            Example: last_name=%tap, last_name=pra% and last_name=%ata%.
+          schema:
+            type: string
+        - in: query
+          name: email
+          required: false
+          description: |
+            The email of the staff.
+            Prefix % for starts with search, suffix % for ends with search and enclose with % for contains search.
+            Example: email=%tap, email=pra% and email=%ata%.
+          schema:
+            type: string
+            format: email
+        - in: query
+          name: phone_number
+          required: false
+          description: |
+            The phone number of the staff.
+            Prefix % for starts with search, suffix % for ends with search and enclose with % for contains search.
+            Example: phone_number=%456, phone_number=123% and phone_number=%456%.
+          schema:
+            type: string
+        - in: query
+          name: address_line
+          required: false
+          description: |
+            The address line of the staff resident.
+            Filters the staff by the address line of the staff address.
+            Prefix % for starts with search, suffix % for ends with search and enclose with % for contains search.
+            Example: address_line=%street, address_line=any% and address_line=%str%.
+          schema:
+            type: string
+        - in: query
+          name: city
+          required: false
+          description: |
+            The city of the staff resident.
+            Filters the staff by the city of the staff resident.
+            Prefix % for starts with search, suffix % for ends with search and enclose with % for contains search.
+            Example: city=%abad, city=hyder% and city=%aba%.
+          schema:
+            type: string
+        - in: query
+          name: state
+          required: false
+          description: |
+            The state of the staff resident.
+            Filters the staff by the state of the staff resident.
+            Prefix % for starts with search, suffix % for ends with search and enclose with % for contains search.
+            Example: state=%gana, state=tel% and state=%anga%.
+          schema:
+            type: string
+        - in: query
+          name: country
+          required: false
+          description: |
+            The country of the staff resident.
+            Filters the staff by the country of the staff resident.
+            Prefix % for starts with search, suffix % for ends with search and enclose with % for contains search.
+            Example: country=%dia, country=ind% and country=%ndi%.
+          schema:
+            type: string
+        - in: query
+          name: postal_code
+          required: false
+          description: |
+            The postal_code of the staff resident.
+            Filters the staff by the postal_code of the staff resident.
+            Prefix % for starts with search, suffix % for ends with search and enclose with % for contains search.
+            Example: postal_code=%048, postal_code=500% and postal_code=%000%.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully returned list of all staff
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/staffSummary'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    post:
+      summary: Add staff member
+      operationId: createStaff
+      tags:
+        - staff
+      requestBody:
+        description: Payload for the new staff
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                phoneNumber:
+                  type: string
+                avatar:
+                  type: string
+                  format: uri
+                storeId:
+                  type: integer
+                  format: number
+                address:
+                  type: object
+                  properties:
+                    addressLine:
+                      type: string
+                    cityName:
+                      type: string
+                    stateName:
+                      type: string
+                    postalCode:
+                      type: string
+      responses:
+        '201':
+          description: Successfully created staff
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: number
+                    readOnly: true
+                  firstName:
+                    type: string
+                  lastName:
+                    type: string
+                  email:
+                    type: string
+                    format: email
+                  active:
+                    type: boolean
+                  phoneNumber:
+                    type: string
+                  avatar:
+                    type: string
+                    format: uri
+                  storeId:
+                    type: integer
+                    format: number
+                  address:
+                    $ref: '#/components/schemas/address'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /staff/managers:
+    get:
+      summary: Get list of store managers
+      operationId: getStoreManagers
+      tags:
+        - staff
+      responses:
+        '200':
+          description: Successfully returned list of store managers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          format: number
+                        firstName:
+                          type: string
+                        lastName:
+                          type: string
+                        email:
+                          type: string
+                          format: email
+                        active:
+                          type: boolean
+                        phoneNumber:
+                          type: string
+                        avatar:
+                          type: string
+                        address:
+                          $ref: '#/components/schemas/address'
+                        store:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              format: number
+                            phoneNumber:
+                              type: string
+                            address:
+                              $ref: '#/components/schemas/address'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /staff/{id}:
+    get:
+      summary: Get staff detail
+      operationId: getStaffById
+      tags:
+        - staff
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Id of the staff
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully returned staff detail
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/staffItem'
+                  - type: object
+                    properties:
+                      store:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            format: number
+                          phoneNumber:
+                            type: string
+                          address:
+                            $ref: '#/components/schemas/address'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    put:
+      summary: Update staff
+      operationId: updateStaff
+      tags:
+        - staff
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Id of the staff
+          schema:
+            type: integer
+      requestBody:
+        description: Payload of the staff to update
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                active:
+                  type: boolean
+                phoneNumber:
+                  type: string
+                avatar:
+                  type: string
+                storeId:
+                  type: integer
+                  format: number
+                address:
+                  $ref: '#/components/schemas/address'
+      responses:
+        '204':
+          description: Successfully updated staff
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    delete:
+      summary: Delete staff
+      operationId: deleteStaff
+      tags:
+        - staff
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the staff
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Successfully deleted staff
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /stores:
+    get:
+      summary: Get list of stores
+      operationId: getStores
+      tags:
+        - store
+      responses:
+        '200':
+          description: Successfully returned an array of storeItem
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/storeItem'
+                  length:
+                    type: integer
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    post:
+      summary: Create store
+      operationId: createStore
+      tags:
+        - store
+      requestBody:
+        description: Payload for the new store
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  properties:
+                    storeManagerId:
+                      type: integer
+                      format: number
+                    phoneNumber:
+                      type: string
+                    address:
+                      $ref: '#/components/schemas/address'
+                - type: object
+                  properties:
+                    phoneNumber:
+                      type: string
+                    address:
+                      $ref: '#/components/schemas/address'
+                    storeManager:
+                      type: object
+                      properties:
+                        firstName:
+                          type: string
+                        lastName:
+                          type: string
+                        email:
+                          type: string
+                          format: email
+                        phoneNumber:
+                          type: string
+                        avatar:
+                          type: string
+                        address:
+                          $ref: '#/components/schemas/address'
+      responses:
+        '201':
+          description: Successfully created store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    format: number
+                  storeManager:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        format: number
+                      firstName:
+                        type: string
+                      lastName:
+                        type: string
+                      email:
+                        type: string
+                        format: email
+                      active:
+                        type: boolean
+                      avatar:
+                        type: string
+                      address:
+                        $ref: '#/components/schemas/address'
+                  phoneNumber:
+                    type: string
+                  address:
+                    $ref: '#/components/schemas/address'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /stores/{id}:
+    get:
+      summary: Get store detail using the id
+      operationId: getStoreById
+      tags:
+        - store
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the store
+          schema:
+            type: integer
+        - in: query
+          name: includeStaff
+          required: false
+          description: |
+            Whether or not to include the staff employed at the store. Accepted values are true, false, yes, no, 0 and 1.
+            If includeStaff value is truthy then the store object will contain staff array.
+            If this is not present in query then it will default to false. If any value other than the accepted ones are
+            given, then 400 is returned.
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Successfully returned the store data with or without the staff
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/storeDetail'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    put:
+      summary: Update store
+      operationId: updateStore
+      tags:
+        - store
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Id of the store
+          schema:
+            type: integer
+      requestBody:
+        description: Payload for the new store
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                storeManagerId:
+                  type: integer
+                  format: number
+                phoneNumber:
+                  type: string
+                address:
+                  $ref: '#/components/schemas/address'
+      responses:
+        '204':
+          description: Successfully updated the store
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    delete:
+      summary: Delete the store
+      operationId: deleteStore
+      tags:
+        - store
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the store
+          schema:
+            type: integer
+        - in: query
+          name: forceDelete
+          required: false
+          description: |
+            A boolean flag to indicate whether or not to delete the staff associated with the store.
+            Default is false.
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '204':
+          description: Successfully deleted the store
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /stores/{id}/stock:
+    get:
+      summary: Get the number of in-stock movies in a given store
+      operationId: getStockCount
+      tags:
+        - store
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the store
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully returned the number of in-stock movies in a given store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  stockCount:
+                    type: string
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/unauthorized'
+  /stores/{id}/movies:
+    get:
+      summary: Get movies in a store
+      operationId: getMoviesInStore
+      tags:
+        - store
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Store id
+          schema:
+            type: integer
+        - in: query
+          name: page
+          required: false
+          description: |
+            The page number (which starts with 1) to fetch the set of in-stock movies from.
+            The movies are split into multiple pages with each page having a limited number of items.
+            This query also accepts first and last.
+          schema:
+            type: integer
+            default: 1
+      responses:
+        '200':
+          description: Successfully returned movies in a store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          format: number
+                        stock:
+                          type: integer
+                          format: number
+                        movie:
+                          $ref: '#/components/schemas/movieSummary'
+                  length:
+                    type: integer
+                  pagination:
+                    $ref: '#/components/schemas/pagination'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /stores/{id}/staff:
+    get:
+      summary: Get staff employed in a store
+      operationId: getStaffInStore
+      tags:
+        - store
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the store
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully returned staff employed in a store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          format: number
+                        firstName:
+                          type: string
+                        lastName:
+                          type: string
+                        email:
+                          type: string
+                        addressId:
+                          type: integer
+                          format: number
+                        storeId:
+                          type: integer
+                          format: number
+                        active: true
+                        phoneNumber:
+                          type: string
+                        avatar:
+                          type: string
+                        isStoreManager:
+                          type: boolean
+                        store:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              format: number
+                            storeManagerId:
+                              type: integer
+                              format: number
+                            addressId:
+                              type: integer
+                              format: number
+                            phoneNumber:
+                              type: string
+                  length:
+                    type: integer
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /rentals:
+    get:
+      summary: Get the list of rentals for the logged in user
+      operationId: getRentals
+      tags:
+        - rental
+      responses:
+        '200':
+          description: Successfully returned a list of rentals for the logged in user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      properties:
+                        id:
+                          type: integer
+                          format: number
+                        rentalStartDate:
+                          type: string
+                          format: date
+                        rentalEndDate:
+                          type: string
+                          format: date
+                        returnDate:
+                          type: string
+                          format: date
+                        rentalDuration:
+                          type: integer
+                          format: number
+                        delayedByDays:
+                          type: integer
+                          format: number
+                        amountPaid:
+                          type: number
+                          format: float
+                        discountAmount:
+                          type: number
+                          format: float
+                        paymentDate:
+                          type: string
+                          format: date
+                        rentalType:
+                          type: string
+                          enum:
+                            - in-store
+                            - online
+                        storeId:
+                          type: integer
+                          format: number
+                        movie:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              format: number
+                            title:
+                              type: string
+                  length:
+                    type: integer
+                    format: number
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /rentals/my_store:
+    get:
+      summary: Get the list of rentals for the store
+      operationId: getRentalsForStore
+      tags:
+        - rental
+      responses:
+        '200':
+          description: Successfully returned a list of rentals for the store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      properties:
+                        id:
+                          type: integer
+                          format: number
+                        rentalStartDate:
+                          type: string
+                          format: date
+                        rentalEndDate:
+                          type: string
+                          format: date
+                        returnDate:
+                          type: string
+                          format: date
+                        rentalDuration:
+                          type: integer
+                          format: number
+                        delayedByDays:
+                          type: integer
+                          format: number
+                        amountPaid:
+                          type: number
+                          format: float
+                        discountAmount:
+                          type: number
+                          format: float
+                        paymentDate:
+                          type: string
+                          format: date
+                        rentalType:
+                          type: string
+                          enum:
+                            - in-store
+                            - online
+                        storeId:
+                          type: integer
+                          format: number
+                        movie:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              format: number
+                            title:
+                              type: string
+                  length:
+                    type: integer
+                    format: number
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /rentals/{id}:
+    get:
+      summary: Get rental detail by id
+      operationId: getRentalById
+      tags:
+        - rental
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the rental
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully returned a rental detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rentalDetail'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
         '404':
           $ref: '#/components/responses/notFound'
         '500':
@@ -470,6 +2699,150 @@ components:
       name: auth_token
       in: cookie
   schemas:
+    actorSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        imdbId:
+          type: integer
+        actorName:
+          type: string
+        birthday:
+          type: string
+          format: date
+        deathday:
+          type: string
+          format: date
+        placeOfBirth:
+          type: string
+        popularity:
+          type: number
+          format: float
+        profilePictureUrl:
+          type: string
+          format: uri
+    pagination:
+      type: object
+      properties:
+        pageNumber:
+          type: integer
+          description: Current page number
+        totalPages:
+          type: integer
+          description: Total pages available for pagination
+        totalItems:
+          type: integer
+          description: Total items across all the pages
+        itemsPerPage:
+          type: integer
+          description: Maximum number of items that the page can have
+        next:
+          type: string
+          description: Link to the next page
+        prev:
+          type: string
+          description: Link to the previous page
+        first:
+          type: string
+          description: Link to the first page
+        last:
+          type: string
+          description: Link to the last page
+    actorDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        imdbId:
+          type: string
+        actorName:
+          type: string
+        biography:
+          type: string
+        birthday:
+          type: string
+          format: date
+        deathday:
+          type: string
+          format: date
+        placeOfBirth:
+          type: string
+        popularity:
+          type: number
+          format: float
+        profilePictureUrl:
+          type: string
+          format: uri
+        movies:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              title:
+                type: string
+              releaseDate:
+                type: string
+                format: date
+              genres:
+                type: array
+                items:
+                  type: string
+              ratingAverage:
+                type: number
+                format: float
+              ratingCount:
+                type: integer
+              posterUrl:
+                type: string
+              cast:
+                type: object
+                properties:
+                  characterName:
+                    type: string
+                  castOrder:
+                    type: integer
+                    format: number
+    cityWithCountry:
+      type: object
+      properties:
+        id:
+          type: integer
+        cityName:
+          type: string
+        stateName:
+          type: string
+        country:
+          type: object
+          properties:
+            id:
+              type: integer
+            countryName:
+              type: string
+            countryCode:
+              type: string
+    city:
+      type: object
+      properties:
+        id:
+          type: integer
+        cityName:
+          type: string
+        stateName:
+          type: string
+        countryId:
+          type: integer
+    country:
+      type: object
+      properties:
+        id:
+          type: integer
+        countryName:
+          type: string
+        countryCode:
+          type: string
     address:
       type: object
       properties:
@@ -515,33 +2888,6 @@ components:
           format: date
         address:
           $ref: '#/components/schemas/address'
-    pagination:
-      type: object
-      properties:
-        pageNumber:
-          type: integer
-          description: Current page number
-        totalPages:
-          type: integer
-          description: Total pages available for pagination
-        totalItems:
-          type: integer
-          description: Total items across all the pages
-        itemsPerPage:
-          type: integer
-          description: Maximum number of items that the page can have
-        next:
-          type: string
-          description: Link to the next page
-        prev:
-          type: string
-          description: Link to the previous page
-        first:
-          type: string
-          description: Link to the first page
-        last:
-          type: string
-          description: Link to the last page
     customerDetail:
       type: object
       properties:
@@ -597,6 +2943,471 @@ components:
                   $ref: '#/components/schemas/address'
         address:
           $ref: '#/components/schemas/address'
+    genre:
+      type: object
+      properties:
+        id:
+          type: integer
+        genreName:
+          type: string
+    movieLanguage:
+      type: object
+      properties:
+        id:
+          type: integer
+        languageName:
+          type: string
+        languageCode:
+          type: string
+    movieSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique id of the resource
+        title:
+          type: string
+          description: The title of the movie
+        runtime:
+          type: integer
+          description: The length of the movie
+        releaseDate:
+          type: string
+          description: Date on which the movie is or will be released
+          format: date
+        genres:
+          type: array
+          description: |
+            The genres that the movie belongs to. The valid genres are action, adventure, animation, 
+            comedy, crime, documentary, drama, family, fantasy, history, horror, music , mystery, romance, 
+            science fiction, thriller, war and western.
+          items:
+            type: string
+        countriesOfOrigin:
+          type: array
+          description: The countries of origin of the movie
+          items:
+            type: string
+        language:
+          type: string
+          description: The language that the movie is in
+        popularity:
+          type: number
+          description: A number indicating how popular the movie is
+          format: float
+        ratingAverage:
+          type: number
+          description: The average rating of the movie
+          format: float
+        ratingCount:
+          type: integer
+          description: The number of ratings that the movie has got
+        posterUrl:
+          type: string
+          description: Link to the movie poster
+          format: uri
+        rentalRate:
+          type: number
+          description: The rental rate of the movie
+          format: float
+    movieDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique id of the resource
+        title:
+          type: string
+          description: The title of the movie
+        originalTitle:
+          type: string
+          description: The original title of the movie (if the movie is not in english then this might be different than title)
+        overview:
+          type: string
+          description: A brief summary of the movie
+        runtime:
+          type: integer
+          description: The length of the movie
+        releaseDate:
+          type: string
+          description: Date on which the movie is or will be released
+          format: date
+        genres:
+          type: array
+          description: |
+            The genres that the movie belongs to. The valid genres are action, adventure, animation, 
+            comedy, crime, documentary, drama, family, fantasy, history, horror, music , mystery, romance, 
+            science fiction, thriller, war and western.
+          items:
+            type: string
+        countriesOfOrigin:
+          type: array
+          description: The countries of origin of the movie
+          items:
+            type: string
+        language:
+          type: string
+          description: The language that the movie is in
+        movieStatus:
+          type: string
+          description: Status of the movie like Released, Post-Production, etc.
+        popularity:
+          type: number
+          description: A number indicating how popular the movie is
+          format: float
+        budget:
+          type: integer
+          description: The budget of the movie
+        revenue:
+          type: integer
+          description: The revenue that the movie has generated
+        ratingAverage:
+          type: number
+          description: The average rating of the movie
+          format: float
+        ratingCount:
+          type: integer
+          description: The number of ratings that the movie has got
+        posterUrl:
+          type: string
+          description: Link to the movie poster
+          format: uri
+        rentalRate:
+          type: number
+          description: The rental rate of the movie
+          format: float
+        actors:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                description: Unique id of the resource
+              actorName:
+                type: string
+                description: Name of the actor
+              characterName:
+                type: string
+                description: The name of the character that the actor has played in the movie
+              castOrder:
+                type: integer
+                description: The order of character appearance in the movie
+              profilePictureUrl:
+                type: string
+                description: Link to the profile picture of the actor
+                format: uri
+    movieStock:
+      type: object
+      properties:
+        inventoryId:
+          type: integer
+          description: Unique id of the invetory
+        stock:
+          type: integer
+          description: The number of stock of the movie in the store
+        store:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: number
+            managerId:
+              type: integer
+              format: number
+            phoneNumber:
+              type: string
+              description: The phone number of the store
+            addressLine:
+              type: string
+              description: This is typically street number and name (for e.g. 11 Reel Avenue)
+            city:
+              type: string
+              description: City name
+            state:
+              type: string
+              description: State name
+            country:
+              type: string
+              description: Country name
+            postalCode:
+              type: string
+              description: Postal code
+    staffSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: number
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        active:
+          type: boolean
+        phoneNumber:
+          type: string
+        avatar:
+          type: string
+          format: uri
+        storeId:
+          type: integer
+          format: number
+        isStoreManager:
+          type: boolean
+        address:
+          $ref: '#/components/schemas/address'
+    staffItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: number
+          readOnly: true
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        isStoreManager:
+          type: boolean
+        active:
+          type: boolean
+        phoneNumber:
+          type: string
+        avatar:
+          type: string
+          format: uri
+        address:
+          $ref: '#/components/schemas/address'
+    storeItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        addressLine:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        country:
+          type: string
+        phoneNumber:
+          type: string
+    storeDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: number
+        phoneNumber:
+          type: string
+        storeManager:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: number
+            firstName:
+              type: string
+            lastName:
+              type: string
+            email:
+              type: string
+            phoneNumber:
+              type: string
+            storeId:
+              type: integer
+              format: number
+            active:
+              type: boolean
+            avatar:
+              type: string
+            address:
+              $ref: '#/components/schemas/address'
+        address:
+          $ref: '#/components/schemas/address'
+    rentalDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: number
+        inventoryId:
+          type: integer
+          format: number
+        customerId:
+          type: integer
+          format: number
+        staffId:
+          type: integer
+          format: number
+        rentalStartDate:
+          type: string
+          format: date
+        rentalEndDate:
+          type: string
+          format: date
+        returnDate:
+          type: string
+          format: date
+        rentalDuration:
+          type: integer
+          format: number
+        delayedByDays:
+          type: integer
+          format: number
+        amountPaid:
+          type: number
+          format: float
+        discountAmount:
+          type: number
+          format: float
+        paymentDate:
+          type: string
+          format: date
+        rentalType:
+          type: string
+          enum:
+            - in-store
+            - online
+        processedBy:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: number
+            firstName:
+              type: string
+            lastName:
+              type: string
+            email:
+              type: string
+            phoneNumber:
+              type: string
+            avatar:
+              type: string
+            address:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  format: number
+                addressLine:
+                  type: string
+                cityName:
+                  type: string
+                stateName:
+                  type: string
+                country:
+                  type: string
+                postalCode:
+                  type: string
+        inventory:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: number
+            movieId:
+              type: integer
+              format: number
+            stock:
+              type: integer
+              format: number
+            store:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  format: number
+                phoneNumber:
+                  type: string
+                storeManager:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      format: number
+                    firstName:
+                      type: string
+                    lastName:
+                      type: string
+                    email:
+                      type: string
+                    addressId:
+                      type: integer
+                      format: number
+                    storeId:
+                      type: integer
+                      format: number
+                    active: true
+                    phoneNumber:
+                      type: string
+                    avatar:
+                      type: string
+                address:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      format: number
+                    addressLine:
+                      type: string
+                    cityName:
+                      type: string
+                    stateName:
+                      type: string
+                    country:
+                      type: string
+                    postalCode:
+                      type: string
+        customer:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: number
+            firstName:
+              type: string
+            lastName:
+              type: string
+            email:
+              type: string
+            phoneNumber:
+              type: string
+            avatar:
+              type: string
+            active:
+              type: boolean
+            preferredStoreId:
+              type: integer
+              format: number
+            registeredOn:
+              type: string
+              format: date
+            address:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  format: number
+                addressLine:
+                  type: string
+                cityName:
+                  type: string
+                stateName:
+                  type: string
+                country:
+                  type: string
+                postalCode:
+                  type: string
   responses:
     badRequest:
       description: The request does not have the data that api needed
@@ -616,6 +3427,12 @@ components:
             properties:
               message:
                 type: string
+    unauthorized:
+      description: Api key is missing or invalid
+      headers:
+        WWW_Authenticate:
+          schema:
+            type: string
     notFound:
       description: Requested resource does not exist
       content:
@@ -625,12 +3442,6 @@ components:
             properties:
               message:
                 type: string
-    unauthorized:
-      description: Api key is missing or invalid
-      headers:
-        WWW_Authenticate:
-          schema:
-            type: string
     forbidden:
       description: User do not have permission to perform the operation
       content:
