@@ -1,7 +1,11 @@
 # Table of Contents
 1. [Introduction](#reelfake-rest-api)
-2. [Running locally](#running-on-localhost)
-3. [Running on Cloud](#running-on-cloud)
+3. [Running locally](#running-on-localhost)
+   1. [Start database](#start-the-container-for-database)
+   2. [Start api](#start-the-container-for-the-api)
+5. [Running on Cloud](#running-on-cloud)
+   1. [Start database instance](#instance-for-database)
+   2. [Start api instance](#instance-for-api)
 
 ## Reelfake REST API
 
@@ -62,7 +66,7 @@ The below instructions are for deploying to Amazon Lightsail that I use (make su
 4. SSH into the in instance
 5. Run the docker command which is same as in [Run Database](#start-the-container-for-database)
 
-### Instance for api (you can also run the api on the same container as database)
+### Instance for api
 1. The steps from 1 to 4 are same as database instance.
 2. Run the docker for starting api which is same as [Run API](#start-the-container-for-the-api)
 
