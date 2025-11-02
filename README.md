@@ -1,11 +1,12 @@
 # Table of Contents
 1. [Introduction](#reelfake-rest-api)
-3. [Running locally](#running-on-localhost)
+2. [Running locally](#running-on-localhost)
    1. [Start database](#start-the-container-for-database)
    2. [Start api](#start-the-container-for-the-api)
-5. [Running on Cloud](#running-on-cloud)
+3. [Running on Cloud](#running-on-cloud)
    1. [Start database instance](#instance-for-database)
    2. [Start api instance](#instance-for-api)
+4. [Api Specs](#api-specification)
 
 ## Reelfake REST API
 
@@ -72,7 +73,17 @@ The below instructions are for deploying to Amazon Lightsail that I use (make su
 
 **Note:**
 1. The docker command as for deploying to Lightsail is same as running it locally. You will just need to change the DB_HOST for the api which must point to the database instance.
-AWS keeps improving so the steps above might or might not change in future. Follow [Create a Lightsail Instance](https://docs.aws.amazon.com/lightsail/latest/userguide/how-to-create-amazon-lightsail-instance-virtual-private-server-vps.html) for guidance.
+2. AWS keeps improving so the steps above might or might not change in future. Follow [Create a Lightsail Instance](https://docs.aws.amazon.com/lightsail/latest/userguide/how-to-create-amazon-lightsail-instance-virtual-private-server-vps.html) for guidance.
+
+## Api Specification
+
+*If running locally (the port is what you mentioned when running the container)*
+Docs - http://localhost:{{port}}/api/docs
+Redocs - http://localhost:{{port}}/api/redocs
+
+*If running on cloud*
+Docs - http://{{Ip Address or host DNS}}/api/docs
+Redocs - http://{{Ip Address or host DNS}}/api/redocs
 
 ## License
 
