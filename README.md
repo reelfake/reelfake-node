@@ -1,5 +1,5 @@
 # Table of Contents
-1. [Introduction](#reelfake-rest-apis)
+1. [Introduction](#reelfake-rest-api)
 2. [Running locally](#running-on-localhost)
 3. [Running on Cloud](#running-on-cloud)
 
