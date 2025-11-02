@@ -19,6 +19,8 @@ WORKDIR /app
 
 COPY --from=build /app/dist/bundle.js ./
 
+COPY --from=build /app/openapi/dist/openapi.yaml ./openapi/dist/
+
 EXPOSE 8080 8000
 
 CMD [ "node", "bundle.js" ]

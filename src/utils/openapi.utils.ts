@@ -1,3 +1,13 @@
+import { DEFAULT_PORT } from '../constants';
+
+export function getOpenApiUril(hostname: string) {
+  const isHttps = process.env.NODE_ENV === 'production';
+  const port = process.env.NODE_ENV === 'production' ? 8080 : process.env.PORT || DEFAULT_PORT;
+
+  const url = `${isHttps ? 'https' : 'http'}://${hostname}${isHttps ? '' : ':' + { port }}/openapi`;
+  return url;
+}
+
 export function getOpenApiDocsHtmlString(docsUrl: string) {
   return `
     <!doctype html>

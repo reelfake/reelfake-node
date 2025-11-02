@@ -4,7 +4,7 @@ import compression from 'compression';
 import path from 'path';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import { AppError, getOpenApiDocsHtmlString, getOpenApiReDocsHtmlString } from './utils';
+import { AppError, getOpenApiDocsHtmlString, getOpenApiReDocsHtmlString, getOpenApiUril } from './utils';
 import {
   statsRoutes,
   addressRoutes,
@@ -20,7 +20,6 @@ import {
   authRoutes,
   rentalRoutes,
 } from './routes';
-import { DEFAULT_PORT } from './constants';
 
 // app.use(helmet());
 // app.use(morgan('tiny', { stream: logStream }));
@@ -46,6 +45,7 @@ app.get('/api', (req: Request, res: Response) => {
   res.status(200).json({
     name: 'reelfake-api',
     version: '1.0.0',
+    ...(process.env['BUILD_AT'] && { BUILD_AT: process.env['BUILD_AT'] }),
   });
 });
 
@@ -55,12 +55,12 @@ app.get('/openapi', (req, res) => {
 });
 
 app.get('/api/docs', (req, res) => {
-  const docsUrl = `${req.protocol}://${req.hostname}:${process.env.PORT || DEFAULT_PORT}/openapi`;
+  const docsUrl = getOpenApiUril(req.hostname);
   res.send(getOpenApiDocsHtmlString(docsUrl));
 });
 
 app.get('/api/redocs', (req, res) => {
-  const docsUrl = `${req.protocol}://${req.hostname}:${process.env.PORT || DEFAULT_PORT}/openapi`;
+  const docsUrl = getOpenApiUril(req.hostname);
   res.send(getOpenApiReDocsHtmlString(docsUrl));
 });
 

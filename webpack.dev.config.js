@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 const NodemonPlugin = require('nodemon-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const nodeExternals = require('webpack-node-externals');
@@ -34,5 +35,9 @@ module.exports = {
       },
     ],
   },
-  plugins: [new NodemonPlugin(), new CleanWebpackPlugin()],
+  plugins: [
+    new webpack.DefinePlugin({ 'process.env.BUILD_AT': JSON.stringify(new Date().toISOString()) }),
+    new NodemonPlugin(),
+    new CleanWebpackPlugin(),
+  ],
 };
