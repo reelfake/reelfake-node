@@ -7,7 +7,3 @@ You have a simple api with GET, POST, PUT, PATCH and DELETE operations with the 
 ## License
 
 MIT
-
----
-
-For more details, see the source code in [`src/app.ts`](src/app.ts) and the OpenAPI specs in [`openapi/`](openapi)
