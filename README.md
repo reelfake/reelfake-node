@@ -37,7 +37,7 @@ You have a simple api with GET, POST, PUT, PATCH and DELETE operations with the 
 I have the api deployed for my personal use which is available for public.
 This publicly available api does not have the routes that mutate the data.
 You can access this using the [Reelfake api](https://reelfake.cloud) which is for my personal use.
-You can go through the [api specs](https://reelfake.cloud/api/docs) for more information.
+You can go through the [api specs](https://reelfake.cloud/api/docs) or the ([redocs](https://reelfake.cloud/api/redocs)) for more information.
 So, what this api provide?
 1. All GET methods (like `/api/movies`, `/api/actors`, `/api/customers`, `/api/movies/:id` and so on).
 2. The login (`/api/auth/login`) and logout (`/api/auth/logout`).
