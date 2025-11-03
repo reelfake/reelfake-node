@@ -747,30 +747,35 @@ describe('Staff Controller', () => {
   });
 
   describe('PUT /:id/forgot_password', () => {
-    const getStaffIdWithoutPassword = async () => {
+    const getStaffWithoutPassword = async () => {
       const queryText = `
-        SELECT staff.id
+        SELECT staff.id, staff.email
         FROM staff LEFT OUTER JOIN store ON staff.store_id = store.id
         WHERE store.store_manager_id <> staff.id AND staff.active = true
         AND staff.user_password IS NULL LIMIT 1;
       `;
       const [queryResult] = await execQuery(queryText);
       const staffId = queryResult.id;
-      return Number(staffId);
+      const staffEmail = queryResult.email;
+      return { id: Number(staffId), email: staffEmail };
     };
 
     it('should be able to update password without providing current password', async () => {
-      const id = await getStaffIdWithoutPassword();
+      const { id, email } = await getStaffWithoutPassword();
 
       const apiResponse = await server.put(`/api/staff/${id}/forgot_password`).send({
         newPassword: 'hello@123',
         confirmedNewPassword: 'hello@123',
       });
-      expect(apiResponse.status).toEqual(204);
+      expect(apiResponse.status).toEqual(200);
+      expect(apiResponse.body).toEqual({
+        id,
+        email,
+      });
     });
 
     it('should return error if new password is not same as confirmed new password', async () => {
-      const id = await getStaffIdWithoutPassword();
+      const { id } = await getStaffWithoutPassword();
 
       const apiResponse = await server.put(`/api/staff/${id}/forgot_password`).send({
         newPassword: 'hello@123',
@@ -781,7 +786,7 @@ describe('Staff Controller', () => {
     });
 
     it('should return error if new password length is less than 8 characters', async () => {
-      const id = await getStaffIdWithoutPassword();
+      const { id } = await getStaffWithoutPassword();
 
       const apiResponse = await server.put(`/api/staff/${id}/forgot_password`).send({
         newPassword: 'test',
@@ -796,7 +801,7 @@ describe('Staff Controller', () => {
     const passwordMock = 'hello_old@123';
     const newPassword = 'hello_new@123';
 
-    const getStaffIdWithPassword = async () => {
+    const getStaffWithPassword = async () => {
       const queryText = `
         SELECT staff.id, staff.email
         FROM staff LEFT OUTER JOIN store ON staff.store_id = store.id
@@ -814,7 +819,7 @@ describe('Staff Controller', () => {
     };
 
     it('should be able to update password by providing current and new password', async () => {
-      const { id, email, password } = await getStaffIdWithPassword();
+      const { id, email, password } = await getStaffWithPassword();
       await login(email, password);
 
       const apiResponse = await server.put(`/api/staff/change_password`).set('Cookie', cookie).send({
@@ -822,11 +827,15 @@ describe('Staff Controller', () => {
         newPassword,
         confirmedNewPassword: newPassword,
       });
-      expect(apiResponse.status).toEqual(204);
+      expect(apiResponse.status).toEqual(200);
+      expect(apiResponse.body).toEqual({
+        id,
+        email,
+      });
     });
 
     it('should return error when changing password and request does not have current password', async () => {
-      const { id, email, password } = await getStaffIdWithPassword();
+      const { id, email, password } = await getStaffWithPassword();
       await login(email, password);
 
       const apiResponse = await server.put(`/api/staff/change_password`).set('Cookie', cookie).send({
@@ -838,7 +847,7 @@ describe('Staff Controller', () => {
     });
 
     it('should return error when changing password and request does not have confirmed password', async () => {
-      const { id, email, password } = await getStaffIdWithPassword();
+      const { id, email, password } = await getStaffWithPassword();
       await login(email, password);
 
       const apiResponse = await server.put(`/api/staff/change_password`).set('Cookie', cookie).send({
@@ -850,7 +859,7 @@ describe('Staff Controller', () => {
     });
 
     it('should return error when changing password and new and confirmed password are not same', async () => {
-      const { id, email, password } = await getStaffIdWithPassword();
+      const { id, email, password } = await getStaffWithPassword();
       await login(email, password);
 
       const apiResponse = await server
@@ -866,7 +875,7 @@ describe('Staff Controller', () => {
     });
 
     it('should return error when changing password and current password is not correct', async () => {
-      const { id, email, password } = await getStaffIdWithPassword();
+      const { id, email, password } = await getStaffWithPassword();
       await login(email, password);
 
       const apiResponse = await server.put(`/api/staff/change_password`).set('Cookie', cookie).send({
@@ -879,7 +888,7 @@ describe('Staff Controller', () => {
     });
 
     it('should return error when changing password and new password is less than 8 characters', async () => {
-      const { id, email, password } = await getStaffIdWithPassword();
+      const { id, email, password } = await getStaffWithPassword();
       await login(email, password);
 
       const apiResponse = await server.put(`/api/staff/change_password`).set('Cookie', cookie).send({
