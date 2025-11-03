@@ -116,9 +116,8 @@ export function allowOnlyMe(req: Request, res: Response, next: NextFunction) {
     ];
 
     if (
-      process.env['NODE_ENV'] === 'production' &&
-      ((disallowedMethods.includes(req.method) && !allowedPaths.some((path) => path.test(req.path))) ||
-        (req.method === 'GET' && disallowedGETPaths.includes(req.path)))
+      (disallowedMethods.includes(req.method) && !allowedPaths.some((path) => path.test(req.path))) ||
+      (req.method === 'GET' && disallowedGETPaths.includes(req.path))
     ) {
       res.send(new AppError(ERROR_MESSAGES.NON_OWNER_NOT_ALLOWED, 403));
     } else {
