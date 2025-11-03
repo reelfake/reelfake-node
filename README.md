@@ -1,13 +1,15 @@
 # Table of Contents
 
 1. [Introduction](#reelfake-rest-api)
-2. [Running locally](#running-on-localhost)
+2. [API for Public Use](#api-for-public-use)
+3. [Running locally](#running-on-localhost)
    1. [Start database](#start-the-container-for-database)
    2. [Start api](#start-the-container-for-the-api)
-3. [Running on Cloud](#running-on-cloud)
+4. [Running on Cloud](#running-on-cloud)
    1. [Start database instance](#instance-for-database)
    2. [Start api instance](#instance-for-api)
-4. [Api Specs](#api-specification)
+5. [Api Specs](#api-specification)
+6. [Generating JWT Secret](#generating-jwt-secret)
 
 ## Reelfake REST API
 
@@ -29,6 +31,23 @@ You have a simple api with GET, POST, PUT, PATCH and DELETE operations with the 
 - Store
 - Customer
 - Rental
+
+## API for Public Use
+
+I have the api deployed for my personal use which is available for public.
+This publicly available api does not have the routes that mutate the data.
+You can access this using the [Reelfake api](https://reelfake.cloud) which is for my personal use.
+You can go through the [api specs](https://reelfake.cloud/api/docs) for more information.
+So, what this api provide?
+1. All GET methods (like `/api/movies`, `/api/actors`, `/api/customers`, `/api/movies/:id` and so on).
+2. The login (`/api/auth/login`) and logout (`/api/auth/logout`).
+3. The new user registration endpoints (i.e. `/api/customers/register` and `/api/staff/register`).
+4. Endpoints for forgotten password (i.e. `/api/customers/:id/forgot_password` and `/api/staff/:id/forgot_password`).
+5. Endpoints for changing password (i.e. `/api/customers/:id/change_password` and `/api/staff/:id/change_password`).
+
+**Notes:**
+1. Although the api is for public, I purge the database weekly to keep my Lightsail instances clean and lightweight.
+2. When I purge the database, I re-seed the database which are part of the docker image. So, whatever you created the users or any data will be removed.
 
 ## Running on localhost
 
