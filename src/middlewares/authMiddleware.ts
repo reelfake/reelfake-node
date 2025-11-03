@@ -100,3 +100,31 @@ export function validateUserRole(...roles: USER_ROLES[]) {
     next();
   };
 }
+
+export function allowOnlyMe(req: Request, res: Response, next: NextFunction) {
+  if (
+    process.env['NODE_ENV'] === 'production' &&
+    process.env['SHOULD_BLOCK_NON_OWNER'] === 'true' &&
+    req.headers['API_OWNER_SECRET_KEY'] !== process.env['API_OWNER_SECRET_KEY']
+  ) {
+    const disallowedMethods = ['PUT', 'PATCH', 'DELETE', 'POST'];
+    const disallowedGETPaths = ['/api/movies/upload/track'];
+    const allowedPaths = [
+      /^\/api\/auth\/(login|logout)$/,
+      /\/api\/(staff|customers)\/register^$/,
+      /^\/api\/(staff|customers)\/[0-9]+\/(forgot_password|change_password)$/,
+    ];
+
+    if (
+      process.env['NODE_ENV'] === 'production' &&
+      ((disallowedMethods.includes(req.method) && !allowedPaths.some((path) => path.test(req.path))) ||
+        (req.method === 'GET' && disallowedGETPaths.includes(req.path)))
+    ) {
+      res.send(new AppError(ERROR_MESSAGES.NON_OWNER_NOT_ALLOWED, 403));
+    } else {
+      next();
+    }
+  } else {
+    next();
+  }
+}

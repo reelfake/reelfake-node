@@ -45,7 +45,10 @@ module.exports = {
     minimizer: [new TerserWebpackPlugin()],
   },
   plugins: [
-    new webpack.DefinePlugin({ 'process.env.BUILD_AT': JSON.stringify(new Date().toISOString()) }),
+    new webpack.DefinePlugin({
+      'process.env.BUILD_AT': JSON.stringify(new Date().toISOString()),
+      'process.env.NODE_ENV': 'production',
+    }),
     new webpack.IgnorePlugin({
       resourceRegExp: /^pg-native$/,
     }),

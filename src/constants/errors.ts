@@ -1,4 +1,6 @@
 export default {
+  NON_OWNER_NOT_ALLOWED:
+    'You are not allowed to mutate the data on the read-only server. Run the app locally or any of your cloud. Please follow the readme for the steps on how to do this.',
   INVALID_AUTH_TOKEN: 'Invalid or expired token',
   RESOURCES_NOT_FOUND: 'Resources not found',
   USER_NOT_FOUND: 'User not found',

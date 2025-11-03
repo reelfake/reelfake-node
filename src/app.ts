@@ -4,7 +4,8 @@ import compression from 'compression';
 import path from 'path';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import { AppError, getOpenApiDocsHtmlString, getOpenApiReDocsHtmlString, getOpenApiUril } from './utils';
+import { allowOnlyMe } from './middlewares';
+import { AppError, getOpenApiDocsHtmlString, getOpenApiReDocsHtmlString, getOpenApiUril, testDbConnection } from './utils';
 import {
   statsRoutes,
   addressRoutes,
@@ -20,6 +21,7 @@ import {
   authRoutes,
   rentalRoutes,
 } from './routes';
+import sequelize from './sequelize.config';
 
 // app.use(helmet());
 // app.use(morgan('tiny', { stream: logStream }));
@@ -36,6 +38,8 @@ app.use((req, res, next) => {
   }
   compression()(req, res, next);
 });
+
+app.use(allowOnlyMe);
 
 app.get('/', (req: Request, res: Response) => {
   res.status(200).send('Welcome to Reelfake API...');
@@ -62,6 +66,15 @@ app.get('/api/docs', (req, res) => {
 app.get('/api/redocs', (req, res) => {
   const docsUrl = getOpenApiUril(req.hostname);
   res.send(getOpenApiReDocsHtmlString(docsUrl));
+});
+
+app.get('/api/test', async (req, res) => {
+  try {
+    const dbMetadata = await testDbConnection(sequelize);
+    res.status(200).send({ status: 'RUNNING', message: 'Database is running', db: { ...dbMetadata } });
+  } catch (err) {
+    res.status(500).send({ status: 'ERROR', message: (err as Error).message });
+  }
 });
 
 // Statistics
