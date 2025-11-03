@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "build": "webpack --config webpack.prod.config.js",
-    "start": "NODE_ENV=production node ./dist/server.js",
+    "start": "node ./dist/bundle.js",
     "dev": "webpack --watch --config webpack.dev.config.js",
     "test": "jest --forceExit --detectOpenHandles",
     "lint-api-specs": "redocly lint openapi/dist/openapi.yaml",
