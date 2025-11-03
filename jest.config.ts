@@ -17,8 +17,8 @@ const config: Config.InitialOptions = {
   ],
   // coverageDirectory: '<rootDir>/testReport',
   testMatch: ['**/tests/**/*.test.ts', '!<rootDir>/src/server.ts'],
-  // globalSetup: '<rootDir>/src/jest.setup.ts',
-  // globalTeardown: '<rootDir>/src/jest.teardown.ts',
+  globalSetup: '<rootDir>/src/jest.setup.ts',
+  globalTeardown: '<rootDir>/src/jest.teardown.ts',
 };
 
 export default config;
