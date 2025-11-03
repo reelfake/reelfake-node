@@ -32,26 +32,26 @@ You have a simple api with GET, POST, PUT, PATCH and DELETE operations with the 
 
 ## Running on localhost
 
-### Start the container for database \n
+### Start the container for database
 
-`docker run -d --name container_name_of_choice -p 5432:5432 -v volume_name_of_choice:/var/lib/postgresql/data \
--e POSTGRES_USER=username_of_choice -e POSTGRES_PASSWORD=password_of_choice pratapreddy15/reelfake-postgres`
+<pre><code>docker run -d --name container_name_of_choice -p 5432:5432 -v volume_name_of_choice:/var/lib/postgresql/data \
+-e POSTGRES_USER=username_of_choice -e POSTGRES_PASSWORD=password_of_choice pratapreddy15/reelfake-postgres</code></pre>
 
-#### Verify the database is up \n
+#### Verify the database is up
 
-`docker logs -f container_name_from_above`
+<code>docker logs -f container_name_from_above</code>
 
 ### Start the container for the api
 
-For this step, you will need to generate the jwt secret (refer #generating-jwt-secret) \n
+For this step, you will need to generate the jwt secret (refer [Generating JWT Secret](#generating-jwt-secret))
 
-`docker run -d --name container_name_of_choice -p port_of_choice:8080 -e DB_HOST=172.17.0.2 \
+<pre><code>docker run -d --name container_name_of_choice -p port_of_choice:8080 -e DB_HOST=172.17.0.2 \
 -e DB_PORT=5432 -e DB_NAME=reelfake_db -e DB_USER=username_from_above -e DB_PASSWORD=password_from_above \
--e REELFAKE_USERS_DB_NAME=true -e JWT_SECRET={{Generated JWT Secret}} pratapreddy15/reelfake-backend`
+-e REELFAKE_USERS_DB_NAME=true -e JWT_SECRET={{Generated JWT Secret}} pratapreddy15/reelfake-backend</code></pre>
 
-#### Monitor the api logs (if REELFAKE_USERS_DB_NAME is enabled then you can see the db transaction related logs) \n
+#### Monitor the api logs (if REELFAKE_USERS_DB_NAME is enabled then you can see the db transaction related logs)
 
-`docker logs -f container_name_from_above`
+<pre><code>docker logs -f container_name_from_above</code></pre>
 
 ## Running on cloud
 
@@ -73,21 +73,21 @@ The below instructions are for deploying to Amazon Lightsail that I use (make su
    - SSH on port 22
    - HTTP on port 80
 5. SSH into the in instance
-6. Run the below docker command (you can change POSTGRES_USER and POSTGRES_PASSWORD of your choice) \n
-   `docker run -d --name container_name_of_choice -p 5432:5432 -v volume_name_of_choice:/var/lib/postgresql/data \
-   -e POSTGRES_USER=db_username_prod -e POSTGRES_PASSWORD=db_user_password_prod pratapreddy15/reelfake-postgres`
-7. If persisting data is not required, you can remove the volume mount \n
-   `docker run -d --name container_name_of_choice -p 5432:5432 \
-   -e POSTGRES_USER=db_username_prod -e POSTGRES_PASSWORD=db_user_password_prod pratapreddy15/reelfake-postgres`
+6. Run the below docker command (you can change POSTGRES_USER and POSTGRES_PASSWORD of your choice)
+   <pre><code>docker run -d --name container_name_of_choice -p 5432:5432 -v volume_name_of_choice:/var/lib/postgresql/data \
+   -e POSTGRES_USER=db_username_prod -e POSTGRES_PASSWORD=db_user_password_prod pratapreddy15/reelfake-postgres</code></pre>
+7. If persisting data is not required, you can remove the volume mount
+   <pre><code>docker run -d --name container_name_of_choice -p 5432:5432 \
+   -e POSTGRES_USER=db_username_prod -e POSTGRES_PASSWORD=db_user_password_prod pratapreddy15/reelfake-postgres</code></pre>
 
 ### Instance for api
 
 1. The steps from 1 to 5 are same as database instance.
-2. Generate the jwt secret (refer #generating_jwt_secret)
-3. Run the below docker command (you need to change DB_USER and DB_PASSWORD depending on what you entered when running database in above step) \n
-   `docker run -d --name container_name_of_choice -p port_of_choice:8080 -e DB_HOST={{IP Address}} \
+2. Generate the jwt secret (refer [Generating JWT Secret](#generating-jwt-secret))
+3. Run the below docker command (you need to change DB_USER and DB_PASSWORD depending on what you entered when running database in above step)
+   <pre><code>docker run -d --name container_name_of_choice -p port_of_choice:8080 -e DB_HOST={{IP Address}} \
    -e DB_PORT=5432 -e DB_NAME=reelfake_db -e DB_USER=db_username_prod -e DB_PASSWORD=db_user_password_prod \
-   -e REELFAKE_USERS_DB_NAME=true -e JWT_SECRET={{Generated JWT Secret}} pratapreddy15/reelfake-backend`
+   -e REELFAKE_USERS_DB_NAME=true -e JWT_SECRET={{Generated JWT Secret}} pratapreddy15/reelfake-backend</code></pre>
 
 **Note:**
 
@@ -97,19 +97,23 @@ The below instructions are for deploying to Amazon Lightsail that I use (make su
 ## Api Specification
 
 _If running locally (the port is what you mentioned when running the container)_
-Docs - http://localhost:{{port}}/api/docs
-Redocs - http://localhost:{{port}}/api/redocs
+<pre>
+   Docs - http://localhost:{{port}}/api/docs
+   Redocs - http://localhost:{{port}}/api/redocs
+</pre>
 
 _If running on cloud_
-Docs - http://{{Ip Address or host DNS}}/api/docs
-Redocs - http://{{Ip Address or host DNS}}/api/redocs
+<pre>
+   Docs - http://{{Ip Address or host DNS}}/api/docs
+   Redocs - http://{{Ip Address or host DNS}}/api/redocs
+</pre>
 
 ### Generating JWT Secret
-In the terminal, run below command \n
-`node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
+In the terminal, run below command
+<pre><code>node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"</code></pre>
 
-if you do not have node installed, you can use openssl tool \n
-`openssl rand -hex 32`
+if you do not have node installed, you can use openssl tool
+<pre><code>openssl rand -hex 32`</code></pre>
 
 ## License
 
