@@ -1910,6 +1910,43 @@ paths:
           $ref: '#/components/responses/notFound'
         '500':
           $ref: '#/components/responses/internalServerError'
+  /movies/upload/validate:
+    post:
+      summary: Validate the csv file to be upload
+      operationId: validateUpload
+      tags:
+        - movie
+      requestBody:
+        content:
+          text/csv:
+            schema:
+              type: string
+              format: binary
+              example: |
+                tmdb_id,imdb_id,title,original_title,overview,runtime,release_date,genres,countries_of_origin,language,movie_status,popularity,budget,revenue,rating_average,rating_count,poster_url,rental_rate
+                658224,tt24218194,some tile for the movie,some original title for the movie,some overview for the movie,104,01/01/2025,['drama','family'],['au'],en,Released,5,900000,12000000,8.5,120,https://example.com/movie_poster.jpg,20
+      responses:
+        '200':
+          description: |
+            Stream of events with the validation result for the row in the csv file. The event payload is below:<br>
+            "data: { "status": "processing", "index": 1, "isValid": true }\n\n"
+            - status: Indicating whether the validation is in progress or completed.
+            - index: The position of the row in the csv. 1 is for row # 1, 2 for row # 2 and so on.
+            - isValid: True when the row is valid and false is when the row is not valid.
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
   /staff/{id}/forgot_password:
     put:
       summary: Change the staff password which is forgotten

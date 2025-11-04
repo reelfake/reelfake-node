@@ -103,7 +103,6 @@ export function validateUserRole(...roles: USER_ROLES[]) {
 
 export function allowOnlyMe(req: Request, res: Response, next: NextFunction) {
   const isProdEnvironment = process.env['NODE_ENV'] === 'production';
-  // const isProdEnvironment = true;
 
   if (
     isProdEnvironment &&
@@ -122,6 +121,7 @@ export function allowOnlyMe(req: Request, res: Response, next: NextFunction) {
   ) {
     const disallowedMethods = ['PUT', 'PATCH', 'DELETE', 'POST'];
     const disallowedGETPaths = ['/api/movies/upload/track'];
+    const allowedPOSTPaths = ['/api/movies/upload/validate'];
     const allowedPaths = [
       /^\/api\/auth\/(login|logout)$/,
       /\/api\/(staff|customers)\/register^$/,
@@ -130,7 +130,8 @@ export function allowOnlyMe(req: Request, res: Response, next: NextFunction) {
 
     if (
       (disallowedMethods.includes(req.method) && !allowedPaths.some((path) => path.test(req.path))) ||
-      (req.method === 'GET' && disallowedGETPaths.includes(req.path))
+      (req.method === 'GET' && disallowedGETPaths.includes(req.path)) ||
+      (req.method === 'POST' && !allowedPOSTPaths.includes(req.path))
     ) {
       next(new AppError(ERROR_MESSAGES.NON_OWNER_NOT_ALLOWED, 403));
     } else {

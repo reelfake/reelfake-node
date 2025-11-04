@@ -66,6 +66,8 @@
   $ref: apis/movie/addActorsToMovie.yaml
 /movies/{id}/stores:
   $ref: apis/movie/movieInStores.yaml
+/movies/upload/validate:
+  $ref: apis/movie/validateUpload.yaml
 # ##################################
 # STAFF API
 /staff/{id}/forgot_password:
