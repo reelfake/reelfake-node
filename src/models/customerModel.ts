@@ -1,6 +1,10 @@
 import { WhereOptions, DataTypes } from 'sequelize';
 import sequelize from '../sequelize.config';
 import BaseModel from './baseModel';
+import { addressUtils, AppError } from '../utils';
+import { ERROR_MESSAGES } from '../constants';
+import StoreModel from './storeModel';
+import StaffModel from './staffModel';
 
 class Customer extends BaseModel {
   public static async getRowsCountWhere(conditions?: WhereOptions) {
@@ -8,6 +12,39 @@ class Customer extends BaseModel {
       where: conditions,
     });
     return countOfRows;
+  }
+
+  public static async getCustomerDetail(id: number) {
+    const instance = await Customer.findByPk(id, {
+      attributes: { exclude: ['addressId', 'preferredStoreId'] },
+      include: [
+        {
+          model: StoreModel,
+          as: 'preferredStore',
+          attributes: ['id', 'phoneNumber'],
+          required: false,
+          include: [
+            {
+              model: StaffModel,
+              as: 'storeManager',
+              attributes: ['id', 'firstName', 'lastName', 'email', 'active', 'phoneNumber', 'avatar'],
+              required: false,
+              include: [addressUtils.includeAddress({ addressPath: 'preferredStore->storeManager->address' })],
+            },
+            addressUtils.includeAddress({ addressPath: 'preferredStore->address' }),
+          ],
+        },
+        addressUtils.includeAddress({ addressPath: 'address' }, false),
+      ],
+    });
+
+    if (!instance) {
+      throw new AppError(ERROR_MESSAGES.RESOURCES_NOT_FOUND, 404);
+    }
+
+    const detail = instance.toJSON();
+
+    return detail;
   }
 }
 

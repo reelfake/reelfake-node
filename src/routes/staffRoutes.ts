@@ -8,6 +8,7 @@ import {
   deleteStaff,
   changeStaffPassword,
   forgotStaffPassword,
+  getStoreManagersSummary,
 } from '../controllers';
 import { validateAuthToken, validateUserRole, validateNewPassword } from '../middlewares';
 import { AppError, routeFnWrapper } from '../utils';
@@ -64,6 +65,7 @@ router.get(
   validateUserRole(USER_ROLES.STAFF, USER_ROLES.STORE_MANAGER),
   routeFnWrapper(getStaff)
 );
+router.get('/summary', validateStaffRouteQuery, routeFnWrapper(getStaff));
 router.post('/', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(createStaff));
 router.get(
   '/managers',
@@ -71,6 +73,7 @@ router.get(
   validateUserRole(USER_ROLES.STAFF, USER_ROLES.STORE_MANAGER),
   routeFnWrapper(getStoreManagers)
 );
+router.get('/managers/summary', routeFnWrapper(getStoreManagersSummary));
 router.get('/:id', validateAuthToken, validateUserRole(USER_ROLES.STAFF, USER_ROLES.STORE_MANAGER), routeFnWrapper(getStaffById));
 
 router.put('/:id/forgot_password', validateNewPassword, routeFnWrapper(forgotStaffPassword));

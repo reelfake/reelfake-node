@@ -151,7 +151,7 @@ export const getMoviesInStore = async (req: Request, res: Response) => {
   const { idOffset, totalMovies } = await getMoviesPaginationOffset(storeId, pageNumber, limitPerPage, filters);
 
   if (totalMovies === 0) {
-    throw new AppError('No data found with the given query', 404);
+    throw new AppError(ERROR_MESSAGES.NO_DATA_FOUND_WITH_QUERY, 404);
   }
 
   const totalPages = Math.ceil(totalMovies / limitPerPage);
@@ -232,7 +232,7 @@ export const updateStore = async (req: CustomRequestWithBody<Partial<StorePayloa
   const { phoneNumber, address } = req.body;
 
   if (address && (!address.addressLine || !address.cityName || !address.stateName || !address.country || !address.postalCode)) {
-    throw new AppError('Incomplete address', 400);
+    throw new AppError(ERROR_MESSAGES.INCOMPLETE_ADDRESS, 400);
   }
 
   if (req.body.storeManagerId && req.body.storeManager) {
@@ -344,7 +344,7 @@ export const createStore = async (req: CustomRequestWithBody<StorePayload>, res:
   }
 
   if (address && (!address.addressLine || !address.cityName || !address.stateName || !address.country || !address.postalCode)) {
-    throw new AppError('Incomplete address', 400);
+    throw new AppError(ERROR_MESSAGES.INCOMPLETE_ADDRESS, 400);
   }
 
   if (await StoreModel.isAddressInUse(address)) {

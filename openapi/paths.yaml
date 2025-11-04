@@ -18,6 +18,8 @@
   $ref: apis/auth/login.yaml
 /auth/logout:
   $ref: apis/auth/logout.yaml
+/auth/me:
+  $ref: apis/auth/userProfile.yaml
 # ##################################
 # CITY API
 /cities:
@@ -34,6 +36,8 @@
   $ref: apis/customer/changeCustomerPassword.yaml
 /customers:
   $ref: apis/customer/customers.yaml
+/customers/summary:
+  $ref: apis/customer/summary.yaml
 /customers/register:
   $ref: apis/customer/customerRegistration.yaml
 /customers/{id}:
@@ -70,8 +74,12 @@
   $ref: apis/staff/changeStaffPassword.yaml
 /staff:
   $ref: apis/staff/staff.yaml
+/staff/summary:
+  $ref: apis/staff/summary.yaml
 /staff/managers:
   $ref: apis/staff/storeManagers.yaml
+/staff/managers/summary:
+  $ref: apis/staff/storeManagersSummary.yaml
 /staff/{id}:
   $ref: apis/staff/staffById.yaml
 # ##################################

@@ -1,15 +1,17 @@
 get:
-  summary: Get list of all staff (optionally filter by residential state and city)
-  operationId: getStaff
+  summary: Get the customer list with pagination support
+  operationId: getCustomersSummary
+  security:
+    - cookieAuth: []
   tags:
-    - staff
+    - customer
   parameters:
     - in: query
       name: page
       required: false
       description: |
-        The page number (which starts with 1) to fetch the set of staff from.
-        The staff are split into multiple pages with each page having a limited number of staff.
+        The page number (which starts with 1) to fetch the set of customers from.
+        The customers are split into multiple pages with each page having a limited number of customers.
       schema:
         type: integer
         default: 1
@@ -17,7 +19,7 @@ get:
       name: first_name
       required: false
       description: |
-        The first name of the staff.
+        The first name of the customer.
         Prefix % for starts with search, suffix % for ends with search and enclose with % for contains search.
         Example: first_name=%tap, first_name=pra% and first_name=%ata%.
       schema:
@@ -26,7 +28,7 @@ get:
       name: last_name
       required: false
       description: |
-        The last name of the staff.
+        The last name of the customers.
         Prefix % for starts with search, suffix % for ends with search and enclose with % for contains search.
         Example: last_name=%tap, last_name=pra% and last_name=%ata%.
       schema:
@@ -35,7 +37,7 @@ get:
       name: email
       required: false
       description: |
-        The email of the staff.
+        The email of the customers.
         Prefix % for starts with search, suffix % for ends with search and enclose with % for contains search.
         Example: email=%tap, email=pra% and email=%ata%.
       schema:
@@ -45,17 +47,25 @@ get:
       name: phone_number
       required: false
       description: |
-        The phone number of the staff.
+        The phone number of the customer. This query supports only exact match.
         Prefix % for starts with search, suffix % for ends with search and enclose with % for contains search.
         Example: phone_number=%456, phone_number=123% and phone_number=%456%.
       schema:
         type: string
     - in: query
+      name: registered_on
+      required: false
+      description: |
+        Filters the customers by the registered date (YYYY-MM-DD). This can be a single registered date or a range. For e.g., ?registered_on=2024-01-01 or ?registered_on=2024-01-01,2024-06-30. The query string ?registered_on=2024-01-01 will query customers with the given registered date while ?registered_on=2024-01-01,2024-06-30 will query customers registered between 2024-01-01 and 2024-06-30.
+      schema:
+        type: string
+        format: date
+    - in: query
       name: address_line
       required: false
       description: |
-        The address line of the staff resident.
-        Filters the staff by the address line of the staff address.
+        The address line of the customer resident.
+        Filters the customer by the address line of the customer address.
         Prefix % for starts with search, suffix % for ends with search and enclose with % for contains search.
         Example: address_line=%street, address_line=any% and address_line=%str%.
       schema:
@@ -64,8 +74,8 @@ get:
       name: city
       required: false
       description: |
-        The city of the staff resident.
-        Filters the staff by the city of the staff resident.
+        The city of the customer resident.
+        Filters the customer by the city of the customer resident.
         Prefix % for starts with search, suffix % for ends with search and enclose with % for contains search.
         Example: city=%abad, city=hyder% and city=%aba%.
       schema:
@@ -74,8 +84,8 @@ get:
       name: state
       required: false
       description: |
-        The state of the staff resident.
-        Filters the staff by the state of the staff resident.
+        The state of the customer resident.
+        Filters the customer by the state of the customer resident.
         Prefix % for starts with search, suffix % for ends with search and enclose with % for contains search.
         Example: state=%gana, state=tel% and state=%anga%.
       schema:
@@ -84,8 +94,8 @@ get:
       name: country
       required: false
       description: |
-        The country of the staff resident.
-        Filters the staff by the country of the staff resident.
+        The country of the customer resident.
+        Filters the customer by the country of the customer resident.
         Prefix % for starts with search, suffix % for ends with search and enclose with % for contains search.
         Example: country=%dia, country=ind% and country=%ndi%.
       schema:
@@ -94,15 +104,15 @@ get:
       name: postal_code
       required: false
       description: |
-        The postal_code of the staff resident.
-        Filters the staff by the postal_code of the staff resident.
+        The postal_code of the customer resident.
+        Filters the customer by the postal_code of the customer resident.
         Prefix % for starts with search, suffix % for ends with search and enclose with % for contains search.
         Example: postal_code=%048, postal_code=500% and postal_code=%000%.
       schema:
         type: string
   responses:
     '200':
-      description: Successfully returned list of all staff
+      description: Successfully returned list of customer summary
       content:
         application/json:
           schema:
@@ -111,93 +121,25 @@ get:
               items:
                 type: array
                 items:
-                  $ref: ../../components/staff/staffSummary.yaml
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      format: number
+                    firstName:
+                      type: string
+                    lastName:
+                      type: string
+                    email:
+                      type: string
+                      format: email
+                    active:
+                      type: boolean
               length:
                 type: integer
               pagination:
                 $ref: ../../components/pagination.yaml
     '400':
       $ref: ../../components/error/badRequest.yaml
-    '401':
-      $ref: ../../components/error/unauthorized.yaml
-    '403':
-      $ref: ../../components/error/forbidden.yaml
-    '500':
-      $ref: ../../components/error/internalServerError.yaml
-post:
-  summary: Add staff member
-  operationId: createStaff
-  tags:
-    - staff
-  requestBody:
-    description: Payload for the new staff
-    required: true
-    content:
-      application/json:
-        schema:
-          type: object
-          properties:
-            firstName:
-              type: string
-            lastName:
-              type: string
-            email:
-              type: string
-            phoneNumber:
-              type: string
-            avatar:
-              type: string
-              format: uri
-            storeId:
-              type: integer
-              format: number
-            address:
-              type: object
-              properties:
-                addressLine:
-                  type: string
-                cityName:
-                  type: string
-                stateName:
-                  type: string
-                postalCode:
-                  type: string
-  responses:
-    '201':
-      description: Successfully created staff
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              id:
-                type: string
-                format: number
-                readOnly: true
-              firstName:
-                type: string
-              lastName:
-                type: string
-              email:
-                type: string
-                format: email
-              active:
-                type: boolean
-              phoneNumber:
-                type: string
-              avatar:
-                type: string
-                format: uri
-              storeId:
-                type: integer
-                format: number
-              address:
-                $ref: ../../components/address/address.yaml
-    '400':
-      $ref: ../../components/error/badRequest.yaml
-    '401':
-      $ref: ../../components/error/unauthorized.yaml
-    '403':
-      $ref: ../../components/error/forbidden.yaml
     '500':
       $ref: ../../components/error/internalServerError.yaml

@@ -76,6 +76,7 @@ function validateCustomersRouteQuery(req: Request, res: Response, next: NextFunc
 
 // GET
 router.get('/', validateCustomersRouteQuery, validateAuthToken, routeFnWrapper(getCustomers));
+router.get('/summary', routeFnWrapper(getCustomers));
 router.get('/:id', validateAuthToken, routeFnWrapper(getCustomerById));
 // POST
 router.post('/register', routeFnWrapper(registerCustomer));

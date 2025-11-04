@@ -102,9 +102,22 @@ export function validateUserRole(...roles: USER_ROLES[]) {
 }
 
 export function allowOnlyMe(req: Request, res: Response, next: NextFunction) {
+  const isProdEnvironment = process.env['NODE_ENV'] === 'production';
+  // const isProdEnvironment = true;
+
   if (
-    process.env['NODE_ENV'] === 'production' &&
+    isProdEnvironment &&
     process.env['SHOULD_BLOCK_NON_OWNER'] === 'true' &&
+    process.env['API_OWNER_SECRET_KEY'] === undefined
+  ) {
+    next(new AppError(ERROR_MESSAGES.NON_OWNER_NOT_ALLOWED, 403));
+    return;
+  }
+
+  if (
+    isProdEnvironment &&
+    process.env['SHOULD_BLOCK_NON_OWNER'] === 'true' &&
+    process.env['API_OWNER_SECRET_KEY'] === undefined &&
     req.headers['API_OWNER_SECRET_KEY'] !== process.env['API_OWNER_SECRET_KEY']
   ) {
     const disallowedMethods = ['PUT', 'PATCH', 'DELETE', 'POST'];
@@ -119,7 +132,7 @@ export function allowOnlyMe(req: Request, res: Response, next: NextFunction) {
       (disallowedMethods.includes(req.method) && !allowedPaths.some((path) => path.test(req.path))) ||
       (req.method === 'GET' && disallowedGETPaths.includes(req.path))
     ) {
-      res.send(new AppError(ERROR_MESSAGES.NON_OWNER_NOT_ALLOWED, 403));
+      next(new AppError(ERROR_MESSAGES.NON_OWNER_NOT_ALLOWED, 403));
     } else {
       next();
     }

@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import { CustomerModel, StaffModel, StoreModel } from '../models';
 import { ERROR_MESSAGES, USER_ROLES, TOKEN_EXPIRING_IN_MS } from '../constants';
 import { AppError, generateAuthToken } from '../utils';
+import { CustomRequest } from '../types';
 
 async function findUser(email: string) {
   const customer = await CustomerModel.findOne({
@@ -104,4 +105,28 @@ export const login = async (req: Request, res: Response) => {
 
 export const logout = (req: Request, res: Response) => {
   res.clearCookie('auth_token').status(200).json({ message: 'Logged out successfully' });
+};
+
+export const getUserProfile = async (req: CustomRequest, res: Response) => {
+  const { user } = req;
+
+  if (!user) {
+    throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
+  }
+
+  let userData;
+
+  switch (user.role) {
+    case USER_ROLES.CUSTOMER:
+      userData = await CustomerModel.getCustomerDetail(user.id);
+      break;
+    case USER_ROLES.STAFF:
+    case USER_ROLES.STORE_MANAGER:
+      userData = await StaffModel.getStaffDetail(user.id);
+      break;
+    default:
+      throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
+  }
+
+  res.status(200).send(userData);
 };

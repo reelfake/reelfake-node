@@ -1,6 +1,6 @@
 get:
   summary: Get list of store managers
-  operationId: getStoreManagers
+  operationId: getStoreManagersSummary
   tags:
     - staff
   responses:
@@ -28,22 +28,6 @@ get:
                       format: email
                     active:
                       type: boolean
-                    phoneNumber:
-                      type: string
-                    avatar:
-                      type: string
-                    address:
-                      $ref: ../../components/address/address.yaml
-                    store:
-                      type: object
-                      properties:
-                        id:
-                          type: integer
-                          format: number
-                        phoneNumber:
-                          type: string
-                        address:
-                          $ref: ../../components/address/address.yaml
               length:
                 type: integer
     '400':

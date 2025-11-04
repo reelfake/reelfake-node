@@ -100,6 +100,7 @@ async function getAddressIdForUpdate(customer: CustomerModel, newAddress: Addres
 }
 
 export const getCustomers = async (req: CustomRequest, res: Response) => {
+  const { user } = req;
   const { page: pageNumberText = '1' } = req.query;
 
   const limitPerPage = ITEMS_PER_PAGE_FOR_PAGINATION;
@@ -110,7 +111,7 @@ export const getCustomers = async (req: CustomRequest, res: Response) => {
   const { idOffset, totalCustomers } = await getCustomersPaginationOffset(pageNumber, limitPerPage, filters);
 
   if (totalCustomers === 0) {
-    throw new AppError('No data found with the given query', 404);
+    throw new AppError(ERROR_MESSAGES.NO_DATA_FOUND_WITH_QUERY, 404);
   }
 
   const totalPages = Math.ceil(totalCustomers / limitPerPage);
@@ -119,15 +120,22 @@ export const getCustomers = async (req: CustomRequest, res: Response) => {
     throw new AppError('Page out of range', 404);
   }
 
+  const attributes = ['id', 'firstName', 'lastName', 'email', 'active'];
+  if (user) {
+    attributes.push('phoneNumber', 'preferredStoreId', 'avatar', 'registeredOn');
+  }
+
   const { addressFilter, customersFilter } = filters;
+  const include = [
+    addressUtils.includeAddress({
+      addressPath: 'address',
+      ...addressFilter,
+    }),
+  ];
+
   const customers = await CustomerModel.findAll({
-    attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber', 'preferredStoreId', 'active', 'avatar', 'registeredOn'],
-    include: [
-      addressUtils.includeAddress({
-        addressPath: 'address',
-        ...addressFilter,
-      }),
-    ],
+    attributes,
+    ...(user && { include }),
     order: [['id', idOffset >= 0 ? 'ASC' : 'DESC']],
     where: {
       id: {
@@ -163,34 +171,7 @@ export const getCustomerById = async (req: CustomRequest, res: Response) => {
     throw new AppError(ERROR_MESSAGES.FORBIDDEN, 403);
   }
 
-  const customerInstance = await CustomerModel.findByPk(id, {
-    attributes: { exclude: ['addressId', 'preferredStoreId'] },
-    include: [
-      {
-        model: StoreModel,
-        as: 'preferredStore',
-        attributes: ['id', 'phoneNumber'],
-        required: false,
-        include: [
-          {
-            model: StaffModel,
-            as: 'storeManager',
-            attributes: ['id', 'firstName', 'lastName', 'email', 'active', 'phoneNumber', 'avatar'],
-            required: false,
-            include: [addressUtils.includeAddress({ addressPath: 'preferredStore->storeManager->address' })],
-          },
-          addressUtils.includeAddress({ addressPath: 'preferredStore->address' }),
-        ],
-      },
-      addressUtils.includeAddress({ addressPath: 'address' }, false),
-    ],
-  });
-
-  if (!customerInstance) {
-    throw new AppError(ERROR_MESSAGES.RESOURCES_NOT_FOUND, 404);
-  }
-
-  const customerData = customerInstance.toJSON();
+  const customerData = await CustomerModel.getCustomerDetail(id);
 
   res.status(200).json(customerData);
 };
@@ -266,7 +247,7 @@ export const updateCustomer = async (req: CustomRequestWithBody<Partial<Customer
   }
 
   if (address && (!address.addressLine || !address.cityName || !address.stateName || !address.country || !address.postalCode)) {
-    throw new AppError('Incomplete address', 400);
+    throw new AppError(ERROR_MESSAGES.INCOMPLETE_ADDRESS, 400);
   }
 
   const existingCustInstance = await CustomerModel.findByPk(id, {

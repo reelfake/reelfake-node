@@ -1,0 +1,22 @@
+get:
+  summary: Get user detail for the logged in user
+  operationId: getUserProfile
+  security:
+    - cookieAuth: []
+  tags:
+    - authentication
+  responses:
+    '200':
+      description: Successfully returned the logged in user detail
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: ../../components/customer/customerDetail.yaml
+              - $ref: ../../components/staff/staffItem.yaml
+    '400':
+      $ref: ../../components/error/badRequest.yaml
+    '404':
+      $ref: ../../components/error/notFound.yaml
+    '500':
+      $ref: ../../components/error/internalServerError.yaml

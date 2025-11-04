@@ -84,6 +84,7 @@ async function createActors(t: Transaction, actors: MovieActorPayload[], movieId
     {
       fields: newActorFields,
       ignoreDuplicates: true,
+      returning: true,
       transaction: t,
     }
   );
@@ -132,6 +133,25 @@ async function createActors(t: Transaction, actors: MovieActorPayload[], movieId
       }
     );
   }
+
+  const { duplicateRecords, newRecords } = createdActors.reduce<{ duplicateRecords: ActorModel[]; newRecords: ActorModel[] }>(
+    (acc, curr) => {
+      if (curr.getDataValue('id') === null) {
+        const newRecord = curr.toJSON();
+        delete newRecord['id'];
+        acc.duplicateRecords.push(newRecord);
+      } else {
+        acc.newRecords.push(curr.toJSON());
+      }
+      return acc;
+    },
+    {
+      duplicateRecords: [],
+      newRecords: [],
+    }
+  );
+
+  return { duplicateRecords, newRecords };
 }
 
 export const getMovies = async (req: Request, res: Response) => {
@@ -148,7 +168,7 @@ export const getMovies = async (req: Request, res: Response) => {
   const { idOffset, totalMovies } = await getMoviesPaginationOffset(pageNumber, limitPerPage, filters);
 
   if (totalMovies === 0) {
-    throw new AppError('No data found with the given query', 404);
+    throw new AppError(ERROR_MESSAGES.NO_DATA_FOUND_WITH_QUERY, 404);
   }
 
   const totalPages = Math.ceil(totalMovies / limitPerPage);
@@ -411,43 +431,31 @@ export const addActors = async (req: CustomRequestWithBody<MovieActorPayload[]>,
 
   const actors = req.body;
 
-  try {
-    await sequelize.transaction(async (t) => {
-      await createActors(t, actors);
-    });
+  const { duplicateRecords, newRecords } = await sequelize.transaction(async (t) => {
+    return await createActors(t, actors);
+  });
 
-    const actorTmdbIds = actors.map((actor) => actor.tmdbId);
-    const createdActors = await MovieActorModel.findAll({
-      attributes: [
-        [col(`"actors"."id"`), 'id'],
-        [col(`"actors"."imdb_id"`), 'imdbId'],
-        [col(`"actors"."actor_name"`), 'actorName'],
-        [col(`"actors"."biography"`), 'biography'],
-        [col(`"actors"."birthday"`), 'birthday'],
-        [col(`"actors"."deathday"`), 'deathday'],
-        [col(`"actors"."place_of_birth"`), 'placeOfBirth'],
-        [col(`"actors"."popularity"`), 'popularity'],
-        [col(`"actors"."profile_picture_url"`), 'profilePictureUrl'],
-        'characterName',
-        'castOrder',
-      ],
-      include: [
-        {
-          model: ActorModel,
-          as: 'actors',
-          attributes: [],
-          where: {
-            tmdbId: {
-              [Op.in]: actorTmdbIds,
-            },
-          },
-        },
-      ],
-    });
-    res.status(200).json(createdActors);
-  } catch (err: unknown) {
-    throw new AppError((err as Error).message, 500);
-  }
+  // const actorTmdbIds = actors.map((actor) => actor.tmdbId);
+  // const createdActors = await ActorModel.findAll({
+  //   include: [
+  //     {
+  //       model: MovieModel,
+  //       as: 'movies',
+  //       through: {
+  //         as: 'movies',
+  //       },
+  //       where: { id: movieId },
+  //       attributes: [],
+  //     },
+  //   ],
+  //   where: {
+  //     tmdbId: {
+  //       [Op.in]: actorTmdbIds,
+  //     },
+  //   },
+  // });
+
+  res.status(201).json({ newRecords, duplicateRecords });
 };
 
 export const updateMovie = async (req: CustomRequestWithBody<Partial<IncomingMovie>>, res: Response) => {

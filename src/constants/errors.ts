@@ -1,6 +1,6 @@
 export default {
   NON_OWNER_NOT_ALLOWED:
-    'You are not allowed to mutate the data on the read-only server. Run the app locally or any of your cloud. Please follow the readme for the steps on how to do this.',
+    'You are not allowed to mutate the data on the read-only server. Run the app locally or any of your cloud provider. Please follow the readme for the steps on how to do this.',
   INVALID_AUTH_TOKEN: 'Invalid or expired token',
   RESOURCES_NOT_FOUND: 'Resources not found',
   USER_NOT_FOUND: 'User not found',
@@ -33,4 +33,6 @@ export default {
   RESET_PASSWORD_CURRENT_ACTUAL_MISMATCH: 'Current password is not same as actual password',
   PASSWORD_LENGTH_NOT_MET: 'Password must be at least 8 characters long',
   CUSTOMER_EXIST_WITH_EMAIL: 'Customer with the same email already exist',
+  INCOMPLETE_ADDRESS: 'Incomplete address',
+  NO_DATA_FOUND_WITH_QUERY: 'No data found with the given query',
 };

@@ -4,7 +4,7 @@ export function getOpenApiUril(hostname: string) {
   const isHttps = process.env.NODE_ENV === 'production';
   const port = process.env.NODE_ENV === 'production' ? 8080 : process.env.PORT || DEFAULT_PORT;
 
-  const url = `${isHttps ? 'https' : 'http'}://${hostname}${isHttps ? '' : ':' + { port }}/openapi`;
+  const url = `${isHttps ? 'https' : 'http'}://${hostname}${isHttps ? '' : ':' + port}/openapi`;
   return url;
 }
 
@@ -16,8 +16,8 @@ export function getOpenApiDocsHtmlString(docsUrl: string) {
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="description" content="SwaggerUI" />
-        <title>SwaggerUI</title>
         <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css" />
+        <title>SwaggerUI</title>
     </head>
     <body>
         <div id="swagger-ui"></div>
@@ -25,8 +25,8 @@ export function getOpenApiDocsHtmlString(docsUrl: string) {
         <script>
         window.onload = () => {
             window.ui = SwaggerUIBundle({
-            url: "${docsUrl}",
-            dom_id: '#swagger-ui',
+                url: "${docsUrl}",
+                dom_id: '#swagger-ui',
             });
         };
         </script>
@@ -56,8 +56,8 @@ export function getOpenApiReDocsHtmlString(docsUrl: string) {
         spec-url="${docsUrl}"
         theme='{
             "sidebar": {
-            "backgroundColor": "#263238",
-            "textColor": "#ffffff"
+                "backgroundColor": "#263238",
+                "textColor": "#ffffff"
             }
         }'
         ></redoc>

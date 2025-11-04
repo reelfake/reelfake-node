@@ -6,9 +6,42 @@ import CityModel from './cityModel';
 import CountryModel from './countryModel';
 import { Address as AddressType } from '../types';
 import { AppError, addressUtils } from '../utils';
+import { ERROR_MESSAGES } from '../constants';
 import sequelize from '../sequelize.config';
 
 class Staff extends BaseModel {
+  public static async getStaffDetail(id: number) {
+    const instance = await Staff.findByPk(id, {
+      attributes: [
+        'id',
+        'firstName',
+        'lastName',
+        'email',
+        [literal(`"store"."store_manager_id" = "Staff"."id"`), 'isStoreManager'],
+        'active',
+        'phoneNumber',
+        'avatar',
+      ],
+      include: [
+        addressUtils.includeAddress({ addressPath: 'address' }),
+        {
+          model: StoreModel,
+          as: 'store',
+          attributes: ['id', 'phoneNumber'],
+          include: [addressUtils.includeAddress({ addressPath: 'address' })],
+        },
+      ],
+    });
+
+    if (!instance) {
+      throw new AppError(ERROR_MESSAGES.RESOURCES_NOT_FOUND, 404);
+    }
+
+    const data = instance.toJSON();
+
+    return data;
+  }
+
   public static async getRowsCountWhere(conditions?: WhereOptions) {
     const countOfRows = await Staff.count({
       where: conditions,

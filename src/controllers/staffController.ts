@@ -1,5 +1,5 @@
 import type { Response } from 'express';
-import { col, literal, Op, WhereOptions, Transaction } from 'sequelize';
+import { col, literal, Op, WhereOptions, Transaction, Includeable } from 'sequelize';
 import { StaffModel, AddressModel, CityModel, CountryModel, StoreModel } from '../models';
 import {
   parseStaffPaginationFilters,
@@ -83,6 +83,7 @@ async function getAddressIdForUpdate(staff: StaffModel, newAddress: Address, t: 
 }
 
 export const getStaff = async (req: CustomRequest, res: Response) => {
+  const { user } = req;
   const { page: pageNumberText = '1' } = req.query;
   const limitPerPage = ITEMS_PER_PAGE_FOR_PAGINATION;
   const pageNumber = Number(pageNumberText);
@@ -92,7 +93,7 @@ export const getStaff = async (req: CustomRequest, res: Response) => {
   const { idOffset, totalStaff } = await getStaffPaginationOffset(pageNumber, limitPerPage, filters);
 
   if (totalStaff === 0) {
-    throw new AppError('No data found with the given query', 404);
+    throw new AppError(ERROR_MESSAGES.NO_DATA_FOUND_WITH_QUERY, 404);
   }
 
   const totalPages = Math.ceil(totalStaff / limitPerPage);
@@ -103,29 +104,35 @@ export const getStaff = async (req: CustomRequest, res: Response) => {
 
   const { addressFilter, staffFilter } = filters;
 
+  const attributes: Array<
+    | [
+        {
+          val: unknown;
+        },
+        string,
+      ]
+    | string
+  > = ['id', 'firstName', 'lastName', 'email', 'active'];
+
+  if (user) {
+    attributes.push('phoneNumber', 'avatar', 'storeId', [literal(`"store"."store_manager_id" = "Staff"."id"`), 'isStoreManager']);
+  }
+
+  const include = [
+    {
+      model: StoreModel,
+      as: 'store',
+      attributes: [],
+    },
+    addressUtils.includeAddress({
+      addressPath: 'address',
+      ...addressFilter,
+    }),
+  ];
+
   const staffInstance = await StaffModel.findAll({
-    attributes: [
-      'id',
-      'firstName',
-      'lastName',
-      'email',
-      'active',
-      'phoneNumber',
-      'avatar',
-      'storeId',
-      [literal(`"store"."store_manager_id" = "Staff"."id"`), 'isStoreManager'],
-    ],
-    include: [
-      {
-        model: StoreModel,
-        as: 'store',
-        attributes: [],
-      },
-      addressUtils.includeAddress({
-        addressPath: 'address',
-        ...addressFilter,
-      }),
-    ],
+    attributes: attributes,
+    ...(user && { include }),
     order: [['id', idOffset >= 0 ? 'ASC' : 'DESC']],
     where: {
       id: {
@@ -156,33 +163,32 @@ export const getStaffById = async (req: CustomRequest, res: Response) => {
     throw new AppError('Invalid staff id', 400);
   }
 
-  const staffInstance = await StaffModel.findByPk(staffId, {
-    attributes: [
-      'id',
-      'firstName',
-      'lastName',
-      'email',
-      [literal(`"store"."store_manager_id" = "Staff"."id"`), 'isStoreManager'],
-      'active',
-      'phoneNumber',
-      'avatar',
-    ],
+  const data = await StaffModel.getStaffDetail(staffId);
+
+  res.status(200).json(data);
+};
+
+export const getStoreManagersSummary = async (req: CustomRequest, res: Response) => {
+  const storeManagers = await StaffModel.findAll({
+    attributes: ['id', 'firstName', 'lastName', 'email', 'active'],
     include: [
-      addressUtils.includeAddress({ addressPath: 'address' }),
       {
         model: StoreModel,
         as: 'store',
-        attributes: ['id', 'phoneNumber'],
-        include: [addressUtils.includeAddress({ addressPath: 'address' })],
+        attributes: [],
       },
     ],
+    where: {
+      id: {
+        [Op.eq]: col(`"store"."store_manager_id`),
+      },
+    },
   });
 
-  if (!staffInstance) {
-    throw new AppError(ERROR_MESSAGES.RESOURCES_NOT_FOUND, 404);
-  }
-
-  res.status(200).json(staffInstance);
+  res.status(200).json({
+    items: storeManagers,
+    lenggth: storeManagers.length,
+  });
 };
 
 export const getStoreManagers = async (req: CustomRequest, res: Response) => {
@@ -230,7 +236,7 @@ export const updateStaff = async (req: CustomRequestWithBody<StaffPayload>, res:
   const { storeId, email, phoneNumber, address } = req.body;
 
   if (address && (!address.addressLine || !address.cityName || !address.stateName || !address.country || !address.postalCode)) {
-    throw new AppError('Incomplete address', 400);
+    throw new AppError(ERROR_MESSAGES.INCOMPLETE_ADDRESS, 400);
   }
 
   const currentStaffInstance = await StaffModel.findByPk(staffId);
@@ -306,6 +312,13 @@ export const updateStaff = async (req: CustomRequestWithBody<StaffPayload>, res:
 
 export const createStaff = async (req: CustomRequestWithBody<StaffPayload>, res: Response) => {
   const { address, firstName, lastName, email, phoneNumber, avatar, storeId } = req.body;
+
+  if (
+    !address ||
+    (address && (!address.addressLine || !address.cityName || !address.stateName || !address.country || !address.postalCode))
+  ) {
+    throw new AppError(ERROR_MESSAGES.INCOMPLETE_ADDRESS, 400);
+  }
 
   if (await StoreModel.isAddressInUse(address)) {
     throw new AppError('The address is in use by a store', 400);

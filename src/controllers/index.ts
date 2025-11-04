@@ -1,3 +1,5 @@
+// Auth
+export { getUserProfile, login, logout } from './authController';
 // Stats
 export { getStatistics } from './statsController';
 // Genres
@@ -25,8 +27,6 @@ export {
   updateStore,
   deleteStore,
 } from './storeController';
-// Auth
-export { login, logout } from './authController';
 // Staff
 export {
   getStaff,
@@ -37,6 +37,7 @@ export {
   deleteStaff,
   changeStaffPassword,
   forgotStaffPassword,
+  getStoreManagersSummary,
 } from './staffController';
 // Address
 export { getAddresses, getAddressesInCity, getAddressesInState } from './addressController';

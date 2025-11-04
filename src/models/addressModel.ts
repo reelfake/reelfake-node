@@ -3,8 +3,9 @@ import BaseModel from './baseModel';
 import CountryModel from './countryModel';
 import CityModel from './cityModel';
 import { AppError } from '../utils';
-import { Address as AddressType } from '../types';
+import { ERROR_MESSAGES } from '../constants';
 import sequelize from '../sequelize.config';
+import { Address as AddressType } from '../types';
 
 class Address extends BaseModel {
   public static async isAddressExist(
@@ -112,7 +113,7 @@ class Address extends BaseModel {
     const { addressLine, cityName, stateName, country, postalCode, inUseBy } = address;
 
     if (!addressLine || !cityName || !stateName || !country || !postalCode) {
-      throw new AppError('Incomplete address', 400);
+      throw new AppError(ERROR_MESSAGES.INCOMPLETE_ADDRESS, 400);
     }
 
     const countryInstance = await CountryModel.findOne({
@@ -185,7 +186,7 @@ class Address extends BaseModel {
     const { addressLine, cityName, stateName, country, postalCode, inUseBy } = address;
 
     if (!addressLine || !cityName || !stateName || !country || !postalCode) {
-      throw new AppError('Incomplete address', 400);
+      throw new AppError(ERROR_MESSAGES.INCOMPLETE_ADDRESS, 400);
     }
 
     const currentAddressInstance = await Address.findByPk(id, { transaction: t });
