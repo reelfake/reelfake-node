@@ -1,2 +1,2 @@
-export { UploadUtil, UploadError } from './uploadUtil';
-export type { CsvRow, CsvRowWithIndex } from './uploadUtil';
+export { UploadUtil, UploadError, parseCsvRow } from './uploadUtil';
+export type { CsvRow, CsvRowWithIndex, ParsedCsvRow, ParsedCsvRowWithIndex } from './uploadUtil';

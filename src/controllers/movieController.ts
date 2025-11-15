@@ -20,7 +20,14 @@ import {
   getPaginationOffsetWithFilters,
   getPaginationMetadata,
 } from '../utils';
-import { ITEMS_PER_PAGE_FOR_PAGINATION, ERROR_MESSAGES, movieModelAttributes } from '../constants';
+import {
+  ITEMS_PER_PAGE_FOR_PAGINATION,
+  ERROR_MESSAGES,
+  movieModelAttributes,
+  availableGenres,
+  availableCountries,
+  availableMovieLanguages,
+} from '../constants';
 import { CustomRequest, CustomRequestWithBody, IncomingMovie, MovieActorPayload } from '../types';
 
 const newMovieFields = [
@@ -360,7 +367,11 @@ export const createMovie = async (req: CustomRequestWithBody<IncomingMovie & { a
       throw new AppError('Movie with the same title and overview already exist', 400);
     }
 
-    const movieInstance = MovieModel.build({ ...req.body });
+    const genreIds = req.body.genres.map((g) => availableGenres[g.toUpperCase()]);
+    const originCountryIds = req.body.countriesOfOrigin.map((country) => availableCountries[country.toUpperCase()]);
+    const languageId = availableMovieLanguages[req.body.language.toUpperCase()];
+
+    const movieInstance = MovieModel.build({ ...req.body, genreIds, originCountryIds, languageId });
     const newMovie = await movieInstance.save({
       fields: newMovieFields,
       transaction: t,
@@ -497,7 +508,14 @@ export const updateMovie = async (req: CustomRequestWithBody<Partial<IncomingMov
     throw new AppError('Movie with the same title and overview already exist', 400);
   }
 
-  await instance.update({ ...moviePayload });
+  const { genres, countriesOfOrigin, language } = req.body;
+
+  await instance.update({
+    ...moviePayload,
+    ...(genres && { genreIds: genres.map((g) => availableGenres[g.toUpperCase()]) }),
+    ...(countriesOfOrigin && { originCountryIds: countriesOfOrigin.map((country) => availableCountries[country.toUpperCase()]) }),
+    ...(language && { languageId: availableMovieLanguages[language.toUpperCase()] }),
+  });
 
   res.status(204).send();
 };

@@ -60,6 +60,10 @@ describe('Store Controller', () => {
     cookie = loginResponse.get('Set-Cookie')?.at(0) || '';
   };
 
+  beforeEach(() => {
+    cookie = '';
+  });
+
   afterEach(() => {
     jest.restoreAllMocks();
     cookie = '';

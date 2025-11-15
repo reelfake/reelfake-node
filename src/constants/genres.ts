@@ -14,6 +14,7 @@ export const availableGenres: { [key: string]: number } = {
   MYSTERY: 13,
   ROMANCE: 14,
   SCIENCE_FICTION: 15,
+  'SCIENCE FICTION': 15,
   SCI_FI: 15,
   TV_MOVIE: 16,
   THRILLER: 17,

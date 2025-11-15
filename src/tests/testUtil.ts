@@ -1,12 +1,45 @@
 import { QueryTypes } from 'sequelize';
+import * as csv from 'fast-csv';
+import fs from 'fs';
 import { faker } from '@faker-js/faker';
 import bcrypt from 'bcryptjs';
 import sequelize from '../sequelize.config';
+import { availableCountries, availableGenres } from '../constants';
 import { MovieActorPayload } from '../types';
 
 export const ITEMS_COUNT_PER_PAGE_FOR_TEST = 50;
 
 const passwordMock = 'test1234';
+
+function parseGenres(genres: string[]) {
+  const genresCopy = [...genres];
+  const genreIds = [];
+
+  let genreName = genresCopy.shift();
+
+  while (genreName) {
+    const genreId = availableGenres[genreName.toUpperCase()];
+    genreIds.push(genreId);
+    genreName = genresCopy.shift();
+  }
+
+  return genreIds;
+}
+
+function parseCountries(countries: string[]) {
+  const countriesCopy = [...countries];
+  const countryIds = [];
+
+  let countryName = countriesCopy.shift();
+
+  while (countryName) {
+    const genreId = availableCountries[countryName.toUpperCase()];
+    countryIds.push(genreId);
+    countryName = countriesCopy.shift();
+  }
+
+  return countryIds;
+}
 
 export function getRandomFirstName() {
   return faker.person.firstName();
@@ -100,6 +133,7 @@ export async function execQuery(
       type: QueryTypes.SELECT,
       raw: true,
       plain: false,
+      logging: false,
       fieldMap,
     });
   } catch (err) {
@@ -234,4 +268,60 @@ export async function hashPassword(password: string) {
   const hashedPassword = await bcrypt.hash(password, salt);
 
   return hashedPassword;
+}
+
+export async function deleteRecords(ids: number[], tableName: string) {
+  const queryText = `DELETE FROM ${tableName} WHERE id IN (${ids.join(',')})`;
+  await sequelize.query(queryText, {
+    type: QueryTypes.BULKDELETE,
+    raw: true,
+    plain: false,
+  });
+}
+
+export async function deleteMoviesByTmdbId(tmdbIds: number[]) {
+  const queryText = `DELETE FROM movie WHERE tmdb_id IN (${tmdbIds.join(',')})`;
+  await sequelize.query(queryText, {
+    type: QueryTypes.BULKDELETE,
+    raw: true,
+    plain: false,
+  });
+}
+
+export async function readCsv(filePath: string) {
+  const rows = await fs
+    .createReadStream(filePath, { encoding: 'utf-8' })
+    .pipe(csv.parse({ headers: true }))
+    .toArray();
+
+  const parsedRows = rows.map((r) => ({
+    tmdbId: Number(r.tmdb_id),
+    imdbId: r.imdb_id ? String(r.imdb_id) : null,
+    title: String(r.title),
+    originalTitle: String(r.original_title),
+    overview: String(r.overview),
+    runtime: Number(r.runtime),
+    releaseDate: r.release_date,
+    genres: (JSON.parse(r.genres.replaceAll("'", '"')) as string[]).sort(),
+    countriesOfOrigin: JSON.parse(r.countries_of_origin.replaceAll("'", '"')) as string[],
+    language: r.language,
+    movieStatus: r.movie_status,
+    popularity: parseFloat(r.popularity.toString()),
+    budget: r.budget,
+    revenue: r.revenue,
+    ratingAverage: parseFloat(r.rating_average.toString()),
+    ratingCount: Number(r.rating_count),
+    posterUrl: String(r.poster_url),
+    rentalRate: Number(r.rental_rate).toFixed(2),
+  }));
+  return parsedRows;
+}
+
+export async function getCsvRowsCount(filePath: string) {
+  const rowsCount = (
+    await fs
+      .createReadStream(filePath, { encoding: 'utf-8' })
+      .pipe(csv.parse({ headers: true }))
+      .toArray()
+  ).length;
 }

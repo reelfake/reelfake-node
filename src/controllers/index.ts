@@ -13,7 +13,7 @@ export { getMovieLanguages } from './movieLanguageController';
 // Movie
 export { getMovies, getMovieById, findInStores, createMovie, addActors, updateMovie, deleteMovie } from './movieController';
 // Movie actor
-export { uploadMovies, trackUpload, validateUpload } from './movieUploadController';
+export { uploadMovies, trackUpload, validateUpload, trackUploadValidation } from './movieUploadController';
 // Actor
 export { getActors, getActorById, updateActor, deleteActor, addActor, addToMovie } from './actorController';
 // Store

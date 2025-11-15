@@ -1,4 +1,6 @@
+import fs from 'fs';
 import supertest from 'supertest';
+import path from 'path';
 import app from '../app';
 import {
   ITEMS_COUNT_PER_PAGE_FOR_TEST,
@@ -11,9 +13,27 @@ import {
   getStoreManagerCredential,
   getStaffCredential,
   getCustomerCredential,
+  readCsv,
+  deleteMoviesByTmdbId,
 } from './testUtil';
 import { MovieModel } from '../models';
 import { MovieActorPayload } from '../types';
+
+type EventData = {
+  index: number;
+  rowNumber: number;
+  status: string;
+  isValid: boolean;
+  reasons: string[];
+};
+
+type EventSummary = {
+  index: number;
+  status: string | undefined;
+  totalRows: number;
+  validRowsCount: number;
+  invalidRowsCount: number;
+};
 
 describe('Movie Controller', () => {
   let cookie: string;
@@ -52,6 +72,10 @@ describe('Movie Controller', () => {
       rentalRate: 15.99,
     };
   };
+
+  beforeEach(() => {
+    cookie = '';
+  });
 
   afterEach(() => {
     jest.restoreAllMocks();
@@ -923,7 +947,9 @@ describe('Movie Controller', () => {
         SELECT origin_country_ids AS "originCountryIds" FROM movie WHERE id = ${newMovieId}
       `);
 
-      expect(afterUpdate.originCountryIds).toEqual(countriesQueryResult.ids);
+      const expectedValues = JSON.parse(JSON.stringify(afterUpdate.originCountryIds)).sort();
+      const actualValues = JSON.parse(JSON.stringify(countriesQueryResult.ids)).sort();
+      expect(expectedValues).toEqual(actualValues);
     });
 
     it('should update the country of origin of the movie when data in payload are mixed casing', async () => {
@@ -945,6 +971,7 @@ describe('Movie Controller', () => {
       const [beforeUpdate] = await execQuery(`
         SELECT origin_country_ids AS "originCountryIds" FROM movie WHERE id = ${newMovieId}
       `);
+
       expect(beforeUpdate.originCountryIds).toEqual(countriesQueryResult.ids);
       const newOriginCountries = ['IN', 'au'];
       [countriesQueryResult] = await execQuery(`
@@ -963,7 +990,9 @@ describe('Movie Controller', () => {
         SELECT origin_country_ids AS "originCountryIds" FROM movie WHERE id = ${newMovieId}
       `);
 
-      expect(afterUpdate.originCountryIds).toEqual(countriesQueryResult.ids);
+      const expectedValues = JSON.parse(JSON.stringify(afterUpdate.originCountryIds)).sort();
+      const actualValues = JSON.parse(JSON.stringify(countriesQueryResult.ids)).sort();
+      expect(expectedValues).toEqual(actualValues);
     });
 
     it('should update the movie language of the movie', async () => {
@@ -1130,7 +1159,6 @@ describe('Movie Controller', () => {
       const newMoviePayload = await getMoviePayload();
       const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
       const newMovieId = newMovieResponse.body.id;
-
       let [movieQueryResult] = await execQuery(`
         SELECT COUNT(*) FROM movie WHERE id = ${newMovieId}  
       `);
@@ -1301,6 +1329,334 @@ describe('Movie Controller', () => {
       expect(response.body).toEqual({
         status: 'error',
         message: 'You are not authorized to perform this operation',
+      });
+    });
+  });
+
+  describe('POST /movies/upload', () => {
+    const cleanUpMovies = async (filePath: string) => {
+      const csvRows = await readCsv(filePath);
+      const tmdbIds = csvRows.filter((r) => !isNaN(r.tmdbId)).map((r) => r.tmdbId);
+      await deleteMoviesByTmdbId(tmdbIds);
+    };
+
+    it('should be able to upload the movies from csv file that has no errors', async () => {
+      const file = path.join(__dirname, 'csv', 'movies_testdata.csv');
+      await cleanUpMovies(file);
+
+      const response = await server.post('/api/movies/upload').attach('file', file);
+
+      const rowToIdMap = response.body.successRows as { rowIndex: number; id: number }[];
+      expect(response.body.failedRows.length).toEqual(0);
+      const generatedIds = rowToIdMap.map((row) => row.id);
+
+      const generatedMovies = await execQuery(
+        `
+        SELECT
+          m.id, m.tmdb_id AS "tmdbId", m.imdb_id AS "imdbId", m.title,
+          m.original_title AS "originalTitle", m.overview AS "overview", m.runtime,
+          m.release_date AS "releaseDate",
+          (
+            SELECT ARRAY_AGG(lower(g.genre_name)) as genre_names FROM unnest(m.genre_ids) AS g_ids 
+            LEFT JOIN genre AS g ON g.id = g_ids
+            ORDER BY genre_names
+          ) AS genres,
+          (
+            SELECT ARRAY_AGG(lower(c.iso_country_code)) FROM unnest(m.origin_country_ids) AS c_ids LEFT JOIN country AS c ON c.id = c_ids
+          ) AS "countriesOfOrigin",
+          ml.iso_language_code as language, m.movie_status AS "movieStatus", m.popularity,
+          m.budget AS "budget", m.revenue AS "revenue", m.rating_average AS "ratingAverage",
+          m.rating_count AS "ratingCount", m.poster_url AS "posterUrl", m.rental_rate AS "rentalRate"
+        FROM movie AS m LEFT JOIN movie_language AS ml ON m.language_id = ml.id
+        GROUP BY m.id, ml.iso_language_code
+        HAVING m.id IN (${generatedIds.join(',')});
+      `,
+        {},
+        true,
+        false
+      );
+      const generatedMoviesId = generatedMovies.map((m) => Number(m.id));
+      await execQuery(`
+          DELETE FROM movie WHERE id IN (${generatedMoviesId.join(',')})
+        `);
+
+      const csvRows = await readCsv(file);
+      expect(csvRows.length).toEqual(generatedMovies.length);
+
+      for (const movieForRow of rowToIdMap) {
+        const actualData = generatedMovies.find((m) => Number(m.id) === movieForRow.id);
+        const expectedData = { id: movieForRow.id, ...csvRows[movieForRow.rowIndex - 1] };
+        expect(expectedData).toEqual(actualData);
+      }
+
+      const files = fs.readdirSync(path.join(process.cwd(), 'movie_uploads'));
+      expect(files.length).toEqual(0);
+    });
+
+    it('should be able to upload movies from csv file which has some invalid rows', async () => {
+      const file = path.join(__dirname, 'csv', 'movies_testdata_errors.csv');
+      await cleanUpMovies(file);
+
+      const invalidRowsIndex = [2, 3, 4, 5];
+
+      const response = await server.post('/api/movies/upload').attach('file', file);
+      const successRows = response.body.successRows as { rowIndex: number; id: number }[];
+      const failedRows = response.body.failedRows as { rowIndex: number; id: number }[];
+
+      expect(successRows.filter((row) => invalidRowsIndex.includes(row.rowIndex)).length).toEqual(0);
+      expect(failedRows.filter((row) => invalidRowsIndex.includes(row.rowIndex)).length).toEqual(invalidRowsIndex.length);
+
+      const rowToIdMap = response.body.successRows as { rowIndex: number; id: number }[];
+      const generatedIds = rowToIdMap.map((row) => row.id);
+
+      let queryResult = await execQuery(
+        `
+        SELECT
+          m.id, m.tmdb_id AS "tmdbId", m.imdb_id AS "imdbId", m.title,
+          m.original_title AS "originalTitle", m.overview AS "overview", m.runtime,
+          m.release_date AS "releaseDate",
+          (
+            SELECT ARRAY_AGG(lower(g.genre_name)) as genre_names FROM unnest(m.genre_ids) AS g_ids 
+            LEFT JOIN genre AS g ON g.id = g_ids
+            ORDER BY genre_names
+          ) AS genres,
+          (
+            SELECT ARRAY_AGG(lower(c.iso_country_code)) FROM unnest(m.origin_country_ids) AS c_ids LEFT JOIN country AS c ON c.id = c_ids
+          ) AS "countriesOfOrigin",
+          ml.iso_language_code as language, m.movie_status AS "movieStatus", m.popularity,
+          m.budget AS "budget", m.revenue AS "revenue", m.rating_average AS "ratingAverage",
+          m.rating_count AS "ratingCount", m.poster_url AS "posterUrl", m.rental_rate AS "rentalRate"
+        FROM movie AS m LEFT JOIN movie_language AS ml ON m.language_id = ml.id
+        GROUP BY m.id, ml.iso_language_code
+        HAVING m.id IN (${generatedIds.join(',')});
+      `,
+        {},
+        true,
+        false
+      );
+
+      const generatedMoviesId = queryResult.map((m) => Number(m.id));
+      await execQuery(`
+          DELETE FROM movie WHERE id IN (${generatedMoviesId.join(',')})
+        `);
+
+      const csvRows = await readCsv(file);
+      expect(csvRows.length - invalidRowsIndex.length).toEqual(queryResult.length);
+
+      for (const movieForRow of rowToIdMap) {
+        const actualData = queryResult.find((m) => Number(m.id) === movieForRow.id);
+        const expectedData = { id: movieForRow.id, ...csvRows[movieForRow.rowIndex - 1] };
+        expect(expectedData).toEqual(actualData);
+      }
+
+      expect(failedRows[0]).toEqual({
+        rowIndex: 2,
+        name: 'ValidationFailed',
+        message: '(tmdbId) The tmdb_id is not a number',
+      });
+
+      expect(failedRows[1]).toEqual({
+        rowIndex: 3,
+        name: 'ValidationFailed',
+        message: '(genreIds) The given genres are invalid',
+      });
+
+      expect(failedRows[2]).toEqual({
+        rowIndex: 4,
+        name: 'ValidationFailed',
+        message: '(tmdbId) The tmdb_id is not a number',
+      });
+
+      const files = fs.readdirSync(path.join(process.cwd(), 'movie_uploads'));
+      expect(files.length).toEqual(0);
+    });
+
+    it('should stop the upload of movies from csv file which has some invalid rows', async () => {
+      const file = path.join(__dirname, 'csv', 'movies_testdata_errors.csv');
+      await cleanUpMovies(file);
+
+      const response = await server.post('/api/movies/upload?stop_on_error').attach('file', file);
+
+      expect(response.status).toEqual(400);
+      expect(response.body).toEqual([
+        {
+          rowIndex: 2,
+          name: 'ValidationFailed',
+          message: '(tmdbId) The tmdb_id is not a number',
+        },
+      ]);
+
+      const csvRows = await readCsv(file);
+      const tmdbIds = csvRows.filter((r) => !isNaN(r.tmdbId)).map((r) => r.tmdbId);
+
+      let [queryResult] = await execQuery(
+        `
+        SELECT count(*) FROM movie WHERE tmdb_id IN (${tmdbIds.join(',')});
+      `,
+        {},
+        true,
+        false
+      );
+
+      expect(Number(queryResult.count)).toEqual(0);
+
+      const files = fs.readdirSync(path.join(process.cwd(), 'movie_uploads'));
+      expect(files.length).toEqual(0);
+    });
+  });
+
+  describe('POST /movies/upload/validate', () => {
+    it('should validate the movies data contained in csv file', async () => {
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
+
+      const expectedInvalidRows = [
+        { rowNumber: 2, reasons: ['(tmdbId: should_be_number) The tmdb_id is not a number'] },
+        { rowNumber: 3, reasons: ["(genres: ['adventure', 'fantasy', 'unknown_genre']) The given genres are invalid"] },
+        { rowNumber: 4, reasons: ['(tmdbId: invalid_tmdb_id) The tmdb_id is not a number'] },
+        { rowNumber: 5, reasons: ["(countries_of_origin: ['mx','zz']) The given countries are invalid"] },
+      ];
+
+      const file = path.join(__dirname, 'csv', 'movies_testdata_errors.csv');
+      const csvRows = await readCsv(file);
+      const response = await server.post('/api/movies/upload/validate').attach('file', file).set('Cookie', cookie);
+
+      expect(response.status).toEqual(200);
+      expect(response.body.totalRows).toEqual(csvRows.length);
+
+      const actualInvalidRows = JSON.parse(JSON.stringify(response.body.invalidRows)) as { rowNumber: 2; reasons: string[] }[];
+      expect(actualInvalidRows).toEqual(expectedInvalidRows);
+
+      const files = fs.readdirSync(path.join(process.cwd(), 'movie_uploads'));
+      expect(files.length).toEqual(0);
+    });
+
+    it('should stream the validation result for the rows in the csv file', (done) => {
+      const file = path.join(__dirname, 'csv', 'movies_testdata_errors.csv');
+
+      const expectedInvalidRowsNumber = [2, 3, 4, 5];
+      const expectedTotalRows = 30;
+
+      const expectedInvalidRows: { [key: number]: string[] } = {
+        2: ['(tmdbId: should_be_number) The tmdb_id is not a number'],
+        3: ["(genres: ['adventure', 'fantasy', 'unknown_genre']) The given genres are invalid"],
+        4: ['(tmdbId: invalid_tmdb_id) The tmdb_id is not a number'],
+        5: ["(countries_of_origin: ['mx','zz']) The given countries are invalid"],
+      };
+
+      const parseEventData = (event: string) => {
+        const statusCheckRegex = /^data: \{"status":"(processing|done)"/.exec(event);
+        const status = statusCheckRegex?.at(1);
+
+        if (status === 'processing') {
+          const processingEventData =
+            /^data: \{"status":"(processing|done)","index":(\d+),"isValid":(true|false)(,"reasons":(\[.*\]))?\}\n\n$/.exec(event);
+
+          const rowNumber = processingEventData?.at(2) ? Number(processingEventData.at(2)) : -1;
+          const isValid = processingEventData?.at(3) === 'true';
+
+          const reasonsMatchingText = processingEventData?.at(5);
+          const reasonsText = reasonsMatchingText ? reasonsMatchingText : JSON.stringify([]);
+          const reasons = JSON.parse(reasonsText);
+
+          return { rowNumber, status, isValid, reasons };
+        } else {
+          const doneEventData =
+            /^data: \{"status":"(processing|done)","totalRows":(\d+),"validRowsCount":(\d+),"invalidRowsCount":(\d+)\}\n\n$/.exec(
+              event
+            );
+          const totalRows = doneEventData?.at(2) ? Number(doneEventData.at(2)) : -1;
+          const validRowsCount = doneEventData?.at(3) ? Number(doneEventData.at(3)) : -1;
+          const invalidRowsCount = doneEventData?.at(4) ? Number(doneEventData.at(4)) : -1;
+
+          return { status, totalRows, validRowsCount, invalidRowsCount };
+        }
+      };
+
+      getStoreManagerCredential().then((cred) => {
+        login(cred.email, cred.password)
+          .then(() => {
+            if (!cookie) {
+              throw new Error(`Login failed for ${cred.email}`);
+            }
+
+            supertest(app)
+              .post('/api/movies/upload/validate?enable_tracking')
+              .attach('file', file)
+              .set('Cookie', cookie)
+              .then((res) => {
+                if (res.statusCode === 401) {
+                  throw new Error(`(/api/movies/upload/validate?enable_tracking) Authentication failed for ${res.statusCode}`);
+                }
+
+                let iteration = 0;
+                return supertest(app)
+                  .get('/api/movies/upload/track_validation')
+                  .set('Accept', 'text/event-stream')
+                  .set('Cookie', cookie)
+                  .timeout({ deadline: 10000 })
+                  .buffer()
+                  .parse((res, cb) => {
+                    if (res.statusCode === 401) {
+                      cb(new Error(`(/api/movies/upload/track_validation) Authentication failed for ${cred.email}`), null);
+                    } else {
+                      const data: (EventData | EventSummary)[] = [];
+                      res
+                        .on('data', (chunk) => {
+                          const eventData = parseEventData(chunk.toString());
+                          data.push({ index: iteration, ...eventData });
+                          iteration++;
+                        })
+                        .on('error', (err) => {
+                          cb(err, null);
+                        })
+                        .on('end', () => {
+                          cb(null, data);
+                        });
+                    }
+                  });
+              })
+              .then((res) => {
+                const events = res.body as (EventData | EventSummary)[];
+                const eventSummary = events.pop();
+                expect(eventSummary).toEqual({
+                  index: expectedTotalRows,
+                  status: 'done',
+                  totalRows: expectedTotalRows,
+                  validRowsCount: expectedTotalRows - expectedInvalidRowsNumber.length,
+                  invalidRowsCount: expectedInvalidRowsNumber.length,
+                });
+
+                for (let i = 0; i < expectedTotalRows; i++) {
+                  const actualEventData = events.at(i);
+                  if (expectedInvalidRowsNumber.includes(i + 1)) {
+                    expect(actualEventData).toEqual({
+                      index: i,
+                      rowNumber: i + 1,
+                      status: 'processing',
+                      isValid: false,
+                      reasons: expectedInvalidRows[i + 1],
+                    });
+                  } else {
+                    expect(actualEventData).toEqual({
+                      index: i,
+                      rowNumber: i + 1,
+                      status: 'processing',
+                      isValid: true,
+                      reasons: [],
+                    });
+                  }
+                }
+
+                const files = fs.readdirSync(path.join(process.cwd(), 'movie_uploads'));
+                expect(files.length).toEqual(0);
+                done();
+              })
+              .catch((err) => {
+                done(err);
+              });
+          })
+          .catch((err) => done(err));
       });
     });
   });

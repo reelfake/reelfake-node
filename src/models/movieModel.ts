@@ -1,9 +1,7 @@
 import { DataTypes, Op, CreationOptional, WhereOptions } from 'sequelize';
-import BaseModel from './baseModel';
-import GenreModel from './genreModel';
-import CountryModel from './countryModel';
-import MovieLanguageModel from './movieLanguageModel';
 import sequelize from '../sequelize.config';
+import BaseModel from './baseModel';
+import { availableCountries, availableGenres, availableMovieLanguages } from '../constants';
 import { capitalize } from '../utils';
 
 class Movie extends BaseModel {
@@ -55,18 +53,36 @@ Movie.init(
     tmdbId: {
       type: DataTypes.INTEGER,
       field: 'tmdb_id',
+      allowNull: false,
+      validate: {
+        isNumeric: { msg: 'The tmdb_id is not a number' },
+        notNull: true,
+      },
     },
     imdbId: {
       type: DataTypes.STRING(60),
       field: 'imdb_id',
+      validate: {
+        len: [0, 60],
+      },
     },
     title: {
       type: DataTypes.STRING(255),
       field: 'title',
+      allowNull: false,
+      validate: {
+        notNull: true,
+        notEmpty: true,
+      },
     },
     originalTitle: {
       type: DataTypes.STRING(255),
       field: 'original_title',
+      allowNull: false,
+      validate: {
+        notNull: true,
+        notEmpty: true,
+      },
     },
     overview: {
       type: DataTypes.TEXT,
@@ -75,10 +91,28 @@ Movie.init(
     runtime: {
       type: DataTypes.SMALLINT,
       field: 'runtime',
+      validate: {
+        isNumberOrNull(value: string) {
+          if (value && !isNaN(Number(value))) {
+            return Number(value);
+          }
+
+          if (value && isNaN(Number(value))) {
+            throw 'The runtime is not a number';
+          }
+
+          return 0;
+        },
+      },
     },
     releaseDate: {
       type: DataTypes.DATEONLY,
       field: 'release_date',
+      allowNull: false,
+      validate: {
+        notNull: true,
+        isDate: true,
+      },
     },
     genres: {
       type: DataTypes.VIRTUAL,
@@ -86,6 +120,20 @@ Movie.init(
     genreIds: {
       type: DataTypes.ARRAY(DataTypes.INTEGER),
       field: 'genre_ids',
+      allowNull: false,
+      validate: {
+        notNull: true,
+        isValidGenres(genres: number[]) {
+          const validGenres = Object.values(availableGenres);
+          const invalidGenres = genres.filter((g) => !validGenres.includes(g));
+
+          if (invalidGenres.length > 0) {
+            throw 'The given genres are invalid';
+          }
+
+          return genres;
+        },
+      },
     },
     countriesOfOrigin: {
       type: DataTypes.VIRTUAL,
@@ -93,6 +141,20 @@ Movie.init(
     originCountryIds: {
       type: DataTypes.ARRAY(DataTypes.INTEGER),
       field: 'origin_country_ids',
+      allowNull: false,
+      validate: {
+        notNull: true,
+        isValidCountries(countries: number[]) {
+          const validCountries = Object.values(availableCountries);
+          const invalidCountries = countries.filter((c) => !validCountries.includes(c));
+
+          if (invalidCountries.length > 0) {
+            throw 'The given countries are invalid';
+          }
+
+          return countries;
+        },
+      },
     },
     language: {
       type: DataTypes.VIRTUAL,
@@ -100,34 +162,79 @@ Movie.init(
     languageId: {
       type: DataTypes.INTEGER,
       field: 'language_id',
+      allowNull: false,
+      validate: {
+        notNull: true,
+        isIn: [Object.values(availableMovieLanguages)],
+      },
     },
     movieStatus: {
       type: DataTypes.STRING(20),
       field: 'movie_status',
+      allowNull: false,
+      validate: {
+        notNull: true,
+      },
     },
     popularity: {
       type: DataTypes.REAL,
       field: 'popularity',
+      allowNull: false,
+      validate: {
+        notNull: true,
+      },
     },
     budget: {
       type: DataTypes.BIGINT,
       field: 'budget',
+      allowNull: false,
+      validate: {
+        isNumeric: true,
+        notNull: true,
+      },
     },
     revenue: {
       type: DataTypes.BIGINT,
       field: 'revenue',
+      allowNull: false,
+      validate: {
+        isNumeric: true,
+        notNull: true,
+      },
     },
     ratingAverage: {
       type: DataTypes.REAL,
       field: 'rating_average',
+      allowNull: false,
+      validate: {
+        notNull: true,
+        max: 10.0,
+      },
     },
     ratingCount: {
       type: DataTypes.INTEGER,
       field: 'rating_count',
+      allowNull: false,
+      validate: {
+        isNumeric: true,
+        notNull: true,
+      },
     },
     posterUrl: {
       type: DataTypes.STRING(90),
       field: 'poster_url',
+      allowNull: true,
+      validate: {
+        isUrlOrEmpty(value: string) {
+          if (value === null || value.trim() === '') {
+            return;
+          }
+
+          if (!require('validator').isURL(value)) {
+            throw new Error('URL must be a valid URL or empty.');
+          }
+        },
+      },
     },
     rentalRate: {
       type: DataTypes.DECIMAL({ precision: 4, scale: 2 }),
@@ -141,51 +248,5 @@ Movie.init(
     timestamps: false,
   }
 );
-
-Movie.addHook('beforeSave', async (instance, options) => {
-  const genres = instance.getDataValue('genres');
-  const countries = instance.getDataValue('countriesOfOrigin');
-  const language = instance.getDataValue('language');
-
-  if (genres && genres.length > 0) {
-    const capitalizedGenres = genres.map((g: string) => `${capitalize(g)}`);
-    let genreIds = await GenreModel.findAll({
-      where: {
-        genreName: {
-          [Op.in]: capitalizedGenres,
-        },
-      },
-      attributes: ['id'],
-    });
-    genreIds = genreIds.map((g) => g.getDataValue('id'));
-    instance.setDataValue('genreIds', genreIds);
-  }
-
-  if (countries && countries.length > 0) {
-    let countryIds = await CountryModel.findAll({
-      where: {
-        countryCode: {
-          [Op.in]: countries.map((countryCode: string) => countryCode.toUpperCase()),
-        },
-      },
-      attributes: ['id'],
-    });
-
-    countryIds = countryIds.map((c) => c.getDataValue('id'));
-    instance.setDataValue('originCountryIds', countryIds);
-  }
-
-  if (language) {
-    let languageId = await MovieLanguageModel.findOne({
-      where: {
-        languageCode: language.toLowerCase(),
-      },
-      attributes: ['id'],
-    });
-
-    languageId = languageId?.getDataValue('id');
-    instance.setDataValue('languageId', languageId);
-  }
-});
 
 export default Movie;

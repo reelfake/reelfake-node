@@ -13,6 +13,7 @@ import {
   uploadMovies,
   trackUpload,
   validateUpload,
+  trackUploadValidation,
 } from '../controllers';
 import { validateMoviesRouteQuery, validateAuthToken, validateUserRole } from '../middlewares';
 import { USER_ROLES } from '../constants';
@@ -48,6 +49,7 @@ const upload = multer({ dest: '/Users/pratap.reddy/repos/reelfake-node/movie_upl
 // GET
 router.get('/', validateMoviesRouteQuery, routeFnWrapper(getMovies));
 router.get('/upload/track', trackUpload);
+router.get('/upload/track_validation', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), trackUploadValidation);
 router.post(
   '/upload/validate',
   validateAuthToken,

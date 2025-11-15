@@ -4,7 +4,5 @@ node_modules
 dist
 .env.*
 .yarn
-testReport
-src/tests/test_db
 script
 certs

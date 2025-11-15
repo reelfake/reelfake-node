@@ -15,11 +15,19 @@ post:
   responses:
     '200':
       description: |
-        Stream of events with the validation result for the row in the csv file. The event payload is below:<br>
+        Stream of events with the validation result for the row in the csv file. The event payload is below.<br>
         "data: { "status": "processing", "index": 1, "isValid": true }\n\n"
         - status: Indicating whether the validation is in progress or completed.
         - index: The position of the row in the csv. 1 is for row # 1, 2 for row # 2 and so on.
         - isValid: True when the row is valid and false is when the row is not valid.
+
+        When csv file is processed, below event is send.<br>
+        "data: { "status": "done", "totalRows": 100, "validRowsCount": 90, "invalidRowsCount": 10, "existingTmdbIds": [1,2,3], "existingImdbIds": ["t123","t556","t847"] }\n\n"
+        - totalRows: The total number of rows in the csv
+        - validRowsCount: The count of valid rows in the csv that can be processed
+        - invalidRowsCount: The count of invalid rows in the csv that cannot be processed
+        - existingTmdbIds: The tmbd ids under the tmdb_id column in csv that already exist in the database
+        - existingImdbIds: The imdb ids under the imdb_id column in csv that already exist in the database
       content:
         text/event-stream:
           schema:
