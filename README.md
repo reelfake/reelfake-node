@@ -19,6 +19,9 @@
    a. [Base url](#base-url)<br>
    b. [Auth-less endpoints](#auth-less-endpoints)<br>
    c. [Protected endpoints]($protected-endpoints)<br>
+   d. [Using customer for login](#using-customer-for-login)<br>
+   e. [Using staff for login](#using-staff-for-login)<br>
+   f. [Using store manager for login](#using-store-manager-for-login)<br>
 7. [Api Specs](#api-specification)
 8. [Generating JWT Secret](#generating-jwt-secret)
 
@@ -165,6 +168,72 @@ There are api routes that does not need user login. These are listed below. You 
   2. GET /stores/{{id}}
   3. GET /stores/{{id}}/stock
   4. GET /stores/{{id}}/movies
+
+### Using customer for login
+To login as customer, you will need to choose the customer using the endpoint `/customers/summary`.<br>
+Once you decide which customer to use, call the endpoint `/customers/{{id}}/forgot_password` with the below json request body.<br>
+<pre>
+   <code>
+      {
+       "newPassword": "password_of_your_choice,
+       "confirmedNewPassword": "password_of_your_choice"
+      }
+   </code>
+</pre>
+You will get the response containing the email of the customer.<br>
+Using the email and the password you have just changed login using the endpoint `/auth/login` with the below json request body.<br>
+<pre>
+   <code>
+      {
+          "email": "email_address_of_customer",
+          "password": "password_you_had_chosen"
+      }
+   </code>
+</pre>
+
+### Using staff for login
+To login as staff, you will need to choose the staff using the endpoint `/staff/summary`.<br>
+Once you decide which staff to use, call the endpoint `/staff/{{id}}/forgot_password` with the below json request body.<br>
+<pre>
+   <code>
+      {
+       "newPassword": "password_of_your_choice,
+       "confirmedNewPassword": "password_of_your_choice"
+      }
+   </code>
+</pre>
+You will get the response containing the email of the staff.<br>
+Using the email and the password you have just changed login using the endpoint `/auth/login` with the below json request body.<br>
+<pre>
+   <code>
+      {
+          "email": "email_address_of_staff",
+          "password": "password_you_had_chosen"
+      }
+   </code>
+</pre>
+
+### Using store manager for login
+To login as store manager, you will need to choose the store manager using the endpoint `/staff/managers/summary`.<br>
+Once you decide which store manager to use, call the endpoint `/staff/{{id}}/forgot_password` with the below json request body.<br>
+<pre>
+   <code>
+      {
+       "newPassword": "password_of_your_choice,
+       "confirmedNewPassword": "password_of_your_choice"
+      }
+   </code>
+</pre>
+You will get the response containing the email of the store manager.<br>
+Using the email and the password you have just changed login using the endpoint `/auth/login` with the below json request body.<br>
+<pre>
+   <code>
+      {
+          "email": "email_address_of_store_,manager",
+          "password": "password_you_had_chosen"
+      }
+   </code>
+</pre>
 
 ### Protected endpoints
 There are api routes which needs authentication through user login. These are listed below. You can get more information on how to use apis using the api docs at {{BASE_URL}}/docs or {{BASE_URL}}/redocs.
