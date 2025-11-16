@@ -78,7 +78,7 @@ For this step, you will need to generate the jwt secret (refer [Generating JWT S
 
 <pre><code>docker run -d --name container_name_of_choice -p port_of_choice:8080 -e DB_HOST=172.17.0.2 \
 -e DB_PORT=5432 -e DB_NAME=reelfake_db -e DB_USER=username_from_above -e DB_PASSWORD=password_from_above \
--e REELFAKE_USERS_DB_NAME=true -e JWT_SECRET={{Generated JWT Secret}} pratapreddy15/reelfake-backend</code></pre>
+-e JWT_SECRET={{Generated JWT Secret}} pratapreddy15/reelfake-backend</code></pre>
 
 #### Monitor the api logs (if REELFAKE_USERS_DB_NAME is enabled then you can see the db transaction related logs)
 
@@ -116,9 +116,9 @@ The below instructions are for deploying to Amazon Lightsail that I use (make su
 1. The steps from 1 to 5 are same as database instance.
 2. Generate the jwt secret (refer [Generating JWT Secret](#generating-jwt-secret))
 3. Run the below docker command (you need to change DB_USER and DB_PASSWORD depending on what you entered when running database in above step)
-   <pre><code>docker run -d --name container_name_of_choice -p port_of_choice:8080 -e DB_HOST={{IP Address}} \
+   <pre><code>docker run -d --name container_name_of_choice -e DB_HOST={{IP Address}} \
    -e DB_PORT=5432 -e DB_NAME=reelfake_db -e DB_USER=db_username_prod -e DB_PASSWORD=db_user_password_prod \
-   -e REELFAKE_USERS_DB_NAME=true -e JWT_SECRET={{Generated JWT Secret}} pratapreddy15/reelfake-backend</code></pre>
+   -e JWT_SECRET={{Generated JWT Secret}} pratapreddy15/reelfake-backend</code></pre>
 
 **Note:**
 
