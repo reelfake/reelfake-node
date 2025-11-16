@@ -1,6 +1,7 @@
 import fs from 'fs';
 import supertest from 'supertest';
 import path from 'path';
+import { Transaction } from 'sequelize';
 import app from '../app';
 import {
   ITEMS_COUNT_PER_PAGE_FOR_TEST,
@@ -16,10 +17,29 @@ import {
   readCsv,
   deleteMoviesByTmdbId,
 } from './testUtil';
+import { CsvRow, ParsedCsvRow } from '../utils/upload';
 import { MovieModel } from '../models';
+import { availableCountries, availableGenres, availableMovieLanguages } from '../constants';
 import { MovieActorPayload } from '../types';
 
-type EventData = {
+type UploadEventData = {
+  index: number;
+  status: string;
+  outcome: string;
+  rowNumber: number;
+  id: number;
+  reasons: string[];
+};
+
+type UploadEventSummary = {
+  index: number;
+  status: string;
+  totalRows: number;
+  successRows: { rowNumber: number; id: number }[];
+  failedRows: { rowNumber: number; reasons: string[] }[];
+};
+
+type ValidationEventData = {
   index: number;
   rowNumber: number;
   status: string;
@@ -27,13 +47,34 @@ type EventData = {
   reasons: string[];
 };
 
-type EventSummary = {
+type ValidationEventSummary = {
   index: number;
   status: string | undefined;
   totalRows: number;
   validRowsCount: number;
   invalidRowsCount: number;
 };
+
+const movieFields = [
+  'tmdbId',
+  'imdbId',
+  'title',
+  'originalTitle',
+  'overview',
+  'runtime',
+  'releaseDate',
+  'genreIds',
+  'originCountryIds',
+  'languageId',
+  'movieStatus',
+  'popularity',
+  'budget',
+  'revenue',
+  'ratingAverage',
+  'ratingCount',
+  'posterUrl',
+  'rentalRate',
+];
 
 describe('Movie Controller', () => {
   let cookie: string;
@@ -1341,52 +1382,62 @@ describe('Movie Controller', () => {
     };
 
     it('should be able to upload the movies from csv file that has no errors', async () => {
+      jest.spyOn(MovieModel, 'create').mockImplementation(
+        // @ts-ignore
+        async (
+          row: ParsedCsvRow,
+          options: { fields: string[]; ignoreDuplicates: boolean; validate: boolean; t?: Transaction }
+        ) => {
+          const getDataValue = (key: string) => {
+            if (key === 'id') {
+              return Number(row.tmdbId) * 2;
+            }
+            return row[key as keyof ParsedCsvRow];
+          };
+          return {
+            ...row,
+            getDataValue,
+          };
+        }
+      );
+
       const file = path.join(__dirname, 'csv', 'movies_testdata.csv');
       await cleanUpMovies(file);
 
       const response = await server.post('/api/movies/upload').attach('file', file);
 
-      const rowToIdMap = response.body.successRows as { rowIndex: number; id: number }[];
+      const rowToIdMap = response.body.successRows as { rowNumber: number; id: number }[];
       expect(response.body.failedRows.length).toEqual(0);
-      const generatedIds = rowToIdMap.map((row) => row.id);
-
-      const generatedMovies = await execQuery(
-        `
-        SELECT
-          m.id, m.tmdb_id AS "tmdbId", m.imdb_id AS "imdbId", m.title,
-          m.original_title AS "originalTitle", m.overview AS "overview", m.runtime,
-          m.release_date AS "releaseDate",
-          (
-            SELECT ARRAY_AGG(lower(g.genre_name)) as genre_names FROM unnest(m.genre_ids) AS g_ids 
-            LEFT JOIN genre AS g ON g.id = g_ids
-            ORDER BY genre_names
-          ) AS genres,
-          (
-            SELECT ARRAY_AGG(lower(c.iso_country_code)) FROM unnest(m.origin_country_ids) AS c_ids LEFT JOIN country AS c ON c.id = c_ids
-          ) AS "countriesOfOrigin",
-          ml.iso_language_code as language, m.movie_status AS "movieStatus", m.popularity,
-          m.budget AS "budget", m.revenue AS "revenue", m.rating_average AS "ratingAverage",
-          m.rating_count AS "ratingCount", m.poster_url AS "posterUrl", m.rental_rate AS "rentalRate"
-        FROM movie AS m LEFT JOIN movie_language AS ml ON m.language_id = ml.id
-        GROUP BY m.id, ml.iso_language_code
-        HAVING m.id IN (${generatedIds.join(',')});
-      `,
-        {},
-        true,
-        false
-      );
-      const generatedMoviesId = generatedMovies.map((m) => Number(m.id));
-      await execQuery(`
-          DELETE FROM movie WHERE id IN (${generatedMoviesId.join(',')})
-        `);
 
       const csvRows = await readCsv(file);
-      expect(csvRows.length).toEqual(generatedMovies.length);
 
-      for (const movieForRow of rowToIdMap) {
-        const actualData = generatedMovies.find((m) => Number(m.id) === movieForRow.id);
-        const expectedData = { id: movieForRow.id, ...csvRows[movieForRow.rowIndex - 1] };
-        expect(expectedData).toEqual(actualData);
+      for (let i = 0; i < rowToIdMap.length; i++) {
+        const args = csvRows[i];
+        const expectedArgs = {
+          tmdbId: args.tmdbId.toString(),
+          imdbId: args.imdbId,
+          title: args.title,
+          originalTitle: args.originalTitle,
+          overview: args.overview,
+          releaseDate: args.releaseDate,
+          genreIds: args.genres.map((g) => availableGenres[g.toUpperCase()]),
+          originCountryIds: args.countriesOfOrigin.map((c) => availableCountries[c.toUpperCase()]),
+          languageId: availableMovieLanguages[args.language.toUpperCase()],
+          movieStatus: args.movieStatus,
+          popularity: args.popularity,
+          budget: BigInt(args.budget),
+          revenue: BigInt(args.revenue),
+          runtime: args.runtime,
+          ratingAverage: Number(args.ratingAverage),
+          ratingCount: args.ratingCount,
+          posterUrl: args.posterUrl,
+          rentalRate: Number(args.rentalRate),
+        };
+        expect(MovieModel.create).toHaveBeenNthCalledWith(i + 1, expectedArgs, {
+          fields: movieFields,
+          ignoreDuplicates: false,
+          validate: true,
+        });
       }
 
       const files = fs.readdirSync(path.join(process.cwd(), 'movie_uploads'));
@@ -1394,77 +1445,84 @@ describe('Movie Controller', () => {
     });
 
     it('should be able to upload movies from csv file which has some invalid rows', async () => {
+      jest.spyOn(MovieModel, 'create').mockImplementation(
+        // @ts-ignore
+        async (
+          row: ParsedCsvRow,
+          options: { fields: string[]; ignoreDuplicates: boolean; validate: boolean; t?: Transaction }
+        ) => {
+          const getDataValue = (key: string) => {
+            if (key === 'id') {
+              return Number(row.tmdbId) * 2;
+            }
+            return row[key as keyof ParsedCsvRow];
+          };
+          return {
+            ...row,
+            getDataValue,
+          };
+        }
+      );
+
       const file = path.join(__dirname, 'csv', 'movies_testdata_errors.csv');
       await cleanUpMovies(file);
 
       const invalidRowsIndex = [2, 3, 4, 5];
 
       const response = await server.post('/api/movies/upload').attach('file', file);
-      const successRows = response.body.successRows as { rowIndex: number; id: number }[];
-      const failedRows = response.body.failedRows as { rowIndex: number; id: number }[];
+      const successRows = response.body.successRows as { rowNumber: number; id: number }[];
+      const failedRows = response.body.failedRows as { rowNumber: number; id: number }[];
 
-      expect(successRows.filter((row) => invalidRowsIndex.includes(row.rowIndex)).length).toEqual(0);
-      expect(failedRows.filter((row) => invalidRowsIndex.includes(row.rowIndex)).length).toEqual(invalidRowsIndex.length);
+      expect(successRows.filter((row) => invalidRowsIndex.includes(row.rowNumber)).length).toEqual(0);
+      expect(failedRows.filter((row) => invalidRowsIndex.includes(row.rowNumber)).length).toEqual(invalidRowsIndex.length);
 
-      const rowToIdMap = response.body.successRows as { rowIndex: number; id: number }[];
-      const generatedIds = rowToIdMap.map((row) => row.id);
+      const rowToIdMap = response.body.successRows as { rowNumber: number; id: number }[];
 
-      let queryResult = await execQuery(
-        `
-        SELECT
-          m.id, m.tmdb_id AS "tmdbId", m.imdb_id AS "imdbId", m.title,
-          m.original_title AS "originalTitle", m.overview AS "overview", m.runtime,
-          m.release_date AS "releaseDate",
-          (
-            SELECT ARRAY_AGG(lower(g.genre_name)) as genre_names FROM unnest(m.genre_ids) AS g_ids 
-            LEFT JOIN genre AS g ON g.id = g_ids
-            ORDER BY genre_names
-          ) AS genres,
-          (
-            SELECT ARRAY_AGG(lower(c.iso_country_code)) FROM unnest(m.origin_country_ids) AS c_ids LEFT JOIN country AS c ON c.id = c_ids
-          ) AS "countriesOfOrigin",
-          ml.iso_language_code as language, m.movie_status AS "movieStatus", m.popularity,
-          m.budget AS "budget", m.revenue AS "revenue", m.rating_average AS "ratingAverage",
-          m.rating_count AS "ratingCount", m.poster_url AS "posterUrl", m.rental_rate AS "rentalRate"
-        FROM movie AS m LEFT JOIN movie_language AS ml ON m.language_id = ml.id
-        GROUP BY m.id, ml.iso_language_code
-        HAVING m.id IN (${generatedIds.join(',')});
-      `,
-        {},
-        true,
-        false
-      );
+      let csvRows = await readCsv(file);
+      csvRows = csvRows.filter((r, i) => !invalidRowsIndex.includes(i + 1));
 
-      const generatedMoviesId = queryResult.map((m) => Number(m.id));
-      await execQuery(`
-          DELETE FROM movie WHERE id IN (${generatedMoviesId.join(',')})
-        `);
-
-      const csvRows = await readCsv(file);
-      expect(csvRows.length - invalidRowsIndex.length).toEqual(queryResult.length);
-
-      for (const movieForRow of rowToIdMap) {
-        const actualData = queryResult.find((m) => Number(m.id) === movieForRow.id);
-        const expectedData = { id: movieForRow.id, ...csvRows[movieForRow.rowIndex - 1] };
-        expect(expectedData).toEqual(actualData);
+      for (let i = 0; i < rowToIdMap.length; i++) {
+        const args = csvRows[i];
+        const expectedArgs = {
+          tmdbId: args.tmdbId.toString(),
+          imdbId: args.imdbId,
+          title: args.title,
+          originalTitle: args.originalTitle,
+          overview: args.overview,
+          releaseDate: args.releaseDate,
+          genreIds: args.genres.map((g) => availableGenres[g.toUpperCase()]),
+          originCountryIds: args.countriesOfOrigin.map((c) => availableCountries[c.toUpperCase()]),
+          languageId: availableMovieLanguages[args.language.toUpperCase()],
+          movieStatus: args.movieStatus,
+          popularity: args.popularity,
+          budget: BigInt(args.budget),
+          revenue: BigInt(args.revenue),
+          runtime: args.runtime,
+          ratingAverage: Number(args.ratingAverage),
+          ratingCount: args.ratingCount,
+          posterUrl: args.posterUrl,
+          rentalRate: Number(args.rentalRate),
+        };
+        expect(MovieModel.create).toHaveBeenNthCalledWith(i + 1, expectedArgs, {
+          fields: movieFields,
+          ignoreDuplicates: false,
+          validate: true,
+        });
       }
 
       expect(failedRows[0]).toEqual({
-        rowIndex: 2,
-        name: 'ValidationFailed',
-        message: '(tmdbId) The tmdb_id is not a number',
+        rowNumber: 2,
+        reasons: ['(tmdbId: should_be_number) The tmdb_id is not a number'],
       });
 
       expect(failedRows[1]).toEqual({
-        rowIndex: 3,
-        name: 'ValidationFailed',
-        message: '(genreIds) The given genres are invalid',
+        rowNumber: 3,
+        reasons: ["(genres: ['adventure','fantasy','unknown_genre']) The given genres are invalid"],
       });
 
       expect(failedRows[2]).toEqual({
-        rowIndex: 4,
-        name: 'ValidationFailed',
-        message: '(tmdbId) The tmdb_id is not a number',
+        rowNumber: 4,
+        reasons: ['(tmdbId: invalid_tmdb_id) The tmdb_id is not a number'],
       });
 
       const files = fs.readdirSync(path.join(process.cwd(), 'movie_uploads'));
@@ -1472,6 +1530,25 @@ describe('Movie Controller', () => {
     });
 
     it('should stop the upload of movies from csv file which has some invalid rows', async () => {
+      jest.spyOn(MovieModel, 'create').mockImplementation(
+        // @ts-ignore
+        async (
+          row: ParsedCsvRow,
+          options: { fields: string[]; ignoreDuplicates: boolean; validate: boolean; t?: Transaction }
+        ) => {
+          const getDataValue = (key: string) => {
+            if (key === 'id') {
+              return Number(row.tmdbId) * 2;
+            }
+            return row[key as keyof ParsedCsvRow];
+          };
+          return {
+            ...row,
+            getDataValue,
+          };
+        }
+      );
+
       const file = path.join(__dirname, 'csv', 'movies_testdata_errors.csv');
       await cleanUpMovies(file);
 
@@ -1480,9 +1557,9 @@ describe('Movie Controller', () => {
       expect(response.status).toEqual(400);
       expect(response.body).toEqual([
         {
-          rowIndex: 2,
+          rowNumber: 2,
           name: 'ValidationFailed',
-          message: '(tmdbId) The tmdb_id is not a number',
+          message: '(tmdbId: should_be_number) The tmdb_id is not a number',
         },
       ]);
 
@@ -1503,6 +1580,182 @@ describe('Movie Controller', () => {
       const files = fs.readdirSync(path.join(process.cwd(), 'movie_uploads'));
       expect(files.length).toEqual(0);
     });
+
+    it('should stream the upload result for the rows in the csv file', (done) => {
+      jest.spyOn(MovieModel, 'create').mockImplementation(
+        // @ts-ignore
+        async (
+          row: ParsedCsvRow,
+          options: { fields: string[]; ignoreDuplicates: boolean; validate: boolean; t?: Transaction }
+        ) => {
+          const getDataValue = (key: string) => {
+            if (key === 'id') {
+              return Number(row.tmdbId) * 2;
+            }
+            return row[key as keyof ParsedCsvRow];
+          };
+          return {
+            ...row,
+            getDataValue,
+          };
+        }
+      );
+
+      const file = path.join(__dirname, 'csv', 'movies_testdata_errors.csv');
+
+      const expectedFailedRowsNumber = [2, 3, 4, 5];
+      const expectedTotalRows = 30;
+
+      const expectedFailedRows: { [key: number]: string[] } = {
+        2: ['(tmdbId: should_be_number) The tmdb_id is not a number'],
+        3: ["(genres: ['adventure','fantasy','unknown_genre']) The given genres are invalid"],
+        4: ['(tmdbId: invalid_tmdb_id) The tmdb_id is not a number'],
+        5: ["(countries_of_origin: ['mx','zz']) The given countries are invalid"],
+      };
+      const expectedRowNumbers = Array.from({ length: expectedTotalRows }, (_, i) => i + 1);
+
+      const parseEventData = (event: string) => {
+        const statusCheckRegex = /^data: \{"status":"(processing|done)"/.exec(event);
+        const status = statusCheckRegex?.at(1);
+
+        if (status === 'processing') {
+          const processingEventData =
+            /^data: \{"status":"(processing|done)","outcome":"(success|failed)","rowNumber":(\d+)(,"id":(\d+))?(,"reasons":(\[.*\]))?\}\n\n$/.exec(
+              event
+            );
+          // status - 1
+          // outcome - 2
+          // rowNumber - 3
+          // id - 5
+          // reasons - 7
+          const outcome = processingEventData?.at(2) ? String(processingEventData.at(2)) : '';
+          const rowNumber = processingEventData?.at(3) ? Number(processingEventData.at(3)) : -1;
+          const newMovieId = processingEventData?.at(4) ? Number(processingEventData.at(5)) : -1;
+
+          const reasonsMatchingText = processingEventData?.at(7);
+          const reasonsText = reasonsMatchingText ? reasonsMatchingText : JSON.stringify([]);
+          const reasons = JSON.parse(reasonsText);
+
+          return { status, outcome, rowNumber, id: newMovieId, reasons };
+        } else {
+          const doneEventData =
+            /^data: \{"status":"(processing|done)","totalRows":(\d+),"successRows":(\[.*\]),"failedRows":(\[.*\])\}\n\n$/.exec(
+              event
+            );
+          const totalRows = doneEventData?.at(2) ? Number(doneEventData.at(2)) : -1;
+          const successRowsMatchingText = doneEventData?.at(3);
+          const failedRowsMatchingText = doneEventData?.at(4);
+
+          const successRowsText = successRowsMatchingText ? successRowsMatchingText : JSON.stringify([]);
+          const failedRowsText = failedRowsMatchingText ? failedRowsMatchingText : JSON.stringify([]);
+
+          const successRows = JSON.parse(successRowsText) as { rowNumber: number; id: number }[];
+          const failedRows = JSON.parse(failedRowsText) as { rowNumber: number; reasons: string[] }[];
+
+          return { status: 'done', totalRows, successRows, failedRows };
+        }
+      };
+
+      getStoreManagerCredential().then((cred) => {
+        login(cred.email, cred.password)
+          .then(() => {
+            if (!cookie) {
+              throw new Error(`Login failed for ${cred.email}`);
+            }
+
+            supertest(app)
+              .post('/api/movies/upload?enable_tracking')
+              .attach('file', file)
+              .set('Cookie', cookie)
+              .then((res) => {
+                if (res.statusCode === 401) {
+                  throw new Error(`(/api/movies/upload?enable_tracking) Authentication failed for ${res.statusCode}`);
+                }
+
+                let iteration = 0;
+                return supertest(app)
+                  .get('/api/movies/upload/track')
+                  .set('Accept', 'text/event-stream')
+                  .set('Cookie', cookie)
+                  .timeout({ deadline: 10000 })
+                  .buffer()
+                  .parse((res, cb) => {
+                    if (res.statusCode === 401) {
+                      cb(new Error(`(/api/movies/upload/track) Authentication failed for ${cred.email}`), null);
+                    } else {
+                      const data: (UploadEventData | UploadEventSummary)[] = [];
+                      res
+                        .on('data', (chunk) => {
+                          const eventData = parseEventData(chunk.toString());
+                          data.push({ index: iteration, ...eventData });
+                          iteration++;
+                        })
+                        .on('error', (err) => {
+                          cb(err, null);
+                        })
+                        .on('end', () => {
+                          cb(null, data);
+                        });
+                    }
+                  });
+              })
+              .then((res) => {
+                const events = res.body as (UploadEventData | UploadEventSummary)[];
+                const eventSummary = events.pop() as UploadEventSummary;
+                expect(eventSummary).toMatchObject({
+                  index: expectedTotalRows,
+                  status: 'done',
+                  totalRows: expectedTotalRows,
+                });
+
+                // Validate each item of success rows (id and rowNumber)
+                const expectedSuccessRowsNumber = expectedRowNumbers.filter((num) => !expectedFailedRowsNumber.includes(num));
+                eventSummary.successRows.forEach((r, i) => {
+                  expect(r.id).toBeGreaterThan(0);
+                  expect(r.rowNumber).toEqual(expectedSuccessRowsNumber[i]);
+                });
+
+                // Validate each item of failed rows (rowNumber and reasons)
+                eventSummary.failedRows.forEach((r) => {
+                  expect(expectedFailedRowsNumber).toContain(r.rowNumber);
+                  expect(r.reasons).toEqual(expectedFailedRows[r.rowNumber]);
+                });
+
+                const newMovieIds: number[] = [];
+
+                for (let i = 0; i < expectedTotalRows; i++) {
+                  const actualEventData = events.at(i);
+                  if (expectedFailedRowsNumber.includes(i + 1)) {
+                    expect(actualEventData).toEqual({
+                      index: i,
+                      rowNumber: i + 1,
+                      status: 'processing',
+                      outcome: 'failed',
+                      id: -1,
+                      reasons: expectedFailedRows[i + 1],
+                    });
+                  } else {
+                    newMovieIds.push((actualEventData as UploadEventData).id);
+                    expect(actualEventData).toEqual({
+                      index: i,
+                      rowNumber: i + 1,
+                      status: 'processing',
+                      outcome: 'success',
+                      id: expect.any(Number),
+                      reasons: [],
+                    });
+                  }
+                }
+
+                done();
+              })
+              .catch((err) => {
+                done(err);
+              });
+          })
+          .catch((err) => done(err));
+      });
+    });
   });
 
   describe('POST /movies/upload/validate', () => {
@@ -1512,7 +1765,7 @@ describe('Movie Controller', () => {
 
       const expectedInvalidRows = [
         { rowNumber: 2, reasons: ['(tmdbId: should_be_number) The tmdb_id is not a number'] },
-        { rowNumber: 3, reasons: ["(genres: ['adventure', 'fantasy', 'unknown_genre']) The given genres are invalid"] },
+        { rowNumber: 3, reasons: ["(genres: ['adventure','fantasy','unknown_genre']) The given genres are invalid"] },
         { rowNumber: 4, reasons: ['(tmdbId: invalid_tmdb_id) The tmdb_id is not a number'] },
         { rowNumber: 5, reasons: ["(countries_of_origin: ['mx','zz']) The given countries are invalid"] },
       ];
@@ -1539,7 +1792,7 @@ describe('Movie Controller', () => {
 
       const expectedInvalidRows: { [key: number]: string[] } = {
         2: ['(tmdbId: should_be_number) The tmdb_id is not a number'],
-        3: ["(genres: ['adventure', 'fantasy', 'unknown_genre']) The given genres are invalid"],
+        3: ["(genres: ['adventure','fantasy','unknown_genre']) The given genres are invalid"],
         4: ['(tmdbId: invalid_tmdb_id) The tmdb_id is not a number'],
         5: ["(countries_of_origin: ['mx','zz']) The given countries are invalid"],
       };
@@ -1550,7 +1803,9 @@ describe('Movie Controller', () => {
 
         if (status === 'processing') {
           const processingEventData =
-            /^data: \{"status":"(processing|done)","index":(\d+),"isValid":(true|false)(,"reasons":(\[.*\]))?\}\n\n$/.exec(event);
+            /^data: \{"status":"(processing|done)","rowNumber":(\d+),"isValid":(true|false)(,"reasons":(\[.*\]))?\}\n\n$/.exec(
+              event
+            );
 
           const rowNumber = processingEventData?.at(2) ? Number(processingEventData.at(2)) : -1;
           const isValid = processingEventData?.at(3) === 'true';
@@ -1600,7 +1855,7 @@ describe('Movie Controller', () => {
                     if (res.statusCode === 401) {
                       cb(new Error(`(/api/movies/upload/track_validation) Authentication failed for ${cred.email}`), null);
                     } else {
-                      const data: (EventData | EventSummary)[] = [];
+                      const data: (ValidationEventData | ValidationEventSummary)[] = [];
                       res
                         .on('data', (chunk) => {
                           const eventData = parseEventData(chunk.toString());
@@ -1617,7 +1872,7 @@ describe('Movie Controller', () => {
                   });
               })
               .then((res) => {
-                const events = res.body as (EventData | EventSummary)[];
+                const events = res.body as (ValidationEventData | ValidationEventSummary)[];
                 const eventSummary = events.pop();
                 expect(eventSummary).toEqual({
                   index: expectedTotalRows,

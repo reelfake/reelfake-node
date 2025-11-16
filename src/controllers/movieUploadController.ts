@@ -4,7 +4,7 @@ import sequelize from '../sequelize.config';
 import { MovieModel } from '../models';
 
 import { DEFAULT_PORT } from '../constants';
-import { UploadUtil, CsvRow, ParsedCsvRowWithIndex, UploadError, parseCsvRow } from '../utils/upload';
+import { UploadUtil, CsvRow, UploadError, parseCsvRow } from '../utils/upload';
 
 const fieldsForBulkCreate = [
   'tmdbId',
@@ -74,81 +74,61 @@ async function validateCsvRow(rowNumber: number, row: CsvRow) {
 }
 
 export const trackUpload = async (req: Request, res: Response) => {
-  // res.setHeader('Content-Type', 'text/event-stream');
-  // res.setHeader('Cache-Control', 'no-cache');
-  // res.setHeader('Connection', 'keep-alive');
-  // res.flushHeaders();
-  // try {
-  //   const failedRows: { status: string; data: { rowIndex: number; errors: string[] } }[] = [];
-  //   const { totalRows, processedRows, invalidRows } = await UploadUtil.process(
-  //     3,
-  //     validateCsvRow,
-  //     async (rows: ParsedCsvRowWithIndex[], totalRows: number) => {
-  //       const newMoviesId = await bulkCreateMovies(rows);
-  //       res.write(`data: ${JSON.stringify({ status: 'processing', data: { totalRows, data: newMoviesId } })}\n\n`);
-  //       // await new Promise((resolve) => setTimeout(resolve, 1000));
-  //     },
-  //     (rowIndex: number, errors: string[]) => {
-  //       failedRows.push({ status: 'error', data: { rowIndex, errors } });
-  //       res.write(`data: ${JSON.stringify({ status: 'error', data: { rowIndex, errors } })}\n\n`);
-  //     }
-  //   );
-  //   res.write(
-  //     `data: ${JSON.stringify({
-  //       status: 'done',
-  //       data: {
-  //         totalRows,
-  //         processedRows,
-  //         invalidRows,
-  //         failed: failedRows.length,
-  //         success: processedRows.length,
-  //         failedRows,
-  //       },
-  //     })}\n\n`
-  //   );
-  // } catch (err) {
-  //   const uploadError = err as UploadError;
-  //   res.write(
-  //     `data: ${JSON.stringify({ status: 'api-error', data: { rowIndex: uploadError.rowIndex, message: uploadError.message } })}\n\n`
-  //   );
-  // } finally {
-  //   UploadUtil.deleteFile();
-  //   UploadUtil.cleanUp();
-  //   res.end();
-  // }
-  // req.on('close', () => {
-  //   res.end();
-  // });
-};
-
-export const trackUploadValidation = async (req: Request, res: Response) => {
-  let totalRows = 0;
-  let validRowsCount = 0;
-  let invalidRowsCount = 0;
+  const successRows: { rowNumber: number; id: number }[] = [];
+  const failedRows: { rowNumber: number; reasons: string[] }[] = [];
 
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
   res.flushHeaders();
 
-  await UploadUtil.validate(validateCsvRow, (rowNumber: number, isValid: boolean, reasons: string[]) => {
-    if (isValid) {
-      validRowsCount++;
-    } else {
-      invalidRowsCount++;
-    }
-    totalRows++;
-    res.write(
-      `data: ${JSON.stringify({ status: 'processing', index: rowNumber, isValid, ...(reasons.length > 0 && { reasons }) })}\n\n`
+  try {
+    const totalRows = await UploadUtil.process(
+      async (row: { index: number } & CsvRow) => {
+        const validationResult = await validateCsvRow(row.index, row);
+        if (validationResult.isValid === false) {
+          throw validationResult.reasons.map((reason) => new UploadError('ValidationFailed', row.index, reason));
+        }
+        const parsedRow = parseCsvRow(row);
+        const movieInstance = await MovieModel.create(parsedRow, {
+          fields: fieldsForBulkCreate,
+          ignoreDuplicates: false,
+          validate: true,
+        });
+        return { id: Number(movieInstance.getDataValue('id')), tmdbId: movieInstance.getDataValue('tmdbId') };
+      },
+      (rowNumber: number, id: number) => {
+        successRows.push({ rowNumber, id });
+        res.write(`data: ${JSON.stringify({ status: 'processing', outcome: 'success', rowNumber, id })}\n\n`);
+      },
+      (rowNumber: number, errors: UploadError[]) => {
+        failedRows.push({ rowNumber, reasons: errors.map((err) => err.message) });
+        res.write(
+          `data: ${JSON.stringify({ status: 'processing', outcome: 'failed', rowNumber, reasons: errors.map((err) => err.message) })}\n\n`
+        );
+      }
     );
-    res.flush();
+    res.write(
+      `data: ${JSON.stringify({
+        status: 'done',
+        totalRows,
+        successRows,
+        failedRows,
+      })}\n\n`
+    );
+  } catch (err) {
+    const uploadError = err as UploadError;
+    res.write(
+      `data: ${JSON.stringify({ status: 'api-error', rowNumber: uploadError.rowNumber, message: uploadError.message })}\n\n`
+    );
+  } finally {
+    UploadUtil.deleteFile();
+    UploadUtil.cleanUp();
+    res.end();
+  }
+  req.on('close', () => {
+    res.end();
   });
-  res.write(`data: ${JSON.stringify({ status: 'done', totalRows, validRowsCount, invalidRowsCount })}\n\n`);
-  res.flush();
-
-  UploadUtil.deleteFile();
-  UploadUtil.cleanUp();
-  res.end();
 };
 
 export const uploadMovies = async (req: Request, res: Response) => {
@@ -173,9 +153,17 @@ export const uploadMovies = async (req: Request, res: Response) => {
       t = await sequelize.transaction();
     }
     try {
-      const { totalRows, successRows, failedRows } = await UploadUtil.process(
-        async (row: ParsedCsvRowWithIndex): Promise<{ id: number; tmdbId: number }> => {
-          const movieInstance = await MovieModel.create(row, {
+      const successRows: { rowNumber: number; id: number }[] = [];
+      const failedRows: { rowNumber: number; reasons: string[] }[] = [];
+
+      const totalRows = await UploadUtil.process(
+        async (row: { index: number } & CsvRow): Promise<{ id: number; tmdbId: number }> => {
+          const validationResult = await validateCsvRow(row.index, row);
+          if (validationResult.isValid === false) {
+            throw validationResult.reasons.map((reason) => new UploadError('ValidationFailed', row.index, reason));
+          }
+          const parsedRow = parseCsvRow(row);
+          const movieInstance = await MovieModel.create(parsedRow, {
             fields: fieldsForBulkCreate,
             ignoreDuplicates: false,
             validate: true,
@@ -183,12 +171,16 @@ export const uploadMovies = async (req: Request, res: Response) => {
           });
           return { id: Number(movieInstance.getDataValue('id')), tmdbId: movieInstance.getDataValue('tmdbId') };
         },
-        undefined,
-        stopOnError
-          ? (errors: UploadError[]) => {
-              throw errors;
-            }
-          : undefined
+        (rowNumber: number, id: number) => {
+          successRows.push({ rowNumber, id });
+        },
+        (rowNumber: number, errors: UploadError[]) => {
+          if (stopOnError) {
+            throw errors;
+          } else {
+            failedRows.push({ rowNumber, reasons: errors.map((err) => err.message) });
+          }
+        }
       );
       await t?.commit();
       res.status(201).json({
@@ -208,6 +200,36 @@ export const uploadMovies = async (req: Request, res: Response) => {
     // Do not process the csv and instead wait for the tracking url to be triggered by client
     res.status(202).json({ trackingUrl: `${req.protocol}://${req.hostname}:${8000}/api/movies/upload/track` });
   }
+};
+
+export const trackUploadValidation = async (req: Request, res: Response) => {
+  let totalRows = 0;
+  let validRowsCount = 0;
+  let invalidRowsCount = 0;
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  await UploadUtil.validate(validateCsvRow, (rowNumber: number, isValid: boolean, reasons: string[]) => {
+    if (isValid) {
+      validRowsCount++;
+    } else {
+      invalidRowsCount++;
+    }
+    totalRows++;
+    res.write(
+      `data: ${JSON.stringify({ status: 'processing', rowNumber, isValid, ...(reasons.length > 0 && { reasons }) })}\n\n`
+    );
+    res.flush();
+  });
+  res.write(`data: ${JSON.stringify({ status: 'done', totalRows, validRowsCount, invalidRowsCount })}\n\n`);
+  res.flush();
+
+  UploadUtil.deleteFile();
+  UploadUtil.cleanUp();
+  res.end();
 };
 
 export const validateUpload = async (req: Request, res: Response) => {

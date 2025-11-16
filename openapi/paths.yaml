@@ -68,6 +68,12 @@
   $ref: apis/movie/movieInStores.yaml
 /movies/upload/validate:
   $ref: apis/movie/validateUpload.yaml
+/movies/upload/track_validation:
+  $ref: apis/movie/trackUploadValidation.yaml
+/movies/upload:
+  $ref: apis/movie/upload.yaml
+/movies/upload/track:
+  $ref: apis/movie/trackUpload.yaml
 # ##################################
 # STAFF API
 /staff/{id}/forgot_password:

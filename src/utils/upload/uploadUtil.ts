@@ -197,48 +197,15 @@ export class UploadUtil {
     }
   }
 
-  static validate1(
-    valiationHandler: (rowNumber: number, row: CsvRow) => Promise<{ isValid: boolean; reasons: string[] }>,
-    onRowProcessed: (rowNumber: number, isValid: boolean, reasons: string[]) => void
-  ) {
-    const validator = new Promise((resolve, reject) => {
-      UploadUtil.CSV_STREAM.validate(async (row, cb) => {
-        const validationResult = await valiationHandler(row.index, row);
-        return cb(null, validationResult.isValid, JSON.stringify(validationResult.reasons));
-      })
-        .on('error', (error) => reject(error))
-        .on('data', (row: CsvRowWithIndex) => {
-          onRowProcessed(row.index, true, []);
-        })
-        .on('data-invalid', (row) => console.log(`Invalid [row=${JSON.stringify(row)}]`))
-        .on('end', (rowCount: number) => resolve(rowCount));
-    });
-
-    return validator;
-
-    // return new Promise((resolve) => {
-    //   UploadUtil.CSV_STREAM.validate(async (row, cb) => {
-    //     const validationResult = await valiationHandler(row.index, row);
-    //     onRowProcessed(row.index, validationResult.isValid, validationResult.reasons);
-    //     return cb(null, validationResult.isValid, JSON.stringify(validationResult.reasons));
-    //   })
-    //     // .on('data-invalid', (row: CsvRow, rowNumber: number, reason) => {
-    //     //   onRowProcessed(rowNumber, false, reason);
-    //     // })
-    //     .on('data', () => {})
-    //     .on('close', resolve);
-    // });
-  }
-
   static async executeRowHandler(
-    row: ParsedCsvRowWithIndex,
-    rowHandler: (row: ParsedCsvRowWithIndex) => Promise<{ id: number; tmdbId: number }>
+    row: { index: number } & CsvRow,
+    rowHandler: (row: { index: number } & CsvRow) => Promise<{ id: number; tmdbId: number }>
   ) {
     try {
       const { id: generatedId, tmdbId: generatedTmdbId } = await rowHandler(row);
 
-      if (generatedTmdbId.toString() === row.tmdbId) {
-        return { rowIndex: row.index, id: generatedId };
+      if (generatedTmdbId.toString() === row.tmdb_id) {
+        return { rowNumber: row.index, id: generatedId };
       } else {
         throw new UploadError('DatabaseError', -1, `Error adding data for row ${row.index}`);
       }
@@ -257,10 +224,13 @@ export class UploadUtil {
         const accumulatedErrors = culpritsOfCsvColumns.reduce<UploadError[]>((acc, curr) => {
           const { key, value } = curr;
           if (key === null) return acc;
-          acc.push(new UploadError('ValidationFailed', row.index, `(${key}) ${curr.message}`));
+          acc.push(new UploadError('ValidationFailed', row.index, `(${key}: ${curr.value}) ${curr.message}`));
+
           return acc;
         }, []);
         throw accumulatedErrors;
+      } else if (Array.isArray(err) && err.every((e) => e instanceof UploadError)) {
+        throw err;
       } else if (err instanceof DatabaseError) {
         // Todo - Handle DatabaseError type of error
         throw new UploadError(err.name, -1, err.message);
@@ -271,28 +241,22 @@ export class UploadUtil {
   }
 
   static async process(
-    rowHandler: (row: ParsedCsvRowWithIndex) => Promise<{ id: number; tmdbId: number }>,
-    successCallback?: (data: { id: number; rowIndex: number }) => void,
-    errorCallback?: (errors: UploadError[]) => void
+    rowHandler: (row: { index: number } & CsvRow) => Promise<{ id: number; tmdbId: number }>,
+    successCallback?: (rowNumber: number, id: number) => void,
+    errorCallback?: (rowNumber: number, errors: UploadError[]) => void
   ) {
-    const failedRows = [];
-    const successRows = [];
-
     for await (const row of UploadUtil.parseCsv()) {
       try {
-        const parsed = parseCsvRow(row);
-        const parsedIncludingIndex = { index: row.index, ...parsed };
+        // const parsed = parseCsvRow(row);
+        // const parsedIncludingIndex = { index: row.index, ...parsed };
 
-        const result = await UploadUtil.executeRowHandler(parsedIncludingIndex, rowHandler);
-        successCallback?.(result);
-        successRows.push(result);
+        const { id, rowNumber } = await UploadUtil.executeRowHandler(row, rowHandler);
+        successCallback?.(rowNumber, id);
       } catch (err) {
         if (err instanceof UploadError) {
-          errorCallback?.([err]);
-          failedRows.push(err);
+          errorCallback?.(row.index, [err]);
         } else if (Array.isArray(err) && err.every((e) => e instanceof UploadError)) {
-          errorCallback?.(err);
-          failedRows.push(...err);
+          errorCallback?.(row.index, err);
         } else {
           throw err;
         }
@@ -301,25 +265,25 @@ export class UploadUtil {
         UploadUtil.deleteFile();
       }
     }
-    return { totalRows: UploadUtil.TOTAL_ROWS, successRows: successRows, failedRows: failedRows };
+    return UploadUtil.TOTAL_ROWS;
   }
 }
 
 export class UploadError extends Error {
-  rowIndex: number;
+  rowNumber: number;
   name: string;
   field: { key: string; value: string | null } | undefined;
 
-  constructor(name: string, rowIndex: number, message: string, field?: { key: string; value: string | null }) {
+  constructor(name: string, rowNumber: number, message: string, field?: { key: string; value: string | null }) {
     super(message);
     this.name = name;
-    this.rowIndex = rowIndex;
+    this.rowNumber = rowNumber;
     if (field) {
       this.field = field;
     }
   }
 
   public toJSON() {
-    return { rowIndex: this.rowIndex, name: this.name, message: this.message, field: this.field };
+    return { rowNumber: this.rowNumber, name: this.name, message: this.message, field: this.field };
   }
 }

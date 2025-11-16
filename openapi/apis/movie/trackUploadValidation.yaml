@@ -1,0 +1,38 @@
+get:
+  summary: Track the validation for each row of the csv
+  operationId: trackUploadValidation
+  tags:
+    - movie
+  responses:
+    '200':
+      description: |
+        Depending on enable_tracking query the response will differ. If the query is added to request and enabled below response stream is send.
+
+        Stream of events with the validation result for the row in the csv file. The event payload is below.<br>
+        "data: { "status": "processing", "rowNumber": <<number>>, "isValid": <<boolean>>, reasons: [<<string>>] }\n\n"
+        - status: Indicating whether the validation is in progress or completed.
+        - rowNumber: The position of the row in the csv. 1 is for row # 1, 2 for row # 2 and so on.
+        - isValid: True when the row is valid and false is when the row is not valid.
+        - reasons: The reasons for the row to be invalid.
+
+        When csv file processing is finished, below event is send.<br>
+        "data: { 'status': 'done', 'totalRows': <<number>>, 'validRowsCount': <<number>>, 'invalidRowsCount': <<number>> }\n\n"
+        - totalRows: The total number of rows in the csv
+        - validRowsCount: The count of valid rows in the csv that can be processed
+        - invalidRowsCount: The count of invalid rows in the csv that cannot be processed
+      content:
+        text/event-stream:
+          schema:
+            type: string
+            example: |
+              When processing is in progress
+              "data: { 'status': 'processing', 'rowNumber': <<number>>, 'isValid': <<boolean>>, reasons: [<<string>>] }\n\n"
+
+              When processing is done
+              "data: { 'status': 'done', 'totalRows': <<number>>, 'validRowsCount': <<number>>, 'invalidRowsCount': <<number>> }\n\n"
+    '401':
+      $ref: ../../components/error/unauthorized.yaml
+    '403':
+      $ref: ../../components/error/forbidden.yaml
+    '500':
+      $ref: ../../components/error/internalServerError.yaml

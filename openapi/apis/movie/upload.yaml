@@ -1,6 +1,6 @@
 post:
-  summary: Validate the csv file to be upload
-  operationId: validateUpload
+  summary: Bulk upload the movies from data in the csv file
+  operationId: uploadMovies
   tags:
     - movie
   parameters:
@@ -10,8 +10,8 @@ post:
       schema:
         type: string
       description: |
-        When enable_tracking is true, a tracking url will be sent to the client using which the client can stream the validation result.
-        The acceptable values are true, yes or nothing. Examples - /api/movies/upload/validate?enable_tracking, /api/movies/upload/validate?enable_tracking=true and /api/movies/upload/validate?enable_tracking=yes.
+        When enable_tracking is true, a tracking url will be sent to the client using which the client can stream the upload result.
+        The acceptable values are true, yes or nothing. Examples - /api/movies/upload?enable_tracking, /api/movies/upload?enable_tracking=true and /api/movies/upload?enable_tracking=yes.
   requestBody:
     content:
       text/csv:
@@ -24,7 +24,7 @@ post:
   responses:
     '200':
       description: |
-        Depending on enable_tracking query the response will differ. If enable_tracking is set in a request the trackingUrl will be sent in the response to let the client the stream the validation result. If not set, a json with the accumulated validation result will be sent.
+        Depending on enable_tracking query the response will differ. If enable_tracking is set in a request the trackingUrl will be sent in the response to let the client the stream the upload result. If not set, a json with the accumulated upload result will be sent.
       content:
         application/json:
           schema:
@@ -37,17 +37,22 @@ post:
                 properties:
                   totalRows:
                     type: integer
-                  invalidRows:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        rowNumber:
-                          type: integer
-                        reasons:
-                          type: array
-                          items:
-                            type: string
+                  successRows:
+                    type: object
+                    properties:
+                      rowNumber:
+                        type: integer
+                      id:
+                        type: integer
+                  failedRows:
+                    type: object
+                    properties:
+                      rowNumber:
+                        type: integer
+                      reasons:
+                        type: array
+                        items:
+                          type: string
     '400':
       $ref: ../../components/error/badRequest.yaml
     '401':

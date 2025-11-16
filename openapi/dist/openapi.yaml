@@ -1916,6 +1916,15 @@ paths:
       operationId: validateUpload
       tags:
         - movie
+      parameters:
+        - in: query
+          name: enable_tracking
+          required: false
+          schema:
+            type: string
+          description: |
+            When enable_tracking is true, a tracking url will be sent to the client using which the client can stream the validation result.
+            The acceptable values are true, yes or nothing. Examples - /api/movies/upload/validate?enable_tracking, /api/movies/upload/validate?enable_tracking=true and /api/movies/upload/validate?enable_tracking=yes.
       requestBody:
         content:
           text/csv:
@@ -1928,15 +1937,30 @@ paths:
       responses:
         '200':
           description: |
-            Stream of events with the validation result for the row in the csv file. The event payload is below:<br>
-            "data: { "status": "processing", "index": 1, "isValid": true }\n\n"
-            - status: Indicating whether the validation is in progress or completed.
-            - index: The position of the row in the csv. 1 is for row # 1, 2 for row # 2 and so on.
-            - isValid: True when the row is valid and false is when the row is not valid.
+            Depending on enable_tracking query the response will differ. If enable_tracking is set in a request the trackingUrl will be sent in the response to let the client the stream the validation result. If not set, a json with the accumulated validation result will be sent.
           content:
-            text/event-stream:
+            application/json:
               schema:
-                type: string
+                oneOf:
+                  - type: object
+                    properties:
+                      trackingUrl:
+                        type: string
+                  - type: object
+                    properties:
+                      totalRows:
+                        type: integer
+                      invalidRows:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            rowNumber:
+                              type: integer
+                            reasons:
+                              type: array
+                              items:
+                                type: string
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -1945,6 +1969,157 @@ paths:
           $ref: '#/components/responses/forbidden'
         '404':
           $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /movies/upload/track_validation:
+    get:
+      summary: Track the validation for each row of the csv
+      operationId: trackUploadValidation
+      tags:
+        - movie
+      responses:
+        '200':
+          description: |
+            Depending on enable_tracking query the response will differ. If the query is added to request and enabled below response stream is send.
+
+            Stream of events with the validation result for the row in the csv file. The event payload is below.<br>
+            "data: { "status": "processing", "rowNumber": <<number>>, "isValid": <<boolean>>, reasons: [<<string>>] }\n\n"
+            - status: Indicating whether the validation is in progress or completed.
+            - rowNumber: The position of the row in the csv. 1 is for row # 1, 2 for row # 2 and so on.
+            - isValid: True when the row is valid and false is when the row is not valid.
+            - reasons: The reasons for the row to be invalid.
+
+            When csv file processing is finished, below event is send.<br>
+            "data: { 'status': 'done', 'totalRows': <<number>>, 'validRowsCount': <<number>>, 'invalidRowsCount': <<number>> }\n\n"
+            - totalRows: The total number of rows in the csv
+            - validRowsCount: The count of valid rows in the csv that can be processed
+            - invalidRowsCount: The count of invalid rows in the csv that cannot be processed
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                example: |
+                  When processing is in progress
+                  "data: { 'status': 'processing', 'rowNumber': <<number>>, 'isValid': <<boolean>>, reasons: [<<string>>] }\n\n"
+
+                  When processing is done
+                  "data: { 'status': 'done', 'totalRows': <<number>>, 'validRowsCount': <<number>>, 'invalidRowsCount': <<number>> }\n\n"
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /movies/upload:
+    post:
+      summary: Bulk upload the movies from data in the csv file
+      operationId: uploadMovies
+      tags:
+        - movie
+      parameters:
+        - in: query
+          name: enable_tracking
+          required: false
+          schema:
+            type: string
+          description: |
+            When enable_tracking is true, a tracking url will be sent to the client using which the client can stream the upload result.
+            The acceptable values are true, yes or nothing. Examples - /api/movies/upload?enable_tracking, /api/movies/upload?enable_tracking=true and /api/movies/upload?enable_tracking=yes.
+      requestBody:
+        content:
+          text/csv:
+            schema:
+              type: string
+              format: binary
+              example: |
+                tmdb_id,imdb_id,title,original_title,overview,runtime,release_date,genres,countries_of_origin,language,movie_status,popularity,budget,revenue,rating_average,rating_count,poster_url,rental_rate
+                658224,tt24218194,some tile for the movie,some original title for the movie,some overview for the movie,104,01/01/2025,['drama','family'],['au'],en,Released,5,900000,12000000,8.5,120,https://example.com/movie_poster.jpg,20
+      responses:
+        '200':
+          description: |
+            Depending on enable_tracking query the response will differ. If enable_tracking is set in a request the trackingUrl will be sent in the response to let the client the stream the upload result. If not set, a json with the accumulated upload result will be sent.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      trackingUrl:
+                        type: string
+                  - type: object
+                    properties:
+                      totalRows:
+                        type: integer
+                      successRows:
+                        type: object
+                        properties:
+                          rowNumber:
+                            type: integer
+                          id:
+                            type: integer
+                      failedRows:
+                        type: object
+                        properties:
+                          rowNumber:
+                            type: integer
+                          reasons:
+                            type: array
+                            items:
+                              type: string
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /movies/upload/track:
+    get:
+      summary: Track the bulk upload of the movies from the csv file
+      operationId: trackUpload
+      tags:
+        - movie
+      responses:
+        '200':
+          description: |
+            Depending on enable_tracking query the response will differ. If the query is added to request and enabled below response stream is send.
+
+            Stream of events with the validation result for the row in the csv file.<br>
+            The event payload for the row that is processed is below.<br>
+            "data: { 'status': 'processing', 'outcome': 'success', 'rowNumber': <<number>>, 'id': <<number>> }\n\n"
+            - status: Indicating whether the validation is in progress or completed.
+            - rowNumber: The position of the row in the csv. 1 is for row # 1, 2 for row # 2 and so on.
+            - id: Id of the created movie.
+
+            The event payload for the failed row is below.<br>
+            "data: { 'status': 'processing', 'outcome': 'failed', 'rowNumber': <<number>>, 'reasons': [<<string>>] }\n\n"
+
+            When csv file processing is finished, below event is send.<br>
+            "data: { 'status': 'done', 'totalRows': <<number>>, 'successRows': [<<{ 'rowNumber': <<number>>, 'id': <<number>> }>>], 'failedRows': [<< { 'rowNumber': <<number>>, 'reasons': [<<string>>] } >>] }\n\n"
+            - totalRows: The total number of rows in the csv
+            - successRows: The successfully processed rows having the row number and the id of the record
+            - failedRows: The failed rows having the row number and reasons for the failure
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                example: |
+                  When processing is in progress
+                  If the row is successfully processed
+                  "data: { 'status': 'processing', 'outcome': 'success', 'rowNumber': <<number>>, 'id': <<number>> }\n\n"
+
+                  If the row is failed to process
+                  "data: { 'status': 'processing', 'outcome': 'failed', 'rowNumber': <<number>>, 'reasons': [<<string>>] }\n\n"
+
+                  When processing is done
+                  "data: { 'status': 'done', 'totalRows': <<number>>, 'successRows': [<<{ 'rowNumber': <<number>>, 'id': <<number>> }>>], 'failedRows': [<< { 'rowNumber': <<number>>, 'reasons': [<<string>>] } >>] }\n\n"
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
         '500':
           $ref: '#/components/responses/internalServerError'
   /staff/{id}/forgot_password:
