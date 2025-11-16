@@ -169,6 +169,46 @@ There are api routes that does not need user login. These are listed below. You 
   3. GET /stores/{{id}}/stock
   4. GET /stores/{{id}}/movies
 
+### Protected endpoints
+There are api routes which needs authentication through user login. These are listed below. You can get more information on how to use apis using the api docs at {{BASE_URL}}/docs or {{BASE_URL}}/redocs.
+- actor
+  1. POST /actors
+  2. POST /actors/{{id}}
+  3. PUT /actors/{{id}}
+  4. DELETE /actors/{{id}
+- customer
+  1. PUT /customers/{{id}}/change_password
+  2. PUT /customers/{{id}}
+  3. DELETE /customers/{{id}}
+  4. PATCH /customers/{{id}}/activate
+  5. PATCH /customers/{{id}/deactivate
+  6. PATCH /customers/{{id}/preferred_store/{{store_id}}
+- movie
+  1. POST /movies
+  2. PUT /movies/{{id}}
+  3. DELETE /movies/{{id}}
+  4. POST /movies/{{id}}/add_actors
+  5. POST /movies/upload/validate
+  6. GET /movies/upload/track_validation
+  7. POST /movies/upload
+  8. GET /movies/upload/track
+- movie language
+
+- staff
+  1. PUT /staff/{{id}}/change_password
+  2. POST /staff
+  3. PUT /staff/{{ud}}
+  4. DELETE /staff/{{id}}
+- store
+  1. POST /stores
+  2. PUT /stores/{{id}}
+  3. DELETE /stores/{{id}}
+  4. GET /stores/{{id}}/staff
+- rental
+  1. GET /rentals
+  2. GET /rentals/my_store
+  3. GET /rentals/{{id}}
+
 ### Using customer for login
 To login as customer, you will need to choose the customer using the endpoint `/customers/summary`.<br>
 Once you decide which customer to use, call the endpoint `/customers/{{id}}/forgot_password` with the below json request body.<br>
@@ -234,46 +274,6 @@ Using the email and the password you have just changed login using the endpoint 
       }
    </code>
 </pre>
-
-### Protected endpoints
-There are api routes which needs authentication through user login. These are listed below. You can get more information on how to use apis using the api docs at {{BASE_URL}}/docs or {{BASE_URL}}/redocs.
-- actor
-  1. POST /actors
-  2. POST /actors/{{id}}
-  3. PUT /actors/{{id}}
-  4. DELETE /actors/{{id}
-- customer
-  1. PUT /customers/{{id}}/change_password
-  2. PUT /customers/{{id}}
-  3. DELETE /customers/{{id}}
-  4. PATCH /customers/{{id}}/activate
-  5. PATCH /customers/{{id}/deactivate
-  6. PATCH /customers/{{id}/preferred_store/{{store_id}}
-- movie
-  1. POST /movies
-  2. PUT /movies/{{id}}
-  3. DELETE /movies/{{id}}
-  4. POST /movies/{{id}}/add_actors
-  5. POST /movies/upload/validate
-  6. GET /movies/upload/track_validation
-  7. POST /movies/upload
-  8. GET /movies/upload/track
-- movie language
-
-- staff
-  1. PUT /staff/{{id}}/change_password
-  2. POST /staff
-  3. PUT /staff/{{ud}}
-  4. DELETE /staff/{{id}}
-- store
-  1. POST /stores
-  2. PUT /stores/{{id}}
-  3. DELETE /stores/{{id}}
-  4. GET /stores/{{id}}/staff
-- rental
-  1. GET /rentals
-  2. GET /rentals/my_store
-  3. GET /rentals/{{id}}
 
 ## Api Specification
 
