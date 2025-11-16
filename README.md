@@ -7,7 +7,7 @@
 
 # Table of Contents
 
-1. [Introduction](#reelfake-rest-api)
+1. [Introduction](#introduction)
 2. [API for Public Use](#api-for-public-use)
 3. [Running locally](#running-on-localhost)<br>
    a. [Start database](#start-the-container-for-database)<br>
