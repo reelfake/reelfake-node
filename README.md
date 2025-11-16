@@ -22,7 +22,7 @@
    d. [Using customer for login](#using-customer-for-login)<br>
    e. [Using staff for login](#using-staff-for-login)<br>
    f. [Using store manager for login](#using-store-manager-for-login)<br>
-6. [Using reelfake.cloud](#using-reelfake)<br>
+6. [Using reelfake.cloud](#using-my-cloud-instance)<br>
 7. [Api Specs](#api-specification)
 8. [Generating JWT Secret](#generating-jwt-secret)
 
@@ -276,7 +276,7 @@ Using the email and the password you have just changed login using the endpoint 
    </code>
 </pre>
 
-## Using reelfake.cloud
+## Using my cloud instance
 I have developed this api for my personal use to practice or try new features in the web development space. For this, I have deployed this to [reelfake.cloud](https://reelfake.cloud/api).<br>
 But I have made some of the apis to public use for you all to try. All the endpoints except the ones with methods POST, PUT, PATCH and DELETE are disallowed.<br>
 The login, register user, change and forgot password routes are also available for you to use.<br>
