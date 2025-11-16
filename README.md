@@ -2,16 +2,16 @@
 
 1. [Introduction](#reelfake-rest-api)
 2. [API for Public Use](#api-for-public-use)
-3. [Running locally](#running-on-localhost)
-   a. [Start database](#start-the-container-for-database)
-   b. [Start api](#start-the-container-for-the-api)
-4. [Running on Cloud](#running-on-cloud)
-   a. [Start database instance](#instance-for-database)
-   b. [Start api instance](#instance-for-api)
-5. [Using the api](#using-the-api)
-   a. [Base url](#base-url)
-   b. [Auth-less endpoints](#auth-less-endpoints)
-   c. [Protected endpoints]($protected-endpoints)
+3. [Running locally](#running-on-localhost)<br>
+   a. [Start database](#start-the-container-for-database)<br>
+   b. [Start api](#start-the-container-for-the-api)<br>
+4. [Running on Cloud](#running-on-cloud)<br>
+   a. [Start database instance](#instance-for-database)<br>
+   b. [Start api instance](#instance-for-api)<br>
+5. [Using the api](#using-the-api)<br>
+   a. [Base url](#base-url)<br>
+   b. [Auth-less endpoints](#auth-less-endpoints)<br>
+   c. [Protected endpoints]($protected-endpoints)<br>
 7. [Api Specs](#api-specification)
 8. [Generating JWT Secret](#generating-jwt-secret)
 
