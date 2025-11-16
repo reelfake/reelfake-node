@@ -18,7 +18,7 @@
 5. [Using the api](#using-the-api)<br>
    a. [Base url](#base-url)<br>
    b. [Auth-less endpoints](#auth-less-endpoints)<br>
-   c. [Protected endpoints]($protected-endpoints)<br>
+   c. [Protected endpoints](#protected-endpoints)<br>
    d. [Using customer for login](#using-customer-for-login)<br>
    e. [Using staff for login](#using-staff-for-login)<br>
    f. [Using store manager for login](#using-store-manager-for-login)<br>
