@@ -24,11 +24,11 @@
    e. [Using staff for login](#using-staff-for-login)<br>
    f. [Using store manager for login](#using-store-manager-for-login)<br>
 6. [Using reelfake.cloud](#using-my-cloud-instance)
-7. [Examples](#examples)
-   a. [Login](#login)
-   b. [Add a movie](#add-a-movie)
-   c. [Logout](#logout)
-   d. [Expired Token](#expired-token)
+7. [Examples](#examples)<br>
+   a. [Login](#login)<br>
+   b. [Add a movie](#add-a-movie)<br>
+   c. [Logout](#logout)<br>
+   d. [Expired Token](#expired-token)<br>
 8. [Api Specs](#api-specification)
 9. [Generating JWT Secret](#generating-jwt-secret)
 
