@@ -10,26 +10,26 @@
 
 1. [Introduction](#introduction)
 2. [API for Public Use](#api-for-public-use)
-3. [Running locally](#running-on-localhost)<br>
+3. [API Specs](#api-specification)
+4. [Running locally](#running-on-localhost)<br>
    a. [Start database](#start-the-container-for-database)<br>
    b. [Start api](#start-the-container-for-the-api)<br>
-4. [Running on Cloud](#running-on-cloud)<br>
+5. [Running on Cloud](#running-on-cloud)<br>
    a. [Start database instance](#instance-for-database)<br>
    b. [Start api instance](#instance-for-api)<br>
-5. [Using the api](#using-the-api)<br>
+6. [Using the api](#using-the-api)<br>
    a. [Base url](#base-url)<br>
    b. [Auth-less endpoints](#auth-less-endpoints)<br>
    c. [Protected endpoints](#protected-endpoints)<br>
    d. [Using customer for login](#using-customer-for-login)<br>
    e. [Using staff for login](#using-staff-for-login)<br>
    f. [Using store manager for login](#using-store-manager-for-login)<br>
-6. [Using reelfake.cloud](#using-my-cloud-instance)
-7. [Examples](#examples)<br>
+7. [Using reelfake.cloud](#using-my-cloud-instance)
+8. [Examples](#examples)<br>
    a. [Login](#login)<br>
    b. [Add a movie](#add-a-movie)<br>
    c. [Logout](#logout)<br>
    d. [Expired Token](#expired-token)<br>
-8. [Api Specs](#api-specification)
 9. [Generating JWT Secret](#generating-jwt-secret)
 
 ## Introduction
@@ -72,6 +72,28 @@ So, what this api provide?
 1. Although the api is for public, I purge the database weekly to keep my Lightsail instances clean and lightweight.
 2. When I purge the database, I re-seed the database which are part of the docker image. So, whatever you created the users or any data will be removed.
 3. Though I have provided limited access to my deployed api, you can hit it as per the api documentation but you will `403 Forbidden` if you do so.
+
+## Api Specification
+
+API Docs
+`https://reelfake.cloud/api/docs`
+
+API Redocs
+`https://reelfake.cloud/api/redocs`
+
+_If running locally (the port is what you mentioned when running the container)_
+
+<pre>
+   Docs - http://localhost:{{port}}/api/docs
+   Redocs - http://localhost:{{port}}/api/redocs
+</pre>
+
+_If running on cloud_
+
+<pre>
+   Docs - http://{{Ip Address or host DNS}}/api/docs
+   Redocs - http://{{Ip Address or host DNS}}/api/redocs
+</pre>
 
 ## Running on localhost
 
@@ -518,22 +540,6 @@ After successfull login, the token will remain valid for 1 hour. If the token is
    "message": "Invalid or expired token"
 }
 </code></pre>
-
-## Api Specification
-
-_If running locally (the port is what you mentioned when running the container)_
-
-<pre>
-   Docs - http://localhost:{{port}}/api/docs
-   Redocs - http://localhost:{{port}}/api/redocs
-</pre>
-
-_If running on cloud_
-
-<pre>
-   Docs - http://{{Ip Address or host DNS}}/api/docs
-   Redocs - http://{{Ip Address or host DNS}}/api/redocs
-</pre>
 
 ### Generating JWT Secret
 
