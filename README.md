@@ -307,6 +307,8 @@ So, basically anything related to mutating or creating new records (like movies,
 
 ## Examples
 
+### Login
+
 Let's try login as store manager. We will reelfake.cloud for this purpose.
 
 Get the id of the store manager to use.
@@ -400,6 +402,121 @@ _*Response body*:_
 </pre>
 
 The authentication token will be sent in the cookie. The token name is auth_token which will be valid for 1 hour.
+
+Get the user profile of the logged in user
+
+`GET https://reelfake.cloud/api/auth/me`
+
+_*Response body*:_
+
+<pre>
+   <code>
+      {
+         "id": 18,
+         "firstName": "Robert",
+         "lastName": "Hale",
+         "email": "roberthale11@example.com",
+         "isStoreManager": true,
+         "active": true,
+         "phoneNumber": "+1-868-555-4346",
+         "avatar": null,
+         "address": {
+            "id": 19,
+            "addressLine": "04719 Carr Plain Apt. 754",
+            "cityName": "Albury-Wodonga",
+            "stateName": "New South Wales",
+            "country": "Australia",
+            "postalCode": "87384"
+         },
+         "store": {
+            "id": 1,
+            "phoneNumber": "8905108936",
+            "address": {
+                  "id": 1,
+                  "addressLine": "1677 Jeanette Bridge",
+                  "cityName": "Albury-Wodonga",
+                  "stateName": "New South Wales",
+                  "country": "Australia",
+                  "postalCode": "46949"
+            }
+         }
+      }
+   </code>
+</pre>
+
+### Add a movie
+
+`POST https://reelfake.cloud/api/movies`
+
+_*Request body*:_
+
+<pre>
+   <code>
+      {
+         "tmdbId": 0484782,
+         "imdbId": "tt31227572",
+         "title": "Predator: Badlands",
+         "originalTitle": "Predator: Badlands",
+         "overview": "A young Predator outcast from his clan finds an unlikely ally on his journey in search of the ultimate adversary.",
+         "runtime": 107,
+         "releaseDate": "2025-11-07",
+         "genres": [
+            "Action",
+            "Adventure",
+            "Science Fiction",
+            "Thriller"
+         ],
+         "countriesOfOrigin": [
+            "US"
+         ],
+         "language": "en",
+         "movieStatus": "Released",
+         "popularity": 0.04,
+         "budget": 105000000,
+         "revenue": 200000000,
+         "ratingAverage": 7.6,
+         "ratingCount": 34000,
+         "posterUrl": "https://image.tmdb.org/t/p/w500/ebyxeBh56QNXxSJgTnmz7fXAlwk.jpg"
+      }
+   </code>
+</pre>
+
+_*Response body*:_
+
+<pre>
+   <code>
+      {
+         "id": 123456,
+         "title": "Predator: Badlands",
+         "originalTitle": "Predator: Badlands",
+         "overview": "A young Predator outcast from his clan finds an unlikely ally on his journey in search of the ultimate adversary.",
+         "runtime": 107,
+         "releaseDate": "2025-11-07",
+         "genres": [
+            "Action",
+            "Adventure",
+            "Science Fiction",
+            "Thriller"
+         ],
+         "countriesOfOrigin": [
+            "US"
+         ],
+         "movieStatus": "Released",
+         "popularity": 0.04,
+         "budget": "105000000",
+         "revenue": "200000000",
+         "ratingAverage": 7.6,
+         "ratingCount": 34000,
+         "posterUrl": "https://image.tmdb.org/t/p/w500/ebyxeBh56QNXxSJgTnmz7fXAlwk.jpg",
+         "rentalRate": "20.00",
+         "language": "en"
+      }
+   </code>
+</pre>
+
+To get the movie detail
+
+`GET https://reelfake.cloud/api/movies/123456`
 
 ## Api Specification
 
