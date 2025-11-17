@@ -224,78 +224,66 @@ There are api routes which needs authentication through user login. These are li
 To login as customer, you will need to choose the customer using the endpoint `/customers/summary`.<br>
 Once you decide which customer to use, call the endpoint `/customers/{{id}}/forgot_password` with the below json request body.<br>
 
-<pre>
-   <code>
-      {
-       "newPassword": "password_of_your_choice,
-       "confirmedNewPassword": "password_of_your_choice"
-      }
-   </code>
-</pre>
+<pre><code>
+{
+   "newPassword": "password_of_your_choice,
+   "confirmedNewPassword": "password_of_your_choice"
+}
+</code></pre>
 
 You will get the response containing the email of the customer.<br>
 Using the email and the password you have just changed login using the endpoint `/auth/login` with the below json request body.<br>
 
-<pre>
-   <code>
-      {
-          "email": "email_address_of_customer",
-          "password": "password_you_had_chosen"
-      }
-   </code>
-</pre>
+<pre><code>
+{
+   "email": "email_address_of_customer",
+   "password": "password_you_had_chosen"
+}
+</code></pre>
 
 ### Using staff for login
 
 To login as staff, you will need to choose the staff using the endpoint `/staff/summary`.<br>
 Once you decide which staff to use, call the endpoint `/staff/{{id}}/forgot_password` with the below json request body.<br>
 
-<pre>
-   <code>
-      {
-       "newPassword": "password_of_your_choice,
-       "confirmedNewPassword": "password_of_your_choice"
-      }
-   </code>
-</pre>
+<pre><code>
+{
+   "newPassword": "password_of_your_choice,
+   "confirmedNewPassword": "password_of_your_choice"
+}
+</code></pre>
 
 You will get the response containing the email of the staff.<br>
 Using the email and the password you have just changed login using the endpoint `/auth/login` with the below json request body.<br>
 
-<pre>
-   <code>
-      {
-          "email": "email_address_of_staff",
-          "password": "password_you_had_chosen"
-      }
-   </code>
-</pre>
+<pre><code>
+{
+   "email": "email_address_of_staff",
+   "password": "password_you_had_chosen"
+}
+</code></pre>
 
 ### Using store manager for login
 
 To login as store manager, you will need to choose the store manager using the endpoint `/staff/managers/summary`.<br>
 Once you decide which store manager to use, call the endpoint `/staff/{{id}}/forgot_password` with the below json request body.<br>
 
-<pre>
-   <code>
-      {
-       "newPassword": "password_of_your_choice,
-       "confirmedNewPassword": "password_of_your_choice"
-      }
-   </code>
-</pre>
+<pre><code>
+{
+   "newPassword": "password_of_your_choice,
+   "confirmedNewPassword": "password_of_your_choice"
+}
+</code></pre>
 
 You will get the response containing the email of the store manager.<br>
 Using the email and the password you have just changed login using the endpoint `/auth/login` with the below json request body.<br>
 
-<pre>
-   <code>
-      {
-          "email": "email_address_of_store_,manager",
-          "password": "password_you_had_chosen"
-      }
-   </code>
-</pre>
+<pre><code>
+{
+   "email": "email_address_of_store_,manager",
+   "password": "password_you_had_chosen"
+}
+</code></pre>
 
 ## Using my cloud instance
 
@@ -317,36 +305,34 @@ Get the id of the store manager to use.
 
 _*Sample Response*:_
 
-<pre>
-   <code>
+<pre><code>
+{
+   "items": [
       {
-         "items": [
-            {
-               "id": 18,
-               "firstName": "Robert",
-               "lastName": "Hale",
-               "email": "roberthale11@example.com",
-               "active": true
-            },
-            {
-               "id": 43,
-               "firstName": "Jeffrey",
-               "lastName": "Franklin",
-               "email": "jeffreyfranklin09@example.com",
-               "active": true
-            },
-            {
-               "id": 47,
-               "firstName": "Kevin",
-               "lastName": "Morrison",
-               "email": "kevinmorrison20@example.com",
-               "active": true
-            }
-         ],
-         "length": 3
+         "id": 18,
+         "firstName": "Robert",
+         "lastName": "Hale",
+         "email": "roberthale11@example.com",
+         "active": true
+      },
+      {
+         "id": 43,
+         "firstName": "Jeffrey",
+         "lastName": "Franklin",
+         "email": "jeffreyfranklin09@example.com",
+         "active": true
+      },
+      {
+         "id": 47,
+         "firstName": "Kevin",
+         "lastName": "Morrison",
+         "email": "kevinmorrison20@example.com",
+         "active": true
       }
-   </code>
-</pre>
+   ],
+   "length": 3
+}
+</code></pre>
 
 Let's use id 18 that belongs to Robert Hale.
 
@@ -356,25 +342,21 @@ Change the password for Robert.
 
 _*Request body*:_
 
-<pre>
-   <code>
-      {
-         "newPassword": "test@123",
-         "confirmedNewPassword": "test@123"
-      }
-   </code>
-</pre>
+<pre><code>
+{
+   "newPassword": "test@123",
+   "confirmedNewPassword": "test@123"
+}
+</code></pre>
 
 _*Response body*:_
 
-<pre>
-   <code>
-      {
-         "id": 18,
-         "email": "roberthale11@example.com"
-      }
-   </code>
-</pre>
+<pre><code>
+{
+   "id": 18,
+   "email": "roberthale11@example.com"
+}
+</code></pre>
 
 Login as Robert Hale.
 
@@ -382,24 +364,20 @@ Login as Robert Hale.
 
 _*Request body*:_
 
-<pre>
-   <code>
-      {
-         "email": "roberthale11@example.com",
-         "password": "test@123"
-      }
-   </code>
-</pre>
+<pre><code>
+{
+   "email": "roberthale11@example.com",
+   "password": "test@123"
+}
+</code></pre>
 
 _*Response body*:_
 
-<pre>
-   <code>
-      {
-         "message": "Login successful"
-      }
-   </code>
-</pre>
+<pre><code>
+{
+   "message": "Login successful"
+}
+</code></pre>
 
 The authentication token will be sent in the cookie. The token name is auth_token which will be valid for 1 hour.
 
@@ -409,40 +387,38 @@ Get the user profile of the logged in user
 
 _*Response body*:_
 
-<pre>
-   <code>
-      {
-         "id": 18,
-         "firstName": "Robert",
-         "lastName": "Hale",
-         "email": "roberthale11@example.com",
-         "isStoreManager": true,
-         "active": true,
-         "phoneNumber": "+1-868-555-4346",
-         "avatar": null,
-         "address": {
-            "id": 19,
-            "addressLine": "04719 Carr Plain Apt. 754",
+<pre><code>
+{
+   "id": 18,
+   "firstName": "Robert",
+   "lastName": "Hale",
+   "email": "roberthale11@example.com",
+   "isStoreManager": true,
+   "active": true,
+   "phoneNumber": "+1-868-555-4346",
+   "avatar": null,
+   "address": {
+      "id": 19,
+      "addressLine": "04719 Carr Plain Apt. 754",
+      "cityName": "Albury-Wodonga",
+      "stateName": "New South Wales",
+      "country": "Australia",
+      "postalCode": "87384"
+   },
+   "store": {
+      "id": 1,
+      "phoneNumber": "8905108936",
+      "address": {
+            "id": 1,
+            "addressLine": "1677 Jeanette Bridge",
             "cityName": "Albury-Wodonga",
             "stateName": "New South Wales",
             "country": "Australia",
-            "postalCode": "87384"
-         },
-         "store": {
-            "id": 1,
-            "phoneNumber": "8905108936",
-            "address": {
-                  "id": 1,
-                  "addressLine": "1677 Jeanette Bridge",
-                  "cityName": "Albury-Wodonga",
-                  "stateName": "New South Wales",
-                  "country": "Australia",
-                  "postalCode": "46949"
-            }
-         }
+            "postalCode": "46949"
       }
-   </code>
-</pre>
+   }
+}
+</code></pre>
 
 ### Add a movie
 
@@ -450,69 +426,65 @@ _*Response body*:_
 
 _*Request body*:_
 
-<pre>
-   <code>
-      {
-         "tmdbId": 0484782,
-         "imdbId": "tt31227572",
-         "title": "Predator: Badlands",
-         "originalTitle": "Predator: Badlands",
-         "overview": "A young Predator outcast from his clan finds an unlikely ally on his journey in search of the ultimate adversary.",
-         "runtime": 107,
-         "releaseDate": "2025-11-07",
-         "genres": [
-            "Action",
-            "Adventure",
-            "Science Fiction",
-            "Thriller"
-         ],
-         "countriesOfOrigin": [
-            "US"
-         ],
-         "language": "en",
-         "movieStatus": "Released",
-         "popularity": 0.04,
-         "budget": 105000000,
-         "revenue": 200000000,
-         "ratingAverage": 7.6,
-         "ratingCount": 34000,
-         "posterUrl": "https://image.tmdb.org/t/p/w500/ebyxeBh56QNXxSJgTnmz7fXAlwk.jpg"
-      }
-   </code>
-</pre>
+<pre><code>
+{
+   "tmdbId": 0484782,
+   "imdbId": "tt31227572",
+   "title": "Predator: Badlands",
+   "originalTitle": "Predator: Badlands",
+   "overview": "A young Predator outcast from his clan finds an unlikely ally on his journey in search of the ultimate adversary.",
+   "runtime": 107,
+   "releaseDate": "2025-11-07",
+   "genres": [
+      "Action",
+      "Adventure",
+      "Science Fiction",
+      "Thriller"
+   ],
+   "countriesOfOrigin": [
+      "US"
+   ],
+   "language": "en",
+   "movieStatus": "Released",
+   "popularity": 0.04,
+   "budget": 105000000,
+   "revenue": 200000000,
+   "ratingAverage": 7.6,
+   "ratingCount": 34000,
+   "posterUrl": "https://image.tmdb.org/t/p/w500/ebyxeBh56QNXxSJgTnmz7fXAlwk.jpg"
+}
+</code></pre>
 
 _*Response body*:_
 
-<pre>
-   <code>
-      {
-         "id": 123456,
-         "title": "Predator: Badlands",
-         "originalTitle": "Predator: Badlands",
-         "overview": "A young Predator outcast from his clan finds an unlikely ally on his journey in search of the ultimate adversary.",
-         "runtime": 107,
-         "releaseDate": "2025-11-07",
-         "genres": [
-            "Action",
-            "Adventure",
-            "Science Fiction",
-            "Thriller"
-         ],
-         "countriesOfOrigin": [
-            "US"
-         ],
-         "movieStatus": "Released",
-         "popularity": 0.04,
-         "budget": "105000000",
-         "revenue": "200000000",
-         "ratingAverage": 7.6,
-         "ratingCount": 34000,
-         "posterUrl": "https://image.tmdb.org/t/p/w500/ebyxeBh56QNXxSJgTnmz7fXAlwk.jpg",
-         "rentalRate": "20.00",
-         "language": "en"
-      }
-   </code>
-</pre>
+<pre><code>
+{
+   "id": 123456,
+   "title": "Predator: Badlands",
+   "originalTitle": "Predator: Badlands",
+   "overview": "A young Predator outcast from his clan finds an unlikely ally on his journey in search of the ultimate adversary.",
+   "runtime": 107,
+   "releaseDate": "2025-11-07",
+   "genres": [
+      "Action",
+      "Adventure",
+      "Science Fiction",
+      "Thriller"
+   ],
+   "countriesOfOrigin": [
+      "US"
+   ],
+   "movieStatus": "Released",
+   "popularity": 0.04,
+   "budget": "105000000",
+   "revenue": "200000000",
+   "ratingAverage": 7.6,
+   "ratingCount": 34000,
+   "posterUrl": "https://image.tmdb.org/t/p/w500/ebyxeBh56QNXxSJgTnmz7fXAlwk.jpg",
+   "rentalRate": "20.00",
+   "language": "en"
+}
+</code></pre>
 
 To get the movie detail
 
