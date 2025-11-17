@@ -48,8 +48,6 @@ const upload = multer({ dest: '/Users/pratap.reddy/repos/reelfake-node/movie_upl
 
 // GET
 router.get('/', validateMoviesRouteQuery, routeFnWrapper(getMovies));
-router.get('/upload/track', trackUpload);
-router.get('/upload/track_validation', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), trackUploadValidation);
 router.post(
   '/upload/validate',
   validateAuthToken,
@@ -57,7 +55,9 @@ router.post(
   upload.single('file'),
   validateUpload
 );
+router.get('/upload/track_validation', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), trackUploadValidation);
 router.post('/upload', upload.single('file'), uploadMovies);
+router.get('/upload/track', trackUpload);
 router.get('/:id', validateMovieByIdRouteQuery, routeFnWrapper(getMovieById));
 router.get('/:id/stores', routeFnWrapper(findInStores));
 // POST

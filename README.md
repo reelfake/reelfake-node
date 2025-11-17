@@ -1,6 +1,7 @@
 # Reelfake REST API
 
 ## DISCLAIMER
+
 1. The movies, actors, genres and movie languages are taken from the [The Movie Database (TMDB) API](https://developer.themoviedb.org/docs/getting-started). You must adhere to the [terms and agreements](https://www.themoviedb.org/api-terms-of-use?language=en-US) of their api which is modified and added new tables to better suit my needs.
 2. The db schema is inspired from the [PostgreSQL Sample Database by NEON](https://neon.com/postgresql/postgresql-getting-started/postgresql-sample-database).
 3. Please make sure to adhere to the licensing terms of TMDB API and do not use the reelfake api for commercial purpose. This api is only for knowledge, practice and educational purposes.
@@ -22,9 +23,10 @@
    d. [Using customer for login](#using-customer-for-login)<br>
    e. [Using staff for login](#using-staff-for-login)<br>
    f. [Using store manager for login](#using-store-manager-for-login)<br>
-6. [Using reelfake.cloud](#using-my-cloud-instance)<br>
-7. [Api Specs](#api-specification)
-8. [Generating JWT Secret](#generating-jwt-secret)
+6. [Using reelfake.cloud](#using-my-cloud-instance)
+7. [Examples](#examples)
+8. [Api Specs](#api-specification)
+9. [Generating JWT Secret](#generating-jwt-secret)
 
 ## Introduction
 
@@ -54,6 +56,7 @@ This publicly available api does not have the routes that mutate the data.
 You can access this using the [Reelfake api](https://reelfake.cloud) which is for my personal use.
 You can go through the [api specs](https://reelfake.cloud/api/docs) or the [redocs](https://reelfake.cloud/api/redocs) for more information.
 So, what this api provide?
+
 1. All GET methods (like `/api/movies`, `/api/actors`, `/api/customers`, `/api/movies/:id` and so on).
 2. The login (`/api/auth/login`) and logout (`/api/auth/logout`).
 3. The new user registration endpoints (i.e. `/api/customers/register` and `/api/staff/register`).
@@ -61,6 +64,7 @@ So, what this api provide?
 5. Endpoints for changing password (i.e. `/api/customers/:id/change_password` and `/api/staff/:id/change_password`).
 
 **Notes:**
+
 1. Although the api is for public, I purge the database weekly to keep my Lightsail instances clean and lightweight.
 2. When I purge the database, I re-seed the database which are part of the docker image. So, whatever you created the users or any data will be removed.
 3. Though I have provided limited access to my deployed api, you can hit it as per the api documentation but you will `403 Forbidden` if you do so.
@@ -132,10 +136,13 @@ The below instructions are for deploying to Amazon Lightsail that I use (make su
 ## Using the api
 
 ### Base url
+
 Depending on where you host the api the base url could differ. If you are running locally the bsae url will http://localhost:{{port}}/api or http://127.0.0.1:{{port}}/api. The port defaults to 8000 if you did not specify anything in the environment variable. If you are running on ec2, lightsail or any other cloud then the hostname will be the ip address depending on how you have configured the http traffic.
 
 ### Auth-less endpoints
+
 There are api routes that does not need user login. These are listed below. You can get more information on how to use apis using the api docs at {{BASE_URL}}/docs or {{BASE_URL}}/redocs.
+
 - address
   1. GET /addresses
   2. GET /address/city/{{city_name}}
@@ -171,7 +178,9 @@ There are api routes that does not need user login. These are listed below. You 
   4. GET /stores/{{id}}/movies
 
 ### Protected endpoints
+
 There are api routes which needs authentication through user login. These are listed below. You can get more information on how to use apis using the api docs at {{BASE_URL}}/docs or {{BASE_URL}}/redocs.
+
 - actor
   1. POST /actors
   2. POST /actors/{{id}}
@@ -211,8 +220,10 @@ There are api routes which needs authentication through user login. These are li
   3. GET /rentals/{{id}}
 
 ### Using customer for login
+
 To login as customer, you will need to choose the customer using the endpoint `/customers/summary`.<br>
 Once you decide which customer to use, call the endpoint `/customers/{{id}}/forgot_password` with the below json request body.<br>
+
 <pre>
    <code>
       {
@@ -221,8 +232,10 @@ Once you decide which customer to use, call the endpoint `/customers/{{id}}/forg
       }
    </code>
 </pre>
+
 You will get the response containing the email of the customer.<br>
 Using the email and the password you have just changed login using the endpoint `/auth/login` with the below json request body.<br>
+
 <pre>
    <code>
       {
@@ -233,8 +246,10 @@ Using the email and the password you have just changed login using the endpoint 
 </pre>
 
 ### Using staff for login
+
 To login as staff, you will need to choose the staff using the endpoint `/staff/summary`.<br>
 Once you decide which staff to use, call the endpoint `/staff/{{id}}/forgot_password` with the below json request body.<br>
+
 <pre>
    <code>
       {
@@ -243,8 +258,10 @@ Once you decide which staff to use, call the endpoint `/staff/{{id}}/forgot_pass
       }
    </code>
 </pre>
+
 You will get the response containing the email of the staff.<br>
 Using the email and the password you have just changed login using the endpoint `/auth/login` with the below json request body.<br>
+
 <pre>
    <code>
       {
@@ -255,8 +272,10 @@ Using the email and the password you have just changed login using the endpoint 
 </pre>
 
 ### Using store manager for login
+
 To login as store manager, you will need to choose the store manager using the endpoint `/staff/managers/summary`.<br>
 Once you decide which store manager to use, call the endpoint `/staff/{{id}}/forgot_password` with the below json request body.<br>
+
 <pre>
    <code>
       {
@@ -265,8 +284,10 @@ Once you decide which store manager to use, call the endpoint `/staff/{{id}}/for
       }
    </code>
 </pre>
+
 You will get the response containing the email of the store manager.<br>
 Using the email and the password you have just changed login using the endpoint `/auth/login` with the below json request body.<br>
+
 <pre>
    <code>
       {
@@ -277,31 +298,133 @@ Using the email and the password you have just changed login using the endpoint 
 </pre>
 
 ## Using my cloud instance
+
 I have developed this api for my personal use to practice or try new features in the web development space. For this, I have deployed this to [reelfake.cloud](https://reelfake.cloud/api).<br>
 But I have made some of the apis to public use for you all to try. All the endpoints except the ones with methods POST, PUT, PATCH and DELETE are disallowed.<br>
 The login, register user, change and forgot password routes are also available for you to use.<br>
 Apart from these, the `GET /api/movies/upload/track` is not allowed and `POST /api/movies/upload/validate` is allowed.<br>
 So, basically anything related to mutating or creating new records (like movies, actors, stores, etc) are prohibited.
 
+## Examples
+
+Let's try login as store manager. We will reelfake.cloud for this purpose.
+
+Get the id of the store manager to use.
+
+`GET https://reelfake.cloud/api/staff/managers/summary`
+
+_*Sample Response*:_
+
+<pre>
+   <code>
+      {
+         "items": [
+            {
+               "id": 18,
+               "firstName": "Robert",
+               "lastName": "Hale",
+               "email": "roberthale11@example.com",
+               "active": true
+            },
+            {
+               "id": 43,
+               "firstName": "Jeffrey",
+               "lastName": "Franklin",
+               "email": "jeffreyfranklin09@example.com",
+               "active": true
+            },
+            {
+               "id": 47,
+               "firstName": "Kevin",
+               "lastName": "Morrison",
+               "email": "kevinmorrison20@example.com",
+               "active": true
+            }
+         ],
+         "length": 3
+      }
+   </code>
+</pre>
+
+Let's use id 18 that belongs to Robert Hale.
+
+Change the password for Robert.
+
+`PUT https://reelfake.cloud/api/staff/18/forgot_password`
+
+_*Request body*:_
+
+<pre>
+   <code>
+      {
+         "newPassword": "test@123",
+         "confirmedNewPassword": "test@123"
+      }
+   </code>
+</pre>
+
+_*Response body*:_
+
+<pre>
+   <code>
+      {
+         "id": 18,
+         "email": "roberthale11@example.com"
+      }
+   </code>
+</pre>
+
+Login as Robert Hale.
+
+`POST https://reelfake.cloud/api/auth/login`
+
+_*Request body*:_
+
+<pre>
+   <code>
+      {
+         "email": "roberthale11@example.com",
+         "password": "test@123"
+      }
+   </code>
+</pre>
+
+_*Response body*:_
+
+<pre>
+   <code>
+      {
+         "message": "Login successful"
+      }
+   </code>
+</pre>
+
+The authentication token will be sent in the cookie. The token name is auth_token which will be valid for 1 hour.
+
 ## Api Specification
 
 _If running locally (the port is what you mentioned when running the container)_
+
 <pre>
    Docs - http://localhost:{{port}}/api/docs
    Redocs - http://localhost:{{port}}/api/redocs
 </pre>
 
 _If running on cloud_
+
 <pre>
    Docs - http://{{Ip Address or host DNS}}/api/docs
    Redocs - http://{{Ip Address or host DNS}}/api/redocs
 </pre>
 
 ### Generating JWT Secret
+
 In the terminal, run below command
+
 <pre><code>node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"</code></pre>
 
 if you do not have node installed, you can use openssl tool
+
 <pre><code>openssl rand -hex 32`</code></pre>
 
 ## License
