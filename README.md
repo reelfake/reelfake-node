@@ -75,11 +75,9 @@ So, what this api provide?
 
 ## Api Specification
 
-API Docs
-`https://reelfake.cloud/api/docs`
+<a href="https://reelfake.cloud/api/docs" target="_blank">API Docs</a>
 
-API Redocs
-`https://reelfake.cloud/api/redocs`
+<a href="https://reelfake.cloud/api/redocs" target="_blank">API Redocs</a>
 
 _If running locally (the port is what you mentioned when running the container)_
 
