@@ -25,6 +25,10 @@
    f. [Using store manager for login](#using-store-manager-for-login)<br>
 6. [Using reelfake.cloud](#using-my-cloud-instance)
 7. [Examples](#examples)
+   a. [Login](#login)
+   b. [Add a movie](#add-a-movie)
+   c. [Logout](#logout)
+   d. [Expired Token](#expired-token)
 8. [Api Specs](#api-specification)
 9. [Generating JWT Secret](#generating-jwt-secret)
 
@@ -489,6 +493,31 @@ _*Response body*:_
 To get the movie detail
 
 `GET https://reelfake.cloud/api/movies/123456`
+
+### Logout
+
+Logging out will clear the token and will not allow any of the protected routes to go through.
+
+`GET https://reelfake.cloud/api/auth/logout`
+
+_*Response body*:_
+
+<pre><code>
+{
+   "message": "Logged out successfully"
+}
+</code></pre>
+
+### Expired Token
+
+After successfull login, the token will remain valid for 1 hour. If the token is expired below response is returned.
+
+<pre><code>
+{
+   "status": "error",
+   "message": "Invalid or expired token"
+}
+</code></pre>
 
 ## Api Specification
 
