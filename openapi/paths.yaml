@@ -40,6 +40,8 @@
   $ref: apis/customer/summary.yaml
 /customers/register:
   $ref: apis/customer/customerRegistration.yaml
+/customers/my_rentals:
+  $ref: apis/customer/customerRental.yaml
 /customers/{id}:
   $ref: apis/customer/customerById.yaml
 /customers/{id}/activate:

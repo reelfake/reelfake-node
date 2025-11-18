@@ -128,5 +128,9 @@ get:
                 $ref: ../../components/pagination.yaml
     '400':
       $ref: ../../components/error/badRequest.yaml
+    '401':
+      $ref: ../../components/error/unauthorized.yaml
+    '403':
+      $ref: ../../components/error/forbidden.yaml
     '500':
       $ref: ../../components/error/internalServerError.yaml

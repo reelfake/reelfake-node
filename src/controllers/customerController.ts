@@ -1,7 +1,16 @@
 import type { Response } from 'express';
-import { WhereOptions, Op, Transaction } from 'sequelize';
+import { WhereOptions, Op, Transaction, fn, literal } from 'sequelize';
 import bcrypt from 'bcryptjs';
-import { CustomerModel, StoreModel, AddressModel, StaffModel, CityModel, CountryModel } from '../models';
+import {
+  CustomerModel,
+  StoreModel,
+  AddressModel,
+  CityModel,
+  CountryModel,
+  RentalModel,
+  InventoryModel,
+  MovieModel,
+} from '../models';
 import {
   AppError,
   addressUtils,
@@ -446,4 +455,124 @@ export const setPreferredStore = async (req: CustomRequest, res: Response) => {
   await existingCustInstance.save();
 
   res.status(204).send();
+};
+
+export const getCustomerRentals = async (req: CustomRequest, res: Response) => {
+  const { user } = req;
+
+  if (!user) {
+    throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
+  }
+
+  const customerId = user.id;
+
+  const customerInstance = await CustomerModel.findByPk(customerId);
+  if (!customerInstance) {
+    throw new AppError(ERROR_MESSAGES.USER_NOT_FOUND, 404);
+  }
+
+  const rentals = await RentalModel.findAll({
+    attributes: [
+      'id',
+      'rentalStartDate',
+      'rentalEndDate',
+      'returnDate',
+      'rentalDuration',
+      'delayedByDays',
+      'amountPaid',
+      'discountAmount',
+      'paymentDate',
+      'rentalType',
+      [
+        fn(
+          'json_build_object',
+          'id',
+          literal(`"inventory->movie"."id"`),
+          'title',
+          literal(`"inventory->movie"."title"`),
+          'imdbId',
+          literal(`"inventory->movie"."imdb_id"`),
+          'posterUrl',
+          literal(`"inventory->movie"."poster_url"`),
+          'ratingAverage',
+          literal(`"inventory->movie"."rating_average"`),
+          'ratingCount',
+          literal(`"inventory->movie"."rating_count"`)
+        ),
+        'movie',
+      ],
+      [
+        fn(
+          'json_build_object',
+          'id',
+          literal(`"inventory->store"."id"`),
+          'phoneNumber',
+          literal(`"inventory->store"."phone_number"`),
+          'storeManagerId',
+          literal(`"inventory->store"."store_manager_id"`),
+          'address',
+          fn(
+            'json_build_object',
+            'id',
+            literal(`"inventory->store->address"."id"`),
+            'addressLine',
+            literal(`"inventory->store->address"."address_line"`),
+            'cityName',
+            literal(`"inventory->store->address->city"."city_name"`),
+            'stateName',
+            literal(`"inventory->store->address->city"."state_name"`),
+            'country',
+            literal(`"inventory->store->address->city->country"."country_name"`),
+            'postalCode',
+            literal(`"inventory->store->address"."postal_code"`)
+          )
+        ),
+        'store',
+      ],
+    ],
+    include: [
+      {
+        model: InventoryModel,
+        as: 'inventory',
+        attributes: [],
+        include: [
+          {
+            model: MovieModel,
+            as: 'movie',
+            attributes: [],
+          },
+          {
+            model: StoreModel,
+            as: 'store',
+            include: [
+              {
+                model: AddressModel,
+                as: 'address',
+                attributes: [],
+                include: [
+                  {
+                    model: CityModel,
+                    as: 'city',
+                    attributes: [],
+                    include: [
+                      {
+                        model: CountryModel,
+                        as: 'country',
+                        attributes: [],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    where: {
+      customerId,
+    },
+  });
+
+  res.json({ items: rentals, length: rentals.length });
 };

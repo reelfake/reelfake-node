@@ -6,29 +6,16 @@ import { ERROR_MESSAGES, USER_ROLES } from '../constants';
 import { CustomRequest } from '../types';
 
 async function getUserAndStoreIdIfExist(email: string, role: USER_ROLES) {
-  let modelInstance: Model | null = null;
-
-  switch (role) {
-    case USER_ROLES.CUSTOMER:
-      modelInstance = await CustomerModel.findOne({
-        attributes: ['id', 'active', [col('preferred_store_id'), 'storeId']],
-        where: {
-          email,
-        },
-      });
-      break;
-    case USER_ROLES.STAFF:
-    case USER_ROLES.STORE_MANAGER:
-      modelInstance = await StaffModel.findOne({
-        attributes: ['id', 'active', [col('store_id'), 'storeId']],
-        where: {
-          email,
-        },
-      });
-      break;
-    default:
-      throw new AppError(`Unknown user role ${role}`, 500);
+  if (role !== USER_ROLES.STAFF && role !== USER_ROLES.STORE_MANAGER) {
+    throw new AppError(ERROR_MESSAGES.FORBIDDEN, 403);
   }
+
+  const modelInstance = await StaffModel.findOne({
+    attributes: ['id', 'active', [col('store_id'), 'storeId']],
+    where: {
+      email,
+    },
+  });
 
   if (!modelInstance) {
     throw new AppError(ERROR_MESSAGES.USER_NOT_FOUND, 404);

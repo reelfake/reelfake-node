@@ -915,6 +915,10 @@ paths:
                     $ref: '#/components/schemas/pagination'
         '400':
           $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
         '500':
           $ref: '#/components/responses/internalServerError'
   /customers/summary:
@@ -1105,6 +1109,38 @@ paths:
                     type: integer
         '400':
           $ref: '#/components/responses/badRequest'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /customers/my_rentals:
+    get:
+      summary: Get rentals of the logged in customer
+      operationId: getCustomerRentals
+      security:
+        - cookieAuth: []
+      tags:
+        - customer
+      responses:
+        '200':
+          description: Successfully returned the customer data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/customerRental'
+                  length:
+                    type: integer
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
         '500':
           $ref: '#/components/responses/internalServerError'
   /customers/{id}:
@@ -3633,6 +3669,72 @@ components:
           format: date
         address:
           $ref: '#/components/schemas/address'
+    customerRental:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: number
+        rentalStartDate:
+          type: string
+          format: date
+        rentalEndDate:
+          type: string
+          format: date
+        returnDate:
+          type: string
+          format: date
+        rentalDuration:
+          type: integer
+          format: number
+        delayedByDays:
+          type: integer
+          format: number
+        amountPaid:
+          type: number
+          format: float
+        discountAmount:
+          type: number
+          format: float
+        paymentDate:
+          type: string
+          format: date
+        rentalType:
+          type: string
+          enum:
+            - in-store
+            - online
+        movie:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: number
+            title:
+              type: string
+            imdbId:
+              type: string
+            posterUrl:
+              type: string
+            ratingAverage:
+              type: integer
+              format: number
+            ratingCount:
+              type: integer
+              format: number
+        store:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: number
+            phoneNumber:
+              type: string
+            storeManagerId:
+              type: integer
+              format: number
+            address:
+              $ref: '#/components/schemas/address'
     genre:
       type: object
       properties:

@@ -11,6 +11,7 @@ import {
   activateCustomer,
   forgotCustomerPassword,
   setPreferredStore,
+  getCustomerRentals,
 } from '../controllers';
 import { routeFnWrapper, AppError, validateDateRangeInRequest } from '../utils';
 import { USER_ROLES, CUSTOMER_EMAIL_FORMAT, ERROR_MESSAGES } from '../constants';
@@ -75,8 +76,15 @@ function validateCustomersRouteQuery(req: Request, res: Response, next: NextFunc
 }
 
 // GET
-router.get('/', validateCustomersRouteQuery, validateAuthToken, routeFnWrapper(getCustomers));
+router.get(
+  '/',
+  validateCustomersRouteQuery,
+  validateAuthToken,
+  validateUserRole(USER_ROLES.STAFF, USER_ROLES.STORE_MANAGER),
+  routeFnWrapper(getCustomers)
+);
 router.get('/summary', routeFnWrapper(getCustomers));
+router.get('/my_rentals', validateAuthToken, validateUserRole(USER_ROLES.CUSTOMER), routeFnWrapper(getCustomerRentals));
 router.get('/:id', validateAuthToken, routeFnWrapper(getCustomerById));
 // POST
 router.post('/register', routeFnWrapper(registerCustomer));
