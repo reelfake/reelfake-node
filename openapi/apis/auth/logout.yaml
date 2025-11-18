@@ -10,11 +10,7 @@ get:
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: Logged out successfully
+            $ref: ../../components/auth/logoutResponse.yaml
     '400':
       description: Bad request
       content:

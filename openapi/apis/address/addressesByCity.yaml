@@ -17,29 +17,7 @@ get:
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              items:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                      format: number
-                    addressLine:
-                      type: string
-                    cityName:
-                      type: string
-                    stateName:
-                      type: string
-                    country:
-                      type: string
-                    postalCode:
-                      type: string
-              length:
-                type: integer
-                format: number
+            $ref: ../../components/address/addressesByCityResponse.yaml
     '400':
       description: Bad request
       content:

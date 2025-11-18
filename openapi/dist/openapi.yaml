@@ -77,16 +77,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/actorSummary'
-                  length:
-                    type: integer
-                  pagination:
-                    $ref: '#/components/schemas/pagination'
+                $ref: '#/components/schemas/actorsResponse'
         '400':
           $ref: '#/components/responses/badRequest'
         '500':
@@ -192,7 +183,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/actorDetail'
+                $ref: '#/components/schemas/actorByIdResponse'
         '400':
           $ref: '#/components/responses/badRequest'
         '404':
@@ -368,31 +359,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id:
-                          type: integer
-                          format: number
-                        addressLine:
-                          type: string
-                        cityName:
-                          type: string
-                        stateName:
-                          type: string
-                        country:
-                          type: string
-                        postalCode:
-                          type: string
-                  length:
-                    type: integer
-                    format: number
-                  pagination:
-                    $ref: '#/components/schemas/pagination'
+                $ref: '#/components/schemas/addressesResponse'
         '400':
           description: Bad request
           content:
@@ -422,29 +389,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id:
-                          type: integer
-                          format: number
-                        addressLine:
-                          type: string
-                        cityName:
-                          type: string
-                        stateName:
-                          type: string
-                        country:
-                          type: string
-                        postalCode:
-                          type: string
-                  length:
-                    type: integer
-                    format: number
+                $ref: '#/components/schemas/addressesByCityResponse'
         '400':
           description: Bad request
           content:
@@ -474,29 +419,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id:
-                          type: integer
-                          format: number
-                        addressLine:
-                          type: string
-                        cityName:
-                          type: string
-                        stateName:
-                          type: string
-                        country:
-                          type: string
-                        postalCode:
-                          type: string
-                  length:
-                    type: integer
-                    format: number
+                $ref: '#/components/schemas/addressesByStateResponse'
         '400':
           description: Bad request
           content:
@@ -519,14 +442,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                  format: email
-                password:
-                  type: string
-                  format: password
+              $ref: '#/components/schemas/loginRequestBody'
       responses:
         '201':
           description: User logged in successfully
@@ -539,11 +455,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Login successful
+                $ref: '#/components/schemas/loginResponse'
         '401':
           description: Invalid credentials
           content:
@@ -566,11 +478,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Logged out successfully
+                $ref: '#/components/schemas/logoutResponse'
         '400':
           description: Bad request
           content:
@@ -594,9 +502,7 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                  - $ref: '#/components/schemas/customerDetail'
-                  - $ref: '#/components/schemas/staffItem'
+                $ref: '#/components/schemas/userProfileResponse'
         '400':
           $ref: '#/components/responses/badRequest'
         '404':
@@ -3400,57 +3306,64 @@ components:
       name: auth_token
       in: cookie
   schemas:
-    actorSummary:
+    actorsResponse:
       type: object
       properties:
-        id:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              imdbId:
+                type: integer
+              actorName:
+                type: string
+              birthday:
+                type: string
+                format: date
+              deathday:
+                type: string
+                format: date
+              placeOfBirth:
+                type: string
+              popularity:
+                type: number
+                format: float
+              profilePictureUrl:
+                type: string
+                format: uri
+        length:
           type: integer
-        imdbId:
-          type: integer
-        actorName:
-          type: string
-        birthday:
-          type: string
-          format: date
-        deathday:
-          type: string
-          format: date
-        placeOfBirth:
-          type: string
-        popularity:
-          type: number
-          format: float
-        profilePictureUrl:
-          type: string
-          format: uri
-    pagination:
-      type: object
-      properties:
-        pageNumber:
-          type: integer
-          description: Current page number
-        totalPages:
-          type: integer
-          description: Total pages available for pagination
-        totalItems:
-          type: integer
-          description: Total items across all the pages
-        itemsPerPage:
-          type: integer
-          description: Maximum number of items that the page can have
-        next:
-          type: string
-          description: Link to the next page
-        prev:
-          type: string
-          description: Link to the previous page
-        first:
-          type: string
-          description: Link to the first page
-        last:
-          type: string
-          description: Link to the last page
-    actorDetail:
+        pagination:
+          type: object
+          properties:
+            pageNumber:
+              type: integer
+              description: Current page number
+            totalPages:
+              type: integer
+              description: Total pages available for pagination
+            totalItems:
+              type: integer
+              description: Total items across all the pages
+            itemsPerPage:
+              type: integer
+              description: Maximum number of items that the page can have
+            next:
+              type: string
+              description: Link to the next page
+            prev:
+              type: string
+              description: Link to the previous page
+            first:
+              type: string
+              description: Link to the first page
+            last:
+              type: string
+              description: Link to the last page
+    actorByIdResponse:
       type: object
       properties:
         id:
@@ -3506,6 +3419,126 @@ components:
                   castOrder:
                     type: integer
                     format: number
+    addressesResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                format: number
+              addressLine:
+                type: string
+              cityName:
+                type: string
+              stateName:
+                type: string
+              country:
+                type: string
+              postalCode:
+                type: string
+        length:
+          type: integer
+          format: number
+        pagination:
+          type: object
+          properties:
+            pageNumber:
+              type: integer
+              description: Current page number
+            totalPages:
+              type: integer
+              description: Total pages available for pagination
+            totalItems:
+              type: integer
+              description: Total items across all the pages
+            itemsPerPage:
+              type: integer
+              description: Maximum number of items that the page can have
+            next:
+              type: string
+              description: Link to the next page
+            prev:
+              type: string
+              description: Link to the previous page
+            first:
+              type: string
+              description: Link to the first page
+            last:
+              type: string
+              description: Link to the last page
+    addressesByCityResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                format: number
+              addressLine:
+                type: string
+              cityName:
+                type: string
+              stateName:
+                type: string
+              country:
+                type: string
+              postalCode:
+                type: string
+        length:
+          type: integer
+          format: number
+    addressesByStateResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                format: number
+              addressLine:
+                type: string
+              cityName:
+                type: string
+              stateName:
+                type: string
+              country:
+                type: string
+              postalCode:
+                type: string
+        length:
+          type: integer
+          format: number
+    loginRequestBody:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+    loginResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Login successful
+    logoutResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Logged out successfully
     address:
       type: object
       properties:
@@ -3523,86 +3556,86 @@ components:
           type: string
         postalCode:
           type: string
-    customerDetail:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: number
-        firstName:
-          type: string
-        lastName:
-          type: string
-        email:
-          type: string
-          format: email
-        active:
-          type: boolean
-        phoneNumber:
-          type: string
-        avatar:
-          type: string
-          format: uri
-        registeredOn:
-          type: string
-          format: date
-        preferredStore:
-          type: object
+    userProfileResponse:
+      oneOf:
+        - type: object
           properties:
             id:
               type: integer
               format: number
+            firstName:
+              type: string
+            lastName:
+              type: string
+            email:
+              type: string
+              format: email
+            active:
+              type: boolean
             phoneNumber:
               type: string
-            storeManager:
+            avatar:
+              type: string
+              format: uri
+            registeredOn:
+              type: string
+              format: date
+            preferredStore:
               type: object
               properties:
                 id:
-                  type: string
+                  type: integer
                   format: number
-                firstName:
-                  type: string
-                lastName:
-                  type: string
-                email:
-                  type: string
-                  format: email
-                active:
-                  type: boolean
                 phoneNumber:
                   type: string
-                avatar:
-                  type: string
-                  format: uri
-                address:
-                  $ref: '#/components/schemas/address'
-        address:
-          $ref: '#/components/schemas/address'
-    staffItem:
-      type: object
-      properties:
-        id:
-          type: string
-          format: number
-          readOnly: true
-        firstName:
-          type: string
-        lastName:
-          type: string
-        email:
-          type: string
-          format: email
-        isStoreManager:
-          type: boolean
-        active:
-          type: boolean
-        phoneNumber:
-          type: string
-        avatar:
-          type: string
-          format: uri
-        address:
-          $ref: '#/components/schemas/address'
+                storeManager:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: number
+                    firstName:
+                      type: string
+                    lastName:
+                      type: string
+                    email:
+                      type: string
+                      format: email
+                    active:
+                      type: boolean
+                    phoneNumber:
+                      type: string
+                    avatar:
+                      type: string
+                      format: uri
+                    address:
+                      $ref: '#/components/schemas/address'
+            address:
+              $ref: '#/components/schemas/address'
+        - type: object
+          properties:
+            id:
+              type: string
+              format: number
+              readOnly: true
+            firstName:
+              type: string
+            lastName:
+              type: string
+            email:
+              type: string
+              format: email
+            isStoreManager:
+              type: boolean
+            active:
+              type: boolean
+            phoneNumber:
+              type: string
+            avatar:
+              type: string
+              format: uri
+            address:
+              $ref: '#/components/schemas/address'
     cityWithCountry:
       type: object
       properties:
@@ -3669,6 +3702,33 @@ components:
           format: date
         address:
           $ref: '#/components/schemas/address'
+    pagination:
+      type: object
+      properties:
+        pageNumber:
+          type: integer
+          description: Current page number
+        totalPages:
+          type: integer
+          description: Total pages available for pagination
+        totalItems:
+          type: integer
+          description: Total items across all the pages
+        itemsPerPage:
+          type: integer
+          description: Maximum number of items that the page can have
+        next:
+          type: string
+          description: Link to the next page
+        prev:
+          type: string
+          description: Link to the previous page
+        first:
+          type: string
+          description: Link to the first page
+        last:
+          type: string
+          description: Link to the last page
     customerRental:
       type: object
       properties:
@@ -3735,6 +3795,61 @@ components:
               format: number
             address:
               $ref: '#/components/schemas/address'
+    customerDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: number
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        active:
+          type: boolean
+        phoneNumber:
+          type: string
+        avatar:
+          type: string
+          format: uri
+        registeredOn:
+          type: string
+          format: date
+        preferredStore:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: number
+            phoneNumber:
+              type: string
+            storeManager:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: number
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                active:
+                  type: boolean
+                phoneNumber:
+                  type: string
+                avatar:
+                  type: string
+                  format: uri
+                address:
+                  $ref: '#/components/schemas/address'
+        address:
+          $ref: '#/components/schemas/address'
     genre:
       type: object
       properties:
@@ -3950,6 +4065,31 @@ components:
           format: number
         isStoreManager:
           type: boolean
+        address:
+          $ref: '#/components/schemas/address'
+    staffItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: number
+          readOnly: true
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        isStoreManager:
+          type: boolean
+        active:
+          type: boolean
+        phoneNumber:
+          type: string
+        avatar:
+          type: string
+          format: uri
         address:
           $ref: '#/components/schemas/address'
     storeItem:

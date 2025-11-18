@@ -27,7 +27,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: ../../components/actor/actorDetail.yaml
+            $ref: ../../components/actor/actorByIdResponse.yaml
     '400':
       $ref: ../../components/error/badRequest.yaml
     '404':

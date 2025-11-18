@@ -10,14 +10,7 @@ post:
     content:
       application/json:
         schema:
-          type: object
-          properties:
-            email:
-              type: string
-              format: email
-            password:
-              type: string
-              format: password
+          $ref: ../../components/auth/loginRequestBody.yaml
   responses:
     '201':
       description: User logged in successfully
@@ -30,11 +23,7 @@ post:
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: Login successful
+            $ref: ../../components/auth/loginResponse.yaml
     '401':
       description: Invalid credentials
       content:
