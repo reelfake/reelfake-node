@@ -49,6 +49,36 @@ properties:
             type: string
             format: uri
           address:
-            $ref: ../address/address.yaml
+            type: object
+            properties:
+              id:
+                type: integer
+                format: number
+                readOnly: true
+              addressLine:
+                type: string
+              cityName:
+                type: string
+              stateName:
+                type: string
+              country:
+                type: string
+              postalCode:
+                type: string
   address:
-    $ref: ../address/address.yaml
+    type: object
+    properties:
+      id:
+        type: integer
+        format: number
+        readOnly: true
+      addressLine:
+        type: string
+      cityName:
+        type: string
+      stateName:
+        type: string
+      country:
+        type: string
+      postalCode:
+        type: string

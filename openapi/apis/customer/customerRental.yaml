@@ -11,14 +11,7 @@ get:
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              items:
-                type: array
-                items:
-                  $ref: ../../components/customer/customerRental.yaml
-              length:
-                type: integer
+            $ref: ../../components/customer/customerRentalsResponse.yaml
     '400':
       $ref: ../../components/error/badRequest.yaml
     '404':

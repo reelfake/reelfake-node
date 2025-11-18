@@ -116,16 +116,7 @@ get:
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              items:
-                type: array
-                items:
-                  $ref: ../../components/customer/customerSummary.yaml
-              length:
-                type: integer
-              pagination:
-                $ref: ../../components/pagination.yaml
+            $ref: ../../components/customer/customersResponse.yaml
     '400':
       $ref: ../../components/error/badRequest.yaml
     '401':

@@ -552,7 +552,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/countries'
+                $ref: '#/components/schemas/countriesResponse'
         '400':
           description: Bad request
           content:
@@ -583,28 +583,14 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                newPassword:
-                  type: string
-                  format: password
-                confirmedNewPassword:
-                  type: string
-                  format: password
+              $ref: '#/components/schemas/forgotPasswordRequestBody'
       responses:
         '200':
           description: Successfully changed the password
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    type: integer
-                    format: number
-                  email:
-                    type: string
-                    format: email
+                $ref: '#/components/schemas/forgotPasswordResponse'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -634,31 +620,14 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                currentPassword:
-                  type: string
-                  format: password
-                newPassword:
-                  type: string
-                  format: password
-                confirmedNewPassword:
-                  type: string
-                  format: password
+              $ref: '#/components/schemas/changePasswordRequestBody'
       responses:
         '200':
           description: Successfully changed the password
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    type: integer
-                    format: number
-                  email:
-                    type: string
-                    format: email
+                $ref: '#/components/schemas/changePasswordResponse'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -786,16 +755,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/customerSummary'
-                  length:
-                    type: integer
-                  pagination:
-                    $ref: '#/components/schemas/pagination'
+                $ref: '#/components/schemas/customersResponse'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -923,29 +883,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id:
-                          type: integer
-                          format: number
-                        firstName:
-                          type: string
-                        lastName:
-                          type: string
-                        email:
-                          type: string
-                          format: email
-                        active:
-                          type: boolean
-                  length:
-                    type: integer
-                  pagination:
-                    $ref: '#/components/schemas/pagination'
+                $ref: '#/components/schemas/customersSummaryResponse'
         '400':
           $ref: '#/components/responses/badRequest'
         '500':
@@ -962,18 +900,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                firstName:
-                  type: string
-                lastName:
-                  type: string
-                email:
-                  type: string
-                  format: email
-                password:
-                  type: string
-                  format: password
+              $ref: '#/components/schemas/customerRegistrationRequestBody'
       responses:
         '201':
           description: Successfully registered customer
@@ -1008,14 +935,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/customerRental'
-                  length:
-                    type: integer
+                $ref: '#/components/schemas/customerRentalsResponse'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -1047,7 +967,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/customerDetail'
+                $ref: '#/components/schemas/customerByIdResponse'
         '400':
           $ref: '#/components/responses/badRequest'
         '404':
@@ -3656,7 +3576,7 @@ components:
                     type: integer
             length:
               type: integer
-    countries:
+    countriesResponse:
       type: object
       properties:
         items:
@@ -3672,12 +3592,174 @@ components:
                 type: string
         length:
           type: integer
-    customerSummary:
+    forgotPasswordRequestBody:
+      type: object
+      properties:
+        newPassword:
+          type: string
+          format: password
+        confirmedNewPassword:
+          type: string
+          format: password
+    forgotPasswordResponse:
       type: object
       properties:
         id:
           type: integer
           format: number
+        email:
+          type: string
+          format: email
+    changePasswordRequestBody:
+      type: object
+      properties:
+        currentPassword:
+          type: string
+          format: password
+        newPassword:
+          type: string
+          format: password
+        confirmedNewPassword:
+          type: string
+          format: password
+    changePasswordResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: number
+        email:
+          type: string
+          format: email
+    customersResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                format: number
+              firstName:
+                type: string
+              lastName:
+                type: string
+              email:
+                type: string
+                format: email
+              phoneNumber:
+                type: string
+              preferredStoreId:
+                type: integer
+                format: number
+              active:
+                type: boolean
+              avatar:
+                type: string
+                format: uri
+              registeredOn:
+                type: string
+                format: date
+              address:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    format: number
+                    readOnly: true
+                  addressLine:
+                    type: string
+                  cityName:
+                    type: string
+                  stateName:
+                    type: string
+                  country:
+                    type: string
+                  postalCode:
+                    type: string
+        length:
+          type: integer
+        pagination:
+          type: object
+          properties:
+            pageNumber:
+              type: integer
+              description: Current page number
+            totalPages:
+              type: integer
+              description: Total pages available for pagination
+            totalItems:
+              type: integer
+              description: Total items across all the pages
+            itemsPerPage:
+              type: integer
+              description: Maximum number of items that the page can have
+            next:
+              type: string
+              description: Link to the next page
+            prev:
+              type: string
+              description: Link to the previous page
+            first:
+              type: string
+              description: Link to the first page
+            last:
+              type: string
+              description: Link to the last page
+    customersSummaryResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                format: number
+              firstName:
+                type: string
+              lastName:
+                type: string
+              email:
+                type: string
+                format: email
+              active:
+                type: boolean
+        length:
+          type: integer
+        pagination:
+          type: object
+          properties:
+            pageNumber:
+              type: integer
+              description: Current page number
+            totalPages:
+              type: integer
+              description: Total pages available for pagination
+            totalItems:
+              type: integer
+              description: Total items across all the pages
+            itemsPerPage:
+              type: integer
+              description: Maximum number of items that the page can have
+            next:
+              type: string
+              description: Link to the next page
+            prev:
+              type: string
+              description: Link to the previous page
+            first:
+              type: string
+              description: Link to the first page
+            last:
+              type: string
+              description: Link to the last page
+    customerRegistrationRequestBody:
+      type: object
+      properties:
         firstName:
           type: string
         lastName:
@@ -3685,115 +3767,98 @@ components:
         email:
           type: string
           format: email
-        phoneNumber:
+        password:
           type: string
-        preferredStoreId:
-          type: integer
-          format: number
-        active:
-          type: boolean
-        avatar:
-          type: string
-          format: uri
-        registeredOn:
-          type: string
-          format: date
-        address:
-          $ref: '#/components/schemas/address'
-    pagination:
+          format: password
+    customerRentalsResponse:
       type: object
       properties:
-        pageNumber:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                format: number
+              rentalStartDate:
+                type: string
+                format: date
+              rentalEndDate:
+                type: string
+                format: date
+              returnDate:
+                type: string
+                format: date
+              rentalDuration:
+                type: integer
+                format: number
+              delayedByDays:
+                type: integer
+                format: number
+              amountPaid:
+                type: number
+                format: float
+              discountAmount:
+                type: number
+                format: float
+              paymentDate:
+                type: string
+                format: date
+              rentalType:
+                type: string
+                enum:
+                  - in-store
+                  - online
+              movie:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    format: number
+                  title:
+                    type: string
+                  imdbId:
+                    type: string
+                  posterUrl:
+                    type: string
+                  ratingAverage:
+                    type: integer
+                    format: number
+                  ratingCount:
+                    type: integer
+                    format: number
+              store:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    format: number
+                  phoneNumber:
+                    type: string
+                  storeManagerId:
+                    type: integer
+                    format: number
+                  address:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        format: number
+                        readOnly: true
+                      addressLine:
+                        type: string
+                      cityName:
+                        type: string
+                      stateName:
+                        type: string
+                      country:
+                        type: string
+                      postalCode:
+                        type: string
+        length:
           type: integer
-          description: Current page number
-        totalPages:
-          type: integer
-          description: Total pages available for pagination
-        totalItems:
-          type: integer
-          description: Total items across all the pages
-        itemsPerPage:
-          type: integer
-          description: Maximum number of items that the page can have
-        next:
-          type: string
-          description: Link to the next page
-        prev:
-          type: string
-          description: Link to the previous page
-        first:
-          type: string
-          description: Link to the first page
-        last:
-          type: string
-          description: Link to the last page
-    customerRental:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: number
-        rentalStartDate:
-          type: string
-          format: date
-        rentalEndDate:
-          type: string
-          format: date
-        returnDate:
-          type: string
-          format: date
-        rentalDuration:
-          type: integer
-          format: number
-        delayedByDays:
-          type: integer
-          format: number
-        amountPaid:
-          type: number
-          format: float
-        discountAmount:
-          type: number
-          format: float
-        paymentDate:
-          type: string
-          format: date
-        rentalType:
-          type: string
-          enum:
-            - in-store
-            - online
-        movie:
-          type: object
-          properties:
-            id:
-              type: integer
-              format: number
-            title:
-              type: string
-            imdbId:
-              type: string
-            posterUrl:
-              type: string
-            ratingAverage:
-              type: integer
-              format: number
-            ratingCount:
-              type: integer
-              format: number
-        store:
-          type: object
-          properties:
-            id:
-              type: integer
-              format: number
-            phoneNumber:
-              type: string
-            storeManagerId:
-              type: integer
-              format: number
-            address:
-              $ref: '#/components/schemas/address'
-    customerDetail:
+    customerByIdResponse:
       type: object
       properties:
         id:
@@ -3845,9 +3910,39 @@ components:
                   type: string
                   format: uri
                 address:
-                  $ref: '#/components/schemas/address'
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      format: number
+                      readOnly: true
+                    addressLine:
+                      type: string
+                    cityName:
+                      type: string
+                    stateName:
+                      type: string
+                    country:
+                      type: string
+                    postalCode:
+                      type: string
         address:
-          $ref: '#/components/schemas/address'
+          type: object
+          properties:
+            id:
+              type: integer
+              format: number
+              readOnly: true
+            addressLine:
+              type: string
+            cityName:
+              type: string
+            stateName:
+              type: string
+            country:
+              type: string
+            postalCode:
+              type: string
     genre:
       type: object
       properties:
@@ -3915,6 +4010,33 @@ components:
           type: number
           description: The rental rate of the movie
           format: float
+    pagination:
+      type: object
+      properties:
+        pageNumber:
+          type: integer
+          description: Current page number
+        totalPages:
+          type: integer
+          description: Total pages available for pagination
+        totalItems:
+          type: integer
+          description: Total items across all the pages
+        itemsPerPage:
+          type: integer
+          description: Maximum number of items that the page can have
+        next:
+          type: string
+          description: Link to the next page
+        prev:
+          type: string
+          description: Link to the previous page
+        first:
+          type: string
+          description: Link to the first page
+        last:
+          type: string
+          description: Link to the last page
     movieDetail:
       type: object
       properties:
