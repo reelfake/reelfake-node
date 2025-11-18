@@ -528,23 +528,7 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                  - type: object
-                    properties:
-                      items:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/cityWithCountry'
-                      length:
-                        type: integer
-                  - type: object
-                    properties:
-                      items:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/city'
-                      length:
-                        type: integer
+                $ref: '#/components/schemas/citiesResponse'
         '400':
           description: Bad request
           content:
@@ -568,14 +552,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/country'
-                  length:
-                    type: integer
+                $ref: '#/components/schemas/countries'
         '400':
           description: Bad request
           content:
@@ -3636,44 +3613,65 @@ components:
               format: uri
             address:
               $ref: '#/components/schemas/address'
-    cityWithCountry:
-      type: object
-      properties:
-        id:
-          type: integer
-        cityName:
-          type: string
-        stateName:
-          type: string
-        country:
-          type: object
+    citiesResponse:
+      oneOf:
+        - type: object
           properties:
-            id:
+            items:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  cityName:
+                    type: string
+                  stateName:
+                    type: string
+                  country:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      countryName:
+                        type: string
+                      countryCode:
+                        type: string
+            length:
               type: integer
-            countryName:
-              type: string
-            countryCode:
-              type: string
-    city:
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  cityName:
+                    type: string
+                  stateName:
+                    type: string
+                  countryId:
+                    type: integer
+            length:
+              type: integer
+    countries:
       type: object
       properties:
-        id:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              countryName:
+                type: string
+              countryCode:
+                type: string
+        length:
           type: integer
-        cityName:
-          type: string
-        stateName:
-          type: string
-        countryId:
-          type: integer
-    country:
-      type: object
-      properties:
-        id:
-          type: integer
-        countryName:
-          type: string
-        countryCode:
-          type: string
     customerSummary:
       type: object
       properties:

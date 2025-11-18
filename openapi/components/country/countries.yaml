@@ -1,0 +1,15 @@
+type: object
+properties:
+  items:
+    type: array
+    items:
+      type: object
+      properties:
+        id:
+          type: integer
+        countryName:
+          type: string
+        countryCode:
+          type: string
+  length:
+    type: integer

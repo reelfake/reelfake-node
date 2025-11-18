@@ -1,0 +1,42 @@
+oneOf:
+  - type: object
+    properties:
+      items:
+        type: array
+        items:
+          type: object
+          properties:
+            id:
+              type: integer
+            cityName:
+              type: string
+            stateName:
+              type: string
+            country:
+              type: object
+              properties:
+                id:
+                  type: integer
+                countryName:
+                  type: string
+                countryCode:
+                  type: string
+      length:
+        type: integer
+  - type: object
+    properties:
+      items:
+        type: array
+        items:
+          type: object
+          properties:
+            id:
+              type: integer
+            cityName:
+              type: string
+            stateName:
+              type: string
+            countryId:
+              type: integer
+      length:
+        type: integer

@@ -9,14 +9,7 @@ get:
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              items:
-                type: array
-                items:
-                  $ref: ../../components/country/country.yaml
-              length:
-                type: integer
+            $ref: ../../components/country/countries.yaml
     '400':
       description: Bad request
       content:
