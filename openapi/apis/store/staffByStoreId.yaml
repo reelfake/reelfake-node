@@ -16,7 +16,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: ../../components/store/staffByStoreIdResponse.yaml
+            $ref: ../../components/store/staffByStoreIdResponseBody.yaml
     '400':
       $ref: ../../components/error/badRequest.yaml
     '404':

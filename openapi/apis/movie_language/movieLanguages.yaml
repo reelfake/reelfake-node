@@ -14,7 +14,7 @@ get:
               items:
                 type: array
                 items:
-                  $ref: ../../components/movie_language/movieLanguagesResponse.yaml
+                  $ref: ../../components/movie_language/movieLanguagesResponseBody.yaml
               length:
                 type: integer
     '400':

@@ -26,7 +26,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: ../../components/store/moviesByStoreIdResponse.yaml
+            $ref: ../../components/store/moviesByStoreIdResponseBody.yaml
     '400':
       $ref: ../../components/error/badRequest.yaml
     '404':

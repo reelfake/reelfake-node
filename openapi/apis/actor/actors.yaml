@@ -57,7 +57,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: ../../components/actor/actorsResponse.yaml
+            $ref: ../../components/actor/actorsResponseBody.yaml
     '400':
       $ref: ../../components/error/badRequest.yaml
     '500':
@@ -80,7 +80,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: ../../components/actor/newActorResponse.yaml
+            $ref: ../../components/actor/newActorResponseBody.yaml
     '400':
       $ref: ../../components/error/badRequest.yaml
     '401':

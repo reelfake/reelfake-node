@@ -9,7 +9,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: ../../components/rental/rentalsResponse.yaml
+            $ref: ../../components/rental/rentalsResponseBody.yaml
     '400':
       description: Bad request
       content:

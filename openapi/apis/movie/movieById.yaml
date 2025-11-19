@@ -27,7 +27,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: ../../components/movie/movieByIdResponse.yaml
+            $ref: ../../components/movie/movieByIdResponseBody.yaml
     '400':
       $ref: ../../components/error/badRequest.yaml
     '404':

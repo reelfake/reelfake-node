@@ -16,7 +16,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: ../../components/store/stockCountInStoreResponse.yaml
+            $ref: ../../components/store/stockCountInStoreResponseBody.yaml
     '400':
       description: Bad request
       content:

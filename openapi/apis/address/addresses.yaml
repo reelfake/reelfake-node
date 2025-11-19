@@ -20,7 +20,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: ../../components/address/addressesResponse.yaml
+            $ref: ../../components/address/addressesResponseBody.yaml
     '400':
       description: Bad request
       content:

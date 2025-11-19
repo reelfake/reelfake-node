@@ -9,7 +9,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: ../../components/staff/storeManagersResponse.yaml
+            $ref: ../../components/staff/storeManagersResponseBody.yaml
     '400':
       $ref: ../../components/error/badRequest.yaml
     '401':

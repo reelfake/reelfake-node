@@ -116,7 +116,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: ../../components/customer/customersSummaryResponse.yaml
+            $ref: ../../components/customer/customersSummaryResponseBody.yaml
     '400':
       $ref: ../../components/error/badRequest.yaml
     '500':

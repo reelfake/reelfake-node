@@ -17,7 +17,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: ../../components/address/addressesByCityResponse.yaml
+            $ref: ../../components/address/addressesByCityResponseBody.yaml
     '400':
       description: Bad request
       content:

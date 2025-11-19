@@ -11,7 +11,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: ../../components/auth/userProfileResponse.yaml
+            $ref: ../../components/auth/userProfileResponseBody.yaml
     '400':
       $ref: ../../components/error/badRequest.yaml
     '404':

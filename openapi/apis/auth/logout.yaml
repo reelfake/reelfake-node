@@ -10,7 +10,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: ../../components/auth/logoutResponse.yaml
+            $ref: ../../components/auth/logoutResponseBody.yaml
     '400':
       description: Bad request
       content:

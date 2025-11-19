@@ -27,7 +27,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: ../../components/actor/actorByIdResponse.yaml
+            $ref: ../../components/actor/actorByIdResponseBody.yaml
     '400':
       $ref: ../../components/error/badRequest.yaml
     '404':
@@ -61,7 +61,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: ../../components/actor/addActorToMovieResponse.yaml
+            $ref: ../../components/actor/addActorToMovieResponseBody.yaml
     '400':
       $ref: ../../components/error/badRequest.yaml
     '401':

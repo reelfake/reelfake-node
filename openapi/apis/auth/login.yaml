@@ -23,7 +23,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: ../../components/auth/loginResponse.yaml
+            $ref: ../../components/auth/loginResponseBody.yaml
     '401':
       description: Invalid credentials
       content:

@@ -9,7 +9,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: ../../components/store/storesResponse.yaml
+            $ref: ../../components/store/storesResponseBody.yaml
     '400':
       $ref: ../../components/error/badRequest.yaml
     '500':
@@ -32,7 +32,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: ../../components/store/newStoreResponse.yaml
+            $ref: ../../components/store/newStoreResponseBody.yaml
     '400':
       $ref: ../../components/error/badRequest.yaml
     '401':

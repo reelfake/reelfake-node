@@ -16,7 +16,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: ../../components/rental/rentalByIdResponse.yaml
+            $ref: ../../components/rental/rentalByIdResponseBody.yaml
     '400':
       description: Bad request
       content:

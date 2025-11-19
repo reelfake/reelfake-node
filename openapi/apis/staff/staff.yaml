@@ -108,7 +108,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: ../../components/staff/staffResponse.yaml
+            $ref: ../../components/staff/staffResponseBody.yaml
     '400':
       $ref: ../../components/error/badRequest.yaml
     '401':
@@ -130,14 +130,14 @@ post:
     content:
       application/json:
         schema:
-          $ref: ../../components/staff/newStaffResponse.yaml
+          $ref: ../../components/staff/newStaffResponseBody.yaml
   responses:
     '201':
       description: Successfully created staff
       content:
         application/json:
           schema:
-            $ref: ../../components/staff/newStaffResponse.yaml
+            $ref: ../../components/staff/newStaffResponseBody.yaml
     '400':
       $ref: ../../components/error/badRequest.yaml
     '401':

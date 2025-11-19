@@ -23,7 +23,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: ../../components/movie/addActorsToMovieResponse.yaml
+            $ref: ../../components/movie/addActorsToMovieResponseBody.yaml
     '400':
       $ref: ../../components/error/badRequest.yaml
     '401':

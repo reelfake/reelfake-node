@@ -86,7 +86,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/actorsResponse'
+                $ref: '#/components/schemas/actorsResponseBody'
         '400':
           $ref: '#/components/responses/badRequest'
         '500':
@@ -109,7 +109,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/newActorResponse'
+                $ref: '#/components/schemas/newActorResponseBody'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -146,7 +146,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/actorByIdResponse'
+                $ref: '#/components/schemas/actorByIdResponseBody'
         '400':
           $ref: '#/components/responses/badRequest'
         '404':
@@ -180,7 +180,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/addActorToMovieResponse'
+                $ref: '#/components/schemas/addActorToMovieResponseBody'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -277,7 +277,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/addressesResponse'
+                $ref: '#/components/schemas/addressesResponseBody'
         '400':
           description: Bad request
           content:
@@ -307,7 +307,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/addressesByCityResponse'
+                $ref: '#/components/schemas/addressesByCityResponseBody'
         '400':
           description: Bad request
           content:
@@ -337,7 +337,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/addressesByStateResponse'
+                $ref: '#/components/schemas/addressesByStateResponseBody'
         '400':
           description: Bad request
           content:
@@ -373,7 +373,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/loginResponse'
+                $ref: '#/components/schemas/loginResponseBody'
         '401':
           description: Invalid credentials
           content:
@@ -396,7 +396,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/logoutResponse'
+                $ref: '#/components/schemas/logoutResponseBody'
         '400':
           description: Bad request
           content:
@@ -420,7 +420,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/userProfileResponse'
+                $ref: '#/components/schemas/userProfileResponseBody'
         '400':
           $ref: '#/components/responses/badRequest'
         '404':
@@ -446,7 +446,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/citiesResponse'
+                $ref: '#/components/schemas/citiesResponseBody'
         '400':
           description: Bad request
           content:
@@ -470,7 +470,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/countriesResponse'
+                $ref: '#/components/schemas/countriesResponseBody'
         '400':
           description: Bad request
           content:
@@ -508,7 +508,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/forgotPasswordResponse'
+                $ref: '#/components/schemas/forgotPasswordResponseBody'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -545,7 +545,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/changePasswordResponse'
+                $ref: '#/components/schemas/changePasswordResponseBody'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -673,7 +673,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/customersResponse'
+                $ref: '#/components/schemas/customersResponseBody'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -801,7 +801,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/customersSummaryResponse'
+                $ref: '#/components/schemas/customersSummaryResponseBody'
         '400':
           $ref: '#/components/responses/badRequest'
         '500':
@@ -853,7 +853,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/customerRentalsResponse'
+                $ref: '#/components/schemas/customerRentalsResponseBody'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -885,7 +885,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/customerByIdResponse'
+                $ref: '#/components/schemas/customerByIdResponseBody'
         '400':
           $ref: '#/components/responses/badRequest'
         '404':
@@ -1047,7 +1047,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genresResponse'
+                $ref: '#/components/schemas/genresResponseBody'
         '400':
           description: Bad request
           content:
@@ -1076,7 +1076,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: '#/components/schemas/movieLanguagesResponse'
+                      $ref: '#/components/schemas/movieLanguagesResponseBody'
                   length:
                     type: integer
         '400':
@@ -1157,7 +1157,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/moviesResponse'
+                $ref: '#/components/schemas/moviesResponseBody'
         '400':
           $ref: '#/components/responses/badRequest'
         '404':
@@ -1189,7 +1189,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/newMovieResponse'
+                $ref: '#/components/schemas/newMovieResponseBody'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -1230,7 +1230,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/movieByIdResponse'
+                $ref: '#/components/schemas/movieByIdResponseBody'
         '400':
           $ref: '#/components/responses/badRequest'
         '404':
@@ -1320,7 +1320,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/addActorsToMovieResponse'
+                $ref: '#/components/schemas/addActorsToMovieResponseBody'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -1348,7 +1348,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/movieAvailabilityInStoresResponse'
+                $ref: '#/components/schemas/movieAvailabilityInStoresResponseBody'
         '400':
           $ref: '#/components/responses/badRequest'
         '404':
@@ -1593,7 +1593,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/forgotPasswordResponse'
+                $ref: '#/components/schemas/forgotPasswordResponseBody'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -1630,7 +1630,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/changePasswordResponse'
+                $ref: '#/components/schemas/changePasswordResponseBody'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -1750,7 +1750,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/staffResponse'
+                $ref: '#/components/schemas/staffResponseBody'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -1772,14 +1772,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/newStaffResponse'
+              $ref: '#/components/schemas/newStaffResponseBody'
       responses:
         '201':
           description: Successfully created staff
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/newStaffResponse'
+                $ref: '#/components/schemas/newStaffResponseBody'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -1897,7 +1897,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/staffSummaryResponse'
+                $ref: '#/components/schemas/staffSummaryResponseBody'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -1920,7 +1920,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/storeManagersResponse'
+                $ref: '#/components/schemas/storeManagersResponseBody'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -1941,7 +1941,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/storeManagersResponse'
+                $ref: '#/components/schemas/storeManagersResponseBody'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -1969,7 +1969,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/staffByIdResponse'
+                $ref: '#/components/schemas/staffByIdResponseBody'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -2045,7 +2045,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/storesResponse'
+                $ref: '#/components/schemas/storesResponseBody'
         '400':
           $ref: '#/components/responses/badRequest'
         '500':
@@ -2068,7 +2068,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/newStoreResponse'
+                $ref: '#/components/schemas/newStoreResponseBody'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -2107,7 +2107,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/storeByIdResponse'
+                $ref: '#/components/schemas/storeByIdResponseBody'
         '400':
           $ref: '#/components/responses/badRequest'
         '404':
@@ -2197,7 +2197,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/stockCountInStoreResponse'
+                $ref: '#/components/schemas/stockCountInStoreResponseBody'
         '400':
           description: Bad request
           content:
@@ -2238,7 +2238,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/moviesByStoreIdResponse'
+                $ref: '#/components/schemas/moviesByStoreIdResponseBody'
         '400':
           $ref: '#/components/responses/badRequest'
         '404':
@@ -2264,7 +2264,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/staffByStoreIdResponse'
+                $ref: '#/components/schemas/staffByStoreIdResponseBody'
         '400':
           $ref: '#/components/responses/badRequest'
         '404':
@@ -2283,7 +2283,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/rentalsResponse'
+                $ref: '#/components/schemas/rentalsResponseBody'
         '400':
           description: Bad request
           content:
@@ -2313,7 +2313,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/rentalsByStoreResponse'
+                $ref: '#/components/schemas/rentalsByStoreResponseBody'
         '400':
           description: Bad request
           content:
@@ -2350,7 +2350,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/rentalByIdResponse'
+                $ref: '#/components/schemas/rentalByIdResponseBody'
         '400':
           description: Bad request
           content:
@@ -2375,7 +2375,7 @@ components:
       name: auth_token
       in: cookie
   schemas:
-    actorsResponse:
+    actorsResponseBody:
       type: object
       properties:
         items:
@@ -2457,7 +2457,7 @@ components:
         profilePictureUrl:
           type: string
           format: uri
-    newActorResponse:
+    newActorResponseBody:
       type: object
       properties:
         id:
@@ -2482,7 +2482,7 @@ components:
         profilePictureUrl:
           type: string
           format: uri
-    actorByIdResponse:
+    actorByIdResponseBody:
       type: object
       properties:
         id:
@@ -2570,7 +2570,7 @@ components:
           type: string
         castOrder:
           type: integer
-    addActorToMovieResponse:
+    addActorToMovieResponseBody:
       type: object
       properties:
         id:
@@ -2589,7 +2589,7 @@ components:
         - movieId
         - characterName
         - castOrder
-    addressesResponse:
+    addressesResponseBody:
       type: object
       properties:
         items:
@@ -2638,7 +2638,7 @@ components:
             last:
               type: string
               description: Link to the last page
-    addressesByCityResponse:
+    addressesByCityResponseBody:
       type: object
       properties:
         items:
@@ -2660,7 +2660,7 @@ components:
                 type: string
         length:
           type: integer
-    addressesByStateResponse:
+    addressesByStateResponseBody:
       type: object
       properties:
         items:
@@ -2691,19 +2691,19 @@ components:
         password:
           type: string
           format: password
-    loginResponse:
+    loginResponseBody:
       type: object
       properties:
         message:
           type: string
           example: Login successful
-    logoutResponse:
+    logoutResponseBody:
       type: object
       properties:
         message:
           type: string
           example: Logged out successfully
-    userProfileResponse:
+    userProfileResponseBody:
       oneOf:
         - type: object
           properties:
@@ -2806,7 +2806,7 @@ components:
                   type: string
                 postalCode:
                   type: string
-    citiesResponse:
+    citiesResponseBody:
       oneOf:
         - type: object
           properties:
@@ -2849,7 +2849,7 @@ components:
                     type: integer
             length:
               type: integer
-    countriesResponse:
+    countriesResponseBody:
       type: object
       properties:
         items:
@@ -2874,7 +2874,7 @@ components:
         confirmedNewPassword:
           type: string
           format: password
-    forgotPasswordResponse:
+    forgotPasswordResponseBody:
       type: object
       properties:
         id:
@@ -2894,7 +2894,7 @@ components:
         confirmedNewPassword:
           type: string
           format: password
-    changePasswordResponse:
+    changePasswordResponseBody:
       type: object
       properties:
         id:
@@ -2902,7 +2902,7 @@ components:
         email:
           type: string
           format: email
-    customersResponse:
+    customersResponseBody:
       type: object
       properties:
         items:
@@ -2976,7 +2976,7 @@ components:
             last:
               type: string
               description: Link to the last page
-    customersSummaryResponse:
+    customersSummaryResponseBody:
       type: object
       properties:
         items:
@@ -3037,7 +3037,7 @@ components:
         password:
           type: string
           format: password
-    customerRentalsResponse:
+    customerRentalsResponseBody:
       type: object
       properties:
         items:
@@ -3116,7 +3116,7 @@ components:
                         type: string
         length:
           type: integer
-    customerByIdResponse:
+    customerByIdResponseBody:
       type: object
       properties:
         id:
@@ -3221,7 +3221,7 @@ components:
         avatar:
           type: string
           format: uri
-    genresResponse:
+    genresResponseBody:
       type: object
       properties:
         items:
@@ -3235,7 +3235,7 @@ components:
                 type: string
         length:
           type: integer
-    movieLanguagesResponse:
+    movieLanguagesResponseBody:
       type: object
       properties:
         items:
@@ -3251,7 +3251,7 @@ components:
                 type: string
         length:
           type: integer
-    moviesResponse:
+    moviesResponseBody:
       type: object
       properties:
         items:
@@ -3417,7 +3417,7 @@ components:
                 type: string
               castOrder:
                 type: integer
-    newMovieResponse:
+    newMovieResponseBody:
       type: object
       properties:
         id:
@@ -3469,7 +3469,7 @@ components:
           format: double
         rentalDuration:
           type: integer
-    movieByIdResponse:
+    movieByIdResponseBody:
       type: object
       properties:
         id:
@@ -3635,7 +3635,7 @@ components:
             type: string
           castOrder:
             type: integer
-    addActorsToMovieResponse:
+    addActorsToMovieResponseBody:
       type: object
       properties:
         newRecords:
@@ -3698,7 +3698,7 @@ components:
                 type: string
               castOrder:
                 type: integer
-    movieAvailabilityInStoresResponse:
+    movieAvailabilityInStoresResponseBody:
       type: object
       properties:
         items:
@@ -3739,7 +3739,7 @@ components:
                     description: Postal code
         length:
           type: integer
-    staffResponse:
+    staffResponseBody:
       type: object
       properties:
         items:
@@ -3812,7 +3812,7 @@ components:
             last:
               type: string
               description: Link to the last page
-    newStaffResponse:
+    newStaffResponseBody:
       type: object
       properties:
         id:
@@ -3850,7 +3850,7 @@ components:
               type: string
             postalCode:
               type: string
-    staffSummaryResponse:
+    staffSummaryResponseBody:
       type: object
       properties:
         items:
@@ -3898,7 +3898,7 @@ components:
             last:
               type: string
               description: Link to the last page
-    storeManagersResponse:
+    storeManagersResponseBody:
       type: object
       properties:
         items:
@@ -3962,7 +3962,7 @@ components:
                         type: string
         length:
           type: integer
-    staffByIdResponse:
+    staffByIdResponseBody:
       type: object
       properties:
         id:
@@ -4057,7 +4057,7 @@ components:
               type: string
             postalCode:
               type: string
-    storesResponse:
+    storesResponseBody:
       type: object
       properties:
         items:
@@ -4155,7 +4155,7 @@ components:
                       type: string
                     postalCode:
                       type: string
-    newStoreResponse:
+    newStoreResponseBody:
       type: object
       properties:
         id:
@@ -4210,7 +4210,7 @@ components:
               type: string
             postalCode:
               type: string
-    storeByIdResponse:
+    storeByIdResponseBody:
       type: object
       properties:
         id:
@@ -4291,14 +4291,14 @@ components:
               type: string
             postalCode:
               type: string
-    stockCountInStoreResponse:
+    stockCountInStoreResponseBody:
       type: object
       properties:
         id:
           type: integer
         stockCount:
           type: string
-    moviesByStoreIdResponse:
+    moviesByStoreIdResponseBody:
       type: object
       properties:
         items:
@@ -4389,7 +4389,7 @@ components:
             last:
               type: string
               description: Link to the last page
-    staffByStoreIdResponse:
+    staffByStoreIdResponseBody:
       type: object
       properties:
         items:
@@ -4429,7 +4429,7 @@ components:
                     type: string
         length:
           type: integer
-    rentalsResponse:
+    rentalsResponseBody:
       type: object
       properties:
         items:
@@ -4476,7 +4476,7 @@ components:
                     type: string
         length:
           type: integer
-    rentalsByStoreResponse:
+    rentalsByStoreResponseBody:
       type: object
       properties:
         items:
@@ -4523,7 +4523,7 @@ components:
                     type: string
         length:
           type: integer
-    rentalByIdResponse:
+    rentalByIdResponseBody:
       type: object
       properties:
         id:
