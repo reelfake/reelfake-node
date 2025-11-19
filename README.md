@@ -10,27 +10,28 @@
 
 1. [Introduction](#introduction)
 2. [API for Public Use](#api-for-public-use)
-3. [API Specs](#api-specification)
-4. [Running locally](#running-on-localhost)<br>
+3. [Postman Collection for reelfake.cloud/api](#postman-collection)
+4. [API Specs](#api-specification)
+5. [Running locally](#running-on-localhost)<br>
    a. [Start database](#start-the-container-for-database)<br>
    b. [Start api](#start-the-container-for-the-api)<br>
-5. [Running on Cloud](#running-on-cloud)<br>
+6. [Running on Cloud](#running-on-cloud)<br>
    a. [Start database instance](#instance-for-database)<br>
    b. [Start api instance](#instance-for-api)<br>
-6. [Using the api](#using-the-api)<br>
+7. [Using the api](#using-the-api)<br>
    a. [Base url](#base-url)<br>
    b. [Auth-less endpoints](#auth-less-endpoints)<br>
    c. [Protected endpoints](#protected-endpoints)<br>
    d. [Using customer for login](#using-customer-for-login)<br>
    e. [Using staff for login](#using-staff-for-login)<br>
    f. [Using store manager for login](#using-store-manager-for-login)<br>
-7. [Using reelfake.cloud](#using-my-cloud-instance)
-8. [Examples](#examples)<br>
+8. [Using reelfake.cloud](#using-my-cloud-instance)
+9. [Examples](#examples)<br>
    a. [Login](#login)<br>
    b. [Add a movie](#add-a-movie)<br>
    c. [Logout](#logout)<br>
    d. [Expired Token](#expired-token)<br>
-9. [Generating JWT Secret](#generating-jwt-secret)
+10. [Generating JWT Secret](#generating-jwt-secret)
 
 ## Introduction
 
@@ -72,6 +73,9 @@ So, what this api provide?
 1. Although the api is for public, I purge the database weekly to keep my Lightsail instances clean and lightweight.
 2. When I purge the database, I re-seed the database which are part of the docker image. So, whatever you created the users or any data will be removed.
 3. Though I have provided limited access to my deployed api, you can hit it as per the api documentation but you will `403 Forbidden` if you do so.
+
+## Postman Collection
+Here is the [postman collection](https://github.com/reelfake/reelfake-node/blob/main/postman/reelfake_api.json) for the api hosted on reelfake.cloud.
 
 ## Api Specification
 
