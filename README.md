@@ -75,7 +75,7 @@ So, what this api provide?
 3. Though I have provided limited access to my deployed api, you can hit it as per the api documentation but you will `403 Forbidden` if you do so.
 
 ## Postman Collection
-Here is the [postman collection](https://github.com/reelfake/reelfake-node/blob/main/postman/reelfake_api.json) for the api hosted on reelfake.cloud.
+Here is the [postman collection](https://raw.githubusercontent.com/reelfake/reelfake-node/main/postman/reelfake_api.json) for the api hosted on reelfake.cloud.
 
 ## Api Specification
 
