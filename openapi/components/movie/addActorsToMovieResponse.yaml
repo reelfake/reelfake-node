@@ -1,0 +1,62 @@
+type: object
+properties:
+  newRecords:
+    type: array
+    items:
+      type: object
+      properties:
+        id:
+          type: integer
+        imdbId:
+          type: integer
+        actorName:
+          type: string
+        biography:
+          type: string
+        birthday:
+          type: string
+          format: date
+        deathday:
+          type: string
+          format: date
+        placeOfBirth:
+          type: string
+        popularity:
+          type: number
+          format: float
+        profilePictureUrl:
+          type: string
+          format: uri
+        characterName:
+          type: string
+        castOrder:
+          type: integer
+  duplicateRecords:
+    type: array
+    items:
+      type: object
+      properties:
+        imdbId:
+          type: integer
+        actorName:
+          type: string
+        biography:
+          type: string
+        birthday:
+          type: string
+          format: date
+        deathday:
+          type: string
+          format: date
+        placeOfBirth:
+          type: string
+        popularity:
+          type: number
+          format: float
+        profilePictureUrl:
+          type: string
+          format: uri
+        characterName:
+          type: string
+        castOrder:
+          type: integer

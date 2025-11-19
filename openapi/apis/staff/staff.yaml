@@ -1,6 +1,8 @@
 get:
   summary: Get list of all staff (optionally filter by residential state and city)
   operationId: getStaff
+  security:
+    - cookieAuth: []
   tags:
     - staff
   parameters:
@@ -106,16 +108,7 @@ get:
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              items:
-                type: array
-                items:
-                  $ref: ../../components/staff/staffSummary.yaml
-              length:
-                type: integer
-              pagination:
-                $ref: ../../components/pagination.yaml
+            $ref: ../../components/staff/staffResponse.yaml
     '400':
       $ref: ../../components/error/badRequest.yaml
     '401':
@@ -127,6 +120,8 @@ get:
 post:
   summary: Add staff member
   operationId: createStaff
+  security:
+    - cookieAuth: []
   tags:
     - staff
   requestBody:
@@ -135,64 +130,14 @@ post:
     content:
       application/json:
         schema:
-          type: object
-          properties:
-            firstName:
-              type: string
-            lastName:
-              type: string
-            email:
-              type: string
-            phoneNumber:
-              type: string
-            avatar:
-              type: string
-              format: uri
-            storeId:
-              type: integer
-              format: number
-            address:
-              type: object
-              properties:
-                addressLine:
-                  type: string
-                cityName:
-                  type: string
-                stateName:
-                  type: string
-                postalCode:
-                  type: string
+          $ref: ../../components/staff/newStaffResponse.yaml
   responses:
     '201':
       description: Successfully created staff
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              id:
-                type: string
-                format: number
-                readOnly: true
-              firstName:
-                type: string
-              lastName:
-                type: string
-              email:
-                type: string
-                format: email
-              active:
-                type: boolean
-              phoneNumber:
-                type: string
-              avatar:
-                type: string
-                format: uri
-              storeId:
-                type: integer
-                format: number
-              address:
-                $ref: ../../components/address/address.yaml
+            $ref: ../../components/staff/newStaffResponse.yaml
     '400':
       $ref: ../../components/error/badRequest.yaml
     '401':

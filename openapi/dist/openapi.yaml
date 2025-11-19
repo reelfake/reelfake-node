@@ -2,7 +2,16 @@ openapi: 3.1.0
 info:
   version: 1.0.0
   title: Reel Fake Api
-  description: A REST api for buying or renting a movie dvd (only for educational purposes)
+  description: |
+    <p>The Reelfake API is a rest api service serving data from the postgresql database. This api is more or less related to the dvd rental store.</p>
+    <p>Every web application need a data to work with and need api of some sort to fetch, mutate and save the data.</p>
+    <p>Though not a perfect api but the intention behind this is to provide backend service to practice, learn, prototype or to do anything with the front end web technologies.</p>
+    <strong style="color: red;">Disclaimer:</strong>
+    <ul>
+      <li>The movies, actors, genres and movie languages are taken from the <a href="https://developer.themoviedb.org/docs/getting-started" target="_blank">The Movie Database (TMDB) API</a>. You must adhere to the <a href="https://www.themoviedb.org/api-terms-of-use?language=en-US" target="_blank">terms and agreements</a> of their api which is modified and added new tables to better suit my needs.</li>
+      <li>The db schema is inspired from the <a href="https://neon.com/postgresql/postgresql-getting-started/postgresql-sample-database" target="_blank">PostgreSQL Sample Database by NEON</a>.</li>
+      <li>Please make sure to adhere to the licensing terms of TMDB API and do not use the reelfake api for commercial purpose. This api is only for knowledge, practice and educational purposes.</li>
+    </ul>
   license:
     name: MIT License
     url: https://mit-license.org
@@ -10,8 +19,8 @@ info:
     name: Pratap Reddy
     email: pratapreddy15@gmail.com
 servers:
-  - url: http://reelfake.cloud/api
-    description: Production server
+  - url: https://reelfake.cloud/api
+    description: My Personal Server
   - url: http://127.0.0.1:8000/api
     description: Local server
 security:
@@ -93,60 +102,14 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                tmdbId:
-                  type: string
-                imdbId:
-                  type: string
-                actorName:
-                  type: string
-                biography:
-                  type: string
-                birthday:
-                  type: string
-                  format: date
-                deathday:
-                  type: string
-                  format: date
-                placeOfBirth:
-                  type: string
-                popularity:
-                  type: number
-                  format: float
-                profilePictureUrl:
-                  type: string
-                  format: uri
+              $ref: '#/components/schemas/newActorRequestBody'
       responses:
         '201':
           description: Successfully added new actor
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    type: integer
-                  imdbId:
-                    type: string
-                  actorName:
-                    type: string
-                  biography:
-                    type: string
-                  birthday:
-                    type: string
-                    format: date
-                  deathday:
-                    type: string
-                    format: date
-                  placeOfBirth:
-                    type: string
-                  popularity:
-                    type: number
-                    format: float
-                  profilePictureUrl:
-                    type: string
-                    format: uri
+                $ref: '#/components/schemas/newActorResponse'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -193,6 +156,8 @@ paths:
     post:
       summary: Add the actor to the movie
       operationId: addToMovie
+      security:
+        - cookieAuth: []
       tags:
         - actor
       parameters:
@@ -208,41 +173,14 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                movieId:
-                  type: integer
-                  format: number
-                characterName:
-                  type: string
-                castOrder:
-                  type: integer
-                  format: number
+              $ref: '#/components/schemas/addActorToMovieRequestBody'
       responses:
         '201':
           description: Successfully added the actor the movie
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    type: integer
-                  actorId:
-                    type: integer
-                  movieId:
-                    type: integer
-                  characterName:
-                    type: string
-                  castOrder:
-                    type: integer
-                    format: number
-                required:
-                  - id
-                  - actorId
-                  - movieId
-                  - characterName
-                  - castOrder
+                $ref: '#/components/schemas/addActorToMovieResponse'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -256,6 +194,8 @@ paths:
     put:
       summary: Update actor
       operationId: updateActor
+      security:
+        - cookieAuth: []
       tags:
         - actor
       parameters:
@@ -271,31 +211,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                tmdbId:
-                  type: integer
-                  format: number
-                imdbId:
-                  type: integer
-                  format: number
-                actorName:
-                  type: string
-                biography:
-                  type: string
-                birthday:
-                  type: string
-                  format: date
-                deathday:
-                  type: string
-                  format: date
-                placeOfBirth:
-                  type: string
-                popularity:
-                  type: string
-                profilePictureUrl:
-                  type: string
-                  format: uri
+              $ref: '#/components/schemas/updateActorRequestBody'
       responses:
         '204':
           description: Successfully updated actor
@@ -314,6 +230,8 @@ paths:
         Delete the actor.
         Note: This operation will delete movie actors for the movie as well.
       operationId: deleteActor
+      security:
+        - cookieAuth: []
       tags:
         - actor
       parameters:
@@ -992,30 +910,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                firstName:
-                  type: string
-                lastName:
-                  type: string
-                address:
-                  type: object
-                  properties:
-                    addressLine:
-                      type: string
-                    cityName:
-                      type: string
-                    stateName:
-                      type: string
-                    country:
-                      type: string
-                    postalCode:
-                      type: string
-                phoneNumber:
-                  type: string
-                avatar:
-                  type: string
-                  format: uri
+              $ref: '#/components/schemas/updateCustomerRequestBody'
       responses:
         '204':
           description: Successfully updated the customer
@@ -1152,14 +1047,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/genre'
-                  length:
-                    type: integer
+                $ref: '#/components/schemas/genresResponse'
         '400':
           description: Bad request
           content:
@@ -1188,7 +1076,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: '#/components/schemas/movieLanguage'
+                      $ref: '#/components/schemas/movieLanguagesResponse'
                   length:
                     type: integer
         '400':
@@ -1269,16 +1157,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/movieSummary'
-                  length:
-                    type: integer
-                  pagination:
-                    $ref: '#/components/schemas/pagination'
+                $ref: '#/components/schemas/moviesResponse'
         '400':
           $ref: '#/components/responses/badRequest'
         '404':
@@ -1303,143 +1182,14 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                tmdbId:
-                  type: integer
-                imdbId:
-                  type: string
-                title:
-                  type: string
-                originalTitle:
-                  type: string
-                overview:
-                  type: string
-                runtime:
-                  type: integer
-                releaseDate:
-                  type: string
-                  format: date
-                genres:
-                  type: array
-                  items:
-                    type: string
-                countriesOfOrigin:
-                  type: array
-                  items:
-                    type: string
-                language:
-                  type: string
-                movieStatus:
-                  type: string
-                popularity:
-                  type: number
-                  format: float
-                budget:
-                  type: integer
-                  format: int64
-                revenue:
-                  type: integer
-                  format: int64
-                ratingAverage:
-                  type: number
-                  format: float
-                ratingCount:
-                  type: integer
-                posterUrl:
-                  type: string
-                  format: uri
-                rentalRate:
-                  type: number
-                  format: double
-                actors:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      tmdbId:
-                        type: integer
-                      imdbId:
-                        type: string
-                      actorName:
-                        type: string
-                      biography:
-                        type: string
-                      birthday:
-                        type: string
-                        format: date
-                      deathday:
-                        type: string
-                        format: date
-                      placeOfBirth:
-                        type: string
-                      popularity:
-                        type: number
-                        format: float
-                      profilePictureUrl:
-                        type: string
-                        format: uri
-                      characterName:
-                        type: string
-                      castOrder:
-                        type: integer
+              $ref: '#/components/schemas/newMovieRequestBody'
       responses:
         '201':
           description: Successfully add new movie
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    type: integer
-                  imdbId:
-                    type: integer
-                  title:
-                    type: string
-                  originalTitle:
-                    type: string
-                  overview:
-                    type: string
-                  runtime:
-                    type: integer
-                  releaseDate:
-                    type: string
-                    format: date
-                  genres:
-                    type: array
-                    items:
-                      type: string
-                  countriesOfOrigin:
-                    type: array
-                    items:
-                      type: string
-                  language:
-                    type: string
-                  movieStatus:
-                    type: string
-                  popularity:
-                    type: number
-                    format: float
-                  budget:
-                    type: integer
-                    format: int64
-                  revenue:
-                    type: integer
-                    format: int64
-                  ratingAverage:
-                    type: number
-                    format: float
-                  ratingCount:
-                    type: integer
-                  posterUrl:
-                    type: string
-                    format: uri
-                  rentalRate:
-                    type: number
-                    format: double
-                  rentalDuration:
-                    type: integer
+                $ref: '#/components/schemas/newMovieResponse'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -1480,7 +1230,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/movieDetail'
+                $ref: '#/components/schemas/movieByIdResponse'
         '400':
           $ref: '#/components/responses/badRequest'
         '404':
@@ -1505,53 +1255,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                tmdbId:
-                  type: integer
-                title:
-                  type: string
-                originalTitle:
-                  type: string
-                overview:
-                  type: string
-                runtime:
-                  type: integer
-                releaseDate:
-                  type: string
-                  format: date
-                genres:
-                  type: array
-                  items:
-                    type: string
-                countriesOfOrigin:
-                  type: array
-                  items:
-                    type: string
-                language:
-                  type: string
-                movieStatus:
-                  type: string
-                popularity:
-                  type: number
-                  format: float
-                budget:
-                  type: integer
-                  format: int64
-                revenue:
-                  type: integer
-                  format: int64
-                ratingAverage:
-                  type: number
-                  format: float
-                ratingCount:
-                  type: integer
-                posterUrl:
-                  type: string
-                  format: uri
-                rentalRate:
-                  type: number
-                  format: double
+              $ref: '#/components/schemas/updateMovieRequestBody'
       responses:
         '204':
           description: Successfully updated the movie
@@ -1609,104 +1313,14 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                type: object
-                properties:
-                  tmdbId:
-                    type: integer
-                  imdbId:
-                    type: string
-                  actorName:
-                    type: string
-                  biography:
-                    type: string
-                  birthday:
-                    type: string
-                    format: date
-                  deathday:
-                    type: string
-                    format: date
-                  placeOfBirth:
-                    type: string
-                  popularity:
-                    type: number
-                    format: float
-                  profilePictureUrl:
-                    type: string
-                    format: uri
-                  characterName:
-                    type: string
-                  castOrder:
-                    type: integer
+              $ref: '#/components/schemas/addActorsToMovieRequestBody'
       responses:
         '201':
           description: Successfully add actors to the movie
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  newRecords:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id:
-                          type: integer
-                        imdbId:
-                          type: integer
-                        actorName:
-                          type: string
-                        biography:
-                          type: string
-                        birthday:
-                          type: string
-                          format: date
-                        deathday:
-                          type: string
-                          format: date
-                        placeOfBirth:
-                          type: string
-                        popularity:
-                          type: number
-                          format: float
-                        profilePictureUrl:
-                          type: string
-                          format: uri
-                        characterName:
-                          type: string
-                        castOrder:
-                          type: integer
-                  duplicateRecords:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        imdbId:
-                          type: integer
-                        actorName:
-                          type: string
-                        biography:
-                          type: string
-                        birthday:
-                          type: string
-                          format: date
-                        deathday:
-                          type: string
-                          format: date
-                        placeOfBirth:
-                          type: string
-                        popularity:
-                          type: number
-                          format: float
-                        profilePictureUrl:
-                          type: string
-                          format: uri
-                        characterName:
-                          type: string
-                        castOrder:
-                          type: integer
+                $ref: '#/components/schemas/addActorsToMovieResponse'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -1734,15 +1348,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/movieStock'
-                  length:
-                    type: integer
-                    format: number
+                $ref: '#/components/schemas/movieAvailabilityInStoresResponse'
         '400':
           $ref: '#/components/responses/badRequest'
         '404':
@@ -1980,28 +1586,14 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                newPassword:
-                  type: string
-                  format: password
-                confirmedNewPassword:
-                  type: string
-                  format: password
+              $ref: '#/components/schemas/forgotPasswordRequestBody'
       responses:
         '200':
           description: Successfully changed the password
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    type: integer
-                    format: number
-                  email:
-                    type: string
-                    format: email
+                $ref: '#/components/schemas/forgotPasswordResponse'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -2014,6 +1606,8 @@ paths:
     put:
       summary: Change the staff password
       operationId: changeStaffPassword
+      security:
+        - cookieAuth: []
       tags:
         - staff
       parameters:
@@ -2029,31 +1623,14 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                currentPassword:
-                  type: string
-                  format: password
-                newPassword:
-                  type: string
-                  format: password
-                confirmedNewPassword:
-                  type: string
-                  format: password
+              $ref: '#/components/schemas/changePasswordRequestBody'
       responses:
         '200':
           description: Successfully changed the password
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    type: integer
-                    format: number
-                  email:
-                    type: string
-                    format: email
+                $ref: '#/components/schemas/changePasswordResponse'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -2066,6 +1643,8 @@ paths:
     get:
       summary: Get list of all staff (optionally filter by residential state and city)
       operationId: getStaff
+      security:
+        - cookieAuth: []
       tags:
         - staff
       parameters:
@@ -2171,16 +1750,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/staffSummary'
-                  length:
-                    type: integer
-                  pagination:
-                    $ref: '#/components/schemas/pagination'
+                $ref: '#/components/schemas/staffResponse'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -2192,6 +1762,8 @@ paths:
     post:
       summary: Add staff member
       operationId: createStaff
+      security:
+        - cookieAuth: []
       tags:
         - staff
       requestBody:
@@ -2200,64 +1772,14 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                firstName:
-                  type: string
-                lastName:
-                  type: string
-                email:
-                  type: string
-                phoneNumber:
-                  type: string
-                avatar:
-                  type: string
-                  format: uri
-                storeId:
-                  type: integer
-                  format: number
-                address:
-                  type: object
-                  properties:
-                    addressLine:
-                      type: string
-                    cityName:
-                      type: string
-                    stateName:
-                      type: string
-                    postalCode:
-                      type: string
+              $ref: '#/components/schemas/newStaffResponse'
       responses:
         '201':
           description: Successfully created staff
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    type: string
-                    format: number
-                    readOnly: true
-                  firstName:
-                    type: string
-                  lastName:
-                    type: string
-                  email:
-                    type: string
-                    format: email
-                  active:
-                    type: boolean
-                  phoneNumber:
-                    type: string
-                  avatar:
-                    type: string
-                    format: uri
-                  storeId:
-                    type: integer
-                    format: number
-                  address:
-                    $ref: '#/components/schemas/address'
+                $ref: '#/components/schemas/newStaffResponse'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -2375,29 +1897,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id:
-                          type: integer
-                          format: number
-                        firstName:
-                          type: string
-                        lastName:
-                          type: string
-                        email:
-                          type: string
-                          format: email
-                        active:
-                          type: boolean
-                  length:
-                    type: integer
-                  pagination:
-                    $ref: '#/components/schemas/pagination'
+                $ref: '#/components/schemas/staffSummaryResponse'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -2410,6 +1910,8 @@ paths:
     get:
       summary: Get list of store managers
       operationId: getStoreManagers
+      security:
+        - cookieAuth: []
       tags:
         - staff
       responses:
@@ -2418,43 +1920,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id:
-                          type: integer
-                          format: number
-                        firstName:
-                          type: string
-                        lastName:
-                          type: string
-                        email:
-                          type: string
-                          format: email
-                        active:
-                          type: boolean
-                        phoneNumber:
-                          type: string
-                        avatar:
-                          type: string
-                        address:
-                          $ref: '#/components/schemas/address'
-                        store:
-                          type: object
-                          properties:
-                            id:
-                              type: integer
-                              format: number
-                            phoneNumber:
-                              type: string
-                            address:
-                              $ref: '#/components/schemas/address'
-                  length:
-                    type: integer
+                $ref: '#/components/schemas/storeManagersResponse'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -2475,27 +1941,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id:
-                          type: integer
-                          format: number
-                        firstName:
-                          type: string
-                        lastName:
-                          type: string
-                        email:
-                          type: string
-                          format: email
-                        active:
-                          type: boolean
-                  length:
-                    type: integer
+                $ref: '#/components/schemas/storeManagersResponse'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -2523,20 +1969,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/staffItem'
-                  - type: object
-                    properties:
-                      store:
-                        type: object
-                        properties:
-                          id:
-                            type: integer
-                            format: number
-                          phoneNumber:
-                            type: string
-                          address:
-                            $ref: '#/components/schemas/address'
+                $ref: '#/components/schemas/staffByIdResponse'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -2563,26 +1996,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                firstName:
-                  type: string
-                lastName:
-                  type: string
-                email:
-                  type: string
-                  format: email
-                active:
-                  type: boolean
-                phoneNumber:
-                  type: string
-                avatar:
-                  type: string
-                storeId:
-                  type: integer
-                  format: number
-                address:
-                  $ref: '#/components/schemas/address'
+              $ref: '#/components/schemas/updateStaffRequestBody'
       responses:
         '204':
           description: Successfully updated staff
@@ -2631,14 +2045,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/storeItem'
-                  length:
-                    type: integer
+                $ref: '#/components/schemas/storesResponse'
         '400':
           $ref: '#/components/responses/badRequest'
         '500':
@@ -2654,72 +2061,14 @@ paths:
         content:
           application/json:
             schema:
-              oneOf:
-                - type: object
-                  properties:
-                    storeManagerId:
-                      type: integer
-                      format: number
-                    phoneNumber:
-                      type: string
-                    address:
-                      $ref: '#/components/schemas/address'
-                - type: object
-                  properties:
-                    phoneNumber:
-                      type: string
-                    address:
-                      $ref: '#/components/schemas/address'
-                    storeManager:
-                      type: object
-                      properties:
-                        firstName:
-                          type: string
-                        lastName:
-                          type: string
-                        email:
-                          type: string
-                          format: email
-                        phoneNumber:
-                          type: string
-                        avatar:
-                          type: string
-                        address:
-                          $ref: '#/components/schemas/address'
+              $ref: '#/components/schemas/newStoreRequestBody'
       responses:
         '201':
           description: Successfully created store
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    type: integer
-                    format: number
-                  storeManager:
-                    type: object
-                    properties:
-                      id:
-                        type: integer
-                        format: number
-                      firstName:
-                        type: string
-                      lastName:
-                        type: string
-                      email:
-                        type: string
-                        format: email
-                      active:
-                        type: boolean
-                      avatar:
-                        type: string
-                      address:
-                        $ref: '#/components/schemas/address'
-                  phoneNumber:
-                    type: string
-                  address:
-                    $ref: '#/components/schemas/address'
+                $ref: '#/components/schemas/newStoreResponse'
         '400':
           $ref: '#/components/responses/badRequest'
         '401':
@@ -2758,7 +2107,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/storeDetail'
+                $ref: '#/components/schemas/storeByIdResponse'
         '400':
           $ref: '#/components/responses/badRequest'
         '404':
@@ -2783,15 +2132,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                storeManagerId:
-                  type: integer
-                  format: number
-                phoneNumber:
-                  type: string
-                address:
-                  $ref: '#/components/schemas/address'
+              $ref: '#/components/schemas/updateStoreRequestBody'
       responses:
         '204':
           description: Successfully updated the store
@@ -2856,12 +2197,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    type: integer
-                  stockCount:
-                    type: string
+                $ref: '#/components/schemas/stockCountInStoreResponse'
         '400':
           description: Bad request
           content:
@@ -2902,25 +2238,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id:
-                          type: integer
-                          format: number
-                        stock:
-                          type: integer
-                          format: number
-                        movie:
-                          $ref: '#/components/schemas/movieSummary'
-                  length:
-                    type: integer
-                  pagination:
-                    $ref: '#/components/schemas/pagination'
+                $ref: '#/components/schemas/moviesByStoreIdResponse'
         '400':
           $ref: '#/components/responses/badRequest'
         '404':
@@ -2946,51 +2264,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id:
-                          type: integer
-                          format: number
-                        firstName:
-                          type: string
-                        lastName:
-                          type: string
-                        email:
-                          type: string
-                        addressId:
-                          type: integer
-                          format: number
-                        storeId:
-                          type: integer
-                          format: number
-                        active: true
-                        phoneNumber:
-                          type: string
-                        avatar:
-                          type: string
-                        isStoreManager:
-                          type: boolean
-                        store:
-                          type: object
-                          properties:
-                            id:
-                              type: integer
-                              format: number
-                            storeManagerId:
-                              type: integer
-                              format: number
-                            addressId:
-                              type: integer
-                              format: number
-                            phoneNumber:
-                              type: string
-                  length:
-                    type: integer
+                $ref: '#/components/schemas/staffByStoreIdResponse'
         '400':
           $ref: '#/components/responses/badRequest'
         '404':
@@ -3009,58 +2283,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      properties:
-                        id:
-                          type: integer
-                          format: number
-                        rentalStartDate:
-                          type: string
-                          format: date
-                        rentalEndDate:
-                          type: string
-                          format: date
-                        returnDate:
-                          type: string
-                          format: date
-                        rentalDuration:
-                          type: integer
-                          format: number
-                        delayedByDays:
-                          type: integer
-                          format: number
-                        amountPaid:
-                          type: number
-                          format: float
-                        discountAmount:
-                          type: number
-                          format: float
-                        paymentDate:
-                          type: string
-                          format: date
-                        rentalType:
-                          type: string
-                          enum:
-                            - in-store
-                            - online
-                        storeId:
-                          type: integer
-                          format: number
-                        movie:
-                          type: object
-                          properties:
-                            id:
-                              type: integer
-                              format: number
-                            title:
-                              type: string
-                  length:
-                    type: integer
-                    format: number
+                $ref: '#/components/schemas/rentalsResponse'
         '400':
           description: Bad request
           content:
@@ -3090,58 +2313,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      properties:
-                        id:
-                          type: integer
-                          format: number
-                        rentalStartDate:
-                          type: string
-                          format: date
-                        rentalEndDate:
-                          type: string
-                          format: date
-                        returnDate:
-                          type: string
-                          format: date
-                        rentalDuration:
-                          type: integer
-                          format: number
-                        delayedByDays:
-                          type: integer
-                          format: number
-                        amountPaid:
-                          type: number
-                          format: float
-                        discountAmount:
-                          type: number
-                          format: float
-                        paymentDate:
-                          type: string
-                          format: date
-                        rentalType:
-                          type: string
-                          enum:
-                            - in-store
-                            - online
-                        storeId:
-                          type: integer
-                          format: number
-                        movie:
-                          type: object
-                          properties:
-                            id:
-                              type: integer
-                              format: number
-                            title:
-                              type: string
-                  length:
-                    type: integer
-                    format: number
+                $ref: '#/components/schemas/rentalsByStoreResponse'
         '400':
           description: Bad request
           content:
@@ -3178,7 +2350,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/rentalDetail'
+                $ref: '#/components/schemas/rentalByIdResponse'
         '400':
           description: Bad request
           content:
@@ -3260,6 +2432,56 @@ components:
             last:
               type: string
               description: Link to the last page
+    newActorRequestBody:
+      type: object
+      properties:
+        tmdbId:
+          type: string
+        imdbId:
+          type: string
+        actorName:
+          type: string
+        biography:
+          type: string
+        birthday:
+          type: string
+          format: date
+        deathday:
+          type: string
+          format: date
+        placeOfBirth:
+          type: string
+        popularity:
+          type: number
+          format: float
+        profilePictureUrl:
+          type: string
+          format: uri
+    newActorResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        imdbId:
+          type: string
+        actorName:
+          type: string
+        biography:
+          type: string
+        birthday:
+          type: string
+          format: date
+        deathday:
+          type: string
+          format: date
+        placeOfBirth:
+          type: string
+        popularity:
+          type: number
+          format: float
+        profilePictureUrl:
+          type: string
+          format: uri
     actorByIdResponse:
       type: object
       properties:
@@ -3315,7 +2537,58 @@ components:
                     type: string
                   castOrder:
                     type: integer
-                    format: number
+    updateActorRequestBody:
+      type: object
+      properties:
+        tmdbId:
+          type: integer
+        imdbId:
+          type: integer
+        actorName:
+          type: string
+        biography:
+          type: string
+        birthday:
+          type: string
+          format: date
+        deathday:
+          type: string
+          format: date
+        placeOfBirth:
+          type: string
+        popularity:
+          type: string
+        profilePictureUrl:
+          type: string
+          format: uri
+    addActorToMovieRequestBody:
+      type: object
+      properties:
+        movieId:
+          type: integer
+        characterName:
+          type: string
+        castOrder:
+          type: integer
+    addActorToMovieResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        actorId:
+          type: integer
+        movieId:
+          type: integer
+        characterName:
+          type: string
+        castOrder:
+          type: integer
+      required:
+        - id
+        - actorId
+        - movieId
+        - characterName
+        - castOrder
     addressesResponse:
       type: object
       properties:
@@ -3326,7 +2599,6 @@ components:
             properties:
               id:
                 type: integer
-                format: number
               addressLine:
                 type: string
               cityName:
@@ -3339,7 +2611,6 @@ components:
                 type: string
         length:
           type: integer
-          format: number
         pagination:
           type: object
           properties:
@@ -3377,7 +2648,6 @@ components:
             properties:
               id:
                 type: integer
-                format: number
               addressLine:
                 type: string
               cityName:
@@ -3390,7 +2660,6 @@ components:
                 type: string
         length:
           type: integer
-          format: number
     addressesByStateResponse:
       type: object
       properties:
@@ -3401,7 +2670,6 @@ components:
             properties:
               id:
                 type: integer
-                format: number
               addressLine:
                 type: string
               cityName:
@@ -3414,7 +2682,6 @@ components:
                 type: string
         length:
           type: integer
-          format: number
     loginRequestBody:
       type: object
       properties:
@@ -3436,30 +2703,12 @@ components:
         message:
           type: string
           example: Logged out successfully
-    address:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: number
-          readOnly: true
-        addressLine:
-          type: string
-        cityName:
-          type: string
-        stateName:
-          type: string
-        country:
-          type: string
-        postalCode:
-          type: string
     userProfileResponse:
       oneOf:
         - type: object
           properties:
             id:
               type: integer
-              format: number
             firstName:
               type: string
             lastName:
@@ -3482,7 +2731,6 @@ components:
               properties:
                 id:
                   type: integer
-                  format: number
                 phoneNumber:
                   type: string
                 storeManager:
@@ -3490,7 +2738,6 @@ components:
                   properties:
                     id:
                       type: string
-                      format: number
                     firstName:
                       type: string
                     lastName:
@@ -3506,14 +2753,31 @@ components:
                       type: string
                       format: uri
                     address:
-                      $ref: '#/components/schemas/address'
+                      type: object
+                      properties:
+                        addressLine:
+                          type: string
+                        cityName:
+                          type: string
+                        stateName:
+                          type: string
+                        postalCode:
+                          type: string
             address:
-              $ref: '#/components/schemas/address'
+              type: object
+              properties:
+                addressLine:
+                  type: string
+                cityName:
+                  type: string
+                stateName:
+                  type: string
+                postalCode:
+                  type: string
         - type: object
           properties:
             id:
               type: string
-              format: number
               readOnly: true
             firstName:
               type: string
@@ -3532,7 +2796,16 @@ components:
               type: string
               format: uri
             address:
-              $ref: '#/components/schemas/address'
+              type: object
+              properties:
+                addressLine:
+                  type: string
+                cityName:
+                  type: string
+                stateName:
+                  type: string
+                postalCode:
+                  type: string
     citiesResponse:
       oneOf:
         - type: object
@@ -3606,7 +2879,6 @@ components:
       properties:
         id:
           type: integer
-          format: number
         email:
           type: string
           format: email
@@ -3627,7 +2899,6 @@ components:
       properties:
         id:
           type: integer
-          format: number
         email:
           type: string
           format: email
@@ -3641,7 +2912,6 @@ components:
             properties:
               id:
                 type: integer
-                format: number
               firstName:
                 type: string
               lastName:
@@ -3653,7 +2923,6 @@ components:
                 type: string
               preferredStoreId:
                 type: integer
-                format: number
               active:
                 type: boolean
               avatar:
@@ -3667,7 +2936,6 @@ components:
                 properties:
                   id:
                     type: integer
-                    format: number
                     readOnly: true
                   addressLine:
                     type: string
@@ -3718,7 +2986,6 @@ components:
             properties:
               id:
                 type: integer
-                format: number
               firstName:
                 type: string
               lastName:
@@ -3780,7 +3047,6 @@ components:
             properties:
               id:
                 type: integer
-                format: number
               rentalStartDate:
                 type: string
                 format: date
@@ -3792,10 +3058,8 @@ components:
                 format: date
               rentalDuration:
                 type: integer
-                format: number
               delayedByDays:
                 type: integer
-                format: number
               amountPaid:
                 type: number
                 format: float
@@ -3815,7 +3079,6 @@ components:
                 properties:
                   id:
                     type: integer
-                    format: number
                   title:
                     type: string
                   imdbId:
@@ -3824,27 +3087,22 @@ components:
                     type: string
                   ratingAverage:
                     type: integer
-                    format: number
                   ratingCount:
                     type: integer
-                    format: number
               store:
                 type: object
                 properties:
                   id:
                     type: integer
-                    format: number
                   phoneNumber:
                     type: string
                   storeManagerId:
                     type: integer
-                    format: number
                   address:
                     type: object
                     properties:
                       id:
                         type: integer
-                        format: number
                         readOnly: true
                       addressLine:
                         type: string
@@ -3863,7 +3121,6 @@ components:
       properties:
         id:
           type: integer
-          format: number
         firstName:
           type: string
         lastName:
@@ -3886,7 +3143,6 @@ components:
           properties:
             id:
               type: integer
-              format: number
             phoneNumber:
               type: string
             storeManager:
@@ -3894,7 +3150,6 @@ components:
               properties:
                 id:
                   type: string
-                  format: number
                 firstName:
                   type: string
                 lastName:
@@ -3914,7 +3169,6 @@ components:
                   properties:
                     id:
                       type: integer
-                      format: number
                       readOnly: true
                     addressLine:
                       type: string
@@ -3931,7 +3185,6 @@ components:
           properties:
             id:
               type: integer
-              format: number
               readOnly: true
             addressLine:
               type: string
@@ -3943,101 +3196,280 @@ components:
               type: string
             postalCode:
               type: string
-    genre:
+    updateCustomerRequestBody:
       type: object
       properties:
-        id:
-          type: integer
-        genreName:
+        firstName:
           type: string
-    movieLanguage:
+        lastName:
+          type: string
+        address:
+          type: object
+          properties:
+            addressLine:
+              type: string
+            cityName:
+              type: string
+            stateName:
+              type: string
+            country:
+              type: string
+            postalCode:
+              type: string
+        phoneNumber:
+          type: string
+        avatar:
+          type: string
+          format: uri
+    genresResponse:
       type: object
       properties:
-        id:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              genreName:
+                type: string
+        length:
           type: integer
-        languageName:
-          type: string
-        languageCode:
-          type: string
-    movieSummary:
+    movieLanguagesResponse:
       type: object
       properties:
-        id:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              languageName:
+                type: string
+              languageCode:
+                type: string
+        length:
           type: integer
-          description: Unique id of the resource
+    moviesResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                description: Unique id of the resource
+              title:
+                type: string
+                description: The title of the movie
+              runtime:
+                type: integer
+                description: The length of the movie
+              releaseDate:
+                type: string
+                description: Date on which the movie is or will be released
+                format: date
+              genres:
+                type: array
+                description: |
+                  The genres that the movie belongs to. The valid genres are action, adventure, animation, 
+                  comedy, crime, documentary, drama, family, fantasy, history, horror, music , mystery, romance, 
+                  science fiction, thriller, war and western.
+                items:
+                  type: string
+              countriesOfOrigin:
+                type: array
+                description: The countries of origin of the movie
+                items:
+                  type: string
+              language:
+                type: string
+                description: The language that the movie is in
+              popularity:
+                type: number
+                description: A number indicating how popular the movie is
+                format: float
+              ratingAverage:
+                type: number
+                description: The average rating of the movie
+                format: float
+              ratingCount:
+                type: integer
+                description: The number of ratings that the movie has got
+              posterUrl:
+                type: string
+                description: Link to the movie poster
+                format: uri
+              rentalRate:
+                type: number
+                description: The rental rate of the movie
+                format: float
+        length:
+          type: integer
+        pagination:
+          type: object
+          properties:
+            pageNumber:
+              type: integer
+              description: Current page number
+            totalPages:
+              type: integer
+              description: Total pages available for pagination
+            totalItems:
+              type: integer
+              description: Total items across all the pages
+            itemsPerPage:
+              type: integer
+              description: Maximum number of items that the page can have
+            next:
+              type: string
+              description: Link to the next page
+            prev:
+              type: string
+              description: Link to the previous page
+            first:
+              type: string
+              description: Link to the first page
+            last:
+              type: string
+              description: Link to the last page
+    newMovieRequestBody:
+      type: object
+      properties:
+        tmdbId:
+          type: integer
+        imdbId:
+          type: string
         title:
           type: string
-          description: The title of the movie
+        originalTitle:
+          type: string
+        overview:
+          type: string
         runtime:
           type: integer
-          description: The length of the movie
         releaseDate:
           type: string
-          description: Date on which the movie is or will be released
           format: date
         genres:
           type: array
-          description: |
-            The genres that the movie belongs to. The valid genres are action, adventure, animation, 
-            comedy, crime, documentary, drama, family, fantasy, history, horror, music , mystery, romance, 
-            science fiction, thriller, war and western.
           items:
             type: string
         countriesOfOrigin:
           type: array
-          description: The countries of origin of the movie
           items:
             type: string
         language:
           type: string
-          description: The language that the movie is in
+        movieStatus:
+          type: string
         popularity:
           type: number
-          description: A number indicating how popular the movie is
           format: float
+        budget:
+          type: integer
+          format: int64
+        revenue:
+          type: integer
+          format: int64
         ratingAverage:
           type: number
-          description: The average rating of the movie
           format: float
         ratingCount:
           type: integer
-          description: The number of ratings that the movie has got
         posterUrl:
           type: string
-          description: Link to the movie poster
           format: uri
         rentalRate:
           type: number
-          description: The rental rate of the movie
-          format: float
-    pagination:
+          format: double
+        actors:
+          type: array
+          items:
+            type: object
+            properties:
+              tmdbId:
+                type: integer
+              imdbId:
+                type: string
+              actorName:
+                type: string
+              biography:
+                type: string
+              birthday:
+                type: string
+                format: date
+              deathday:
+                type: string
+                format: date
+              placeOfBirth:
+                type: string
+              popularity:
+                type: number
+                format: float
+              profilePictureUrl:
+                type: string
+                format: uri
+              characterName:
+                type: string
+              castOrder:
+                type: integer
+    newMovieResponse:
       type: object
       properties:
-        pageNumber:
+        id:
           type: integer
-          description: Current page number
-        totalPages:
+        imdbId:
           type: integer
-          description: Total pages available for pagination
-        totalItems:
+        title:
+          type: string
+        originalTitle:
+          type: string
+        overview:
+          type: string
+        runtime:
           type: integer
-          description: Total items across all the pages
-        itemsPerPage:
+        releaseDate:
+          type: string
+          format: date
+        genres:
+          type: array
+          items:
+            type: string
+        countriesOfOrigin:
+          type: array
+          items:
+            type: string
+        language:
+          type: string
+        movieStatus:
+          type: string
+        popularity:
+          type: number
+          format: float
+        budget:
           type: integer
-          description: Maximum number of items that the page can have
-        next:
+          format: int64
+        revenue:
+          type: integer
+          format: int64
+        ratingAverage:
+          type: number
+          format: float
+        ratingCount:
+          type: integer
+        posterUrl:
           type: string
-          description: Link to the next page
-        prev:
-          type: string
-          description: Link to the previous page
-        first:
-          type: string
-          description: Link to the first page
-        last:
-          type: string
-          description: Link to the last page
-    movieDetail:
+          format: uri
+        rentalRate:
+          type: number
+          format: double
+        rentalDuration:
+          type: integer
+    movieByIdResponse:
       type: object
       properties:
         id:
@@ -4124,48 +3556,268 @@ components:
                 type: string
                 description: Link to the profile picture of the actor
                 format: uri
-    movieStock:
+    updateMovieRequestBody:
       type: object
       properties:
-        inventoryId:
+        tmdbId:
           type: integer
-          description: Unique id of the invetory
-        stock:
+        title:
+          type: string
+        originalTitle:
+          type: string
+        overview:
+          type: string
+        runtime:
           type: integer
-          description: The number of stock of the movie in the store
-        store:
+        releaseDate:
+          type: string
+          format: date
+        genres:
+          type: array
+          items:
+            type: string
+        countriesOfOrigin:
+          type: array
+          items:
+            type: string
+        language:
+          type: string
+        movieStatus:
+          type: string
+        popularity:
+          type: number
+          format: float
+        budget:
+          type: integer
+          format: int64
+        revenue:
+          type: integer
+          format: int64
+        ratingAverage:
+          type: number
+          format: float
+        ratingCount:
+          type: integer
+        posterUrl:
+          type: string
+          format: uri
+        rentalRate:
+          type: number
+          format: double
+    addActorsToMovieRequestBody:
+      type: array
+      items:
+        type: object
+        properties:
+          tmdbId:
+            type: integer
+          imdbId:
+            type: string
+          actorName:
+            type: string
+          biography:
+            type: string
+          birthday:
+            type: string
+            format: date
+          deathday:
+            type: string
+            format: date
+          placeOfBirth:
+            type: string
+          popularity:
+            type: number
+            format: float
+          profilePictureUrl:
+            type: string
+            format: uri
+          characterName:
+            type: string
+          castOrder:
+            type: integer
+    addActorsToMovieResponse:
+      type: object
+      properties:
+        newRecords:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              imdbId:
+                type: integer
+              actorName:
+                type: string
+              biography:
+                type: string
+              birthday:
+                type: string
+                format: date
+              deathday:
+                type: string
+                format: date
+              placeOfBirth:
+                type: string
+              popularity:
+                type: number
+                format: float
+              profilePictureUrl:
+                type: string
+                format: uri
+              characterName:
+                type: string
+              castOrder:
+                type: integer
+        duplicateRecords:
+          type: array
+          items:
+            type: object
+            properties:
+              imdbId:
+                type: integer
+              actorName:
+                type: string
+              biography:
+                type: string
+              birthday:
+                type: string
+                format: date
+              deathday:
+                type: string
+                format: date
+              placeOfBirth:
+                type: string
+              popularity:
+                type: number
+                format: float
+              profilePictureUrl:
+                type: string
+                format: uri
+              characterName:
+                type: string
+              castOrder:
+                type: integer
+    movieAvailabilityInStoresResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              inventoryId:
+                type: integer
+                description: Unique id of the invetory
+              stock:
+                type: integer
+                description: The number of stock of the movie in the store
+              store:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  managerId:
+                    type: integer
+                  phoneNumber:
+                    type: string
+                    description: The phone number of the store
+                  addressLine:
+                    type: string
+                    description: This is typically street number and name (for e.g. 11 Reel Avenue)
+                  city:
+                    type: string
+                    description: City name
+                  state:
+                    type: string
+                    description: State name
+                  country:
+                    type: string
+                    description: Country name
+                  postalCode:
+                    type: string
+                    description: Postal code
+        length:
+          type: integer
+    staffResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              firstName:
+                type: string
+              lastName:
+                type: string
+              email:
+                type: string
+                format: email
+              active:
+                type: boolean
+              phoneNumber:
+                type: string
+              avatar:
+                type: string
+                format: uri
+              storeId:
+                type: integer
+              isStoreManager:
+                type: boolean
+              address:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    readOnly: true
+                  addressLine:
+                    type: string
+                  cityName:
+                    type: string
+                  stateName:
+                    type: string
+                  country:
+                    type: string
+                  postalCode:
+                    type: string
+        length:
+          type: integer
+        pagination:
           type: object
           properties:
-            id:
+            pageNumber:
               type: integer
-              format: number
-            managerId:
+              description: Current page number
+            totalPages:
               type: integer
-              format: number
-            phoneNumber:
+              description: Total pages available for pagination
+            totalItems:
+              type: integer
+              description: Total items across all the pages
+            itemsPerPage:
+              type: integer
+              description: Maximum number of items that the page can have
+            next:
               type: string
-              description: The phone number of the store
-            addressLine:
+              description: Link to the next page
+            prev:
               type: string
-              description: This is typically street number and name (for e.g. 11 Reel Avenue)
-            city:
+              description: Link to the previous page
+            first:
               type: string
-              description: City name
-            state:
+              description: Link to the first page
+            last:
               type: string
-              description: State name
-            country:
-              type: string
-              description: Country name
-            postalCode:
-              type: string
-              description: Postal code
-    staffSummary:
+              description: Link to the last page
+    newStaffResponse:
       type: object
       properties:
         id:
-          type: integer
-          format: number
+          type: string
+          readOnly: true
         firstName:
           type: string
         lastName:
@@ -4182,17 +3834,139 @@ components:
           format: uri
         storeId:
           type: integer
-          format: number
-        isStoreManager:
-          type: boolean
         address:
-          $ref: '#/components/schemas/address'
-    staffItem:
+          type: object
+          properties:
+            id:
+              type: integer
+              readOnly: true
+            addressLine:
+              type: string
+            cityName:
+              type: string
+            stateName:
+              type: string
+            country:
+              type: string
+            postalCode:
+              type: string
+    staffSummaryResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              firstName:
+                type: string
+              lastName:
+                type: string
+              email:
+                type: string
+                format: email
+              active:
+                type: boolean
+        length:
+          type: integer
+        pagination:
+          type: object
+          properties:
+            pageNumber:
+              type: integer
+              description: Current page number
+            totalPages:
+              type: integer
+              description: Total pages available for pagination
+            totalItems:
+              type: integer
+              description: Total items across all the pages
+            itemsPerPage:
+              type: integer
+              description: Maximum number of items that the page can have
+            next:
+              type: string
+              description: Link to the next page
+            prev:
+              type: string
+              description: Link to the previous page
+            first:
+              type: string
+              description: Link to the first page
+            last:
+              type: string
+              description: Link to the last page
+    storeManagersResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              firstName:
+                type: string
+              lastName:
+                type: string
+              email:
+                type: string
+                format: email
+              active:
+                type: boolean
+              phoneNumber:
+                type: string
+              avatar:
+                type: string
+              address:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    readOnly: true
+                  addressLine:
+                    type: string
+                  cityName:
+                    type: string
+                  stateName:
+                    type: string
+                  country:
+                    type: string
+                  postalCode:
+                    type: string
+              store:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  phoneNumber:
+                    type: string
+                  address:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        readOnly: true
+                      addressLine:
+                        type: string
+                      cityName:
+                        type: string
+                      stateName:
+                        type: string
+                      country:
+                        type: string
+                      postalCode:
+                        type: string
+        length:
+          type: integer
+    staffByIdResponse:
       type: object
       properties:
         id:
           type: string
-          format: number
           readOnly: true
         firstName:
           type: string
@@ -4211,28 +3985,236 @@ components:
           type: string
           format: uri
         address:
-          $ref: '#/components/schemas/address'
-    storeItem:
+          type: object
+          properties:
+            id:
+              type: integer
+              readOnly: true
+            addressLine:
+              type: string
+            cityName:
+              type: string
+            stateName:
+              type: string
+            country:
+              type: string
+            postalCode:
+              type: string
+        store:
+          type: object
+          properties:
+            id:
+              type: integer
+            phoneNumber:
+              type: string
+            address:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  readOnly: true
+                addressLine:
+                  type: string
+                cityName:
+                  type: string
+                stateName:
+                  type: string
+                country:
+                  type: string
+                postalCode:
+                  type: string
+    updateStaffRequestBody:
       type: object
       properties:
-        id:
-          type: integer
-        addressLine:
+        firstName:
           type: string
-        city:
+        lastName:
           type: string
-        state:
+        email:
           type: string
-        country:
-          type: string
+          format: email
+        active:
+          type: boolean
         phoneNumber:
           type: string
-    storeDetail:
+        avatar:
+          type: string
+        storeId:
+          type: integer
+        address:
+          type: object
+          properties:
+            id:
+              type: integer
+              readOnly: true
+            addressLine:
+              type: string
+            cityName:
+              type: string
+            stateName:
+              type: string
+            country:
+              type: string
+            postalCode:
+              type: string
+    storesResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                format: int32
+              addressLine:
+                type: string
+              city:
+                type: string
+              state:
+                type: string
+              country:
+                type: string
+              phoneNumber:
+                type: string
+        length:
+          type: integer
+          format: int32
+    newStoreRequestBody:
+      oneOf:
+        - type: object
+          properties:
+            storeManagerId:
+              type: integer
+            phoneNumber:
+              type: string
+            address:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  readOnly: true
+                addressLine:
+                  type: string
+                cityName:
+                  type: string
+                stateName:
+                  type: string
+                country:
+                  type: string
+                postalCode:
+                  type: string
+        - type: object
+          properties:
+            phoneNumber:
+              type: string
+            address:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  readOnly: true
+                addressLine:
+                  type: string
+                cityName:
+                  type: string
+                stateName:
+                  type: string
+                country:
+                  type: string
+                postalCode:
+                  type: string
+            storeManager:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                phoneNumber:
+                  type: string
+                avatar:
+                  type: string
+                address:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      readOnly: true
+                    addressLine:
+                      type: string
+                    cityName:
+                      type: string
+                    stateName:
+                      type: string
+                    country:
+                      type: string
+                    postalCode:
+                      type: string
+    newStoreResponse:
       type: object
       properties:
         id:
           type: integer
-          format: number
+        storeManager:
+          type: object
+          properties:
+            id:
+              type: integer
+            firstName:
+              type: string
+            lastName:
+              type: string
+            email:
+              type: string
+              format: email
+            active:
+              type: boolean
+            avatar:
+              type: string
+            address:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  readOnly: true
+                addressLine:
+                  type: string
+                cityName:
+                  type: string
+                stateName:
+                  type: string
+                country:
+                  type: string
+                postalCode:
+                  type: string
+        phoneNumber:
+          type: string
+        address:
+          type: object
+          properties:
+            id:
+              type: integer
+              readOnly: true
+            addressLine:
+              type: string
+            cityName:
+              type: string
+            stateName:
+              type: string
+            country:
+              type: string
+            postalCode:
+              type: string
+    storeByIdResponse:
+      type: object
+      properties:
+        id:
+          type: integer
         phoneNumber:
           type: string
         storeManager:
@@ -4240,7 +4222,6 @@ components:
           properties:
             id:
               type: integer
-              format: number
             firstName:
               type: string
             lastName:
@@ -4251,30 +4232,308 @@ components:
               type: string
             storeId:
               type: integer
-              format: number
             active:
               type: boolean
             avatar:
               type: string
             address:
-              $ref: '#/components/schemas/address'
+              type: object
+              properties:
+                id:
+                  type: integer
+                  readOnly: true
+                addressLine:
+                  type: string
+                cityName:
+                  type: string
+                stateName:
+                  type: string
+                country:
+                  type: string
+                postalCode:
+                  type: string
         address:
-          $ref: '#/components/schemas/address'
-    rentalDetail:
+          type: object
+          properties:
+            id:
+              type: integer
+              readOnly: true
+            addressLine:
+              type: string
+            cityName:
+              type: string
+            stateName:
+              type: string
+            country:
+              type: string
+            postalCode:
+              type: string
+    updateStoreRequestBody:
+      type: object
+      properties:
+        storeManagerId:
+          type: integer
+        phoneNumber:
+          type: string
+        address:
+          type: object
+          properties:
+            id:
+              type: integer
+              readOnly: true
+            addressLine:
+              type: string
+            cityName:
+              type: string
+            stateName:
+              type: string
+            country:
+              type: string
+            postalCode:
+              type: string
+    stockCountInStoreResponse:
       type: object
       properties:
         id:
           type: integer
-          format: number
+        stockCount:
+          type: string
+    moviesByStoreIdResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              stock:
+                type: integer
+              movie:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  title:
+                    type: string
+                  originalTitle:
+                    type: string
+                  overview:
+                    type: string
+                  runtime:
+                    type: integer
+                    format: int32
+                  releaseDate:
+                    type: string
+                    format: date
+                  genres:
+                    type: array
+                    items:
+                      type: string
+                  countriesOfOrigin:
+                    type: array
+                    items:
+                      type: string
+                  movieStatus:
+                    type: string
+                  popularity:
+                    type: number
+                    format: float
+                  budget:
+                    type: integer
+                    format: int64
+                  revenue:
+                    type: integer
+                    format: int64
+                  ratingAverage:
+                    type: number
+                    format: float
+                  ratingCount:
+                    type: integer
+                    format: int32
+                  posterUrl:
+                    type: string
+                    format: uri
+                  rentalRate:
+                    type: number
+                    format: float
+                  language:
+                    type: string
+        length:
+          type: integer
+        pagination:
+          type: object
+          properties:
+            pageNumber:
+              type: integer
+              description: Current page number
+            totalPages:
+              type: integer
+              description: Total pages available for pagination
+            totalItems:
+              type: integer
+              description: Total items across all the pages
+            itemsPerPage:
+              type: integer
+              description: Maximum number of items that the page can have
+            next:
+              type: string
+              description: Link to the next page
+            prev:
+              type: string
+              description: Link to the previous page
+            first:
+              type: string
+              description: Link to the first page
+            last:
+              type: string
+              description: Link to the last page
+    staffByStoreIdResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              firstName:
+                type: string
+              lastName:
+                type: string
+              email:
+                type: string
+              addressId:
+                type: integer
+              storeId:
+                type: integer
+              active: true
+              phoneNumber:
+                type: string
+              avatar:
+                type: string
+              isStoreManager:
+                type: boolean
+              store:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  storeManagerId:
+                    type: integer
+                  addressId:
+                    type: integer
+                  phoneNumber:
+                    type: string
+        length:
+          type: integer
+    rentalsResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            properties:
+              id:
+                type: integer
+              rentalStartDate:
+                type: string
+                format: date
+              rentalEndDate:
+                type: string
+                format: date
+              returnDate:
+                type: string
+                format: date
+              rentalDuration:
+                type: integer
+              delayedByDays:
+                type: integer
+              amountPaid:
+                type: number
+                format: float
+              discountAmount:
+                type: number
+                format: float
+              paymentDate:
+                type: string
+                format: date
+              rentalType:
+                type: string
+                enum:
+                  - in-store
+                  - online
+              storeId:
+                type: integer
+              movie:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  title:
+                    type: string
+        length:
+          type: integer
+    rentalsByStoreResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            properties:
+              id:
+                type: integer
+              rentalStartDate:
+                type: string
+                format: date
+              rentalEndDate:
+                type: string
+                format: date
+              returnDate:
+                type: string
+                format: date
+              rentalDuration:
+                type: integer
+              delayedByDays:
+                type: integer
+              amountPaid:
+                type: number
+                format: float
+              discountAmount:
+                type: number
+                format: float
+              paymentDate:
+                type: string
+                format: date
+              rentalType:
+                type: string
+                enum:
+                  - in-store
+                  - online
+              storeId:
+                type: integer
+              movie:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  title:
+                    type: string
+        length:
+          type: integer
+    rentalByIdResponse:
+      type: object
+      properties:
+        id:
+          type: integer
         inventoryId:
           type: integer
-          format: number
         customerId:
           type: integer
-          format: number
         staffId:
           type: integer
-          format: number
         rentalStartDate:
           type: string
           format: date
@@ -4286,10 +4545,8 @@ components:
           format: date
         rentalDuration:
           type: integer
-          format: number
         delayedByDays:
           type: integer
-          format: number
         amountPaid:
           type: number
           format: float
@@ -4309,7 +4566,6 @@ components:
           properties:
             id:
               type: integer
-              format: number
             firstName:
               type: string
             lastName:
@@ -4325,7 +4581,6 @@ components:
               properties:
                 id:
                   type: integer
-                  format: number
                 addressLine:
                   type: string
                 cityName:
@@ -4341,19 +4596,15 @@ components:
           properties:
             id:
               type: integer
-              format: number
             movieId:
               type: integer
-              format: number
             stock:
               type: integer
-              format: number
             store:
               type: object
               properties:
                 id:
                   type: integer
-                  format: number
                 phoneNumber:
                   type: string
                 storeManager:
@@ -4361,7 +4612,6 @@ components:
                   properties:
                     id:
                       type: integer
-                      format: number
                     firstName:
                       type: string
                     lastName:
@@ -4370,10 +4620,8 @@ components:
                       type: string
                     addressId:
                       type: integer
-                      format: number
                     storeId:
                       type: integer
-                      format: number
                     active: true
                     phoneNumber:
                       type: string
@@ -4384,7 +4632,6 @@ components:
                   properties:
                     id:
                       type: integer
-                      format: number
                     addressLine:
                       type: string
                     cityName:
@@ -4400,7 +4647,6 @@ components:
           properties:
             id:
               type: integer
-              format: number
             firstName:
               type: string
             lastName:
@@ -4415,7 +4661,6 @@ components:
               type: boolean
             preferredStoreId:
               type: integer
-              format: number
             registeredOn:
               type: string
               format: date
@@ -4424,7 +4669,6 @@ components:
               properties:
                 id:
                   type: integer
-                  format: number
                 addressLine:
                   type: string
                 cityName:

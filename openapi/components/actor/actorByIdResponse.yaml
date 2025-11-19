@@ -52,4 +52,3 @@ properties:
               type: string
             castOrder:
               type: integer
-              format: number

@@ -37,6 +37,8 @@ get:
 post:
   summary: Add the actor to the movie
   operationId: addToMovie
+  security:
+    - cookieAuth: []
   tags:
     - actor
   parameters:
@@ -52,41 +54,14 @@ post:
     content:
       application/json:
         schema:
-          type: object
-          properties:
-            movieId:
-              type: integer
-              format: number
-            characterName:
-              type: string
-            castOrder:
-              type: integer
-              format: number
+          $ref: ../../components/actor/addActorToMovieRequestBody.yaml
   responses:
     '201':
       description: Successfully added the actor the movie
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              id:
-                type: integer
-              actorId:
-                type: integer
-              movieId:
-                type: integer
-              characterName:
-                type: string
-              castOrder:
-                type: integer
-                format: number
-            required:
-              - id
-              - actorId
-              - movieId
-              - characterName
-              - castOrder
+            $ref: ../../components/actor/addActorToMovieResponse.yaml
     '400':
       $ref: ../../components/error/badRequest.yaml
     '401':
@@ -100,6 +75,8 @@ post:
 put:
   summary: Update actor
   operationId: updateActor
+  security:
+    - cookieAuth: []
   tags:
     - actor
   parameters:
@@ -115,31 +92,7 @@ put:
     content:
       application/json:
         schema:
-          type: object
-          properties:
-            tmdbId:
-              type: integer
-              format: number
-            imdbId:
-              type: integer
-              format: number
-            actorName:
-              type: string
-            biography:
-              type: string
-            birthday:
-              type: string
-              format: date
-            deathday:
-              type: string
-              format: date
-            placeOfBirth:
-              type: string
-            popularity:
-              type: string
-            profilePictureUrl:
-              type: string
-              format: uri
+          $ref: ../../components/actor/updateActorRequestBody.yaml
   responses:
     '204':
       description: Successfully updated actor
@@ -158,6 +111,8 @@ delete:
     Delete the actor.
     Note: This operation will delete movie actors for the movie as well.
   operationId: deleteActor
+  security:
+    - cookieAuth: []
   tags:
     - actor
   parameters:

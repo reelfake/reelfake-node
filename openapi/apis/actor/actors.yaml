@@ -73,60 +73,14 @@ post:
     content:
       application/json:
         schema:
-          type: object
-          properties:
-            tmdbId:
-              type: string
-            imdbId:
-              type: string
-            actorName:
-              type: string
-            biography:
-              type: string
-            birthday:
-              type: string
-              format: date
-            deathday:
-              type: string
-              format: date
-            placeOfBirth:
-              type: string
-            popularity:
-              type: number
-              format: float
-            profilePictureUrl:
-              type: string
-              format: uri
+          $ref: ../../components/actor/newActorRequestBody.yaml
   responses:
     '201':
       description: Successfully added new actor
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              id:
-                type: integer
-              imdbId:
-                type: string
-              actorName:
-                type: string
-              biography:
-                type: string
-              birthday:
-                type: string
-                format: date
-              deathday:
-                type: string
-                format: date
-              placeOfBirth:
-                type: string
-              popularity:
-                type: number
-                format: float
-              profilePictureUrl:
-                type: string
-                format: uri
+            $ref: ../../components/actor/newActorResponse.yaml
     '400':
       $ref: ../../components/error/badRequest.yaml
     '401':

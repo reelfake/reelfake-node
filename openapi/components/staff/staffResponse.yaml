@@ -1,0 +1,72 @@
+type: object
+properties:
+  items:
+    type: array
+    items:
+      type: object
+      properties:
+        id:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        active:
+          type: boolean
+        phoneNumber:
+          type: string
+        avatar:
+          type: string
+          format: uri
+        storeId:
+          type: integer
+        isStoreManager:
+          type: boolean
+        address:
+          type: object
+          properties:
+            id:
+              type: integer
+              readOnly: true
+            addressLine:
+              type: string
+            cityName:
+              type: string
+            stateName:
+              type: string
+            country:
+              type: string
+            postalCode:
+              type: string
+  length:
+    type: integer
+  pagination:
+    type: object
+    properties:
+      pageNumber:
+        type: integer
+        description: Current page number
+      totalPages:
+        type: integer
+        description: Total pages available for pagination
+      totalItems:
+        type: integer
+        description: Total items across all the pages
+      itemsPerPage:
+        type: integer
+        description: Maximum number of items that the page can have
+      next:
+        type: string
+        description: Link to the next page
+      prev:
+        type: string
+        description: Link to the previous page
+      first:
+        type: string
+        description: Link to the first page
+      last:
+        type: string
+        description: Link to the last page

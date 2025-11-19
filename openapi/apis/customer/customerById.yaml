@@ -43,30 +43,7 @@ put:
     content:
       application/json:
         schema:
-          type: object
-          properties:
-            firstName:
-              type: string
-            lastName:
-              type: string
-            address:
-              type: object
-              properties:
-                addressLine:
-                  type: string
-                cityName:
-                  type: string
-                stateName:
-                  type: string
-                country:
-                  type: string
-                postalCode:
-                  type: string
-            phoneNumber:
-              type: string
-            avatar:
-              type: string
-              format: uri
+          $ref: ../../components/customer/updateCustomerRequestBody.yaml
   responses:
     '204':
       description: Successfully updated the customer

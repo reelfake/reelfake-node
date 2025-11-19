@@ -1,0 +1,84 @@
+type: object
+properties:
+  items:
+    type: array
+    items:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique id of the resource
+        title:
+          type: string
+          description: The title of the movie
+        runtime:
+          type: integer
+          description: The length of the movie
+        releaseDate:
+          type: string
+          description: Date on which the movie is or will be released
+          format: date
+        genres:
+          type: array
+          description: |
+            The genres that the movie belongs to. The valid genres are action, adventure, animation, 
+            comedy, crime, documentary, drama, family, fantasy, history, horror, music , mystery, romance, 
+            science fiction, thriller, war and western.
+          items:
+            type: string
+        countriesOfOrigin:
+          type: array
+          description: The countries of origin of the movie
+          items:
+            type: string
+        language:
+          type: string
+          description: The language that the movie is in
+        popularity:
+          type: number
+          description: A number indicating how popular the movie is
+          format: float
+        ratingAverage:
+          type: number
+          description: The average rating of the movie
+          format: float
+        ratingCount:
+          type: integer
+          description: The number of ratings that the movie has got
+        posterUrl:
+          type: string
+          description: Link to the movie poster
+          format: uri
+        rentalRate:
+          type: number
+          description: The rental rate of the movie
+          format: float
+  length:
+    type: integer
+  pagination:
+    type: object
+    properties:
+      pageNumber:
+        type: integer
+        description: Current page number
+      totalPages:
+        type: integer
+        description: Total pages available for pagination
+      totalItems:
+        type: integer
+        description: Total items across all the pages
+      itemsPerPage:
+        type: integer
+        description: Maximum number of items that the page can have
+      next:
+        type: string
+        description: Link to the next page
+      prev:
+        type: string
+        description: Link to the previous page
+      first:
+        type: string
+        description: Link to the first page
+      last:
+        type: string
+        description: Link to the last page

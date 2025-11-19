@@ -7,7 +7,6 @@ properties:
       properties:
         id:
           type: integer
-          format: number
         firstName:
           type: string
         lastName:
@@ -19,7 +18,6 @@ properties:
           type: string
         preferredStoreId:
           type: integer
-          format: number
         active:
           type: boolean
         avatar:
@@ -33,7 +31,6 @@ properties:
           properties:
             id:
               type: integer
-              format: number
               readOnly: true
             addressLine:
               type: string

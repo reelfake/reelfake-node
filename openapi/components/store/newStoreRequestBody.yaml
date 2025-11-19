@@ -1,0 +1,73 @@
+oneOf:
+  - type: object
+    properties:
+      storeManagerId:
+        type: integer
+      phoneNumber:
+        type: string
+      address:
+        type: object
+        properties:
+          id:
+            type: integer
+            readOnly: true
+          addressLine:
+            type: string
+          cityName:
+            type: string
+          stateName:
+            type: string
+          country:
+            type: string
+          postalCode:
+            type: string
+  - type: object
+    properties:
+      phoneNumber:
+        type: string
+      address:
+        type: object
+        properties:
+          id:
+            type: integer
+            readOnly: true
+          addressLine:
+            type: string
+          cityName:
+            type: string
+          stateName:
+            type: string
+          country:
+            type: string
+          postalCode:
+            type: string
+      storeManager:
+        type: object
+        properties:
+          firstName:
+            type: string
+          lastName:
+            type: string
+          email:
+            type: string
+            format: email
+          phoneNumber:
+            type: string
+          avatar:
+            type: string
+          address:
+            type: object
+            properties:
+              id:
+                type: integer
+                readOnly: true
+              addressLine:
+                type: string
+              cityName:
+                type: string
+              stateName:
+                type: string
+              country:
+                type: string
+              postalCode:
+                type: string

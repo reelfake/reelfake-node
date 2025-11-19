@@ -1,0 +1,47 @@
+type: object
+properties:
+  tmdbId:
+    type: integer
+  title:
+    type: string
+  originalTitle:
+    type: string
+  overview:
+    type: string
+  runtime:
+    type: integer
+  releaseDate:
+    type: string
+    format: date
+  genres:
+    type: array
+    items:
+      type: string
+  countriesOfOrigin:
+    type: array
+    items:
+      type: string
+  language:
+    type: string
+  movieStatus:
+    type: string
+  popularity:
+    type: number
+    format: float
+  budget:
+    type: integer
+    format: int64
+  revenue:
+    type: integer
+    format: int64
+  ratingAverage:
+    type: number
+    format: float
+  ratingCount:
+    type: integer
+  posterUrl:
+    type: string
+    format: uri
+  rentalRate:
+    type: number
+    format: double

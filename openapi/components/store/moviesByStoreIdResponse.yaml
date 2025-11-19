@@ -1,0 +1,90 @@
+type: object
+properties:
+  items:
+    type: array
+    items:
+      type: object
+      properties:
+        id:
+          type: integer
+        stock:
+          type: integer
+        movie:
+          type: object
+          properties:
+            id:
+              type: integer
+            title:
+              type: string
+            originalTitle:
+              type: string
+            overview:
+              type: string
+            runtime:
+              type: integer
+              format: int32
+            releaseDate:
+              type: string
+              format: date
+            genres:
+              type: array
+              items:
+                type: string
+            countriesOfOrigin:
+              type: array
+              items:
+                type: string
+            movieStatus:
+              type: string
+            popularity:
+              type: number
+              format: float
+            budget:
+              type: integer
+              format: int64
+            revenue:
+              type: integer
+              format: int64
+            ratingAverage:
+              type: number
+              format: float
+            ratingCount:
+              type: integer
+              format: int32
+            posterUrl:
+              type: string
+              format: uri
+            rentalRate:
+              type: number
+              format: float
+            language:
+              type: string
+  length:
+    type: integer
+  pagination:
+    type: object
+    properties:
+      pageNumber:
+        type: integer
+        description: Current page number
+      totalPages:
+        type: integer
+        description: Total pages available for pagination
+      totalItems:
+        type: integer
+        description: Total items across all the pages
+      itemsPerPage:
+        type: integer
+        description: Maximum number of items that the page can have
+      next:
+        type: string
+        description: Link to the next page
+      prev:
+        type: string
+        description: Link to the previous page
+      first:
+        type: string
+        description: Link to the first page
+      last:
+        type: string
+        description: Link to the last page

@@ -1,0 +1,22 @@
+type: object
+properties:
+  storeManagerId:
+    type: integer
+  phoneNumber:
+    type: string
+  address:
+    type: object
+    properties:
+      id:
+        type: integer
+        readOnly: true
+      addressLine:
+        type: string
+      cityName:
+        type: string
+      stateName:
+        type: string
+      country:
+        type: string
+      postalCode:
+        type: string

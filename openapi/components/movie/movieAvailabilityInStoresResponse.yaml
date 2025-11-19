@@ -1,0 +1,40 @@
+type: object
+properties:
+  items:
+    type: array
+    items:
+      type: object
+      properties:
+        inventoryId:
+          type: integer
+          description: Unique id of the invetory
+        stock:
+          type: integer
+          description: The number of stock of the movie in the store
+        store:
+          type: object
+          properties:
+            id:
+              type: integer
+            managerId:
+              type: integer
+            phoneNumber:
+              type: string
+              description: The phone number of the store
+            addressLine:
+              type: string
+              description: This is typically street number and name (for e.g. 11 Reel Avenue)
+            city:
+              type: string
+              description: City name
+            state:
+              type: string
+              description: State name
+            country:
+              type: string
+              description: Country name
+            postalCode:
+              type: string
+              description: Postal code
+  length:
+    type: integer

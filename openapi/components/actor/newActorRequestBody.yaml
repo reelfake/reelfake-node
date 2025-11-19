@@ -1,0 +1,24 @@
+type: object
+properties:
+  tmdbId:
+    type: string
+  imdbId:
+    type: string
+  actorName:
+    type: string
+  biography:
+    type: string
+  birthday:
+    type: string
+    format: date
+  deathday:
+    type: string
+    format: date
+  placeOfBirth:
+    type: string
+  popularity:
+    type: number
+    format: float
+  profilePictureUrl:
+    type: string
+    format: uri

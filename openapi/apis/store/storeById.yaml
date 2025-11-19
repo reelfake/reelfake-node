@@ -27,7 +27,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: ../../components/store/storeDetail.yaml
+            $ref: ../../components/store/storeByIdResponse.yaml
     '400':
       $ref: ../../components/error/badRequest.yaml
     '404':
@@ -52,15 +52,7 @@ put:
     content:
       application/json:
         schema:
-          type: object
-          properties:
-            storeManagerId:
-              type: integer
-              format: number
-            phoneNumber:
-              type: string
-            address:
-              $ref: ../../components/address/address.yaml
+          $ref: ../../components/store/updateStoreRequestBody.yaml
   responses:
     '204':
       description: Successfully updated the store

@@ -2,7 +2,16 @@ openapi: 3.1.0
 info:
   version: 1.0.0
   title: Reel Fake Api
-  description: A REST api for buying or renting a movie dvd (only for educational purposes)
+  description: |
+    <p>The Reelfake API is a rest api service serving data from the postgresql database. This api is more or less related to the dvd rental store.</p>
+    <p>Every web application need a data to work with and need api of some sort to fetch, mutate and save the data.</p>
+    <p>Though not a perfect api but the intention behind this is to provide backend service to practice, learn, prototype or to do anything with the front end web technologies.</p>
+    <strong style="color: red;">Disclaimer:</strong>
+    <ul>
+      <li>The movies, actors, genres and movie languages are taken from the <a href="https://developer.themoviedb.org/docs/getting-started" target="_blank">The Movie Database (TMDB) API</a>. You must adhere to the <a href="https://www.themoviedb.org/api-terms-of-use?language=en-US" target="_blank">terms and agreements</a> of their api which is modified and added new tables to better suit my needs.</li>
+      <li>The db schema is inspired from the <a href="https://neon.com/postgresql/postgresql-getting-started/postgresql-sample-database" target="_blank">PostgreSQL Sample Database by NEON</a>.</li>
+      <li>Please make sure to adhere to the licensing terms of TMDB API and do not use the reelfake api for commercial purpose. This api is only for knowledge, practice and educational purposes.</li>
+    </ul>
   license:
     name: MIT License
     url: https://mit-license.org
@@ -10,8 +19,8 @@ info:
     name: Pratap Reddy
     email: pratapreddy15@gmail.com
 servers:
-  - url: http://reelfake.cloud/api
-    description: Production server
+  - url: https://reelfake.cloud/api
+    description: My Personal Server
   - url: http://127.0.0.1:8000/api
     description: Local server
 components:

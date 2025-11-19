@@ -27,7 +27,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: ../../components/movie/movieDetail.yaml
+            $ref: ../../components/movie/movieByIdResponse.yaml
     '400':
       $ref: ../../components/error/badRequest.yaml
     '404':
@@ -52,53 +52,7 @@ put:
     content:
       application/json:
         schema:
-          type: object
-          properties:
-            tmdbId:
-              type: integer
-            title:
-              type: string
-            originalTitle:
-              type: string
-            overview:
-              type: string
-            runtime:
-              type: integer
-            releaseDate:
-              type: string
-              format: date
-            genres:
-              type: array
-              items:
-                type: string
-            countriesOfOrigin:
-              type: array
-              items:
-                type: string
-            language:
-              type: string
-            movieStatus:
-              type: string
-            popularity:
-              type: number
-              format: float
-            budget:
-              type: integer
-              format: int64
-            revenue:
-              type: integer
-              format: int64
-            ratingAverage:
-              type: number
-              format: float
-            ratingCount:
-              type: integer
-            posterUrl:
-              type: string
-              format: uri
-            rentalRate:
-              type: number
-              format: double
+          $ref: ../../components/movie/updateMovieRequestBody.yaml
   responses:
     '204':
       description: Successfully updated the movie

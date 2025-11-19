@@ -1,0 +1,18 @@
+type: object
+properties:
+  id:
+    type: integer
+  actorId:
+    type: integer
+  movieId:
+    type: integer
+  characterName:
+    type: string
+  castOrder:
+    type: integer
+required:
+  - id
+  - actorId
+  - movieId
+  - characterName
+  - castOrder

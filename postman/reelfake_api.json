@@ -1,0 +1,1463 @@
+{
+	"info": {
+		"_postman_id": "302bfb99-1411-49fe-9a9d-c4399f1cd5c0",
+		"name": "Reelfake API (reelfake.cloud)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "548394"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Logout",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/auth/logout",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"auth",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"brandonwiggins25@example.com\",\n    \"password\": \"test@123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://reelfake.cloud/api/auth/login",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/auth/me",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"auth",
+								"me"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register as customer",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"Pratap\",\n    \"lastName\": \"Reddy\",\n    \"email\": \"pratap.reddy@example.com\",\n    \"password\": \"password@123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://reelfake.cloud/api/customers/register",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"customers",
+								"register"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Movie",
+			"item": [
+				{
+					"name": "Get movies",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/movies",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"movies"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by release date & countries",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/movies?release_date=2020-01-01,2020-12-31&countries=cl,in",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"movies"
+							],
+							"query": [
+								{
+									"key": "release_date",
+									"value": "2020-01-01,2020-12-31"
+								},
+								{
+									"key": "countries",
+									"value": "cl,in"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get movie stocks",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/movies/1/stores",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"movies",
+								"1",
+								"stores"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Movie",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/movies/442417",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"movies",
+								"442417"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Has all genres",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/movies?genres=[\"science fiction\",\"action\",\"mystery\"]",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"movies"
+							],
+							"query": [
+								{
+									"key": "genres",
+									"value": "[\"science fiction\",\"action\",\"mystery\"]"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Any of genres",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/movies?genres=science fiction",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"movies"
+							],
+							"query": [
+								{
+									"key": "genres",
+									"value": "science fiction"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Any of languages",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/movies?languages=hi,fr",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"movies"
+							],
+							"query": [
+								{
+									"key": "languages",
+									"value": "hi,fr"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "By language",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/movies?languages=te",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"movies"
+							],
+							"query": [
+								{
+									"key": "languages",
+									"value": "te"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Movie Language",
+			"item": [
+				{
+					"name": "Get languages",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/movie_languages",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"movie_languages"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Actor",
+			"item": [
+				{
+					"name": "Get actor detail",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/actors/442251?includeMovies=true",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"actors",
+								"442251"
+							],
+							"query": [
+								{
+									"key": "includeMovies",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get actors",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/actors?page=25000",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"actors"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "25000"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get actors using filters",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/actors?birthday=1980-01-01,1990-01-01",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"actors"
+							],
+							"query": [
+								{
+									"key": "birthday",
+									"value": "1980-01-01,1990-01-01"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search Actors by birthdate",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/actors?birthday=1980-01-01,1990-01-01",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"actors"
+							],
+							"query": [
+								{
+									"key": "birthday",
+									"value": "1980-01-01,1990-01-01"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search by name (single page)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/actors?name=%vidyut%",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"actors"
+							],
+							"query": [
+								{
+									"key": "name",
+									"value": "%vidyut%"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search by name (pagination)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/actors?name=%jodie%",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"actors"
+							],
+							"query": [
+								{
+									"key": "name",
+									"value": "%jodie%"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get actors by place of birth",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/actors?place_of_birth=jakarta",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"actors"
+							],
+							"query": [
+								{
+									"key": "place_of_birth",
+									"value": "jakarta"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get actors by place of birth (wildcard)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/actors?place_of_birth=%art%",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"actors"
+							],
+							"query": [
+								{
+									"key": "place_of_birth",
+									"value": "%art%"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Customer",
+			"item": [
+				{
+					"name": "Get customers",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/customers?page=2",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"customers"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get customers Summary",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/customers/summary",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"customers",
+								"summary"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get customer detail",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/customers/15370",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"customers",
+								"15370"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search customers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/customers?registered_on=2024-01-01",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"customers"
+							],
+							"query": [
+								{
+									"key": "registered_on",
+									"value": "2024-01-01"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Forgot Password",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"newPassword\": \"test@123\",\n    \"confirmedNewPassword\": \"test@123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://reelfake.cloud/api/customers/1/forgot_password",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"customers",
+								"1",
+								"forgot_password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"currentPassword\": \"oldtest@123\",\n    \"newPassword\": \"test@123\",\n    \"confirmedNewPassword\": \"test@123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://reelfake.cloud/api/customers/1/change_password",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"customers",
+								"1",
+								"change_password"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Staff",
+			"item": [
+				{
+					"name": "Get Staff (Pagination)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/staff",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"staff"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get store managers",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/staff/managers",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"staff",
+								"managers"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get staff with filter",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/staff?first_name=jo%&last_name=%ed%",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"staff"
+							],
+							"query": [
+								{
+									"key": "first_name",
+									"value": "jo%"
+								},
+								{
+									"key": "last_name",
+									"value": "%ed%"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get staff summary with filter",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/staff/summary?first_name=%ben%",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"staff",
+								"summary"
+							],
+							"query": [
+								{
+									"key": "first_name",
+									"value": "%ben%"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get staff in a state",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/staff?state=victoria",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"staff"
+							],
+							"query": [
+								{
+									"key": "state",
+									"value": "victoria"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get staff detail",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/staff/40",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"staff",
+								"40"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Change staff password",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"currentPassword\": \"test@123\",\n    \"newPassword\": \"newtest@123\",\n    \"confirmedNewPassword\": \"newtest@123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://reelfake.cloud/api/staff/1/change_password",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"staff",
+								"1",
+								"change_password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Forgot Staff Password",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"newPassword\": \"test@123\",\n    \"confirmedNewPassword\": \"test@123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://reelfake.cloud/api/staff/18/forgot_password",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"staff",
+								"18",
+								"forgot_password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get staff summary",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/staff/summary",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"staff",
+								"summary"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get store managers summary",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/staff/managers/summary",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"staff",
+								"managers",
+								"summary"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Store",
+			"item": [
+				{
+					"name": "Get store staff",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/stores/1/staff",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"stores",
+								"1",
+								"staff"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get store detail",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/stores/1",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"stores",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get movies in store",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/stores/1/movies?page=last",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"stores",
+								"1",
+								"movies"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "last"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get stores",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/stores",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"stores"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Stock Count",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/stores/1/stock",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"stores",
+								"1",
+								"stock"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get movies in store",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/stores/1/movies",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"stores",
+								"1",
+								"movies"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "City",
+			"item": [
+				{
+					"name": "Get cities",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/cities",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"cities"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Country",
+			"item": [
+				{
+					"name": "Get countries",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/countries",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"countries"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Genre",
+			"item": [
+				{
+					"name": "Get genres",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/genres",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"genres"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Address",
+			"item": [
+				{
+					"name": "Get addresses",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/addresses",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"addresses"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get addresses by city",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/addresses/city/melbourne",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"addresses",
+								"city",
+								"melbourne"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get addresses by state",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/addresses/state/victoria",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"addresses",
+								"state",
+								"victoria"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Rental",
+			"item": [
+				{
+					"name": "Get rentals",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/rentals",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"rentals"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Rental Detail",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/rentals/172",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"rentals",
+								"172"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get rentals from my store",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://reelfake.cloud/api/rentals/my_store",
+							"protocol": "https",
+							"host": [
+								"reelfake",
+								"cloud"
+							],
+							"path": [
+								"api",
+								"rentals",
+								"my_store"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Api info",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://reelfake.cloud/api",
+					"protocol": "https",
+					"host": [
+						"reelfake",
+						"cloud"
+					],
+					"path": [
+						"api"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Statistics",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://reelfake.cloud/api/stats",
+					"protocol": "https",
+					"host": [
+						"reelfake",
+						"cloud"
+					],
+					"path": [
+						"api",
+						"stats"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Test db connection",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://reelfake.cloud/api/test",
+					"protocol": "https",
+					"host": [
+						"reelfake",
+						"cloud"
+					],
+					"path": [
+						"api",
+						"test"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

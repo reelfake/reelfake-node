@@ -1,0 +1,80 @@
+type: object
+properties:
+  tmdbId:
+    type: integer
+  imdbId:
+    type: string
+  title:
+    type: string
+  originalTitle:
+    type: string
+  overview:
+    type: string
+  runtime:
+    type: integer
+  releaseDate:
+    type: string
+    format: date
+  genres:
+    type: array
+    items:
+      type: string
+  countriesOfOrigin:
+    type: array
+    items:
+      type: string
+  language:
+    type: string
+  movieStatus:
+    type: string
+  popularity:
+    type: number
+    format: float
+  budget:
+    type: integer
+    format: int64
+  revenue:
+    type: integer
+    format: int64
+  ratingAverage:
+    type: number
+    format: float
+  ratingCount:
+    type: integer
+  posterUrl:
+    type: string
+    format: uri
+  rentalRate:
+    type: number
+    format: double
+  actors:
+    type: array
+    items:
+      type: object
+      properties:
+        tmdbId:
+          type: integer
+        imdbId:
+          type: string
+        actorName:
+          type: string
+        biography:
+          type: string
+        birthday:
+          type: string
+          format: date
+        deathday:
+          type: string
+          format: date
+        placeOfBirth:
+          type: string
+        popularity:
+          type: number
+          format: float
+        profilePictureUrl:
+          type: string
+          format: uri
+        characterName:
+          type: string
+        castOrder:
+          type: integer

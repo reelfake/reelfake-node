@@ -16,12 +16,7 @@ get:
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              id:
-                type: integer
-              stockCount:
-                type: string
+            $ref: ../../components/store/stockCountInStoreResponse.yaml
     '400':
       description: Bad request
       content:

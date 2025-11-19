@@ -101,9 +101,9 @@
 /stores/{id}/stock:
   $ref: apis/store/stockCountInStore.yaml
 /stores/{id}/movies:
-  $ref: apis/store/moviesInStore.yaml
+  $ref: apis/store/moviesByStoreId.yaml
 /stores/{id}/staff:
-  $ref: apis/store/staffInStore.yaml
+  $ref: apis/store/staffByStoreId.yaml
 # ##################################
 # RENTAL API
 /rentals:
@@ -111,4 +111,4 @@
 /rentals/my_store:
   $ref: apis/rental/rentalsByStore.yaml
 /rentals/{id}:
-  $ref: apis/rental/rentalDetail.yaml
+  $ref: apis/rental/rentalById.yaml

@@ -7,7 +7,6 @@ properties:
       properties:
         id:
           type: integer
-          format: number
         addressLine:
           type: string
         cityName:
@@ -20,7 +19,6 @@ properties:
           type: string
   length:
     type: integer
-    format: number
   pagination:
     type: object
     properties:

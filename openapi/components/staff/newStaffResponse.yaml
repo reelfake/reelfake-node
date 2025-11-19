@@ -1,0 +1,37 @@
+type: object
+properties:
+  id:
+    type: string
+    readOnly: true
+  firstName:
+    type: string
+  lastName:
+    type: string
+  email:
+    type: string
+    format: email
+  active:
+    type: boolean
+  phoneNumber:
+    type: string
+  avatar:
+    type: string
+    format: uri
+  storeId:
+    type: integer
+  address:
+    type: object
+    properties:
+      id:
+        type: integer
+        readOnly: true
+      addressLine:
+        type: string
+      cityName:
+        type: string
+      stateName:
+        type: string
+      country:
+        type: string
+      postalCode:
+        type: string

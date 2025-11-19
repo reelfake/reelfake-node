@@ -3,7 +3,6 @@ oneOf:
     properties:
       id:
         type: integer
-        format: number
       firstName:
         type: string
       lastName:
@@ -26,7 +25,6 @@ oneOf:
         properties:
           id:
             type: integer
-            format: number
           phoneNumber:
             type: string
           storeManager:
@@ -34,7 +32,6 @@ oneOf:
             properties:
               id:
                 type: string
-                format: number
               firstName:
                 type: string
               lastName:
@@ -50,15 +47,32 @@ oneOf:
                 type: string
                 format: uri
               address:
-                $ref: ../address/address.yaml
+                type: object
+                properties:
+                  addressLine:
+                    type: string
+                  cityName:
+                    type: string
+                  stateName:
+                    type: string
+                  postalCode:
+                    type: string
       address:
-        $ref: ../address/address.yaml
+        type: object
+        properties:
+          addressLine:
+            type: string
+          cityName:
+            type: string
+          stateName:
+            type: string
+          postalCode:
+            type: string
 
   - type: object
     properties:
       id:
         type: string
-        format: number
         readOnly: true
       firstName:
         type: string
@@ -77,4 +91,13 @@ oneOf:
         type: string
         format: uri
       address:
-        $ref: ../address/address.yaml
+        type: object
+        properties:
+          addressLine:
+            type: string
+          cityName:
+            type: string
+          stateName:
+            type: string
+          postalCode:
+            type: string

@@ -1,8 +1,8 @@
 type: object
 properties:
-  id:
+  movieId:
     type: integer
-  languageName:
+  characterName:
     type: string
-  languageCode:
-    type: string
+  castOrder:
+    type: integer

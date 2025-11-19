@@ -1,0 +1,24 @@
+type: object
+properties:
+  firstName:
+    type: string
+  lastName:
+    type: string
+  address:
+    type: object
+    properties:
+      addressLine:
+        type: string
+      cityName:
+        type: string
+      stateName:
+        type: string
+      country:
+        type: string
+      postalCode:
+        type: string
+  phoneNumber:
+    type: string
+  avatar:
+    type: string
+    format: uri

@@ -2,16 +2,12 @@ type: object
 properties:
   id:
     type: integer
-    format: number
   inventoryId:
     type: integer
-    format: number
   customerId:
     type: integer
-    format: number
   staffId:
     type: integer
-    format: number
   rentalStartDate:
     type: string
     format: date
@@ -23,10 +19,8 @@ properties:
     format: date
   rentalDuration:
     type: integer
-    format: number
   delayedByDays:
     type: integer
-    format: number
   amountPaid:
     type: number
     format: float
@@ -44,7 +38,6 @@ properties:
     properties:
       id:
         type: integer
-        format: number
       firstName:
         type: string
       lastName:
@@ -60,7 +53,6 @@ properties:
         properties:
           id:
             type: integer
-            format: number
           addressLine:
             type: string
           cityName:
@@ -76,19 +68,15 @@ properties:
     properties:
       id:
         type: integer
-        format: number
       movieId:
         type: integer
-        format: number
       stock:
         type: integer
-        format: number
       store:
         type: object
         properties:
           id:
             type: integer
-            format: number
           phoneNumber:
             type: string
           storeManager:
@@ -96,7 +84,6 @@ properties:
             properties:
               id:
                 type: integer
-                format: number
               firstName:
                 type: string
               lastName:
@@ -105,10 +92,8 @@ properties:
                 type: string
               addressId:
                 type: integer
-                format: number
               storeId:
                 type: integer
-                format: number
               active: true
               phoneNumber:
                 type: string
@@ -119,7 +104,6 @@ properties:
             properties:
               id:
                 type: integer
-                format: number
               addressLine:
                 type: string
               cityName:
@@ -135,7 +119,6 @@ properties:
     properties:
       id:
         type: integer
-        format: number
       firstName:
         type: string
       lastName:
@@ -150,7 +133,6 @@ properties:
         type: boolean
       preferredStoreId:
         type: integer
-        format: number
       registeredOn:
         type: string
         format: date
@@ -159,7 +141,6 @@ properties:
         properties:
           id:
             type: integer
-            format: number
           addressLine:
             type: string
           cityName:
