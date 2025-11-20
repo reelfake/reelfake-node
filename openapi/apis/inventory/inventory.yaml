@@ -1,0 +1,29 @@
+post:
+  summary: Add an inventory for the movie
+  operationId: addInventory
+  tags:
+    - inventory
+  requestBody:
+    description: Payload for the new inventory
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../components/inventory/newInventoryRequestBody.yaml
+  responses:
+    '201':
+      description: Successfully added new inventory
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/inventory/newInventoryResponseBody.yaml
+    '400':
+      $ref: ../../components/error/badRequest.yaml
+    '401':
+      $ref: ../../components/error/unauthorized.yaml
+    '403':
+      $ref: ../../components/error/forbidden.yaml
+    '404':
+      $ref: ../../components/error/notFound.yaml
+    '500':
+      $ref: ../../components/error/internalServerError.yaml

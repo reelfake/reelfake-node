@@ -1,0 +1,84 @@
+type: object
+properties:
+  id:
+    type: integer
+    format: int64
+  stock:
+    type: integer
+    format: int32
+  movie:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      title:
+        type: string
+      originalTitle:
+        type: string
+      overview:
+        type: string
+      runtime:
+        type: integer
+        format: int32
+      releaseDate:
+        type: string
+        format: date
+      genres:
+        type: array
+        items:
+          type: string
+      countriesOfOrigin:
+        type: array
+        items:
+          type: string
+      movieStatus:
+        type: string
+      popularity:
+        type: number
+        format: float
+      budget:
+        type: integer
+        format: int64
+      revenue:
+        type: integer
+        format: int64
+      ratingAverage:
+        type: number
+        format: float
+      ratingCount:
+        type: integer
+        format: int32
+      posterUrl:
+        type: string
+        format: uri
+      rentalRate:
+        type: number
+        format: float
+      language:
+        type: string
+  store:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int32
+      storeManagerId:
+        type: integer
+        format: int64
+      address:
+        type: object
+        properties:
+          id:
+            type: integer
+            readOnly: true
+          addressLine:
+            type: string
+          cityName:
+            type: string
+          stateName:
+            type: string
+          country:
+            type: string
+          postalCode:
+            type: string

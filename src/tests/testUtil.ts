@@ -227,6 +227,31 @@ export async function getStoreManagerCredential() {
   return { email, password: passwordMock };
 }
 
+export async function getMultipleStaffCredentials(count: number) {
+  const staffList = await execQuery(`
+    SELECT staff.id, email
+    FROM staff LEFT OUTER JOIN store ON staff.store_id = store.id
+    WHERE store.store_manager_id <> staff.id AND staff.active = true
+    LIMIT ${count}
+  `);
+
+  const credentials = [];
+
+  for (const staff of staffList) {
+    const email = staff.email;
+
+    const hashedPassword = await hashPassword(passwordMock);
+
+    await execQuery(`
+      UPDATE staff SET user_password = '${hashedPassword}' WHERE id = ${staff.id}
+    `);
+
+    credentials.push({ email, password: passwordMock });
+  }
+
+  return credentials;
+}
+
 export async function getStaffCredential() {
   const [staff] = await execQuery(`
     SELECT staff.id, email

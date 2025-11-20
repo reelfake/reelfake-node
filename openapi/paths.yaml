@@ -55,6 +55,12 @@
 /genres:
   $ref: apis/genre/genres.yaml
 # ##################################
+# INVENTORY API
+/inventory:
+  $ref: apis/inventory/inventory.yaml
+/inventory/{id}:
+  $ref: apis/inventory/inventoryById.yaml
+# ##################################
 # MOVIE LANGUAGE API
 /movie_languages:
   $ref: apis/movie_language/movieLanguages.yaml

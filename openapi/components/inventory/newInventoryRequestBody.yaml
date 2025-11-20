@@ -1,0 +1,14 @@
+type: object
+properties:
+  movie_id:
+    type: integer
+    format: int64
+    description: Id of the existing movie
+  store_id:
+    type: integer
+    format: int64
+    description: Id of the existing store
+  stock_count:
+    type: integer
+    format: int32
+    description: The available stock count of the movie in the store

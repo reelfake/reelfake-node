@@ -1,0 +1,58 @@
+put:
+  summary: Update inventory
+  operationId: updateInventory
+  tags:
+    - inventory
+  parameters:
+    - in: path
+      name: id
+      required: true
+      description: Inventory Id
+      schema:
+        type: integer
+  requestBody:
+    description: Payload of the inventory to update
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../components/inventory/updateInventoryRequestBody.yaml
+  responses:
+    '204':
+      description: Successfully updated inventory
+    '400':
+      $ref: ../../components/error/badRequest.yaml
+    '401':
+      $ref: ../../components/error/unauthorized.yaml
+    '403':
+      $ref: ../../components/error/forbidden.yaml
+    '404':
+      $ref: ../../components/error/notFound.yaml
+    '500':
+      $ref: ../../components/error/internalServerError.yaml
+delete:
+  summary: |
+    Delete the inventory.
+  operationId: deleteInventory
+  tags:
+    - inventory
+  parameters:
+    - in: path
+      name: id
+      required: true
+      description: Inventory Id
+      schema:
+        type: integer
+  responses:
+    '204':
+      description: Successfully deleted the inventory
+    '400':
+      $ref: ../../components/error/badRequest.yaml
+    '401':
+      $ref: ../../components/error/unauthorized.yaml
+    '403':
+      $ref: ../../components/error/forbidden.yaml
+    '404':
+      $ref: ../../components/error/notFound.yaml
+    '500':
+      $ref: ../../components/error/internalServerError.yaml

@@ -1059,6 +1059,95 @@ paths:
                     type: string
         '401':
           $ref: '#/components/responses/unauthorized'
+  /inventory:
+    post:
+      summary: Add an inventory for the movie
+      operationId: addInventory
+      tags:
+        - inventory
+      requestBody:
+        description: Payload for the new inventory
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/newInventoryRequestBody'
+      responses:
+        '201':
+          description: Successfully added new inventory
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/newInventoryResponseBody'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /inventory/{id}:
+    put:
+      summary: Update inventory
+      operationId: updateInventory
+      tags:
+        - inventory
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Inventory Id
+          schema:
+            type: integer
+      requestBody:
+        description: Payload of the inventory to update
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/updateInventoryRequestBody'
+      responses:
+        '204':
+          description: Successfully updated inventory
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    delete:
+      summary: |
+        Delete the inventory.
+      operationId: deleteInventory
+      tags:
+        - inventory
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Inventory Id
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Successfully deleted the inventory
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
   /movie_languages:
     get:
       summary: Get all available movie languages
@@ -3235,6 +3324,121 @@ components:
                 type: string
         length:
           type: integer
+    newInventoryRequestBody:
+      type: object
+      properties:
+        movie_id:
+          type: integer
+          format: int64
+          description: Id of the existing movie
+        store_id:
+          type: integer
+          format: int64
+          description: Id of the existing store
+        stock_count:
+          type: integer
+          format: int32
+          description: The available stock count of the movie in the store
+    newInventoryResponseBody:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        stock:
+          type: integer
+          format: int32
+        movie:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+            title:
+              type: string
+            originalTitle:
+              type: string
+            overview:
+              type: string
+            runtime:
+              type: integer
+              format: int32
+            releaseDate:
+              type: string
+              format: date
+            genres:
+              type: array
+              items:
+                type: string
+            countriesOfOrigin:
+              type: array
+              items:
+                type: string
+            movieStatus:
+              type: string
+            popularity:
+              type: number
+              format: float
+            budget:
+              type: integer
+              format: int64
+            revenue:
+              type: integer
+              format: int64
+            ratingAverage:
+              type: number
+              format: float
+            ratingCount:
+              type: integer
+              format: int32
+            posterUrl:
+              type: string
+              format: uri
+            rentalRate:
+              type: number
+              format: float
+            language:
+              type: string
+        store:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int32
+            storeManagerId:
+              type: integer
+              format: int64
+            address:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  readOnly: true
+                addressLine:
+                  type: string
+                cityName:
+                  type: string
+                stateName:
+                  type: string
+                country:
+                  type: string
+                postalCode:
+                  type: string
+    updateInventoryRequestBody:
+      type: object
+      properties:
+        movie_id:
+          type: integer
+          format: int64
+          description: Id of the existing movie
+        store_id:
+          type: integer
+          format: int64
+          description: Id of the existing store
+        stock_count:
+          type: integer
+          format: int32
+          description: The available stock count of the movie in the store
     movieLanguagesResponseBody:
       type: object
       properties:

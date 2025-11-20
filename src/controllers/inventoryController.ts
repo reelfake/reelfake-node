@@ -53,7 +53,7 @@ export const addInventory = async (req: CustomRequest, res: Response) => {
   }
 
   if (multipleInventory.length === 1) {
-    throw new AppError('Inventory with given movie already exist in the given store', 400);
+    throw new AppError('Inventory for the movie already exist in the given store', 400);
   }
 
   const inventoryData = await sequelize.transaction(async (t) => {
@@ -108,7 +108,7 @@ export const addInventory = async (req: CustomRequest, res: Response) => {
   });
 
   const inventoryJson = inventoryData.toJSON();
-  res.json(inventoryJson);
+  res.status(201).json(inventoryJson);
 };
 
 export const deleteInventory = async (req: CustomRequest, res: Response) => {
