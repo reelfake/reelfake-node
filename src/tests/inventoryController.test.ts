@@ -135,7 +135,7 @@ describe('Inventory Controller', () => {
   };
 
   beforeAll(async () => {
-    const creds = await getMultipleStaffCredentials(10);
+    const creds = await getMultipleStaffCredentials(12);
     credentials.push(...creds);
     defaultOutOfStockData = await getMovieNotInStock();
     defaultStoreData = await getStoreData(defaultStoreId);
@@ -206,6 +206,139 @@ describe('Inventory Controller', () => {
           },
         },
       });
+    });
+
+    it('should add inventory for store which already has some movies stock', async () => {
+      const credential = credentials[credCounter++];
+      await login(credential.email, credential.password);
+
+      const movieData = await getMovieNotInStock();
+
+      const storeQueryResult = await execQuery(`
+          SELECT store_id AS "storeId" FROM inventory LIMIT 1;
+        `);
+
+      const storeId = storeQueryResult[0].storeId;
+      const storeData = await getStoreData(Number(storeId));
+
+      const newInventoryPayload = {
+        movie_id: movieData.id,
+        store_id: storeId,
+        stock_count: 6,
+      };
+
+      const response = await server.post('/api/inventory').set('Cookie', cookie).send(newInventoryPayload);
+      expect(response.status).toEqual(201);
+
+      const newInventoryId = response.body.id;
+      await execQuery(`DELETE FROM inventory WHERE id = ${newInventoryId}`);
+
+      expect(response.body).toEqual({
+        id: expect.any(Number),
+        stock: newInventoryPayload.stock_count,
+        movie: {
+          id: newInventoryPayload.movie_id,
+          title: movieData.title,
+          originalTitle: movieData.originalTitle,
+          overview: movieData.overview,
+          runtime: movieData.runtime,
+          releaseDate: movieData.releaseDate,
+          genres: movieData.genres,
+          countriesOfOrigin: movieData.countriesOfOrigin,
+          movieStatus: movieData.movieStatus,
+          popularity: movieData.popularity,
+          budget: movieData.budget,
+          revenue: movieData.revenue,
+          ratingAverage: movieData.ratingAverage,
+          ratingCount: movieData.ratingCount,
+          posterUrl: movieData.posterUrl,
+          rentalRate: movieData.rentalRate,
+          language: movieData.language,
+        },
+        store: {
+          id: newInventoryPayload.store_id,
+          storeManagerId: storeData.storeManagerId,
+          phoneNumber: storeData.phoneNumber,
+          address: {
+            id: storeData.address.id,
+            addressLine: storeData.address.addressLine,
+            cityName: storeData.address.cityName,
+            stateName: storeData.address.stateName,
+            country: storeData.address.country,
+            postalCode: storeData.address.postalCode,
+          },
+        },
+      });
+    });
+
+    it('should not add duplicate inventory to the same store', async () => {
+      const credential = credentials[credCounter++];
+      await login(credential.email, credential.password);
+
+      const movieData = await getMovieNotInStock();
+
+      const newInventoryPayload = {
+        movie_id: movieData.id,
+        store_id: 1,
+        stock_count: 6,
+      };
+
+      let response = await server.post('/api/inventory').set('Cookie', cookie).send(newInventoryPayload);
+      expect(response.status).toEqual(201);
+      const newInventoryId = response.body.id;
+
+      const duplicateInventoryPayload = {
+        movie_id: movieData.id,
+        store_id: 1,
+        stock_count: 33,
+      };
+
+      response = await server.post('/api/inventory').set('Cookie', cookie).send(duplicateInventoryPayload);
+      expect(response.status).toEqual(400);
+
+      await execQuery(`DELETE FROM inventory WHERE id = ${newInventoryId}`);
+
+      expect(response.body.message).toEqual('Inventory for the movie already exist in the given store');
+    });
+
+    it('should not add inventory for the movie that does not exist', async () => {
+      const credential = credentials[credCounter++];
+      await login(credential.email, credential.password);
+
+      const movieQueryResult = await execQuery(`
+          SELECT id FROM movie ORDER BY id DESC LIMIT 1
+        `);
+      const nonExistingMovieId = Number(movieQueryResult[0].id) + 1;
+
+      const newInventoryPayload = {
+        movie_id: nonExistingMovieId,
+        store_id: 1,
+        stock_count: 6,
+      };
+
+      let response = await server.post('/api/inventory').set('Cookie', cookie).send(newInventoryPayload);
+      expect(response.status).toEqual(404);
+      expect(response.body.message).toEqual('Movie not found');
+    });
+
+    it('should not add inventory for the store that does not exist', async () => {
+      const credential = credentials[credCounter++];
+      await login(credential.email, credential.password);
+
+      const storeQueryResult = await execQuery(`
+          SELECT id FROM store ORDER BY id DESC LIMIT 1
+        `);
+      const nonExistingStoreId = Number(storeQueryResult[0].id) + 1;
+
+      const newInventoryPayload = {
+        movie_id: 1,
+        store_id: nonExistingStoreId,
+        stock_count: 6,
+      };
+
+      let response = await server.post('/api/inventory').set('Cookie', cookie).send(newInventoryPayload);
+      expect(response.status).toEqual(404);
+      expect(response.body.message).toEqual('Store not found');
     });
   });
 
@@ -369,6 +502,48 @@ describe('Inventory Controller', () => {
         storeId: updateInventoryPayload.store_id,
         stockCount: updateInventoryPayload.stock_count,
       });
+    });
+
+    it('should not update the inventory with the movie that does not exist', async () => {
+      const credential = credentials[credCounter++];
+      await login(credential.email, credential.password);
+
+      const inventoryQueryResult = await execQuery(`
+          SELECT id FROM inventory LIMIT 1
+        `);
+
+      const inventoryId = inventoryQueryResult[0].id;
+      const movieQueryResult = await execQuery(`
+          SELECT id FROM movie ORDER BY id DESC LIMIT 1
+        `);
+      const nonExistingMovieId = Number(movieQueryResult[0].id) + 1;
+
+      const response = await server.put(`/api/inventory/${inventoryId}`).set('Cookie', cookie).send({
+        movie_id: nonExistingMovieId,
+      });
+      expect(response.status).toEqual(404);
+      expect(response.body.message).toEqual('Movie not found');
+    });
+
+    it('should not update the inventory for the store that does not exist', async () => {
+      const credential = credentials[credCounter++];
+      await login(credential.email, credential.password);
+
+      const inventoryQueryResult = await execQuery(`
+          SELECT id FROM inventory LIMIT 1
+        `);
+
+      const inventoryId = inventoryQueryResult[0].id;
+      const storeQueryResult = await execQuery(`
+          SELECT id FROM store ORDER BY id DESC LIMIT 1
+        `);
+      const nonExistingStoreId = Number(storeQueryResult[0].id) + 1;
+
+      const response = await server.put(`/api/inventory/${inventoryId}`).set('Cookie', cookie).send({
+        store_id: nonExistingStoreId,
+      });
+      expect(response.status).toEqual(404);
+      expect(response.body.message).toEqual('Store not found');
     });
   });
 

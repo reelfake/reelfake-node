@@ -6,13 +6,6 @@ import { ERROR_MESSAGES, movieModelAttributes } from '../constants';
 import { CustomRequest } from '../types';
 import sequelize from '../sequelize.config';
 
-const isMovieExist = async (id: number) => {
-  const storeInstance = await MovieModel.findByPk(id);
-  if (!storeInstance) {
-    throw new AppError(ERROR_MESSAGES.STORE_NOT_FOUND, 404);
-  }
-};
-
 export const addInventory = async (req: CustomRequest, res: Response) => {
   const { user } = req;
 
@@ -74,7 +67,6 @@ export const addInventory = async (req: CustomRequest, res: Response) => {
     );
 
     const newInventoryId = Number(newInventory.getDataValue('id'));
-    // const newInventoryId = 13192302;
     const newInventoryData = await InventoryModel.findByPk(newInventoryId, {
       attributes: ['id', 'stock'],
       include: [
