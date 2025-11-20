@@ -555,5 +555,3 @@ export const deleteMovie = async (req: CustomRequest, res: Response) => {
 
   res.status(204).send();
 };
-
-export const getOutOfStockMovies = async (req: CustomRequest, res: Response) => {};
