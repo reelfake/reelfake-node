@@ -666,7 +666,7 @@ describe('Movie Controller', () => {
           SELECT i.id AS "inventoryId", i.stock_count AS stock, 
           json_build_object(
             'id', s.id,
-            'managerId', s.store_manager_id,
+            'storeManagerId', s.store_manager_id,
             'phoneNumber', s.phone_number, 
             'addressLine', a.address_line, 
             'city', c.city_name, 

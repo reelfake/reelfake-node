@@ -21,6 +21,26 @@ class BaseModel extends Model {
 
     return Number(countResult.count);
   }
+
+  public static async isResourceExist(id: number) {
+    if (!this.sequelize) {
+      throw new AppError(`Unable to get the instance of sequelize from  model ${this.name}`, 500);
+    }
+
+    const tableName = this.getTableName();
+    const queryText = `SELECT id FROM ${tableName} WHERE id = ${id};`;
+    const queryResult = await this.sequelize.query<{ [key: string]: number }>(queryText, {
+      type: QueryTypes.SELECT,
+      plain: true,
+      raw: true,
+    });
+
+    if (!queryResult || !queryResult.id || isNaN(queryResult.id)) {
+      return false;
+    }
+
+    return true;
+  }
 }
 
 export default BaseModel;

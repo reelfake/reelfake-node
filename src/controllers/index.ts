@@ -57,3 +57,5 @@ export {
 } from './customerController';
 // Rental
 export { getRentals, getRentalById, getRentalsForStore } from './rentalController';
+// Inventory
+export { addInventory, updateInventory, deleteInventory } from './inventoryController';

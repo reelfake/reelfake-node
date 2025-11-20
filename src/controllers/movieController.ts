@@ -300,7 +300,7 @@ export const findInStores = async (req: Request, res: Response) => {
         as: 'store',
         attributes: [
           'id',
-          ['store_manager_id', 'managerId'],
+          ['store_manager_id', 'storeManagerId'],
           'phoneNumber',
           [literal(`"store->address"."address_line"`), 'addressLine'],
           [literal(`"store->address->city"."city_name"`), 'city'],
@@ -555,3 +555,5 @@ export const deleteMovie = async (req: CustomRequest, res: Response) => {
 
   res.status(204).send();
 };
+
+export const getOutOfStockMovies = async (req: CustomRequest, res: Response) => {};

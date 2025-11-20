@@ -3,6 +3,8 @@ export default {
     'You are not allowed to mutate the data on the read-only server. Run the app locally or any of your cloud provider. Please follow the readme for the steps on how to do this.',
   INVALID_AUTH_TOKEN: 'Invalid or expired token',
   RESOURCES_NOT_FOUND: 'Resources not found',
+  MOVIE_NOT_FOUND: 'Movie not found',
+  STORE_NOT_FOUND: 'Store not found',
   USER_NOT_FOUND: 'User not found',
   INTERNAL_SERVER_ERROR: 'Server encountered unexpected error',
   FORBIDDEN: 'You are not authorized to perform this operation',
@@ -35,4 +37,5 @@ export default {
   CUSTOMER_EXIST_WITH_EMAIL: 'Customer with the same email already exist',
   INCOMPLETE_ADDRESS: 'Incomplete address',
   NO_DATA_FOUND_WITH_QUERY: 'No data found with the given query',
+  STOCK_COUNT_MUST_BE_NUMBER: 'Stock count must be a whole number greater than zero',
 };

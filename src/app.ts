@@ -20,6 +20,7 @@ import {
   customerRoutes,
   authRoutes,
   rentalRoutes,
+  inventoryRoutes,
 } from './routes';
 import sequelize from './sequelize.config';
 
@@ -115,6 +116,9 @@ app.use('/api/customers', customerRoutes);
 
 // Rentals
 app.use('/api/rentals', rentalRoutes);
+
+// Inventory
+app.use('/api/inventory', inventoryRoutes);
 
 app.use('*', (req: Request, res: Response) => {
   res.status(404).json({

@@ -3717,7 +3717,7 @@ components:
                 properties:
                   id:
                     type: integer
-                  managerId:
+                  storeManagerId:
                     type: integer
                   phoneNumber:
                     type: string
