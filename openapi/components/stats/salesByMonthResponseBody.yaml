@@ -1,0 +1,19 @@
+type: object
+properties:
+  items:
+    type: array
+    items:
+      type: object
+      properties:
+        month:
+          type: string
+          description: The month of the year in the format Mon-YYYY (exmple Apr-2025)
+        totalSales:
+          type: integer
+          description: The total number sales during the month
+        revenue:
+          type: integer
+          description: The total revenue generated in the month
+  length:
+    type: integer
+    format: int32

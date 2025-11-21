@@ -1,7 +1,7 @@
 // Auth
 export { getUserProfile, login, logout } from './authController';
 // Stats
-export { getStatistics } from './statsController';
+export { getStatistics, getMostRentedMovies, getSalesByStore, getSalesByMonth, getSalesByCity } from './statsController';
 // Genres
 export { getGenres } from './genreController';
 // City

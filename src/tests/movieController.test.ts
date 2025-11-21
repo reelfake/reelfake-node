@@ -17,7 +17,7 @@ import {
   readCsv,
   deleteMoviesByTmdbId,
 } from './testUtil';
-import { CsvRow, ParsedCsvRow } from '../utils/upload';
+import { ParsedCsvRow } from '../utils/upload';
 import { MovieModel } from '../models';
 import { availableCountries, availableGenres, availableMovieLanguages } from '../constants';
 import { MovieActorPayload } from '../types';

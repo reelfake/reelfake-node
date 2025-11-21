@@ -1,0 +1,19 @@
+type: object
+properties:
+  items:
+    type: array
+    items:
+      type: object
+      properties:
+        movieId:
+          type: integer
+          description: Movie id
+        movieTitle:
+          type: string
+          description: Movie title
+        totalRentals:
+          type: integer
+          description: The total number of dvds sold for the movie
+  length:
+    type: integer
+    format: int32

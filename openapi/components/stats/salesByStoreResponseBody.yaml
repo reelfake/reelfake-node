@@ -1,0 +1,25 @@
+type: object
+properties:
+  items:
+    type: array
+    items:
+      type: object
+      properties:
+        storeId:
+          type: integer
+          description: Store id
+        firstName:
+          type: string
+          descritpion: First name of the store manager
+        lastName:
+          type: string
+          descritpion: Last name of the store manager
+        email:
+          type: string
+          descritpion: Email of the store manager
+        revenue:
+          type: integer
+          description: The total revenue generated from the store
+  length:
+    type: integer
+    format: int32

@@ -2122,6 +2122,138 @@ paths:
           $ref: '#/components/responses/notFound'
         '500':
           $ref: '#/components/responses/internalServerError'
+  /stats/most_rented_movies:
+    get:
+      summary: Get the statistics for the most rented movies
+      operationId: getMostRentedMovies
+      security:
+        - cookieAuth: []
+      tags:
+        - stats
+      parameters:
+        - in: query
+          name: limit
+          required: true
+          description: |
+            Apply the limit to the number rows fetched from the database. This will limit the number of 
+            items returned by the api.
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Successfully returned most rented movies
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/mostRentedMoviesResponseBody'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /stats/sales_by_store:
+    get:
+      summary: Get the statistics for the top performing store
+      operationId: getSalesByStore
+      security:
+        - cookieAuth: []
+      tags:
+        - stats
+      parameters:
+        - in: query
+          name: limit
+          required: true
+          description: |
+            Apply the limit to the number rows fetched from the database. This will limit the number of 
+            items returned by the api.
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Successfully returned statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/mostRentedMoviesResponseBody'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /stats/sales_by_month:
+    get:
+      summary: Get the statistics for the sales happened on a montly basis
+      operationId: getSalesByMonth
+      security:
+        - cookieAuth: []
+      tags:
+        - stats
+      parameters:
+        - in: query
+          name: limit
+          required: true
+          description: |
+            Apply the limit to the number rows fetched from the database. This will limit the number of 
+            items returned by the api.
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Successfully returned statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/salesByMonthResponseBody'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /stats/sales_by_city:
+    get:
+      summary: Get the statistics for the top performing city (from sales perspective)
+      operationId: getSalesByCity
+      security:
+        - cookieAuth: []
+      tags:
+        - stats
+      parameters:
+        - in: query
+          name: limit
+          required: true
+          description: |
+            Apply the limit to the number rows fetched from the database. This will limit the number of 
+            items returned by the api.
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Successfully returned statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/salesByCityResponseBody'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '500':
+          $ref: '#/components/responses/internalServerError'
   /stores:
     get:
       summary: Get list of stores
@@ -4261,6 +4393,70 @@ components:
               type: string
             postalCode:
               type: string
+    mostRentedMoviesResponseBody:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              movieId:
+                type: integer
+                description: Movie id
+              movieTitle:
+                type: string
+                description: Movie title
+              totalRentals:
+                type: integer
+                description: The total number of dvds sold for the movie
+        length:
+          type: integer
+          format: int32
+    salesByMonthResponseBody:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              month:
+                type: string
+                description: The month of the year in the format Mon-YYYY (exmple Apr-2025)
+              totalSales:
+                type: integer
+                description: The total number sales during the month
+              revenue:
+                type: integer
+                description: The total revenue generated in the month
+        length:
+          type: integer
+          format: int32
+    salesByCityResponseBody:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                format: int32
+                description: City id
+              cityName:
+                type: string
+                description: City name
+              stateName:
+                type: string
+                description: State name
+              totalSales:
+                type: integer
+                description: The total number sales from the city
+        length:
+          type: integer
+          format: int32
     storesResponseBody:
       type: object
       properties:

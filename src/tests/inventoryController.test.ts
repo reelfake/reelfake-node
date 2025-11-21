@@ -1,7 +1,6 @@
 import supertest from 'supertest';
 
 import app from '../app';
-import * as dbQuery from '../utils/dbQuery';
 import { execQuery, getMultipleStaffCredentials } from './testUtil';
 
 type MovieQueryItem = {

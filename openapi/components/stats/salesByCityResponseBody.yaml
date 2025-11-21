@@ -1,0 +1,23 @@
+type: object
+properties:
+  items:
+    type: array
+    items:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          description: City id
+        cityName:
+          type: string
+          description: City name
+        stateName:
+          type: string
+          description: State name
+        totalSales:
+          type: integer
+          description: The total number sales from the city
+  length:
+    type: integer
+    format: int32

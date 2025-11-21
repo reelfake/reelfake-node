@@ -1,0 +1,32 @@
+get:
+  summary: Get the statistics for the top performing store
+  operationId: getSalesByStore
+  security:
+    - cookieAuth: []
+  tags:
+    - stats
+  parameters:
+    - in: query
+      name: limit
+      required: true
+      description: |
+        Apply the limit to the number rows fetched from the database. This will limit the number of 
+        items returned by the api.
+      schema:
+        type: integer
+        format: int32
+  responses:
+    '200':
+      description: Successfully returned statistics
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/stats/mostRentedMoviesResponseBody.yaml
+    '400':
+      $ref: ../../components/error/badRequest.yaml
+    '401':
+      $ref: ../../components/error/unauthorized.yaml
+    '403':
+      $ref: ../../components/error/forbidden.yaml
+    '500':
+      $ref: ../../components/error/internalServerError.yaml

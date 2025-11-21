@@ -38,4 +38,5 @@ export default {
   INCOMPLETE_ADDRESS: 'Incomplete address',
   NO_DATA_FOUND_WITH_QUERY: 'No data found with the given query',
   STOCK_COUNT_MUST_BE_NUMBER: 'Stock count must be a whole number greater than zero',
+  STATS_LIMIT_EXCEEDED: 'The maximum allowed limit is {{STATS_LIMIT}}',
 };

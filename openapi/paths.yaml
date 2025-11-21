@@ -57,7 +57,7 @@
 # ##################################
 # INVENTORY API
 /inventory:
-  $ref: apis/inventory/inventory.yaml
+  $ref: apis/inventory/addInventory.yaml
 /inventory/{id}:
   $ref: apis/inventory/inventoryById.yaml
 # ##################################
@@ -98,6 +98,16 @@
   $ref: apis/staff/storeManagersSummary.yaml
 /staff/{id}:
   $ref: apis/staff/staffById.yaml
+# ##################################
+# STATS API
+/stats/most_rented_movies:
+  $ref: apis/stats/mostRentedMovies.yaml
+/stats/sales_by_store:
+  $ref: apis/stats/salesByStore.yaml
+/stats/sales_by_month:
+  $ref: apis/stats/salesByMonth.yaml
+/stats/sales_by_city:
+  $ref: apis/stats/salesByCity.yaml
 # ##################################
 # STORES API
 /stores:
