@@ -1,6 +1,6 @@
 get:
   summary: Get staff employed in a store
-  description: This route is accessible to customers, staff and store managers.
+  description: This route is accessible to staff and store managers.
   operationId: getStaffInStore
   tags:
     - store

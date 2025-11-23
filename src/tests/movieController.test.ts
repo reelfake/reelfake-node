@@ -1400,11 +1400,13 @@ describe('Movie Controller', () => {
           };
         }
       );
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
 
       const file = path.join(__dirname, 'csv', 'movies_testdata.csv');
       await cleanUpMovies(file);
 
-      const response = await server.post('/api/movies/upload').attach('file', file);
+      const response = await server.post('/api/movies/upload').attach('file', file).set('Cookie', cookie);
 
       const rowToIdMap = response.body.successRows as { rowNumber: number; id: number }[];
       expect(response.body.failedRows.length).toEqual(0);
@@ -1463,13 +1465,15 @@ describe('Movie Controller', () => {
           };
         }
       );
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
 
       const file = path.join(__dirname, 'csv', 'movies_testdata_errors.csv');
       await cleanUpMovies(file);
 
       const invalidRowsIndex = [2, 3, 4, 5];
 
-      const response = await server.post('/api/movies/upload').attach('file', file);
+      const response = await server.post('/api/movies/upload').attach('file', file).set('Cookie', cookie);
       const successRows = response.body.successRows as { rowNumber: number; id: number }[];
       const failedRows = response.body.failedRows as { rowNumber: number; id: number }[];
 
@@ -1548,11 +1552,13 @@ describe('Movie Controller', () => {
           };
         }
       );
+      const credential = await getStoreManagerCredential();
+      await login(credential.email, credential.password);
 
       const file = path.join(__dirname, 'csv', 'movies_testdata_errors.csv');
       await cleanUpMovies(file);
 
-      const response = await server.post('/api/movies/upload?stop_on_error').attach('file', file);
+      const response = await server.post('/api/movies/upload?stop_on_error').attach('file', file).set('Cookie', cookie);
 
       expect(response.status).toEqual(400);
       expect(response.body).toEqual([
