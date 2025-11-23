@@ -30,6 +30,7 @@ paths:
     get:
       summary: Get the actor list with pagination support
       operationId: getActors
+      security: []
       tags:
         - actor
       parameters:
@@ -120,6 +121,7 @@ paths:
     get:
       summary: Get actor detail using the id
       operationId: getActorById
+      security: []
       tags:
         - actor
       parameters:
@@ -156,8 +158,6 @@ paths:
     post:
       summary: Add the actor to the movie
       operationId: addToMovie
-      security:
-        - cookieAuth: []
       tags:
         - actor
       parameters:
@@ -194,8 +194,6 @@ paths:
     put:
       summary: Update actor
       operationId: updateActor
-      security:
-        - cookieAuth: []
       tags:
         - actor
       parameters:
@@ -230,8 +228,6 @@ paths:
         Delete the actor.
         Note: This operation will delete movie actors for the movie as well.
       operationId: deleteActor
-      security:
-        - cookieAuth: []
       tags:
         - actor
       parameters:
@@ -258,6 +254,7 @@ paths:
     get:
       summary: Get the list of available addresses
       operationId: getAddresses
+      security: []
       tags:
         - address
       parameters:
@@ -291,6 +288,7 @@ paths:
     get:
       summary: Get the list of available addresses in a city
       operationId: getAddressesInCity
+      security: []
       tags:
         - address
       parameters:
@@ -321,6 +319,7 @@ paths:
     get:
       summary: Get the list of available addresses in a state
       operationId: getAddressesInState
+      security: []
       tags:
         - address
       parameters:
@@ -351,9 +350,9 @@ paths:
     post:
       summary: Login user (token valid for 1 hour)
       operationId: login
+      security: []
       tags:
         - authentication
-      security: []
       requestBody:
         description: Provide the user email and password for login
         required: true
@@ -389,7 +388,6 @@ paths:
       operationId: logout
       tags:
         - authentication
-      security: []
       responses:
         '200':
           description: User logged out successfully
@@ -410,8 +408,6 @@ paths:
     get:
       summary: Get user detail for the logged in user
       operationId: getUserProfile
-      security:
-        - cookieAuth: []
       tags:
         - authentication
       responses:
@@ -431,6 +427,7 @@ paths:
     get:
       summary: Get the list of the cities
       operationId: getCities
+      security: []
       tags:
         - city
       parameters:
@@ -462,6 +459,7 @@ paths:
     get:
       summary: Get all the countries
       operationId: getCountries
+      security: []
       tags:
         - country
       responses:
@@ -486,6 +484,7 @@ paths:
     put:
       summary: Change the customer password which is forgotten
       operationId: forgotCustomerPassword
+      security: []
       tags:
         - customer
       parameters:
@@ -521,8 +520,6 @@ paths:
     put:
       summary: Change the customer password
       operationId: changeCustomerPassword
-      security:
-        - cookieAuth: []
       tags:
         - customer
       parameters:
@@ -558,8 +555,6 @@ paths:
     get:
       summary: Get the customer list with pagination support
       operationId: getCustomers
-      security:
-        - cookieAuth: []
       tags:
         - customer
       parameters:
@@ -686,8 +681,7 @@ paths:
     get:
       summary: Get the customer list with pagination support
       operationId: getCustomersSummary
-      security:
-        - cookieAuth: []
+      security: []
       tags:
         - customer
       parameters:
@@ -843,8 +837,6 @@ paths:
     get:
       summary: Get rentals of the logged in customer
       operationId: getCustomerRentals
-      security:
-        - cookieAuth: []
       tags:
         - customer
       responses:
@@ -868,8 +860,6 @@ paths:
     get:
       summary: Get customer detail using the id
       operationId: getCustomerById
-      security:
-        - cookieAuth: []
       tags:
         - customer
       parameters:
@@ -953,8 +943,6 @@ paths:
     patch:
       summary: Activate customer
       operationId: activateCustomer
-      security:
-        - cookieAuth: []
       tags:
         - customer
       parameters:
@@ -1039,6 +1027,7 @@ paths:
     get:
       summary: Get all available genres
       operationId: getGenres
+      security: []
       tags:
         - genre
       responses:
@@ -1152,6 +1141,7 @@ paths:
     get:
       summary: Get all available movie languages
       operationId: getMovieLanguages
+      security: []
       tags:
         - movie_language
       responses:
@@ -1183,6 +1173,7 @@ paths:
     get:
       summary: Get the list of movies with the pagination support
       operationId: getMovies
+      security: []
       tags:
         - movie
       parameters:
@@ -1293,6 +1284,7 @@ paths:
     get:
       summary: Get movie detail using the id
       operationId: getMovieById
+      security: []
       tags:
         - movie
       parameters:
@@ -1422,6 +1414,7 @@ paths:
     get:
       summary: Get stock count of the movie in all the stores
       operationId: findInStores
+      security: []
       tags:
         - movie
       parameters:
@@ -1660,6 +1653,7 @@ paths:
     put:
       summary: Change the staff password which is forgotten
       operationId: forgotStaffPassword
+      security: []
       tags:
         - staff
       parameters:
@@ -1695,8 +1689,6 @@ paths:
     put:
       summary: Change the staff password
       operationId: changeStaffPassword
-      security:
-        - cookieAuth: []
       tags:
         - staff
       parameters:
@@ -1732,8 +1724,6 @@ paths:
     get:
       summary: Get list of all staff (optionally filter by residential state and city)
       operationId: getStaff
-      security:
-        - cookieAuth: []
       tags:
         - staff
       parameters:
@@ -1851,8 +1841,6 @@ paths:
     post:
       summary: Add staff member
       operationId: createStaff
-      security:
-        - cookieAuth: []
       tags:
         - staff
       requestBody:
@@ -1881,6 +1869,7 @@ paths:
     get:
       summary: Get list of all staff (optionally filter by residential state and city)
       operationId: getStaffSummary
+      security: []
       tags:
         - staff
       parameters:
@@ -1999,8 +1988,6 @@ paths:
     get:
       summary: Get list of store managers
       operationId: getStoreManagers
-      security:
-        - cookieAuth: []
       tags:
         - staff
       responses:
@@ -2022,6 +2009,7 @@ paths:
     get:
       summary: Get list of store managers
       operationId: getStoreManagersSummary
+      security: []
       tags:
         - staff
       responses:
@@ -2126,8 +2114,6 @@ paths:
     get:
       summary: Get the statistics for the most rented movies
       operationId: getMostRentedMovies
-      security:
-        - cookieAuth: []
       tags:
         - stats
       parameters:
@@ -2159,8 +2145,6 @@ paths:
     get:
       summary: Get the statistics for the top performing store
       operationId: getSalesByStore
-      security:
-        - cookieAuth: []
       tags:
         - stats
       parameters:
@@ -2192,8 +2176,6 @@ paths:
     get:
       summary: Get the statistics for the sales happened on a montly basis
       operationId: getSalesByMonth
-      security:
-        - cookieAuth: []
       tags:
         - stats
       parameters:
@@ -2225,8 +2207,6 @@ paths:
     get:
       summary: Get the statistics for the top performing city (from sales perspective)
       operationId: getSalesByCity
-      security:
-        - cookieAuth: []
       tags:
         - stats
       parameters:
@@ -2258,6 +2238,7 @@ paths:
     get:
       summary: Get list of stores
       operationId: getStores
+      security: []
       tags:
         - store
       responses:
@@ -2302,6 +2283,7 @@ paths:
     get:
       summary: Get store detail using the id
       operationId: getStoreById
+      security: []
       tags:
         - store
       parameters:
@@ -2403,6 +2385,7 @@ paths:
     get:
       summary: Get the number of in-stock movies in a given store
       operationId: getStockCount
+      security: []
       tags:
         - store
       parameters:
@@ -2434,6 +2417,7 @@ paths:
     get:
       summary: Get movies in a store
       operationId: getMoviesInStore
+      security: []
       tags:
         - store
       parameters:

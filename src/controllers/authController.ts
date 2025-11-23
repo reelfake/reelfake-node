@@ -91,13 +91,15 @@ export const login = async (req: Request, res: Response) => {
   }
 
   const authToken = generateAuthToken(user.id, user.email, user.role);
+  const isProd = process.env.NODE_ENV === 'production';
 
   res
     .status(201)
     .cookie('auth_token', authToken, {
       httpOnly: true,
       secure: true,
-      sameSite: 'strict',
+      sameSite: isProd ? 'lax' : 'none',
+      path: '/',
       maxAge: TOKEN_EXPIRING_IN_MS,
     })
     .json({ message: 'Login successful' });

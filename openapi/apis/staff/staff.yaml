@@ -1,8 +1,6 @@
 get:
   summary: Get list of all staff (optionally filter by residential state and city)
   operationId: getStaff
-  security:
-    - cookieAuth: []
   tags:
     - staff
   parameters:
@@ -120,8 +118,6 @@ get:
 post:
   summary: Add staff member
   operationId: createStaff
-  security:
-    - cookieAuth: []
   tags:
     - staff
   requestBody:

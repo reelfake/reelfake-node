@@ -1,6 +1,7 @@
 get:
   summary: Get the list of movies with the pagination support
   operationId: getMovies
+  security: []
   tags:
     - movie
   parameters:

@@ -1,8 +1,6 @@
 get:
   summary: Get customer detail using the id
   operationId: getCustomerById
-  security:
-    - cookieAuth: []
   tags:
     - customer
   parameters:

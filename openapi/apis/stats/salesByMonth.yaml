@@ -1,8 +1,6 @@
 get:
   summary: Get the statistics for the sales happened on a montly basis
   operationId: getSalesByMonth
-  security:
-    - cookieAuth: []
   tags:
     - stats
   parameters:

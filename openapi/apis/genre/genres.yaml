@@ -1,6 +1,7 @@
 get:
   summary: Get all available genres
   operationId: getGenres
+  security: []
   tags:
     - genre
   responses:

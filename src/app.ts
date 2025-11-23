@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import express from 'express';
+import { URL } from 'url';
 import compression from 'compression';
 import path from 'path';
 import cors from 'cors';
@@ -29,7 +30,30 @@ import sequelize from './sequelize.config';
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      const url = new URL(origin);
+      const { protocol, hostname, port } = url;
+
+      if (!['http:', 'https:'].includes(protocol)) {
+        callback(new Error(`Unknown protocol - ${protocol}`));
+        return;
+      }
+
+      if (['localhost', '127.0.0.1'].includes(hostname)) {
+        callback(null, true);
+        return;
+      }
+    },
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 app.use(cookieParser());

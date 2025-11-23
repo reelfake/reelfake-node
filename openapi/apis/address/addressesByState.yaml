@@ -1,6 +1,7 @@
 get:
   summary: Get the list of available addresses in a state
   operationId: getAddressesInState
+  security: []
   tags:
     - address
   parameters:

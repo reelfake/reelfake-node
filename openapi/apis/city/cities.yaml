@@ -1,6 +1,7 @@
 get:
   summary: Get the list of the cities
   operationId: getCities
+  security: []
   tags:
     - city
   parameters:

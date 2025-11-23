@@ -1,8 +1,6 @@
 patch:
   summary: Activate customer
   operationId: activateCustomer
-  security:
-    - cookieAuth: []
   tags:
     - customer
   parameters:

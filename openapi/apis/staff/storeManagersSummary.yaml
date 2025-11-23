@@ -1,6 +1,7 @@
 get:
   summary: Get list of store managers
   operationId: getStoreManagersSummary
+  security: []
   tags:
     - staff
   responses:

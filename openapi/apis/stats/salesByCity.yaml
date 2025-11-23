@@ -1,8 +1,6 @@
 get:
   summary: Get the statistics for the top performing city (from sales perspective)
   operationId: getSalesByCity
-  security:
-    - cookieAuth: []
   tags:
     - stats
   parameters:

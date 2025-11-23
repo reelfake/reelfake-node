@@ -1,6 +1,7 @@
 get:
   summary: Get list of all staff (optionally filter by residential state and city)
   operationId: getStaffSummary
+  security: []
   tags:
     - staff
   parameters:

@@ -1,8 +1,6 @@
 get:
   summary: Get the statistics for the most rented movies
   operationId: getMostRentedMovies
-  security:
-    - cookieAuth: []
   tags:
     - stats
   parameters:

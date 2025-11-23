@@ -22,7 +22,7 @@ router.get('/:id/movies', validateMoviesRouteQuery, routeFnWrapper(getMoviesInSt
 router.get(
   '/:id/staff',
   validateAuthToken,
-  validateUserRole(USER_ROLES.STAFF, USER_ROLES.STORE_MANAGER),
+  validateUserRole(USER_ROLES.CUSTOMER, USER_ROLES.STAFF, USER_ROLES.STORE_MANAGER),
   routeFnWrapper(getStaffInStore)
 );
 router.post('/', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), routeFnWrapper(createStore));

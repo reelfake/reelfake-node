@@ -3,7 +3,6 @@ get:
   operationId: logout
   tags:
     - authentication
-  security: []
   responses:
     '200':
       description: User logged out successfully

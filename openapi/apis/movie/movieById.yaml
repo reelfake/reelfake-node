@@ -1,6 +1,7 @@
 get:
   summary: Get movie detail using the id
   operationId: getMovieById
+  security: []
   tags:
     - movie
   parameters:

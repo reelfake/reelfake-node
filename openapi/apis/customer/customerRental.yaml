@@ -1,8 +1,6 @@
 get:
   summary: Get rentals of the logged in customer
   operationId: getCustomerRentals
-  security:
-    - cookieAuth: []
   tags:
     - customer
   responses:

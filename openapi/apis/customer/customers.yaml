@@ -1,8 +1,6 @@
 get:
   summary: Get the customer list with pagination support
   operationId: getCustomers
-  security:
-    - cookieAuth: []
   tags:
     - customer
   parameters:

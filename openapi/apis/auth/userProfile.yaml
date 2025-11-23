@@ -1,8 +1,6 @@
 get:
   summary: Get user detail for the logged in user
   operationId: getUserProfile
-  security:
-    - cookieAuth: []
   tags:
     - authentication
   responses:

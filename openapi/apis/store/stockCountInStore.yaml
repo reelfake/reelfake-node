@@ -1,6 +1,7 @@
 get:
   summary: Get the number of in-stock movies in a given store
   operationId: getStockCount
+  security: []
   tags:
     - store
   parameters:

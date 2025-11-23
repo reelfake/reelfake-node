@@ -1,9 +1,9 @@
 post:
   summary: Login user (token valid for 1 hour)
   operationId: login
+  security: []
   tags:
     - authentication
-  security: []
   requestBody:
     description: Provide the user email and password for login
     required: true

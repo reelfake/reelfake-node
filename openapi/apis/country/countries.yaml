@@ -1,6 +1,7 @@
 get:
   summary: Get all the countries
   operationId: getCountries
+  security: []
   tags:
     - country
   responses:

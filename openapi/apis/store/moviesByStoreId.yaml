@@ -1,6 +1,7 @@
 get:
   summary: Get movies in a store
   operationId: getMoviesInStore
+  security: []
   tags:
     - store
   parameters:

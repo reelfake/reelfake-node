@@ -1,6 +1,7 @@
 get:
   summary: Get store detail using the id
   operationId: getStoreById
+  security: []
   tags:
     - store
   parameters:

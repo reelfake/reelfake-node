@@ -1,6 +1,7 @@
 get:
   summary: Get the actor list with pagination support
   operationId: getActors
+  security: []
   tags:
     - actor
   parameters:

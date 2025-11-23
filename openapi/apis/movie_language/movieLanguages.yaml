@@ -1,6 +1,7 @@
 get:
   summary: Get all available movie languages
   operationId: getMovieLanguages
+  security: []
   tags:
     - movie_language
   responses:
