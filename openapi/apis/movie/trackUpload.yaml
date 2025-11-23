@@ -1,5 +1,6 @@
 get:
   summary: Track the bulk upload of the movies from the csv file
+  description: This route is accessible only to store managers.
   operationId: trackUpload
   tags:
     - movie

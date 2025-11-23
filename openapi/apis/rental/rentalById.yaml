@@ -1,5 +1,8 @@
 get:
   summary: Get rental detail by id
+  description: |
+    This route is accessible to customers, staff and store managers.
+    A customer can get only her or his rental detail.
   operationId: getRentalById
   tags:
     - rental

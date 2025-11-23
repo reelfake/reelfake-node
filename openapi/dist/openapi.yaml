@@ -94,6 +94,7 @@ paths:
           $ref: '#/components/responses/internalServerError'
     post:
       summary: Add new actor
+      description: This route is accessible only to store managers
       operationId: addActor
       tags:
         - actor
@@ -157,6 +158,7 @@ paths:
           $ref: '#/components/responses/internalServerError'
     post:
       summary: Add the actor to the movie
+      description: This route is accessible only to store managers
       operationId: addToMovie
       tags:
         - actor
@@ -193,6 +195,7 @@ paths:
           $ref: '#/components/responses/internalServerError'
     put:
       summary: Update actor
+      description: This route is accessible only to store managers
       operationId: updateActor
       tags:
         - actor
@@ -227,6 +230,7 @@ paths:
       summary: |
         Delete the actor.
         Note: This operation will delete movie actors for the movie as well.
+      description: This route is accessible only to store managers
       operationId: deleteActor
       tags:
         - actor
@@ -554,6 +558,7 @@ paths:
   /customers:
     get:
       summary: Get the customer list with pagination support
+      description: This route is accessible only to staff and store managers.
       operationId: getCustomers
       tags:
         - customer
@@ -836,6 +841,9 @@ paths:
   /customers/my_rentals:
     get:
       summary: Get rentals of the logged in customer
+      description: |
+        This route is accessible only to customer.
+        This route returns the rentals only for the logged in customer.
       operationId: getCustomerRentals
       tags:
         - customer
@@ -859,6 +867,9 @@ paths:
   /customers/{id}:
     get:
       summary: Get customer detail using the id
+      description: |
+        This route is accessible to customer, staff and store manager.
+        403 is returned if a customer is trying to access other customer data.
       operationId: getCustomerById
       tags:
         - customer
@@ -884,6 +895,9 @@ paths:
           $ref: '#/components/responses/internalServerError'
     put:
       summary: Update customer
+      description: |
+        This route is accessible to customer and store manager.
+        403 is returned if a customer is trying to update other customer data.
       operationId: updateCustomer
       tags:
         - customer
@@ -913,9 +927,8 @@ paths:
         '500':
           $ref: '#/components/responses/internalServerError'
     delete:
-      summary: |
-        Delete the customer.
-        Note: It is not allowed to delete a customer which is in use by any user
+      summary: Delete the customer
+      description: This route is accessible only to store manager.
       operationId: deleteCustomer
       tags:
         - customer
@@ -942,6 +955,7 @@ paths:
   /customers/{id}/activate:
     patch:
       summary: Activate customer
+      description: This route is accessible only to store managers
       operationId: activateCustomer
       tags:
         - customer
@@ -968,6 +982,7 @@ paths:
   /customers/{id}/deactivate:
     patch:
       summary: Deactivate customer
+      description: This route is accessible only to store managers
       operationId: deactivateCustomer
       tags:
         - customer
@@ -994,6 +1009,9 @@ paths:
   /customers/{id}/preferred_store/{store_id}:
     patch:
       summary: Set preferred store for the customer
+      description: |
+        This route is accessible only to customer.
+        A customer is not allowed to update preferred store for other customer.
       operationId: setPreferredStore
       tags:
         - customer
@@ -1001,7 +1019,7 @@ paths:
         - in: path
           name: id
           required: true
-          description: The id of the customer
+          description: Customer id
           schema:
             type: integer
         - in: path
@@ -1051,6 +1069,7 @@ paths:
   /inventory:
     post:
       summary: Add an inventory for the movie
+      description: This route is accessible only to staff and store managers.
       operationId: addInventory
       tags:
         - inventory
@@ -1081,6 +1100,7 @@ paths:
   /inventory/{id}:
     put:
       summary: Update inventory
+      description: This route is accessible only to staff and store managers.
       operationId: updateInventory
       tags:
         - inventory
@@ -1112,8 +1132,8 @@ paths:
         '500':
           $ref: '#/components/responses/internalServerError'
     delete:
-      summary: |
-        Delete the inventory.
+      summary: Delete the inventory.
+      description: This route is accessible only to staff and store managers.
       operationId: deleteInventory
       tags:
         - inventory
@@ -1253,6 +1273,7 @@ paths:
           $ref: '#/components/responses/internalServerError'
     post:
       summary: Add new movie (optionally with the actors)
+      description: This route is accessible only to store managers.
       operationId: addMovie
       tags:
         - movie
@@ -1320,6 +1341,7 @@ paths:
           $ref: '#/components/responses/internalServerError'
     put:
       summary: Update movie
+      description: This route is accessible only to store managers.
       operationId: updateMovie
       tags:
         - movie
@@ -1352,6 +1374,7 @@ paths:
       summary: |
         Delete the movie.
         Note: This operation will delete movie actors and inventory for the movie as well.
+      description: This route is accessible only to store managers.
       operationId: deleteMovie
       tags:
         - movie
@@ -1378,6 +1401,7 @@ paths:
   /movies/{id}/add_actors:
     post:
       summary: Add actors to movie
+      description: This route is accessible only to store managers.
       operationId: addActors
       tags:
         - movie
@@ -1440,6 +1464,7 @@ paths:
   /movies/upload/validate:
     post:
       summary: Validate the csv file to be upload
+      description: This route is accessible only to store managers.
       operationId: validateUpload
       tags:
         - movie
@@ -1501,6 +1526,7 @@ paths:
   /movies/upload/track_validation:
     get:
       summary: Track the validation for each row of the csv
+      description: This route is accessible only to store managers.
       operationId: trackUploadValidation
       tags:
         - movie
@@ -1540,6 +1566,7 @@ paths:
   /movies/upload:
     post:
       summary: Bulk upload the movies from data in the csv file
+      description: This route is accessible only to store managers.
       operationId: uploadMovies
       tags:
         - movie
@@ -1606,6 +1633,7 @@ paths:
   /movies/upload/track:
     get:
       summary: Track the bulk upload of the movies from the csv file
+      description: This route is accessible only to store managers.
       operationId: trackUpload
       tags:
         - movie
@@ -1688,6 +1716,7 @@ paths:
   /staff/{id}/change_password:
     put:
       summary: Change the staff password
+      description: This route is accessible only to staff and store managers.
       operationId: changeStaffPassword
       tags:
         - staff
@@ -1723,6 +1752,7 @@ paths:
   /staff:
     get:
       summary: Get list of all staff (optionally filter by residential state and city)
+      description: This route is accessible only to staff and store managers.
       operationId: getStaff
       tags:
         - staff
@@ -1840,6 +1870,7 @@ paths:
           $ref: '#/components/responses/internalServerError'
     post:
       summary: Add staff member
+      description: This route is accessible only to store managers.
       operationId: createStaff
       tags:
         - staff
@@ -1987,6 +2018,7 @@ paths:
   /staff/managers:
     get:
       summary: Get list of store managers
+      description: This route is accessible only to staff and store managers.
       operationId: getStoreManagers
       tags:
         - staff
@@ -2030,6 +2062,7 @@ paths:
   /staff/{id}:
     get:
       summary: Get staff detail
+      description: This route is accessible only to staff and store managers.
       operationId: getStaffById
       tags:
         - staff
@@ -2057,6 +2090,7 @@ paths:
           $ref: '#/components/responses/internalServerError'
     put:
       summary: Update staff
+      description: This route is accessible only to store managers.
       operationId: updateStaff
       tags:
         - staff
@@ -2087,6 +2121,7 @@ paths:
           $ref: '#/components/responses/internalServerError'
     delete:
       summary: Delete staff
+      description: This route is accessible only to store managers.
       operationId: deleteStaff
       tags:
         - staff
@@ -2113,6 +2148,7 @@ paths:
   /stats/most_rented_movies:
     get:
       summary: Get the statistics for the most rented movies
+      description: This route is accessible only to staff and store managers.
       operationId: getMostRentedMovies
       tags:
         - stats
@@ -2144,6 +2180,7 @@ paths:
   /stats/sales_by_store:
     get:
       summary: Get the statistics for the top performing store
+      description: This route is accessible only to staff and store managers.
       operationId: getSalesByStore
       tags:
         - stats
@@ -2175,6 +2212,7 @@ paths:
   /stats/sales_by_month:
     get:
       summary: Get the statistics for the sales happened on a montly basis
+      description: This route is accessible only to staff and store managers.
       operationId: getSalesByMonth
       tags:
         - stats
@@ -2206,6 +2244,7 @@ paths:
   /stats/sales_by_city:
     get:
       summary: Get the statistics for the top performing city (from sales perspective)
+      description: This route is accessible only to staff and store managers.
       operationId: getSalesByCity
       tags:
         - stats
@@ -2254,6 +2293,7 @@ paths:
           $ref: '#/components/responses/internalServerError'
     post:
       summary: Create store
+      description: This route is accessible only to store managers.
       operationId: createStore
       tags:
         - store
@@ -2319,6 +2359,7 @@ paths:
           $ref: '#/components/responses/internalServerError'
     put:
       summary: Update store
+      description: This route is accessible only to store managers.
       operationId: updateStore
       tags:
         - store
@@ -2349,6 +2390,7 @@ paths:
           $ref: '#/components/responses/internalServerError'
     delete:
       summary: Delete the store
+      description: This route is accessible only to store managers.
       operationId: deleteStore
       tags:
         - store
@@ -2453,6 +2495,7 @@ paths:
   /stores/{id}/staff:
     get:
       summary: Get staff employed in a store
+      description: This route is accessible to customers, staff and store managers.
       operationId: getStaffInStore
       tags:
         - store
@@ -2479,6 +2522,10 @@ paths:
   /rentals:
     get:
       summary: Get the list of rentals for the logged in user
+      description: |
+        This route is accessible to customers, staff and store managers.
+        A logged in customer can get only his or her rentals.
+        A logged in staff or store manager can get rentals processed by him or her.
       operationId: getRentals
       tags:
         - rental
@@ -2509,6 +2556,7 @@ paths:
   /rentals/my_store:
     get:
       summary: Get the list of rentals for the store
+      description: This route is accessible only to staff and store managers.
       operationId: getRentalsForStore
       tags:
         - rental
@@ -2539,6 +2587,9 @@ paths:
   /rentals/{id}:
     get:
       summary: Get rental detail by id
+      description: |
+        This route is accessible to customers, staff and store managers.
+        A customer can get only her or his rental detail.
       operationId: getRentalById
       tags:
         - rental

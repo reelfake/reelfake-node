@@ -1,5 +1,9 @@
 get:
   summary: Get the list of rentals for the logged in user
+  description: |
+    This route is accessible to customers, staff and store managers.
+    A logged in customer can get only his or her rentals.
+    A logged in staff or store manager can get rentals processed by him or her.
   operationId: getRentals
   tags:
     - rental

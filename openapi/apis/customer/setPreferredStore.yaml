@@ -1,5 +1,8 @@
 patch:
   summary: Set preferred store for the customer
+  description: |
+    This route is accessible only to customer.
+    A customer is not allowed to update preferred store for other customer.
   operationId: setPreferredStore
   tags:
     - customer
@@ -7,7 +10,7 @@ patch:
     - in: path
       name: id
       required: true
-      description: The id of the customer
+      description: Customer id
       schema:
         type: integer
     - in: path

@@ -56,8 +56,8 @@ router.post(
   validateUpload
 );
 router.get('/upload/track_validation', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), trackUploadValidation);
-router.post('/upload', upload.single('file'), uploadMovies);
-router.get('/upload/track', trackUpload);
+router.post('/upload', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), upload.single('file'), uploadMovies);
+router.get('/upload/track', validateAuthToken, validateUserRole(USER_ROLES.STORE_MANAGER), trackUpload);
 router.get('/:id', validateMovieByIdRouteQuery, routeFnWrapper(getMovieById));
 router.get('/:id/stores', routeFnWrapper(findInStores));
 // POST

@@ -1,5 +1,8 @@
 get:
   summary: Get customer detail using the id
+  description: |
+    This route is accessible to customer, staff and store manager.
+    403 is returned if a customer is trying to access other customer data.
   operationId: getCustomerById
   tags:
     - customer
@@ -25,6 +28,9 @@ get:
       $ref: ../../components/error/internalServerError.yaml
 put:
   summary: Update customer
+  description: |
+    This route is accessible to customer and store manager.
+    403 is returned if a customer is trying to update other customer data.
   operationId: updateCustomer
   tags:
     - customer
@@ -54,9 +60,8 @@ put:
     '500':
       $ref: ../../components/error/internalServerError.yaml
 delete:
-  summary: |
-    Delete the customer.
-    Note: It is not allowed to delete a customer which is in use by any user
+  summary: Delete the customer
+  description: This route is accessible only to store manager.
   operationId: deleteCustomer
   tags:
     - customer

@@ -65,6 +65,7 @@ get:
       $ref: ../../components/error/internalServerError.yaml
 post:
   summary: Add new actor
+  description: This route is accessible only to store managers
   operationId: addActor
   tags:
     - actor

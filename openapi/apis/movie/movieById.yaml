@@ -37,6 +37,7 @@ get:
       $ref: ../../components/error/internalServerError.yaml
 put:
   summary: Update movie
+  description: This route is accessible only to store managers.
   operationId: updateMovie
   tags:
     - movie
@@ -69,6 +70,7 @@ delete:
   summary: |
     Delete the movie.
     Note: This operation will delete movie actors and inventory for the movie as well.
+  description: This route is accessible only to store managers.
   operationId: deleteMovie
   tags:
     - movie

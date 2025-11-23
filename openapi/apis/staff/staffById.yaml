@@ -1,5 +1,6 @@
 get:
   summary: Get staff detail
+  description: This route is accessible only to staff and store managers.
   operationId: getStaffById
   tags:
     - staff
@@ -27,6 +28,7 @@ get:
       $ref: ../../components/error/internalServerError.yaml
 put:
   summary: Update staff
+  description: This route is accessible only to store managers.
   operationId: updateStaff
   tags:
     - staff
@@ -57,6 +59,7 @@ put:
       $ref: ../../components/error/internalServerError.yaml
 delete:
   summary: Delete staff
+  description: This route is accessible only to store managers.
   operationId: deleteStaff
   tags:
     - staff

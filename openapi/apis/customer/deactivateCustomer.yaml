@@ -1,5 +1,6 @@
 patch:
   summary: Deactivate customer
+  description: This route is accessible only to store managers
   operationId: deactivateCustomer
   tags:
     - customer

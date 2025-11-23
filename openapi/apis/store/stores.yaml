@@ -17,6 +17,7 @@ get:
       $ref: ../../components/error/internalServerError.yaml
 post:
   summary: Create store
+  description: This route is accessible only to store managers.
   operationId: createStore
   tags:
     - store

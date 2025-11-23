@@ -1,5 +1,6 @@
 get:
   summary: Track the validation for each row of the csv
+  description: This route is accessible only to store managers.
   operationId: trackUploadValidation
   tags:
     - movie

@@ -1,5 +1,6 @@
 get:
   summary: Get the statistics for the top performing city (from sales perspective)
+  description: This route is accessible only to staff and store managers.
   operationId: getSalesByCity
   tags:
     - stats

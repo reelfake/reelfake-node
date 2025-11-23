@@ -1,5 +1,6 @@
 get:
   summary: Get list of all staff (optionally filter by residential state and city)
+  description: This route is accessible only to staff and store managers.
   operationId: getStaff
   tags:
     - staff
@@ -117,6 +118,7 @@ get:
       $ref: ../../components/error/internalServerError.yaml
 post:
   summary: Add staff member
+  description: This route is accessible only to store managers.
   operationId: createStaff
   tags:
     - staff

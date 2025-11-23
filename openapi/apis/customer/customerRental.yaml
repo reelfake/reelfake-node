@@ -1,5 +1,8 @@
 get:
   summary: Get rentals of the logged in customer
+  description: |
+    This route is accessible only to customer.
+    This route returns the rentals only for the logged in customer.
   operationId: getCustomerRentals
   tags:
     - customer

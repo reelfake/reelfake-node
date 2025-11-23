@@ -6,7 +6,12 @@ import { routeFnWrapper } from '../utils';
 
 const router = Router();
 
-router.get('/', validateAuthToken, validateUserRole(USER_ROLES.STAFF, USER_ROLES.STORE_MANAGER), routeFnWrapper(getRentals));
+router.get(
+  '/',
+  validateAuthToken,
+  validateUserRole(USER_ROLES.CUSTOMER, USER_ROLES.STAFF, USER_ROLES.STORE_MANAGER),
+  routeFnWrapper(getRentals)
+);
 router.get(
   '/my_store',
   validateAuthToken,

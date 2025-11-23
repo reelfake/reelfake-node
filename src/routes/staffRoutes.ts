@@ -80,7 +80,7 @@ router.put('/:id/forgot_password', validateNewPassword, routeFnWrapper(forgotSta
 router.put(
   '/change_password',
   validateAuthToken,
-  validateUserRole(USER_ROLES.STAFF),
+  validateUserRole(USER_ROLES.STAFF, USER_ROLES.STORE_MANAGER),
   validateNewPassword,
   routeFnWrapper(changeStaffPassword)
 );

@@ -122,6 +122,11 @@ export const getRentalById = async (req: CustomRequest, res: Response) => {
   }
 
   const role = user.role;
+
+  if (role === USER_ROLES.CUSTOMER && id !== user.id) {
+    throw new AppError(ERROR_MESSAGES.FORBIDDEN, 403);
+  }
+
   const { userId } = await getUserAndStoreIdIfExist(user.email, user.role);
   const modelBasicAttributes = ['id', 'firstName', 'lastName', 'email', 'phoneNumber', 'avatar'];
 

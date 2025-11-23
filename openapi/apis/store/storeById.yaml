@@ -37,6 +37,7 @@ get:
       $ref: ../../components/error/internalServerError.yaml
 put:
   summary: Update store
+  description: This route is accessible only to store managers.
   operationId: updateStore
   tags:
     - store
@@ -67,6 +68,7 @@ put:
       $ref: ../../components/error/internalServerError.yaml
 delete:
   summary: Delete the store
+  description: This route is accessible only to store managers.
   operationId: deleteStore
   tags:
     - store

@@ -1,5 +1,6 @@
 post:
   summary: Add actors to movie
+  description: This route is accessible only to store managers.
   operationId: addActors
   tags:
     - movie

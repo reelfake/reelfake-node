@@ -1,5 +1,6 @@
 get:
   summary: Get the list of rentals for the store
+  description: This route is accessible only to staff and store managers.
   operationId: getRentalsForStore
   tags:
     - rental
