@@ -320,8 +320,6 @@ So, basically anything related to mutating or creating new records (like movies,
 
 ## Examples
 
-### Forgot Password
-
 Get the list of customers, staff or store managers to choose from
 
 |Resource     |Url Path              |
@@ -329,6 +327,8 @@ Get the list of customers, staff or store managers to choose from
 |Customer     |/api/customers/summary|
 |Staff        |/api/staff/summary    |
 |Store Manager|/api/staff/summary    |
+
+### Forgot Password
 
 ```javascript showLineNumbers
 const email = 'test@example.com';
