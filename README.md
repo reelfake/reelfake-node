@@ -19,11 +19,10 @@
    b. [Start api instance](#instance-for-api)<br>
 6. [Using the api](#using-the-api)<br>
    a. [Base url](#base-url)<br>
-   b. [Auth-less endpoints](#auth-less-endpoints)<br>
-   c. [Protected endpoints](#protected-endpoints)<br>
-   d. [Using customer for login](#using-customer-for-login)<br>
-   e. [Using staff for login](#using-staff-for-login)<br>
-   f. [Using store manager for login](#using-store-manager-for-login)<br>
+   b. [Protected and Unprotected Routes](#protected-and-unprotected-routes)<br>
+   c. [Using customer for login](#using-customer-for-login)<br>
+   d. [Using staff for login](#using-staff-for-login)<br>
+   e. [Using store manager for login](#using-store-manager-for-login)<br>
 7. [Using reelfake.cloud](#using-my-cloud-instance)
 8. [Examples](#examples)<br>
    a. [Forgot Password](#forgot-password)<br>
@@ -109,7 +108,7 @@ The below instructions are for deploying to Amazon Lightsail that I use (make su
 
 **Note:**
 
-1. The docker command as for deploying to Lightsail is same as running it locally. You will just need to change the DB_HOST for the api which must point to the database instance.
+1. The docker command for deploying to Lightsail is same as running it locally. You will just need to change the DB_HOST for the api which must point to the database instance.
 2. AWS keeps improving so the steps above might or might not change in future. Follow [Create a Lightsail Instance](https://docs.aws.amazon.com/lightsail/latest/userguide/how-to-create-amazon-lightsail-instance-virtual-private-server-vps.html) for guidance.
 
 ## Using the api
@@ -118,151 +117,75 @@ The below instructions are for deploying to Amazon Lightsail that I use (make su
 
 Depending on where you host the api the base url could differ. If you are running locally the bsae url will http://localhost:{{port}}/api or http://127.0.0.1:{{port}}/api. The port defaults to 8000 if you did not specify anything in the environment variable. If you are running on ec2, lightsail or any other cloud then the hostname will be the ip address depending on how you have configured the http traffic.
 
-### Auth-less endpoints
+### Protected and Unprotected Routes
 
-There are api routes that does not need user login. These are listed below. You can get more information on how to use apis using the api docs at {{BASE_URL}}/docs or {{BASE_URL}}/redocs.
-
-- address
-  1. GET /addresses
-  2. GET /address/city/{{city_name}}
-  3. GET /addresses/state/{{state_name}}
-- city
-  1. GET /cities
-- country
-  1. GET /countries
-- actor
-  1. GET /actors
-  2. GET /actors/{{id}}
-- customer
-  1. GET /customers
-  2. GET /customers/{{id}}
-  3. GET /customers/summary
-  4. POST /customers
-  5. PUT /customers/{{id}}/forgot_customer
-- movie
-  1. GET /movies
-  2. GET /movies/{{id}}
-  3. GET /movies/{{id}}/stores
-- genre
-  1. GET /genres
-- movie language
-  1. GET /movie_languages
-- staff
-  1. GET /staff/summary
-  2. GET /staff/managers/summary
-- store
-  1. GET /stores
-  2. GET /stores/{{id}}
-  3. GET /stores/{{id}}/stock
-  4. GET /stores/{{id}}/movies
-
-### Protected endpoints
-
-There are api routes which needs authentication through user login. These are listed below. You can get more information on how to use apis using the api docs at {{BASE_URL}}/docs or {{BASE_URL}}/redocs.
-
-- actor
-  1. POST /actors
-  2. POST /actors/{{id}}
-  3. PUT /actors/{{id}}
-  4. DELETE /actors/{{id}
-- customer
-  1. PUT /customers/{{id}}/change_password
-  2. PUT /customers/{{id}}
-  3. DELETE /customers/{{id}}
-  4. PATCH /customers/{{id}}/activate
-  5. PATCH /customers/{{id}/deactivate
-  6. PATCH /customers/{{id}/preferred_store/{{store_id}}
-- movie
-  1. POST /movies
-  2. PUT /movies/{{id}}
-  3. DELETE /movies/{{id}}
-  4. POST /movies/{{id}}/add_actors
-  5. POST /movies/upload/validate
-  6. GET /movies/upload/track_validation
-  7. POST /movies/upload
-  8. GET /movies/upload/track
-- movie language
-
-- staff
-  1. PUT /staff/{{id}}/change_password
-  2. POST /staff
-  3. PUT /staff/{{ud}}
-  4. DELETE /staff/{{id}}
-- store
-  1. POST /stores
-  2. PUT /stores/{{id}}
-  3. DELETE /stores/{{id}}
-  4. GET /stores/{{id}}/staff
-- rental
-  1. GET /rentals
-  2. GET /rentals/my_store
-  3. GET /rentals/{{id}}
+Some routes requires authentication through login and some routes can be accessed without login. To check which routes are protected or unprotected, please follow the [api specification](#api-specs).
 
 ### Using customer for login
 
 To login as customer, you will need to choose the customer using the endpoint `/customers/summary`.<br>
 Once you decide which customer to use, call the endpoint `/customers/{{id}}/forgot_password` with the below json request body.<br>
 
-<pre><code>
+```json
 {
    "newPassword": "password_of_your_choice,
    "confirmedNewPassword": "password_of_your_choice"
 }
-</code></pre>
+```
 
 You will get the response containing the email of the customer.<br>
 Using the email and the password you have just changed login using the endpoint `/auth/login` with the below json request body.<br>
 
-<pre><code>
+```json
 {
    "email": "email_address_of_customer",
    "password": "password_you_had_chosen"
 }
-</code></pre>
+```
 
 ### Using staff for login
 
 To login as staff, you will need to choose the staff using the endpoint `/staff/summary`.<br>
 Once you decide which staff to use, call the endpoint `/staff/{{id}}/forgot_password` with the below json request body.<br>
 
-<pre><code>
+```json
 {
    "newPassword": "password_of_your_choice,
    "confirmedNewPassword": "password_of_your_choice"
 }
-</code></pre>
+```
 
 You will get the response containing the email of the staff.<br>
 Using the email and the password you have just changed login using the endpoint `/auth/login` with the below json request body.<br>
 
-<pre><code>
+```json
 {
    "email": "email_address_of_staff",
    "password": "password_you_had_chosen"
 }
-</code></pre>
+```
 
 ### Using store manager for login
 
 To login as store manager, you will need to choose the store manager using the endpoint `/staff/managers/summary`.<br>
 Once you decide which store manager to use, call the endpoint `/staff/{{id}}/forgot_password` with the below json request body.<br>
 
-<pre><code>
+```json
 {
    "newPassword": "password_of_your_choice,
    "confirmedNewPassword": "password_of_your_choice"
 }
-</code></pre>
+```
 
 You will get the response containing the email of the store manager.<br>
 Using the email and the password you have just changed login using the endpoint `/auth/login` with the below json request body.<br>
 
-<pre><code>
+```json
 {
    "email": "email_address_of_store_,manager",
    "password": "password_you_had_chosen"
 }
-</code></pre>
+```
 
 ## Using my cloud instance
 
