@@ -9,27 +9,26 @@
 # Table of Contents
 
 1. [Introduction](#introduction)
-2. [API for Public Use](#api-for-public-use)
-3. [Postman Collection for reelfake.cloud/api](#postman-collection)
-4. [API Specs](#api-specification)
-5. [Running locally](#running-on-localhost)<br>
+2. [API Specs](#api-specification)
+3. [How to access the apis?](#how-to-access-the-apis)
+4. [Running locally](#running-on-localhost)<br>
    a. [Start database](#start-the-container-for-database)<br>
    b. [Start api](#start-the-container-for-the-api)<br>
-6. [Running on Cloud](#running-on-cloud)<br>
+5. [Running on Cloud](#running-on-cloud)<br>
    a. [Start database instance](#instance-for-database)<br>
    b. [Start api instance](#instance-for-api)<br>
-7. [Using the api](#using-the-api)<br>
+6. [Using the api](#using-the-api)<br>
    a. [Base url](#base-url)<br>
    b. [Auth-less endpoints](#auth-less-endpoints)<br>
    c. [Protected endpoints](#protected-endpoints)<br>
    d. [Using customer for login](#using-customer-for-login)<br>
    e. [Using staff for login](#using-staff-for-login)<br>
    f. [Using store manager for login](#using-store-manager-for-login)<br>
-8. [Using reelfake.cloud](#using-my-cloud-instance)
-9. [Examples](#examples)<br>
+7. [Using reelfake.cloud](#using-my-cloud-instance)
+8. [Examples](#examples)<br>
    a. [Forgot Password](#forgot-password)<br>
    b. [Login](#login)<br>
-11. [Generating JWT Secret](#generating-jwt-secret)
+9. [Generating JWT Secret](#generating-jwt-secret)
 
 ## Introduction
 
@@ -37,62 +36,17 @@ A rest api that provides data for practicing, prototyping or anything to play wi
 
 You have a simple api with GET, POST, PUT, PATCH and DELETE operations with the cookie based authentication. There is also a csv file upload that uses the server sent events so you can listen to any incoming events on frontend. The file upload also just process the file and send the response and also uses server sent events.
 
-**APIs**
-
-- Authentication (login and logout)
-- City
-- Country
-- Address
-- Genre
-- Movie language
-- Actor
-- Movie
-- Staff
-- Store
-- Customer
-- Rental
-
-## API for Public Use
-
-I have the api deployed for my personal use which is available for public.
-This publicly available api does not have the routes that mutate the data.
-You can access this using the [Reelfake api](https://reelfake.cloud) which is for my personal use.
-You can go through the [api specs](https://reelfake.cloud/api/docs) or the [redocs](https://reelfake.cloud/api/redocs) for more information.
-So, what this api provide?
-
-1. All GET methods (like `/api/movies`, `/api/actors`, `/api/customers`, `/api/movies/:id` and so on).
-2. The login (`/api/auth/login`) and logout (`/api/auth/logout`).
-3. The new user registration endpoints (i.e. `/api/customers/register` and `/api/staff/register`).
-4. Endpoints for forgotten password (i.e. `/api/customers/:id/forgot_password` and `/api/staff/:id/forgot_password`).
-5. Endpoints for changing password (i.e. `/api/customers/:id/change_password` and `/api/staff/:id/change_password`).
-
-**Notes:**
-
-1. Although the api is for public, I purge the database weekly to keep my Lightsail instances clean and lightweight.
-2. When I purge the database, I re-seed the database which are part of the docker image. So, whatever you created the users or any data will be removed.
-3. Though I have provided limited access to my deployed api, you can hit it as per the api documentation but you will `403 Forbidden` if you do so.
-
-## Postman Collection
-Here is the [postman collection](https://raw.githubusercontent.com/reelfake/reelfake-node/main/postman/reelfake_api.json) for the api hosted on reelfake.cloud.
-
 ## Api Specification
 
-[API Docs](https://reelfake.cloud/api/docs)<br><br>
-[API Redocs](https://reelfake.cloud/api/redocs)
+|DOCS                           |REDOCS                           |
+|-------------------------------|---------------------------------|
+|https://reelfake.cloud/api/docs|https://reelfake.cloud/api/redocs|
 
-_If running locally (the port is what you mentioned when running the container)_
+## How to access the apis?
 
-<pre>
-   Docs - http://localhost:{{port}}/api/docs
-   Redocs - http://localhost:{{port}}/api/redocs
-</pre>
+The apis are accessible through https://reelfake.cloud/api. Not all the rouets are accessible. To know which routes are accessible, please follow the api specifications.
 
-_If running on cloud_
-
-<pre>
-   Docs - http://{{Ip Address or host DNS}}/api/docs
-   Redocs - http://{{Ip Address or host DNS}}/api/redocs
-</pre>
+If you want to complete api access, you will either need to run it locally or need to bring your own cloud. Please follow the instructions below to get the api running.
 
 ## Running on localhost
 
