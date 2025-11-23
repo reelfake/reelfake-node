@@ -322,11 +322,11 @@ So, basically anything related to mutating or creating new records (like movies,
 
 Get the list of customers, staff or store managers to choose from
 
-|Resource     |Url Path              |
-|-------------|----------------------|
-|Customer     |/api/customers/summary|
-|Staff        |/api/staff/summary    |
-|Store Manager|/api/staff/summary    |
+|Resource     |Url Path                       |
+|-------------|-------------------------------|
+|Customer     |/api/customers/summary         |
+|Staff        |/api/staff/summary             |
+|Store Manager|/api/staff/managers/summary    |
 
 ### Forgot Password
 
