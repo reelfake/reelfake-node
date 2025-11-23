@@ -27,11 +27,9 @@
    f. [Using store manager for login](#using-store-manager-for-login)<br>
 8. [Using reelfake.cloud](#using-my-cloud-instance)
 9. [Examples](#examples)<br>
-   a. [Login](#login)<br>
-   b. [Add a movie](#add-a-movie)<br>
-   c. [Logout](#logout)<br>
-   d. [Expired Token](#expired-token)<br>
-10. [Generating JWT Secret](#generating-jwt-secret)
+   a. [Forgot Password](#forgot-password)<br>
+   b. [Login](#login)<br>
+11. [Generating JWT Secret](#generating-jwt-secret)
 
 ## Introduction
 
@@ -322,7 +320,7 @@ So, basically anything related to mutating or creating new records (like movies,
 
 ## Examples
 
-### Forgot password
+### Forgot Password
 
 Get the list of customers, staff or store managers to choose from
 
