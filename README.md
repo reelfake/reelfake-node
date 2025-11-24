@@ -20,14 +20,11 @@
 6. [Using the api](#using-the-api)<br>
    a. [Base url](#base-url)<br>
    b. [Protected and Unprotected Routes](#protected-and-unprotected-routes)<br>
-   c. [Using customer for login](#using-customer-for-login)<br>
-   d. [Using staff for login](#using-staff-for-login)<br>
-   e. [Using store manager for login](#using-store-manager-for-login)<br>
-7. [Using reelfake.cloud](#using-my-cloud-instance)
-8. [Examples](#examples)<br>
+   c. [Using customer / staff / store manager for login](#using-customer-staff-store-manager-for-login)
+7. [Examples](#examples)<br>
    a. [Forgot Password](#forgot-password)<br>
    b. [Login](#login)<br>
-9. [Generating JWT Secret](#generating-jwt-secret)
+8. [Generating JWT Secret](#generating-jwt-secret)
 
 ## Introduction
 
@@ -121,79 +118,41 @@ Depending on where you host the api the base url could differ. If you are runnin
 
 Some routes requires authentication through login and some routes can be accessed without login. To check which routes are protected or unprotected, please follow the [api specification](#api-specs).
 
-### Using customer for login
+### Using customer / staff / store manager for login
 
-To login as customer, you will need to choose the customer using the endpoint `/customers/summary`.<br>
-Once you decide which customer to use, call the endpoint `/customers/{{id}}/forgot_password` with the below json request body.<br>
+To login as customer, staff or any store manager you can fetch the data and decide which one to use. This does not require login.
 
-```json
-{
-   "newPassword": "password_of_your_choice,
-   "confirmedNewPassword": "password_of_your_choice"
-}
+|Resource     |Url Path                       |
+|-------------|-------------------------------|
+|Customer     |/api/customers/summary         |
+|Staff        |/api/staff/summary             |
+|Store Manager|/api/staff/managers/summary    |
+
+To know the response returned by the summary api, please follow the [api specs](#api-specs).
+
+Below are the sample request for setting the password.
+
+*Customer*
+
+```curl
+curl --location --request PUT 'https://reelfake.cloud/api/customers/{id}/forgot_password' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "newPassword": "test@123",
+    "confirmedNewPassword": "test@123"
+}'
 ```
 
-You will get the response containing the email of the customer.<br>
-Using the email and the password you have just changed login using the endpoint `/auth/login` with the below json request body.<br>
+*Staff / Store Manager*
 
-```json
-{
-   "email": "email_address_of_customer",
-   "password": "password_you_had_chosen"
-}
+```curl
+curl --location --request PUT 'https://reelfake.cloud/api/staff/{id}/forgot_password' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "newPassword": "test@123",
+    "confirmedNewPassword": "test@123"
+}'
 ```
-
-### Using staff for login
-
-To login as staff, you will need to choose the staff using the endpoint `/staff/summary`.<br>
-Once you decide which staff to use, call the endpoint `/staff/{{id}}/forgot_password` with the below json request body.<br>
-
-```json
-{
-   "newPassword": "password_of_your_choice,
-   "confirmedNewPassword": "password_of_your_choice"
-}
-```
-
-You will get the response containing the email of the staff.<br>
-Using the email and the password you have just changed login using the endpoint `/auth/login` with the below json request body.<br>
-
-```json
-{
-   "email": "email_address_of_staff",
-   "password": "password_you_had_chosen"
-}
-```
-
-### Using store manager for login
-
-To login as store manager, you will need to choose the store manager using the endpoint `/staff/managers/summary`.<br>
-Once you decide which store manager to use, call the endpoint `/staff/{{id}}/forgot_password` with the below json request body.<br>
-
-```json
-{
-   "newPassword": "password_of_your_choice,
-   "confirmedNewPassword": "password_of_your_choice"
-}
-```
-
-You will get the response containing the email of the store manager.<br>
-Using the email and the password you have just changed login using the endpoint `/auth/login` with the below json request body.<br>
-
-```json
-{
-   "email": "email_address_of_store_,manager",
-   "password": "password_you_had_chosen"
-}
-```
-
-## Using my cloud instance
-
-I have developed this api for my personal use to practice or try new features in the web development space. For this, I have deployed this to [reelfake.cloud](https://reelfake.cloud/api).<br>
-But I have made some of the apis to public use for you all to try. All the endpoints except the ones with methods POST, PUT, PATCH and DELETE are disallowed.<br>
-The login, register user, change and forgot password routes are also available for you to use.<br>
-Apart from these, the `GET /api/movies/upload/track` is not allowed and `POST /api/movies/upload/validate` is allowed.<br>
-So, basically anything related to mutating or creating new records (like movies, actors, stores, etc) are prohibited.
 
 ## Examples
 
