@@ -57,7 +57,7 @@ If you want to complete api access, you will either need to run it locally or ne
 ### Start the container for database
 
 <pre><code>docker run -d --name container_name_of_choice -p 5432:5432 -v volume_name_of_choice:/var/lib/postgresql/data \
--e POSTGRES_USER=username_of_choice -e POSTGRES_PASSWORD=password_of_choice pratapreddy15/reelfake-postgres</code></pre>
+-e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=password_of_choice pratapreddy15/reelfake-postgres</code></pre>
 
 #### Verify the database is up
 
@@ -68,7 +68,7 @@ If you want to complete api access, you will either need to run it locally or ne
 For this step, you will need to generate the jwt secret (refer [Generating JWT Secret](#generating-jwt-secret))
 
 <pre><code>docker run -d --name container_name_of_choice -p port_of_choice:8080 -e DB_HOST=172.17.0.2 \
--e DB_PORT=5432 -e DB_NAME=reelfake_db -e DB_USER=username_from_above -e DB_PASSWORD=password_from_above \
+-e DB_PORT=5432 -e DB_NAME=reelfake_db -e DB_USER=postgres -e DB_PASSWORD=password_from_above \
 -e JWT_SECRET={{Generated JWT Secret}} pratapreddy15/reelfake-backend</code></pre>
 
 #### Monitor the api logs (if REELFAKE_USERS_DB_NAME is enabled then you can see the db transaction related logs)
