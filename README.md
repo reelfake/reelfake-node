@@ -112,7 +112,7 @@ The below instructions are for deploying to Amazon Lightsail that I use (make su
 
 ### Base url
 
-Depending on where you host the api the base url could differ. If you are running locally the bsae url will http://localhost:{{port}}/api or http://127.0.0.1:{{port}}/api. The port defaults to 8000 if you did not specify anything in the environment variable. If you are running on ec2, lightsail or any other cloud then the hostname will be the ip address depending on how you have configured the http traffic.
+The base url is https://reelfake.cloud/api if you are planning to use the one deployed to my instance. Otherwise depending on where you host the api the base url could differ. If you are running locally the bsae url will http://localhost:{{port}}/api or http://127.0.0.1:{{port}}/api. The port defaults to 8000 if you do not specify anything in the environment variable. If you are running on ec2, lightsail or any other cloud then the hostname will be the ip address depending on how you have configured the http traffic.
 
 ### Protected and Unprotected Routes
 
