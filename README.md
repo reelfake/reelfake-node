@@ -97,10 +97,10 @@ The below instructions are for deploying to Amazon Lightsail that I use (make su
 5. SSH into the in instance
 6. Run the below docker command (you can change POSTGRES_USER and POSTGRES_PASSWORD of your choice)
    <pre><code>docker run -d --name container_name_of_choice -p 5432:5432 -v volume_name_of_choice:/var/lib/postgresql/data \
-   -e POSTGRES_USER=db_username_prod -e POSTGRES_PASSWORD=db_user_password_prod pratapreddy15/reelfake-postgres</code></pre>
+   -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=db_user_password_prod pratapreddy15/reelfake-postgres</code></pre>
 7. If persisting data is not required, you can remove the volume mount
    <pre><code>docker run -d --name container_name_of_choice -p 5432:5432 \
-   -e POSTGRES_USER=db_username_prod -e POSTGRES_PASSWORD=db_user_password_prod pratapreddy15/reelfake-postgres</code></pre>
+   -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=db_user_password_prod pratapreddy15/reelfake-postgres</code></pre>
 
 ### Instance for api
 
@@ -108,7 +108,7 @@ The below instructions are for deploying to Amazon Lightsail that I use (make su
 2. Generate the jwt secret (refer [Generating JWT Secret](#generating-jwt-secret))
 3. Run the below docker command (you need to change DB_USER and DB_PASSWORD depending on what you entered when running database in above step)
    <pre><code>docker run -d --name container_name_of_choice -e DB_HOST={{IP Address}} \
-   -e DB_PORT=5432 -e DB_NAME=reelfake_db -e DB_USER=db_username_prod -e DB_PASSWORD=db_user_password_prod \
+   -e DB_PORT=5432 -e DB_NAME=reelfake_db -e DB_USER=postgres -e DB_PASSWORD=db_user_password_prod \
    -e JWT_SECRET={{Generated JWT Secret}} pratapreddy15/reelfake-backend</code></pre>
 
 **Note:**
