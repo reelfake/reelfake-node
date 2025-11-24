@@ -30,6 +30,14 @@
 
 A rest api that provides data for practicing, prototyping or anything to play with for the frontend development. This api is build with the real sql database so when you update the data is really updated and when you create the data is really created.
 
+#### Reelfake api provides a set of features such as
+1. Real time CRUD operations. What you update, delete or create persist and you get the updated data on fetch.
+2. Pagination. The GET methods for some resources like movie, actor and customer implements a pagination feature. Refer the api specs for more information.
+3. Cookie based authentication. There are some operations which requires you to login.
+4. Role based authorization. Some resources has a role-based access. For instance, only store manager can add a movie, delete a customer, etc.
+5. File upload. The movie api provides a capability to let you send a csv file with the movie records for bulk create.
+6. Server sent events. The movie api implements the SSE (Server-Sent Events) for the csv file validation and upload. Refer the api specs for more information.
+
 You have a simple api with GET, POST, PUT, PATCH and DELETE operations with the cookie based authentication. There is also a csv file upload that uses the server sent events so you can listen to any incoming events on frontend. The file upload also just process the file and send the response and also uses server sent events.
 
 ## Api Specification
