@@ -18,11 +18,9 @@ export default function (req: Request, res: Response, next: NextFunction) {
     const userId = (decodedToken as { [key: string]: string })['id'];
     const userEmail = (decodedToken as { [key: string]: string })['email'];
     const userRole = (decodedToken as { [key: string]: USER_ROLES })['role'];
-
     if (!userRole) {
       throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
     }
-
     (req as CustomRequest).user = {
       id: Number(userId),
       email: userEmail,
