@@ -24,6 +24,7 @@
 7. [Examples](#examples)<br>
    a. [Forgot Password](#forgot-password)<br>
    b. [Login](#login)<br>
+   c. [Add Movie](#add-movie)<br>
 8. [Generating JWT Secret](#generating-jwt-secret)
 
 ## Introduction
@@ -217,7 +218,8 @@ const response = await fetch('https://reelfake.cloud/api/auth/login', {
    body: JSON.stringify({
      email,
      password
-   })
+   }),
+   credentials: 'include',
 );
 
 const jsonData = await response.json();
@@ -225,6 +227,49 @@ const jsonData = await response.json();
 if (response.status !== 200) {
    throw new Error(jsonData.message);
 }
+```
+
+### Add Movie
+
+```javascript
+const sampleMovie = {
+ tmdbId: 1242898,
+ imdbId: 'tt31227572',
+ title: 'Predator: Badlands',
+ originalTitle: 'Predator: Badlands',
+ overview: 'A young Predator outcast from his clan finds an unlikely ally on his journey in search of the ultimate adversary.',
+ runtime: 107,
+ releaseDate: '2025-11-07',
+ genres: ['Action', 'Adventure', 'Science Fiction', 'Thriller'],
+ countriesOfOrigin: ['US'],
+ language: 'en',
+ movieStatus: 'Released',
+ popularity: 0.04,
+ budget: 105000000,
+ revenue: 200000000,
+ ratingAverage: 7.6,
+ ratingCount: 34000,
+ posterUrl: 'https://image.tmdb.org/t/p/w500/ebyxeBh56QNXxSJgTnmz7fXAlwk.jpg',
+};
+
+// First, reset password if you haven't
+// Second, login
+// Finally, add a movie
+const response = await fetch(`${baseUrl}/movies`, {
+ method: 'POST',
+ headers: requestHeaders,
+ body: JSON.stringify(payload),
+ cache: 'no-cache',
+ credentials: 'include',
+});
+
+const json = await response.json();
+
+if (response.status !== 201) {
+ throw new Error(json.message);
+}
+
+console.log(json); // Console logging movie data
 ```
 
 ### Generating JWT Secret
