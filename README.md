@@ -445,7 +445,7 @@ const sampleMovie = {
      profilePictureUrl: 'https://image.tmdb.org/t/p/w500/iM9dr3AjXTt7IGpRzZlQVG7hINa.jpg',
    },
  ],
-  };
+};
 
 // First, reset password if you haven't
 // Second, login
