@@ -26,6 +26,7 @@
    b. [Login](#login)<br>
    c. [Add Movie](#add-movie)<br>
    d. [Add Movie with Actors](#add-movie-with-actors)<br>
+   e. [Track File Validation for Upload](#track-file-validation-for-upload)<br>
 8. [Generating JWT Secret](#generating-jwt-secret)
 
 ## Introduction
@@ -338,6 +339,114 @@ Adding amovie with actors is same as adding a movie above but only differs in th
    },
  ],
 }
+```
+
+### Track File Validation for Upload
+
+The route /movies/upload/validate provides a query option enable_tracking that sends the tracking url that implements the server sent events.
+
+```javascript
+// The csv file upload is accessible only to store manager role
+
+// Login as store manager (using the forgot password route to reset password for any store manager)
+
+const baseUrl = 'https://reelfake.cloud/api';
+
+async function uploadFile(formData) {
+  try {
+    // delay_event_ms query parameter is used to pause between events send back from the server. Maximum allowed delay is 1 second
+    const response = await fetch(`${baseUrl}/movies/upload/validate?enable_tracking&delay_event_ms=500`, {
+      method: 'POST',
+      body: formData,
+      header: requestHeaders,
+      credentials: 'include',
+    });
+    const json = await response.json();
+    if (response.status !== 202) {
+      return json.message;
+    }
+
+    const { trackingUrl } = json;
+
+    return trackingUrl;
+  } catch (err) {
+    return err.message;
+  }
+}
+
+let eventSource;
+
+const form = document.getElementById('form');
+form.addEventListener('submit', e => {
+   e.preventDefault();
+
+   const formData = new FormData(e.target);
+   const trackingUrl = await uploadFile(formData);
+
+   eventSource = new EventSource(trackingUrl, { withCredentials: true });
+   eventSource.onopen = () => {
+      // Update UI if needed
+   };
+   
+   eventSource.onerror = e => {
+      eventSource.close();
+      // Update UI to show error
+   };
+
+   eventSource.onmessage = e => {
+      const data = JSON.parse(e.data);
+
+      // data will be
+
+      // If processing
+      // status - Processing means the csv file is being processed
+      // rowNumber - The row number for the row from the csv file (the first row number is 1, seecond one is 2 and so on)
+      // isValid - Whether the row passed validation or not
+      // reasons - Reasons for why the row is marked as invalid
+      /*
+         {
+            status: 'processing',
+            rowNumber: <<number>>,
+            isValid: <<boolean>>,
+            reasons: <<string[]>>
+         }
+      */
+
+      // If error
+      // The below payload is for any error encountered when processing the csv file
+      // Note: This error is not the valiation outcome
+      /*
+         {
+            status: 'error',
+            message: <<string>>
+         }
+      */
+
+      // If done
+      // status - The status 'done' means the processing is finished and the below data is the summary result
+      // totalRows - The total number of rows from the csv file
+      // processedRowsCount - The number of rows processed by the server
+      // validRowsCount - The number of valid rows in the csv file that can be used to create the movies
+      // invalidRowsCount - The number of invalid rows in the csv file that canno tbe used for creating the movie
+      /*
+         {
+            status: 'done',
+            totalRows: <<number>>,
+            processedRowsCount: <<number>>,
+            validRowsCount: <<number>>,
+            invalidRowsCount: <<number>>
+         }
+      */
+   };
+
+   // If the UI has a button to cancel the event streaming then below snippet is to cancel the streaming
+   const cancelButton = document.getElementById('cancel-button');
+   cancelButton.addEventListener('click', () => {
+      if (eventSource) {
+         eventSource.close();
+      }
+   });
+});
 ```
 
 ### Generating JWT Secret
