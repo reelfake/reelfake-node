@@ -277,7 +277,7 @@ console.log(json); // Console logging movie data
 
 Adding amovie with actors is same as adding a movie above but only differs in the payload
 
-```json
+```javascript
 {
  tmdbId: 1242898,
  imdbId: 'tt31227572',
