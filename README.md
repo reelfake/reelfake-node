@@ -25,6 +25,7 @@
    a. [Forgot Password](#forgot-password)<br>
    b. [Login](#login)<br>
    c. [Add Movie](#add-movie)<br>
+   d. [Add Movie with Actors](#add-movie-with-actors)<br>
 8. [Generating JWT Secret](#generating-jwt-secret)
 
 ## Introduction
@@ -259,7 +260,6 @@ const response = await fetch(`${baseUrl}/movies`, {
  method: 'POST',
  headers: requestHeaders,
  body: JSON.stringify(payload),
- cache: 'no-cache',
  credentials: 'include',
 });
 
@@ -270,6 +270,74 @@ if (response.status !== 201) {
 }
 
 console.log(json); // Console logging movie data
+```
+
+### Add Movie with Actors
+
+Adding amovie with actors is same as adding a movie above but only differs in the payload
+
+```json
+{
+ tmdbId: 1242898,
+ imdbId: 'tt31227572',
+ title: 'Predator: Badlands',
+ originalTitle: 'Predator: Badlands',
+ overview: 'A young Predator outcast from his clan finds an unlikely ally on his journey in search of the ultimate adversary.',
+ runtime: 107,
+ releaseDate: '2025-11-07',
+ genres: ['Action', 'Adventure', 'Science Fiction', 'Thriller'],
+ countriesOfOrigin: ['US'],
+ language: 'en',
+ movieStatus: 'Released',
+ popularity: 0.04,
+ budget: 105000000,
+ revenue: 200000000,
+ ratingAverage: 7.6,
+ ratingCount: 34000,
+ posterUrl: 'https://image.tmdb.org/t/p/w500/ebyxeBh56QNXxSJgTnmz7fXAlwk.jpg',
+ actors: [
+   {
+     tmdbId: 18050,
+     imdbId: 'nm1102577',
+     characterName: 'Thia / Tessa',
+     castOrder: 0,
+     actorName: 'Elle Fanning',
+     biography:
+       "Mary Elle Fanning (born April 9, 1998) is an American actress. As a child, she made her film debut as the younger version of her sister Dakota Fanning's character in the drama film I Am Sam (2001). She appeared in several other films as a child actress, including Daddy Day Care (2003), Babel (2006), The Curious Case of Benjamin Button and Phoebe in Wonderland (both 2008), and the miniseries The Lost Room (2006). She then had leading roles in Sofia Coppola's drama Somewhere (2010) and J. J. Abrams' science fiction film Super 8 (2011).\n\nFanning played Princess Aurora in the fantasy films Maleficent (2014) and Maleficent: Mistress of Evil (2019) while working in independent films such as Sally Potter's Ginger & Rosa (2012), Nicolas Winding Refn's The Neon Demon (2016), Mike Mills' 20th Century Women (2016), and Coppola's The Beguiled (2017). From 2020 to 2023, she starred as Catherine the Great in the Hulu period satire series The Great, for which she received nominations for a Primetime Emmy Award and two Golden Globe Awards. She has since portrayed Michelle Carter in the Hulu limited series The Girl from Plainville (2022), made her Broadway debut in the play Appropriate (2023), and played a character based on Suze Rotolo in the biographical drama A Complete Unknown (2024).\n\nDescription above from the Wikipedia article Elle Fanning, licensed under CC-BY-SA, full list of contributors on Wikipedia.",
+     birthday: '1998-04-09',
+     deathday: null,
+     placeOfBirth: 'Conyers, Georgia, USA',
+     popularity: 27.431,
+     profilePictureUrl: 'https://image.tmdb.org/t/p/w500/e8CUyxQSE99y5IOfzSLtHC0B0Ch.jpg',
+   },
+   {
+     tmdbId: 3223391,
+     imdbId: 'nm10921048',
+     characterName: 'Dek / Father',
+     castOrder: 1,
+     actorName: 'Dimitrius Schuster-Koloamatangi',
+     biography: '',
+     birthday: '2001-02-06',
+     deathday: null,
+     placeOfBirth: null,
+     popularity: 2.0463,
+     profilePictureUrl: 'https://image.tmdb.org/t/p/w500/rmIZTT1AZK3C9fYhEOtGKtSrF8E.jpg',
+   },
+   {
+     tmdbId: 5780413,
+     imdbId: 'nm17849525',
+     characterName: 'Bud',
+     castOrder: 2,
+     actorName: 'Rohinal Nayaran',
+     biography: '',
+     birthday: null,
+     deathday: null,
+     placeOfBirth: null,
+     popularity: 0.4074,
+     profilePictureUrl: null,
+   },
+ ],
+}
 ```
 
 ### Generating JWT Secret
