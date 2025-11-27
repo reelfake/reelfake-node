@@ -1823,14 +1823,15 @@ describe('Movie Controller', () => {
           return { rowNumber, status, isValid, reasons };
         } else {
           const doneEventData =
-            /^data: \{"status":"(processing|done)","totalRows":(\d+),"validRowsCount":(\d+),"invalidRowsCount":(\d+)\}\n\n$/.exec(
+            /^data: \{"status":"(processing|done)","totalRows":(\d+),"processedRowsCount":(\d+),"validRowsCount":(\d+),"invalidRowsCount":(\d+)\}\n\n$/.exec(
               event
             );
           const totalRows = doneEventData?.at(2) ? Number(doneEventData.at(2)) : -1;
-          const validRowsCount = doneEventData?.at(3) ? Number(doneEventData.at(3)) : -1;
-          const invalidRowsCount = doneEventData?.at(4) ? Number(doneEventData.at(4)) : -1;
+          const processedRowsCount = doneEventData?.at(2) ? Number(doneEventData.at(3)) : -1;
+          const validRowsCount = doneEventData?.at(3) ? Number(doneEventData.at(4)) : -1;
+          const invalidRowsCount = doneEventData?.at(4) ? Number(doneEventData.at(5)) : -1;
 
-          return { status, totalRows, validRowsCount, invalidRowsCount };
+          return { status, totalRows, processedRowsCount, validRowsCount, invalidRowsCount };
         }
       };
 
@@ -1884,6 +1885,7 @@ describe('Movie Controller', () => {
                   index: expectedTotalRows,
                   status: 'done',
                   totalRows: expectedTotalRows,
+                  processedRowsCount: expectedTotalRows,
                   validRowsCount: expectedTotalRows - expectedInvalidRowsNumber.length,
                   invalidRowsCount: expectedInvalidRowsNumber.length,
                 });

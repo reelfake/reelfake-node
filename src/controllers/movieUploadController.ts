@@ -1,10 +1,12 @@
 import type { Request, Response } from 'express';
 import { Op, ValidationError, Transaction } from 'sequelize';
 import sequelize from '../sequelize.config';
-import { MovieModel } from '../models';
 
-import { DEFAULT_PORT } from '../constants';
+import { AppError } from '../utils';
 import { UploadUtil, CsvRow, UploadError, parseCsvRow } from '../utils/upload';
+
+import { MovieModel } from '../models';
+import { DEFAULT_PORT } from '../constants';
 
 const fieldsForBulkCreate = [
   'tmdbId',
@@ -27,7 +29,11 @@ const fieldsForBulkCreate = [
   'rentalRate',
 ];
 
-async function validateCsvRow(rowNumber: number, row: CsvRow) {
+async function validateCsvRow(rowNumber: number, row: CsvRow, delay = 0) {
+  if (delay > 0) {
+    await new Promise((resolve) => setTimeout(resolve, delay));
+  }
+
   const parsedRow = parseCsvRow(row);
   try {
     await MovieModel.build(parsedRow, { isNewRecord: true }).validate();
@@ -41,13 +47,15 @@ async function validateCsvRow(rowNumber: number, row: CsvRow) {
       throw new UploadError('DuplicateTmdbId', rowNumber, `The tmdb_id ${row.tmdb_id} already exist`);
     }
     // Check for duplicate imdb id
-    const existingImdbIdCount = await MovieModel.count({
-      where: {
-        imdbId: row.imdb_id,
-      },
-    });
-    if (existingImdbIdCount > 0) {
-      throw new UploadError('DuplicateImdbId', rowNumber, `The imdb_id ${row.imdb_id} already exist`);
+    if (row.imdb_id) {
+      const existingImdbIdCount = await MovieModel.count({
+        where: {
+          imdbId: row.imdb_id,
+        },
+      });
+      if (existingImdbIdCount > 0) {
+        throw new UploadError('DuplicateImdbId', rowNumber, `The imdb_id ${row.imdb_id} already exist`);
+      }
     }
     return { isValid: true, reasons: [] };
   } catch (err) {
@@ -57,6 +65,10 @@ async function validateCsvRow(rowNumber: number, row: CsvRow) {
           return `(genres: ${row.genres}) ${error.message}`;
         } else if (error.path === 'originCountryIds') {
           return `(countries_of_origin: ${row.countries_of_origin}) ${error.message}`;
+        } else if (error.path === 'releaseDate' && error.value === 'Invalid date') {
+          return `(release_date: ${row.release_date}) Expecting a date in format YYYY-MM-DD`;
+        } else if (error.path === 'releaseDate' && error.value !== 'Invalid date') {
+          return `(release_date: ${row.release_date}) ${error.message}`;
         } else {
           return `(${error.path}: ${error.value}) ${error.message}`;
         }
@@ -123,7 +135,6 @@ export const trackUpload = async (req: Request, res: Response) => {
     );
   } finally {
     UploadUtil.deleteFile();
-    UploadUtil.cleanUp();
     res.end();
   }
   req.on('close', () => {
@@ -206,34 +217,73 @@ export const trackUploadValidation = async (req: Request, res: Response) => {
   let totalRows = 0;
   let validRowsCount = 0;
   let invalidRowsCount = 0;
+  let processedCount = 0;
+
+  const { delay_event_ms } = req.query;
+  const delayEventMs = delay_event_ms ? Number(delay_event_ms) : 0;
+
+  if (isNaN(delayEventMs)) {
+    throw new AppError('Delay event query string should be a number', 400);
+  }
+
+  if (delayEventMs > 1000) {
+    throw new AppError('Delay event (ms) should be less than 1000 milliseconds', 400);
+  }
 
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
   res.flushHeaders();
 
-  await UploadUtil.validate(validateCsvRow, (rowNumber: number, isValid: boolean, reasons: string[]) => {
-    if (isValid) {
-      validRowsCount++;
-    } else {
-      invalidRowsCount++;
-    }
-    totalRows++;
+  req.on('close', () => {
+    UploadUtil.abort();
+  });
+
+  try {
+    await UploadUtil.validate(
+      validateCsvRow,
+      (rowNumber: number, isValid: boolean, reasons: string[]) => {
+        processedCount++;
+        if (isValid) {
+          validRowsCount++;
+        } else {
+          invalidRowsCount++;
+        }
+        totalRows++;
+        res.write(
+          `data: ${JSON.stringify({ status: 'processing', rowNumber, isValid, ...(reasons.length > 0 && { reasons }) })}\n\n`
+        );
+        res.flush();
+      },
+      delayEventMs
+    );
     res.write(
-      `data: ${JSON.stringify({ status: 'processing', rowNumber, isValid, ...(reasons.length > 0 && { reasons }) })}\n\n`
+      `data: ${JSON.stringify({ status: 'done', totalRows, processedRowsCount: processedCount, validRowsCount, invalidRowsCount })}\n\n`
     );
     res.flush();
-  });
-  res.write(`data: ${JSON.stringify({ status: 'done', totalRows, validRowsCount, invalidRowsCount })}\n\n`);
-  res.flush();
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message !== 'ABORTED') {
+      res.write(`data: ${JSON.stringify({ status: 'error', message: error.message })}\n\n`);
+      res.flush();
+    }
+  }
 
   UploadUtil.deleteFile();
-  UploadUtil.cleanUp();
   res.end();
 };
 
 export const validateUpload = async (req: Request, res: Response) => {
   const filePath = req.file?.path;
+  const { delay_event_ms } = req.query;
+  const delayEventMs = delay_event_ms ? Number(delay_event_ms) : 0;
+
+  if (isNaN(delayEventMs)) {
+    throw new AppError('Delay event query string should be a number', 400);
+  }
+
+  if (delayEventMs > 1000) {
+    throw new AppError('Delay event (ms) should be less than 1000 milliseconds', 400);
+  }
 
   if (!filePath) {
     res.status(404).json({ message: 'File not found in the request' });
@@ -261,13 +311,16 @@ export const validateUpload = async (req: Request, res: Response) => {
       });
     } finally {
       UploadUtil.deleteFile();
-      UploadUtil.cleanUp();
     }
 
     res.status(200).json({ totalRows, invalidRows });
     return;
   } else {
-    res.status(202).json({ trackingUrl: `${req.protocol}://localhost:${DEFAULT_PORT}/api/movies/upload/track_validation` });
+    let path = '/movies/upload/track_validation';
+    if (delayEventMs > 0) {
+      path += `?delay_event_ms=${delayEventMs}`;
+    }
+    res.status(202).json({ trackingUrl: `${req.protocol}://localhost:${DEFAULT_PORT}/api${path}` });
   }
 };
 

@@ -129,9 +129,9 @@ export class UploadUtil {
     }
   }
 
-  static cleanUp() {
-    UploadUtil.CSV_STREAM.removeAllListeners();
-    UploadUtil.CSV_STREAM.destroy();
+  static abort() {
+    UploadUtil.IS_DONE = true;
+    UploadUtil.CSV_STREAM.destroy(new Error('ABORTED'));
   }
 
   static async *parseCsv(): AsyncGenerator<CsvRowWithIndex> {
@@ -140,7 +140,16 @@ export class UploadUtil {
     let error = null;
     let resolveNext: any = null;
 
+    UploadUtil.CSV_STREAM.on('error', (err) => {
+      UploadUtil.IS_DONE = true;
+      error = err;
+      if (resolveNext) {
+        resolveNext(Promise.reject(err));
+        resolveNext = null;
+      }
+    });
     UploadUtil.CSV_STREAM.on('data', (row: CsvRowWithIndex) => {
+      UploadUtil.CSV_STREAM.pause();
       UploadUtil.IS_DONE = false;
       if (resolveNext) {
         resolveNext({ done: false, value: row });
@@ -148,29 +157,22 @@ export class UploadUtil {
       } else {
         queue.push(row);
       }
-    })
-      .on('close', () => {
-        UploadUtil.IS_DONE = true;
-        done = true;
-        if (resolveNext) {
-          resolveNext({ done: true, value: undefined });
-          resolveNext = null;
-        }
-      })
-      .on('error', (err) => {
-        UploadUtil.IS_DONE = true;
-        error = err;
-        if (resolveNext) {
-          resolveNext(Promise.reject(err));
-          resolveNext = null;
-        }
-      });
+    });
+    UploadUtil.CSV_STREAM.on('close', () => {
+      UploadUtil.IS_DONE = true;
+      done = true;
+      if (resolveNext) {
+        resolveNext({ done: true, value: undefined });
+        resolveNext = null;
+      }
+    });
 
     while (true) {
       if (error) throw error;
 
       if (queue.length > 0) {
         yield queue.shift() as CsvRowWithIndex;
+        UploadUtil.CSV_STREAM.resume();
         continue;
       }
 
@@ -178,22 +180,19 @@ export class UploadUtil {
 
       const result: any = await new Promise((resolve) => (resolveNext = resolve));
       if (result.done) break;
+      UploadUtil.CSV_STREAM.resume();
       yield result.value;
     }
   }
 
   static async validate(
-    validator: (rowNumber: number, row: CsvRow) => Promise<{ isValid: boolean; reasons: string[] }>,
-    onRowProcessed: (rowNumber: number, isValid: boolean, reasons: string[]) => void
+    validator: (rowNumber: number, row: CsvRow, delay?: number) => Promise<{ isValid: boolean; reasons: string[] }>,
+    onRowProcessed: (rowNumber: number, isValid: boolean, reasons: string[]) => void,
+    delayBetweenEvents = 0
   ) {
-    try {
-      for await (const row of UploadUtil.parseCsv()) {
-        // await new Promise((resolve) => setTimeout(resolve, 2000));
-        const validationResult = await validator(row.index, row);
-        onRowProcessed(row.index, validationResult.isValid, validationResult.reasons);
-      }
-    } catch (err) {
-      console.log('ERRROR', err);
+    for await (const row of UploadUtil.parseCsv()) {
+      const validationResult = await validator(row.index, row, delayBetweenEvents);
+      onRowProcessed(row.index, validationResult.isValid, validationResult.reasons);
     }
   }
 
@@ -261,7 +260,6 @@ export class UploadUtil {
           throw err;
         }
       } finally {
-        UploadUtil.cleanUp();
         UploadUtil.deleteFile();
       }
     }

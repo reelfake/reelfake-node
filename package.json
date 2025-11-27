@@ -29,7 +29,7 @@
     "@babel/core": "^7.28.4",
     "@babel/preset-env": "^7.28.3",
     "@faker-js/faker": "^9.8.0",
-    "@redocly/cli": "^2.11.1",
+    "@redocly/cli": "^2.12.0",
     "@types/babel__core": "^7",
     "@types/babel__preset-env": "^7",
     "@types/compression": "^1",
