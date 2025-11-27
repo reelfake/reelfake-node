@@ -275,7 +275,7 @@ console.log(json); // Console logging movie data
 
 ### Add Movie with Actors
 
-Adding amovie with actors is same as adding a movie above but only differs in the payload
+Adding a movie with actors is same as adding a movie above but only differs in the payload
 
 ```javascript
 {
