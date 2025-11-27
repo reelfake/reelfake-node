@@ -114,13 +114,8 @@ describe('Movie Controller', () => {
     };
   };
 
-  beforeEach(() => {
-    cookie = '';
-  });
-
   afterEach(() => {
     jest.restoreAllMocks();
-    cookie = '';
   });
 
   describe('GET /movies', () => {
@@ -835,286 +830,272 @@ describe('Movie Controller', () => {
   });
 
   describe('PUT /movies/:id', () => {
-    afterEach(() => {
-      cookie = '';
-    });
-
-    it('should update title and original title of the movie with the payload', async () => {
-      const newMoviePayload = await getMoviePayload();
-
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
-
-      const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
-      const newMovieId = newMovieResponse.body.id;
-
-      const [beforeUpdate] = await execQuery(`
-        SELECT title, original_title AS "originalTitle" FROM movie WHERE id = ${newMovieId}
-      `);
-
-      expect(beforeUpdate.title).toEqual(newMovieResponse.body.title);
-      expect(beforeUpdate.originalTitle).toEqual(newMovieResponse.body.originalTitle);
-
-      const newMovieTitle = `${getRandomCharacters(5)} ${getRandomCharacters(10)} ${Date.now()}`;
-      const response = await server.put(`/api/movies/${newMovieId}`).set('Cookie', cookie).send({
-        title: newMovieTitle,
-        originalTitle: newMovieTitle,
+    describe('as store manager', () => {
+      beforeAll(async () => {
+        const credential = await getStoreManagerCredential();
+        await login(credential.email, credential.password);
       });
 
-      expect(response.status).toEqual(204);
-
-      const [afterUpdate] = await execQuery(`
-        SELECT title, original_title AS "originalTitle" FROM movie WHERE id = ${newMovieId}
-      `);
-
-      expect(afterUpdate.title).toEqual(newMovieTitle);
-      expect(afterUpdate.originalTitle).toEqual(newMovieTitle);
-    });
-
-    it('should update genre of the movie', async () => {
-      const newMoviePayload = await getMoviePayload();
-      newMoviePayload.genres = ['Drama', 'Thriller'];
-
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
-
-      let [genresQueryResult] = await execQuery(`
-        SELECT json_agg(id) AS ids 
-        FROM genre 
-        WHERE genre_name IN (${newMoviePayload.genres.map((g) => `'${g}'`)})
-      `);
-
-      const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
-      const newMovieId = newMovieResponse.body.id;
-
-      const [beforeUpdate] = await execQuery(`
-        SELECT genre_ids AS "genreIds" FROM movie WHERE id = ${newMovieId}
-      `);
-      expect(beforeUpdate.genreIds).toEqual(genresQueryResult.ids);
-
-      const newGenres = ['Action', 'Adventure', 'Science Fiction'];
-      [genresQueryResult] = await execQuery(`
-        SELECT json_agg(id) AS ids FROM genre WHERE genre_name IN (${newGenres.map((g) => `'${g}'`)})
-      `);
-
-      const response = await server.put(`/api/movies/${newMovieId}`).set('Cookie', cookie).send({
-        genres: newGenres,
+      afterAll(async () => {
+        await server.get('/api/auth/logout').set('Cookie', cookie);
       });
 
-      expect(response.status).toEqual(204);
+      it('should update title and original title of the movie with the payload', async () => {
+        const newMoviePayload = await getMoviePayload();
 
-      const [afterUpdate] = await execQuery(`
-        SELECT genre_ids AS "genreIds" FROM movie WHERE id = ${newMovieId}
-      `);
+        const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
+        const newMovieId = newMovieResponse.body.id;
 
-      expect(afterUpdate.genreIds).toEqual(genresQueryResult.ids);
-    });
+        const [beforeUpdate] = await execQuery(`
+          SELECT title, original_title AS "originalTitle" FROM movie WHERE id = ${newMovieId}
+        `);
 
-    it('should update genre of the movie when data in payload is mixed casing', async () => {
-      const newMoviePayload = await getMoviePayload();
-      newMoviePayload.genres = ['drAMA', 'THRILler'];
+        expect(beforeUpdate.title).toEqual(newMovieResponse.body.title);
+        expect(beforeUpdate.originalTitle).toEqual(newMovieResponse.body.originalTitle);
 
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
+        const newMovieTitle = `${getRandomCharacters(5)} ${getRandomCharacters(10)} ${Date.now()}`;
+        const response = await server.put(`/api/movies/${newMovieId}`).set('Cookie', cookie).send({
+          title: newMovieTitle,
+          originalTitle: newMovieTitle,
+        });
 
-      let [genresQueryResult] = await execQuery(`
-        SELECT json_agg(id) AS ids 
-        FROM genre 
-        WHERE genre_name IN (${newMoviePayload.genres.map((g) => `INITCAP('${g}')`)})
-      `);
+        expect(response.status).toEqual(204);
 
-      const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
-      const newMovieId = newMovieResponse.body.id;
+        const [afterUpdate] = await execQuery(`
+          SELECT title, original_title AS "originalTitle" FROM movie WHERE id = ${newMovieId}
+        `);
 
-      const [beforeUpdate] = await execQuery(`
-        SELECT genre_ids AS "genreIds" FROM movie WHERE id = ${newMovieId}
-      `);
-      expect(beforeUpdate.genreIds).toEqual(genresQueryResult.ids);
-
-      const newGenres = ['actION', 'adVenTURE', 'science fictION'];
-      [genresQueryResult] = await execQuery(`
-        SELECT json_agg(id) AS ids 
-        FROM genre 
-        WHERE genre_name IN (${newGenres.map((g) => `INITCAP('${g}')`)})
-      `);
-
-      const response = await server.put(`/api/movies/${newMovieId}`).set('Cookie', cookie).send({
-        genres: newGenres,
+        expect(afterUpdate.title).toEqual(newMovieTitle);
+        expect(afterUpdate.originalTitle).toEqual(newMovieTitle);
       });
 
-      expect(response.status).toEqual(204);
+      it('should update genre of the movie', async () => {
+        const newMoviePayload = await getMoviePayload();
+        newMoviePayload.genres = ['Drama', 'Thriller'];
 
-      const [afterUpdate] = await execQuery(`
-        SELECT genre_ids AS "genreIds" FROM movie WHERE id = ${newMovieId}
-      `);
+        let [genresQueryResult] = await execQuery(`
+          SELECT json_agg(id) AS ids 
+          FROM genre 
+          WHERE genre_name IN (${newMoviePayload.genres.map((g) => `'${g}'`)})
+        `);
 
-      expect(afterUpdate.genreIds).toEqual(genresQueryResult.ids);
-    });
+        const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
+        const newMovieId = newMovieResponse.body.id;
 
-    it('should update the country of origin of the movie', async () => {
-      const newMoviePayload = await getMoviePayload();
-      newMoviePayload.countriesOfOrigin = ['US'];
+        const [beforeUpdate] = await execQuery(`
+          SELECT genre_ids AS "genreIds" FROM movie WHERE id = ${newMovieId}
+        `);
+        expect(beforeUpdate.genreIds).toEqual(genresQueryResult.ids);
 
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
+        const newGenres = ['Action', 'Adventure', 'Science Fiction'];
+        [genresQueryResult] = await execQuery(`
+          SELECT json_agg(id) AS ids FROM genre WHERE genre_name IN (${newGenres.map((g) => `'${g}'`)})
+        `);
 
-      let [countriesQueryResult] = await execQuery(`
-        SELECT json_agg(id) AS ids 
-        FROM country 
-        WHERE iso_country_code IN (${newMoviePayload.countriesOfOrigin.map((c) => `UPPER('${c}')`)})
-      `);
+        const response = await server.put(`/api/movies/${newMovieId}`).set('Cookie', cookie).send({
+          genres: newGenres,
+        });
 
-      const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
-      const newMovieId = newMovieResponse.body.id;
+        expect(response.status).toEqual(204);
 
-      const [beforeUpdate] = await execQuery(`
-        SELECT origin_country_ids AS "originCountryIds" FROM movie WHERE id = ${newMovieId}
-      `);
-      expect(beforeUpdate.originCountryIds).toEqual(countriesQueryResult.ids);
-      const newOriginCountries = ['IN', 'AU'];
-      [countriesQueryResult] = await execQuery(`
-        SELECT json_agg(id) AS ids 
-        FROM country 
-        WHERE iso_country_code IN (${newOriginCountries.map((c) => `UPPER('${c}')`)})
-      `);
+        const [afterUpdate] = await execQuery(`
+          SELECT genre_ids AS "genreIds" FROM movie WHERE id = ${newMovieId}
+        `);
 
-      const response = await server.put(`/api/movies/${newMovieId}`).set('Cookie', cookie).send({
-        countriesOfOrigin: newOriginCountries,
+        expect(afterUpdate.genreIds).toEqual(genresQueryResult.ids);
       });
 
-      expect(response.status).toEqual(204);
+      it('should update genre of the movie when data in payload is mixed casing', async () => {
+        const newMoviePayload = await getMoviePayload();
+        newMoviePayload.genres = ['drAMA', 'THRILler'];
 
-      const [afterUpdate] = await execQuery(`
-        SELECT origin_country_ids AS "originCountryIds" FROM movie WHERE id = ${newMovieId}
-      `);
+        let [genresQueryResult] = await execQuery(`
+          SELECT json_agg(id) AS ids 
+          FROM genre 
+          WHERE genre_name IN (${newMoviePayload.genres.map((g) => `INITCAP('${g}')`)})
+        `);
 
-      const expectedValues = JSON.parse(JSON.stringify(afterUpdate.originCountryIds)).sort();
-      const actualValues = JSON.parse(JSON.stringify(countriesQueryResult.ids)).sort();
-      expect(expectedValues).toEqual(actualValues);
-    });
+        const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
+        const newMovieId = newMovieResponse.body.id;
 
-    it('should update the country of origin of the movie when data in payload are mixed casing', async () => {
-      const newMoviePayload = await getMoviePayload();
-      newMoviePayload.countriesOfOrigin = ['US'];
+        const [beforeUpdate] = await execQuery(`
+          SELECT genre_ids AS "genreIds" FROM movie WHERE id = ${newMovieId}
+        `);
+        expect(beforeUpdate.genreIds).toEqual(genresQueryResult.ids);
 
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
+        const newGenres = ['actION', 'adVenTURE', 'science fictION'];
+        [genresQueryResult] = await execQuery(`
+          SELECT json_agg(id) AS ids 
+          FROM genre 
+          WHERE genre_name IN (${newGenres.map((g) => `INITCAP('${g}')`)})
+        `);
 
-      let [countriesQueryResult] = await execQuery(`
-        SELECT json_agg(id) AS ids 
-        FROM country 
-        WHERE iso_country_code IN (${newMoviePayload.countriesOfOrigin.map((c) => `UPPER('${c}')`)})
-      `);
+        const response = await server.put(`/api/movies/${newMovieId}`).set('Cookie', cookie).send({
+          genres: newGenres,
+        });
 
-      const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
-      const newMovieId = newMovieResponse.body.id;
+        expect(response.status).toEqual(204);
 
-      const [beforeUpdate] = await execQuery(`
-        SELECT origin_country_ids AS "originCountryIds" FROM movie WHERE id = ${newMovieId}
-      `);
+        const [afterUpdate] = await execQuery(`
+          SELECT genre_ids AS "genreIds" FROM movie WHERE id = ${newMovieId}
+        `);
 
-      expect(beforeUpdate.originCountryIds).toEqual(countriesQueryResult.ids);
-      const newOriginCountries = ['IN', 'au'];
-      [countriesQueryResult] = await execQuery(`
-        SELECT json_agg(id) AS ids 
-        FROM country 
-        WHERE iso_country_code IN (${newOriginCountries.map((c) => `UPPER('${c}')`)})
-      `);
-
-      const response = await server.put(`/api/movies/${newMovieId}`).set('Cookie', cookie).send({
-        countriesOfOrigin: newOriginCountries,
+        expect(afterUpdate.genreIds).toEqual(genresQueryResult.ids);
       });
 
-      expect(response.status).toEqual(204);
+      it('should update the country of origin of the movie', async () => {
+        const newMoviePayload = await getMoviePayload();
+        newMoviePayload.countriesOfOrigin = ['US'];
 
-      const [afterUpdate] = await execQuery(`
-        SELECT origin_country_ids AS "originCountryIds" FROM movie WHERE id = ${newMovieId}
-      `);
+        let [countriesQueryResult] = await execQuery(`
+          SELECT json_agg(id) AS ids 
+          FROM country 
+          WHERE iso_country_code IN (${newMoviePayload.countriesOfOrigin.map((c) => `UPPER('${c}')`)})
+        `);
 
-      const expectedValues = JSON.parse(JSON.stringify(afterUpdate.originCountryIds)).sort();
-      const actualValues = JSON.parse(JSON.stringify(countriesQueryResult.ids)).sort();
-      expect(expectedValues).toEqual(actualValues);
-    });
+        const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
+        const newMovieId = newMovieResponse.body.id;
 
-    it('should update the movie language of the movie', async () => {
-      const newMoviePayload = await getMoviePayload();
-      newMoviePayload.genres = ['Drama', 'Thriller'];
+        const [beforeUpdate] = await execQuery(`
+          SELECT origin_country_ids AS "originCountryIds" FROM movie WHERE id = ${newMovieId}
+        `);
+        expect(beforeUpdate.originCountryIds).toEqual(countriesQueryResult.ids);
+        const newOriginCountries = ['IN', 'AU'];
+        [countriesQueryResult] = await execQuery(`
+          SELECT json_agg(id) AS ids 
+          FROM country 
+          WHERE iso_country_code IN (${newOriginCountries.map((c) => `UPPER('${c}')`)})
+        `);
 
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
+        const response = await server.put(`/api/movies/${newMovieId}`).set('Cookie', cookie).send({
+          countriesOfOrigin: newOriginCountries,
+        });
 
-      let [languageQueryResult] = await execQuery(`
-        SELECT id 
-        FROM movie_language 
-        WHERE iso_language_code = LOWER('${newMoviePayload.language}')
-      `);
+        expect(response.status).toEqual(204);
 
-      const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
-      const newMovieId = newMovieResponse.body.id;
+        const [afterUpdate] = await execQuery(`
+          SELECT origin_country_ids AS "originCountryIds" FROM movie WHERE id = ${newMovieId}
+        `);
 
-      const [beforeUpdate] = await execQuery(`
-        SELECT language_id AS "languageId" FROM movie WHERE id = ${newMovieId}
-      `);
-      expect(beforeUpdate.languageId).toEqual(languageQueryResult.id);
-      const newMovieLanguage = 'sd';
-      [languageQueryResult] = await execQuery(`
-        SELECT id 
-        FROM movie_language 
-        WHERE iso_language_code = LOWER('${newMovieLanguage}')
-      `);
-
-      const response = await server.put(`/api/movies/${newMovieId}`).set('Cookie', cookie).send({
-        language: newMovieLanguage,
+        const expectedValues = JSON.parse(JSON.stringify(afterUpdate.originCountryIds)).sort();
+        const actualValues = JSON.parse(JSON.stringify(countriesQueryResult.ids)).sort();
+        expect(expectedValues).toEqual(actualValues);
       });
 
-      expect(response.status).toEqual(204);
+      it('should update the country of origin of the movie when data in payload are mixed casing', async () => {
+        const newMoviePayload = await getMoviePayload();
+        newMoviePayload.countriesOfOrigin = ['US'];
 
-      const [afterUpdate] = await execQuery(`
-        SELECT language_id AS "languageId" FROM movie WHERE id = ${newMovieId}
-      `);
+        let [countriesQueryResult] = await execQuery(`
+          SELECT json_agg(id) AS ids 
+          FROM country 
+          WHERE iso_country_code IN (${newMoviePayload.countriesOfOrigin.map((c) => `UPPER('${c}')`)})
+        `);
 
-      expect(afterUpdate.languageId).toEqual(languageQueryResult.id);
-    });
+        const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
+        const newMovieId = newMovieResponse.body.id;
 
-    it('should update the movie language of the movie when data in payload is upper case', async () => {
-      const newMoviePayload = await getMoviePayload();
-      newMoviePayload.genres = ['Drama', 'Thriller'];
+        const [beforeUpdate] = await execQuery(`
+          SELECT origin_country_ids AS "originCountryIds" FROM movie WHERE id = ${newMovieId}
+        `);
 
-      let [languageQueryResult] = await execQuery(`
-        SELECT id 
-        FROM movie_language 
-        WHERE iso_language_code = LOWER('${newMoviePayload.language}')
-      `);
+        expect(beforeUpdate.originCountryIds).toEqual(countriesQueryResult.ids);
+        const newOriginCountries = ['IN', 'au'];
+        [countriesQueryResult] = await execQuery(`
+          SELECT json_agg(id) AS ids 
+          FROM country 
+          WHERE iso_country_code IN (${newOriginCountries.map((c) => `UPPER('${c}')`)})
+        `);
 
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
+        const response = await server.put(`/api/movies/${newMovieId}`).set('Cookie', cookie).send({
+          countriesOfOrigin: newOriginCountries,
+        });
 
-      const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
-      expect(newMovieResponse.status).toEqual(201);
-      const newMovieId = newMovieResponse.body.id;
+        expect(response.status).toEqual(204);
 
-      const [beforeUpdate] = await execQuery(`
-        SELECT language_id AS "languageId" FROM movie WHERE id = ${newMovieId}
-      `);
-      expect(beforeUpdate.languageId).toEqual(languageQueryResult.id);
-      const newMovieLanguage = 'SD';
-      [languageQueryResult] = await execQuery(`
-        SELECT id 
-        FROM movie_language 
-        WHERE iso_language_code = LOWER('${newMovieLanguage}')
-      `);
+        const [afterUpdate] = await execQuery(`
+          SELECT origin_country_ids AS "originCountryIds" FROM movie WHERE id = ${newMovieId}
+        `);
 
-      const response = await server.put(`/api/movies/${newMovieId}`).set('Cookie', cookie).send({
-        language: newMovieLanguage,
+        const expectedValues = JSON.parse(JSON.stringify(afterUpdate.originCountryIds)).sort();
+        const actualValues = JSON.parse(JSON.stringify(countriesQueryResult.ids)).sort();
+        expect(expectedValues).toEqual(actualValues);
       });
 
-      expect(response.status).toEqual(204);
+      it('should update the movie language of the movie', async () => {
+        const newMoviePayload = await getMoviePayload();
+        newMoviePayload.genres = ['Drama', 'Thriller'];
 
-      const [afterUpdate] = await execQuery(`
-        SELECT language_id AS "languageId" FROM movie WHERE id = ${newMovieId}
-      `);
+        let [languageQueryResult] = await execQuery(`
+          SELECT id 
+          FROM movie_language 
+          WHERE iso_language_code = LOWER('${newMoviePayload.language}')
+        `);
 
-      expect(afterUpdate.languageId).toEqual(languageQueryResult.id);
+        const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
+        const newMovieId = newMovieResponse.body.id;
+
+        const [beforeUpdate] = await execQuery(`
+          SELECT language_id AS "languageId" FROM movie WHERE id = ${newMovieId}
+        `);
+        expect(beforeUpdate.languageId).toEqual(languageQueryResult.id);
+        const newMovieLanguage = 'sd';
+        [languageQueryResult] = await execQuery(`
+          SELECT id 
+          FROM movie_language 
+          WHERE iso_language_code = LOWER('${newMovieLanguage}')
+        `);
+
+        const response = await server.put(`/api/movies/${newMovieId}`).set('Cookie', cookie).send({
+          language: newMovieLanguage,
+        });
+
+        expect(response.status).toEqual(204);
+
+        const [afterUpdate] = await execQuery(`
+          SELECT language_id AS "languageId" FROM movie WHERE id = ${newMovieId}
+        `);
+
+        expect(afterUpdate.languageId).toEqual(languageQueryResult.id);
+      });
+
+      it('should update the movie language of the movie when data in payload is upper case', async () => {
+        const newMoviePayload = await getMoviePayload();
+        newMoviePayload.genres = ['Drama', 'Thriller'];
+
+        let [languageQueryResult] = await execQuery(`
+          SELECT id 
+          FROM movie_language 
+          WHERE iso_language_code = LOWER('${newMoviePayload.language}')
+        `);
+
+        const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
+        expect(newMovieResponse.status).toEqual(201);
+        const newMovieId = newMovieResponse.body.id;
+
+        const [beforeUpdate] = await execQuery(`
+          SELECT language_id AS "languageId" FROM movie WHERE id = ${newMovieId}
+        `);
+        expect(beforeUpdate.languageId).toEqual(languageQueryResult.id);
+        const newMovieLanguage = 'SD';
+        [languageQueryResult] = await execQuery(`
+          SELECT id 
+          FROM movie_language 
+          WHERE iso_language_code = LOWER('${newMovieLanguage}')
+        `);
+
+        const response = await server.put(`/api/movies/${newMovieId}`).set('Cookie', cookie).send({
+          language: newMovieLanguage,
+        });
+
+        expect(response.status).toEqual(204);
+
+        const [afterUpdate] = await execQuery(`
+          SELECT language_id AS "languageId" FROM movie WHERE id = ${newMovieId}
+        `);
+
+        expect(afterUpdate.languageId).toEqual(languageQueryResult.id);
+      });
     });
 
     it('should not let staff to update the movie', async () => {
@@ -1141,6 +1122,8 @@ describe('Movie Controller', () => {
         status: 'error',
         message: 'You are not authorized to perform this operation',
       });
+
+      await server.get('/api/auth/logout').set('Cookie', cookie);
     });
 
     it('should not let customer to update the movie', async () => {
@@ -1167,6 +1150,8 @@ describe('Movie Controller', () => {
         status: 'error',
         message: 'You are not authorized to perform this operation',
       });
+
+      await server.get('/api/auth/logout').set('Cookie', cookie);
     });
   });
 
@@ -1193,148 +1178,150 @@ describe('Movie Controller', () => {
       return newActorId;
     };
 
-    it('should delete the movie', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
+    describe('as store manager', () => {
+      beforeAll(async () => {
+        const credential = await getStoreManagerCredential();
+        await login(credential.email, credential.password);
+      });
 
-      const newMoviePayload = await getMoviePayload();
-      const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
-      const newMovieId = newMovieResponse.body.id;
-      let [movieQueryResult] = await execQuery(`
-        SELECT COUNT(*) FROM movie WHERE id = ${newMovieId}  
-      `);
-      expect(Number(movieQueryResult.count)).toEqual(1);
+      afterAll(async () => {
+        await server.get('/api/auth/logout').set('Cookie', cookie);
+      });
 
-      const response = await server.delete(`/api/movies/${newMovieId}`).set('Cookie', cookie);
-      expect(response.status).toEqual(204);
+      it('should delete the movie', async () => {
+        const newMoviePayload = await getMoviePayload();
+        const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
+        const newMovieId = newMovieResponse.body.id;
+        let [movieQueryResult] = await execQuery(`
+          SELECT COUNT(*) FROM movie WHERE id = ${newMovieId}  
+        `);
+        expect(Number(movieQueryResult.count)).toEqual(1);
 
-      [movieQueryResult] = await execQuery(`
-        SELECT COUNT(*) FROM movie WHERE id = ${newMovieId}  
-      `);
-      expect(Number(movieQueryResult.count)).toEqual(0);
-    });
+        const response = await server.delete(`/api/movies/${newMovieId}`).set('Cookie', cookie);
+        expect(response.status).toEqual(204);
 
-    it('should delete the movie and movie actors', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
+        [movieQueryResult] = await execQuery(`
+          SELECT COUNT(*) FROM movie WHERE id = ${newMovieId}  
+        `);
+        expect(Number(movieQueryResult.count)).toEqual(0);
+      });
 
-      const newMoviePayload = await getMoviePayload();
-      const newActors = await getRandomActors(5);
-      const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
-      const newMovieId = newMovieResponse.body.id;
+      it('should delete the movie and movie actors', async () => {
+        const newMoviePayload = await getMoviePayload();
+        const newActors = await getRandomActors(5);
+        const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
+        const newMovieId = newMovieResponse.body.id;
 
-      // Verify new movie count
-      let [movieQueryResult] = await execQuery(`
-        SELECT COUNT(*) FROM movie WHERE id = ${newMovieId}  
-      `);
-      expect(Number(movieQueryResult.count)).toEqual(1);
+        // Verify new movie count
+        let [movieQueryResult] = await execQuery(`
+          SELECT COUNT(*) FROM movie WHERE id = ${newMovieId}  
+        `);
+        expect(Number(movieQueryResult.count)).toEqual(1);
 
-      const newActorIds = [];
-      for (const a of newActors) {
-        const newActorId = await createTestActor(a, newMovieId);
-        newActorIds.push(newActorId);
-      }
+        const newActorIds = [];
+        for (const a of newActors) {
+          const newActorId = await createTestActor(a, newMovieId);
+          newActorIds.push(newActorId);
+        }
 
-      // Verify new actors count before delete
-      let [actorsQueryResult] = await execQuery(`
-        SELECT COUNT(*) FROM actor WHERE id IN (${newActorIds.join(',')})  
-      `);
-      expect(Number(actorsQueryResult.count)).toEqual(newActorIds.length);
+        // Verify new actors count before delete
+        let [actorsQueryResult] = await execQuery(`
+          SELECT COUNT(*) FROM actor WHERE id IN (${newActorIds.join(',')})  
+        `);
+        expect(Number(actorsQueryResult.count)).toEqual(newActorIds.length);
 
-      // Verify new movie cast count before delete
-      let [movieActorsQueryResult] = await execQuery(`
-        SELECT COUNT(*) FROM movie_actor WHERE movie_id = ${newMovieId}
-      `);
-      expect(Number(movieActorsQueryResult.count)).toEqual(newActorIds.length);
+        // Verify new movie cast count before delete
+        let [movieActorsQueryResult] = await execQuery(`
+          SELECT COUNT(*) FROM movie_actor WHERE movie_id = ${newMovieId}
+        `);
+        expect(Number(movieActorsQueryResult.count)).toEqual(newActorIds.length);
 
-      // Delete movie
-      await server.delete(`/api/movies/${newMovieId}`).set('Cookie', cookie);
-      [movieQueryResult] = await execQuery(`
-        SELECT COUNT(*) FROM movie WHERE id = ${newMovieId}  
-      `);
-      expect(Number(movieQueryResult.count)).toEqual(0);
+        // Delete movie
+        await server.delete(`/api/movies/${newMovieId}`).set('Cookie', cookie);
+        [movieQueryResult] = await execQuery(`
+          SELECT COUNT(*) FROM movie WHERE id = ${newMovieId}  
+        `);
+        expect(Number(movieQueryResult.count)).toEqual(0);
 
-      // Verify actors count after delete
-      [actorsQueryResult] = await execQuery(`
-        SELECT COUNT(*) FROM actor WHERE id IN (${newActorIds.join(',')})  
-      `);
-      expect(Number(actorsQueryResult.count)).toEqual(newActorIds.length);
+        // Verify actors count after delete
+        [actorsQueryResult] = await execQuery(`
+          SELECT COUNT(*) FROM actor WHERE id IN (${newActorIds.join(',')})  
+        `);
+        expect(Number(actorsQueryResult.count)).toEqual(newActorIds.length);
 
-      // Verify movie cast count after delete
-      [movieActorsQueryResult] = await execQuery(`
-        SELECT COUNT(*) FROM movie_actor WHERE movie_id = ${newMovieId}
-      `);
-      expect(Number(movieActorsQueryResult.count)).toEqual(0);
-    });
+        // Verify movie cast count after delete
+        [movieActorsQueryResult] = await execQuery(`
+          SELECT COUNT(*) FROM movie_actor WHERE movie_id = ${newMovieId}
+        `);
+        expect(Number(movieActorsQueryResult.count)).toEqual(0);
+      });
 
-    it('should delete the movie, movie actors and the inventory records', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
+      it('should delete the movie, movie actors and the inventory records', async () => {
+        const newMoviePayload = await getMoviePayload();
+        const newActors = await getRandomActors(5);
+        const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
+        const newMovieId = newMovieResponse.body.id;
 
-      const newMoviePayload = await getMoviePayload();
-      const newActors = await getRandomActors(5);
-      const newMovieResponse = await server.post('/api/movies').set('Cookie', cookie).send(newMoviePayload);
-      const newMovieId = newMovieResponse.body.id;
+        // Verify new movie count
+        let [movieQueryResult] = await execQuery(`
+          SELECT COUNT(*) FROM movie WHERE id = ${newMovieId}  
+        `);
+        expect(Number(movieQueryResult.count)).toEqual(1);
 
-      // Verify new movie count
-      let [movieQueryResult] = await execQuery(`
-        SELECT COUNT(*) FROM movie WHERE id = ${newMovieId}  
-      `);
-      expect(Number(movieQueryResult.count)).toEqual(1);
+        const newActorIds = [];
+        for (const a of newActors) {
+          const newActorId = await createTestActor(a, newMovieId);
+          newActorIds.push(newActorId);
+        }
 
-      const newActorIds = [];
-      for (const a of newActors) {
-        const newActorId = await createTestActor(a, newMovieId);
-        newActorIds.push(newActorId);
-      }
+        // Verify new actors count before delete
+        let [actorsQueryResult] = await execQuery(`
+          SELECT COUNT(*) FROM actor WHERE id IN (${newActorIds.join(',')})  
+        `);
+        expect(Number(actorsQueryResult.count)).toEqual(newActorIds.length);
 
-      // Verify new actors count before delete
-      let [actorsQueryResult] = await execQuery(`
-        SELECT COUNT(*) FROM actor WHERE id IN (${newActorIds.join(',')})  
-      `);
-      expect(Number(actorsQueryResult.count)).toEqual(newActorIds.length);
+        // Verify new movie cast count before delete
+        let [movieActorsQueryResult] = await execQuery(`
+          SELECT COUNT(*) FROM movie_actor WHERE movie_id = ${newMovieId}
+        `);
+        expect(Number(movieActorsQueryResult.count)).toEqual(newActorIds.length);
 
-      // Verify new movie cast count before delete
-      let [movieActorsQueryResult] = await execQuery(`
-        SELECT COUNT(*) FROM movie_actor WHERE movie_id = ${newMovieId}
-      `);
-      expect(Number(movieActorsQueryResult.count)).toEqual(newActorIds.length);
+        // Insert inventory rows
+        await execQuery(`
+          INSERT INTO inventory (movie_id, store_id, stock_count) VALUES (${newMovieId}, 1, 10)
+        `);
 
-      // Insert inventory rows
-      await execQuery(`
-        INSERT INTO inventory (movie_id, store_id, stock_count) VALUES (${newMovieId}, 1, 10)
-      `);
+        // Verify inventory count before delete
+        let [inventoryQueryResult] = await execQuery(`
+          SELECT COUNT(*) FROM inventory WHERE movie_id = ${newMovieId}
+        `);
+        expect(Number(inventoryQueryResult.count)).toEqual(1);
 
-      // Verify inventory count before delete
-      let [inventoryQueryResult] = await execQuery(`
-        SELECT COUNT(*) FROM inventory WHERE movie_id = ${newMovieId}
-      `);
-      expect(Number(inventoryQueryResult.count)).toEqual(1);
+        // Delete movie
+        await server.delete(`/api/movies/${newMovieId}`).set('Cookie', cookie);
+        [movieQueryResult] = await execQuery(`
+          SELECT COUNT(*) FROM movie WHERE id = ${newMovieId}  
+        `);
+        expect(Number(movieQueryResult.count)).toEqual(0);
 
-      // Delete movie
-      await server.delete(`/api/movies/${newMovieId}`).set('Cookie', cookie);
-      [movieQueryResult] = await execQuery(`
-        SELECT COUNT(*) FROM movie WHERE id = ${newMovieId}  
-      `);
-      expect(Number(movieQueryResult.count)).toEqual(0);
+        // Verify actors count after delete
+        [actorsQueryResult] = await execQuery(`
+          SELECT COUNT(*) FROM actor WHERE id IN (${newActorIds.join(',')})  
+        `);
+        expect(Number(actorsQueryResult.count)).toEqual(newActorIds.length);
 
-      // Verify actors count after delete
-      [actorsQueryResult] = await execQuery(`
-        SELECT COUNT(*) FROM actor WHERE id IN (${newActorIds.join(',')})  
-      `);
-      expect(Number(actorsQueryResult.count)).toEqual(newActorIds.length);
+        // Verify movie cast count after delete
+        [movieActorsQueryResult] = await execQuery(`
+          SELECT COUNT(*) FROM movie_actor WHERE movie_id = ${newMovieId}
+        `);
+        expect(Number(movieActorsQueryResult.count)).toEqual(0);
 
-      // Verify movie cast count after delete
-      [movieActorsQueryResult] = await execQuery(`
-        SELECT COUNT(*) FROM movie_actor WHERE movie_id = ${newMovieId}
-      `);
-      expect(Number(movieActorsQueryResult.count)).toEqual(0);
-
-      // Verify inventory count after delete
-      [inventoryQueryResult] = await execQuery(`
-        SELECT COUNT(*) FROM inventory WHERE movie_id = ${newMovieId}
-      `);
-      expect(Number(inventoryQueryResult.count)).toEqual(0);
+        // Verify inventory count after delete
+        [inventoryQueryResult] = await execQuery(`
+          SELECT COUNT(*) FROM inventory WHERE movie_id = ${newMovieId}
+        `);
+        expect(Number(inventoryQueryResult.count)).toEqual(0);
+      });
     });
 
     it('should not let staff to delete the movie', async () => {
@@ -1353,6 +1340,8 @@ describe('Movie Controller', () => {
         status: 'error',
         message: 'You are not authorized to perform this operation',
       });
+
+      await server.get('/api/auth/logout').set('Cookie', cookie);
     });
 
     it('should not let customer to delete the movie', async () => {
@@ -1371,6 +1360,8 @@ describe('Movie Controller', () => {
         status: 'error',
         message: 'You are not authorized to perform this operation',
       });
+
+      await server.get('/api/auth/logout').set('Cookie', cookie);
     });
   });
 
@@ -1380,6 +1371,10 @@ describe('Movie Controller', () => {
       const tmdbIds = csvRows.filter((r) => !isNaN(r.tmdbId)).map((r) => r.tmdbId);
       await deleteMoviesByTmdbId(tmdbIds);
     };
+
+    afterEach(async () => {
+      await server.get('/api/auth/logout').set('Cookie', cookie);
+    });
 
     it('should be able to upload the movies from csv file that has no errors', async () => {
       jest.spyOn(MovieModel, 'create').mockImplementation(
