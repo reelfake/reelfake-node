@@ -439,7 +439,7 @@ form.addEventListener('submit', e => {
       */
    };
 
-   // If the UI has a button to cancel the event streaming then below snippet is to cancel the streaming
+   // If the UI has a button to cancel the event streaming then below snippet is to cancel it
    const cancelButton = document.getElementById('cancel-button');
    cancelButton.addEventListener('click', () => {
       if (eventSource) {
