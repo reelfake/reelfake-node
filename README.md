@@ -22,13 +22,14 @@
    a. [Base url](#base-url)<br>
    b. [Protected and Unprotected Routes](#protected-and-unprotected-routes)<br>
    c. [Using customer / staff / store manager for login](#using-customer-staff-store-manager-for-login)
-7. [Examples](#examples)<br>
+7. [Postman Collection](#postman-collection)<br>
+8. [Examples](#examples)<br>
    a. [Forgot Password](#forgot-password)<br>
    b. [Login](#login)<br>
    c. [Add Movie](#add-movie)<br>
    d. [Add Movie with Actors](#add-movie-with-actors)<br>
    e. [Track File Validation for Upload](#track-file-validation-for-upload)<br>
-8. [Generating JWT Secret](#generating-jwt-secret)
+9. [Generating JWT Secret](#generating-jwt-secret)
 
 ## Introduction
 
@@ -165,6 +166,11 @@ curl --location --request PUT 'https://reelfake.cloud/api/staff/{id}/forgot_pass
     "confirmedNewPassword": "test@123"
 }'
 ```
+
+## Postman Collection
+
+You can use the [postman collection](https://drive.google.com/file/d/1MVjfk2LI4SR919Nn2Hre1gv8IAOUuuSm/view?usp=sharing) if you want to try the api on reelfake.cloud.
+Note that this postman collection does not have all the requests mostly POST, PUT and DELETE that mutates the data.
 
 ## Examples
 
@@ -345,6 +351,8 @@ Adding a movie with actors is same as adding a movie above but only differs in t
 ### Track File Validation for Upload
 
 The route /movies/upload/validate provides a query option enable_tracking that sends the tracking url that implements the server sent events.
+
+You can download the [sample csv](https://drive.google.com/file/d/1vsubzQ-HyZX6OZtK5Tb0vWiUBU0CgiCF/view?usp=sharing) file to try the file validation api.
 
 ```javascript
 // The csv file upload is accessible only to store manager role
