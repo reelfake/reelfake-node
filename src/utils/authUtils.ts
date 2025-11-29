@@ -2,12 +2,12 @@ import jwt from 'jsonwebtoken';
 import { Op } from 'sequelize';
 import sequelize from '../sequelize.config';
 import bcrypt from 'bcryptjs';
-import { USER_ROLES, ERROR_MESSAGES } from '../constants';
+import { USER_ROLES, ERROR_MESSAGES, envVars } from '../constants';
 import { BaseModel, CustomerModel, StaffModel } from '../models';
 import { AppError } from '../utils';
 import type { GenericModelConstraint } from '../types';
 
-const JWT_SECRET = process.env.JWT_SECRET || '';
+const JWT_SECRET = envVars.jwtSecret || '';
 
 export function generateAuthToken(id: number, email: string, role: USER_ROLES) {
   const auth_token = jwt.sign(

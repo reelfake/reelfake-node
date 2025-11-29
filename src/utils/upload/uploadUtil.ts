@@ -1,7 +1,7 @@
 import { DatabaseError, UniqueConstraintError, ValidationError } from 'sequelize';
 import fs from 'fs';
 import * as csv from 'fast-csv';
-import { availableCountries, availableGenres, availableMovieLanguages } from '../../constants';
+import { availableCountries, availableGenres, availableMovieLanguages, envVars } from '../../constants';
 
 export type CsvRow = {
   tmdb_id: string;
@@ -118,7 +118,7 @@ export class UploadUtil {
 
     UploadUtil.IS_INITIATED = true;
     UploadUtil.CSV_STREAM = fs
-      .createReadStream(filePath, { encoding: 'utf-8', ...(process.env.NODE_ENV === 'test' && { highWaterMark: 10 * 1000 }) })
+      .createReadStream(filePath, { encoding: 'utf-8', ...(envVars.nodeEnv === 'test' && { highWaterMark: 10 * 1000 }) })
       .pipe(csv.parse<CsvRow, CsvRowWithIndex>({ headers: true }))
       .transform((row: CsvRow) => ({ ...row, index: ++UploadUtil.TOTAL_ROWS }));
   }

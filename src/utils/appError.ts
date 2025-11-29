@@ -1,3 +1,5 @@
+import { envVars } from '../constants';
+
 export class AppError extends Error {
   statusCode: number;
   status: 'error' | 'failed';
@@ -6,6 +8,6 @@ export class AppError extends Error {
     super(message);
     this.statusCode = statusCode;
     this.status = statusCode < 500 ? 'error' : 'failed';
-    if (process.env.NODE_ENV !== 'production') Error.captureStackTrace(this, this.constructor);
+    if (envVars.nodeEnv !== 'production') Error.captureStackTrace(this, this.constructor);
   }
 }

@@ -5,6 +5,7 @@ export { COUNTRIES, availableCountries } from './countries';
 export { LANGUAGES, availableMovieLanguages } from './languages';
 export { movieModelAttributes } from './expandedAttributes';
 export { USER_ROLES, TOKEN_EXPIRING_IN_MS } from './auth';
+export { default as envVars } from './envVars';
 
 export const DEFAULT_PORT = 8000;
 export const SECURE_PORT = 443;

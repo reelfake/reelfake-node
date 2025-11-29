@@ -1,41 +1,34 @@
 import dotenv from 'dotenv';
 
-let envName = '';
+const envName = process.env.NODE_ENV;
 
-switch (process.env.NODE_ENV) {
-  case 'production':
-    envName = 'prod';
-    break;
-  case 'development':
-    envName = 'dev';
-    break;
-  case 'test':
-    envName = 'test';
-    break;
-  default:
-    throw new Error('App environment not found');
+if (envName === 'development') {
+  dotenv.config({ path: `${process.cwd()}/.env.dev` });
 }
 
-dotenv.config({ path: `${process.cwd()}/.env.${envName}` });
+if (envName === 'test') {
+  dotenv.config({ path: `${process.cwd()}/.env.test` });
+}
 
 import { Sequelize } from 'sequelize';
 import pg from 'pg';
+import { envVars } from './constants';
 
-const db = process.env['DB_NAME'];
-const user = process.env['DB_USER'];
-const password = process.env['DB_PASSWORD'];
-const host = process.env['DB_HOST'];
-const port = process.env['DB_PORT'];
+const db = envVars.db;
+const user = envVars.user;
+const password = envVars.password;
+const host = envVars.host;
+const port = envVars.port;
 
 if (!db || !user || !password || !host || !port) {
   throw new Error('Missing environment variables required for connecting to the database');
 }
 
-const enableLogs = process.env.ENABLE_SEQUELIZE_LOGS === 'true';
+const enableLogs = envVars.enableSequelizeLogs;
 
 const sequelize = new Sequelize(db, user, password, {
   host,
-  port: parseInt(port, 10),
+  port,
   dialect: 'postgres',
   dialectModule: pg,
   pool: {

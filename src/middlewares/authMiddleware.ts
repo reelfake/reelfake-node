@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { AppError, comparePasswordWithActual } from '../utils';
-import { ERROR_MESSAGES, USER_ROLES } from '../constants';
+import { ERROR_MESSAGES, USER_ROLES, envVars } from '../constants';
 import { CustomerModel, StaffModel } from '../models';
 import { CustomRequest, CustomRequestWithBody } from '../types';
 
@@ -11,7 +11,7 @@ export default function (req: Request, res: Response, next: NextFunction) {
     return next(new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401));
   }
   try {
-    const decodedToken = jwt.verify(token, process.env.JWT_SECRET || '', {
+    const decodedToken = jwt.verify(token, envVars.jwtSecret || '', {
       ignoreExpiration: false, // default
     });
 
@@ -32,7 +32,7 @@ export default function (req: Request, res: Response, next: NextFunction) {
     if ((err as Error).name === 'TokenExpiredError') {
       return next(new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401));
     }
-    if (process.env.NODE_ENV === 'prod') {
+    if (envVars.nodeEnv === 'prod') {
       next(new AppError('Error validating token', 401));
     } else {
       next(err);
@@ -100,22 +100,18 @@ export function validateUserRole(...roles: USER_ROLES[]) {
 }
 
 export function allowOnlyMe(req: Request, res: Response, next: NextFunction) {
-  const isProdEnvironment = process.env['NODE_ENV'] === 'production';
+  const isProdEnvironment = envVars.nodeEnv === 'production';
 
-  if (
-    isProdEnvironment &&
-    process.env['SHOULD_BLOCK_NON_OWNER'] === 'true' &&
-    process.env['API_OWNER_SECRET_KEY'] === undefined
-  ) {
+  if (isProdEnvironment && envVars.shouldBlockNonOwner && envVars.apiOwnerSecretKey === undefined) {
     next(new AppError(ERROR_MESSAGES.NON_OWNER_NOT_ALLOWED, 403));
     return;
   }
 
   if (
     isProdEnvironment &&
-    process.env['SHOULD_BLOCK_NON_OWNER'] === 'true' &&
-    process.env['API_OWNER_SECRET_KEY'] === undefined &&
-    req.headers['API_OWNER_SECRET_KEY'] !== process.env['API_OWNER_SECRET_KEY']
+    envVars.shouldBlockNonOwner &&
+    envVars.apiOwnerSecretKey === undefined &&
+    req.headers['API_OWNER_SECRET_KEY'] !== envVars.apiOwnerSecretKey
   ) {
     const disallowedMethods = ['PUT', 'PATCH', 'DELETE', 'POST'];
     const disallowedGETPaths = ['/api/movies/upload/track'];

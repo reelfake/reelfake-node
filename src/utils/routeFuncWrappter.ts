@@ -1,10 +1,11 @@
 import type { Request, Response, NextFunction } from 'express';
 import { ValidationError, BaseError } from 'sequelize';
+import { envVars } from '../constants';
 import { AppError } from '../utils';
 
 export default function (fn: (req: Request, res: Response, next: NextFunction) => Promise<void>) {
   return (req: Request, res: Response, next: NextFunction) => {
-    const isDevEnvironment = process.env['NODE_ENV'] === 'development';
+    const isDevEnvironment = envVars.nodeEnv === 'development';
     fn(req, res, next).catch((err) => {
       if (err instanceof ValidationError) {
         const errMessages = err.errors.map((error) => error.message);

@@ -23,6 +23,7 @@ import {
   inventoryRoutes,
 } from './routes';
 import sequelize from './sequelize.config';
+import { envVars } from './constants';
 
 // app.use(helmet());
 // app.use(morgan('tiny', { stream: logStream }));
@@ -138,13 +139,13 @@ app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
     res.status(appError.statusCode).json({
       status: appError.status,
       message: error.message,
-      stack: process.env.NODE_ENV === 'dev' ? error.stack : undefined,
+      stack: envVars.nodeEnv === 'development' ? error.stack : undefined,
     });
   } else {
     res.status(500).json({
       status: 'error',
       message: error.message,
-      stack: process.env.NODE_ENV === 'dev' ? error.stack : undefined,
+      stack: envVars.nodeEnv === 'development' ? error.stack : undefined,
     });
   }
 });

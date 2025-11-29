@@ -1,9 +1,10 @@
 import type { Sequelize } from 'sequelize';
+import { envVars } from '../constants';
 
 export async function testDbConnection(sequelize: Sequelize) {
   try {
     await sequelize.authenticate();
-    if (process.env['ENABLE_SEQUELIZE_LOGS'] === 'true') {
+    if (envVars.enableSequelizeLogs) {
       console.log('Connection to the database has been established successfully.');
     }
 
@@ -14,7 +15,7 @@ export async function testDbConnection(sequelize: Sequelize) {
 
     return { dialect, dbName, dbVersion, tables };
   } catch (error: unknown) {
-    if (process.env['ENABLE_SEQUELIZE_LOGS'] === 'true') {
+    if (envVars.enableSequelizeLogs) {
       console.log('Error connecting to the database:', error);
     }
     throw error as Error;

@@ -15,26 +15,29 @@ get:
       description: |
         The query string delay_event_ms when passed in request will pause for the given millisecond between every row processing. This query string is forwarded from the /movies/upload/validate route.
   responses:
-    '200':
+    "200":
       description: |
         Depending on enable_tracking query the response will differ. If the query is added to request and enabled below response stream is send.
 
         Stream of events with the validation result for the row in the csv file.<br>
         The event payload for the row that is processed is below.<br>
-        "data: { 'status': 'processing', 'outcome': 'success', 'rowNumber': <<number>>, 'id': <<number>> }\n\n"
+        "data: { 'status': 'processing', 'outcome': 'success', 'rowNumber': \<number\>, 'id': \<number\> }\n\n"
         - status: Indicating whether the validation is in progress or completed.
-        - rowNumber: The position of the row in the csv. 1 is for row # 1, 2 for row # 2 and so on.
+        - rowNumber: The position of the row in the csv. 1 is for row # 1, 2 for row no. 2 and so on.
         - id: Id of the created movie.
 
         The event payload for the failed row is below.<br>
-        "data: { 'status': 'processing', 'outcome': 'failed', 'rowNumber': <<number>>, 'reasons': [<<string>>] }\n\n"
+        "data: { 'status': 'processing', 'outcome': 'failed', 'rowNumber': <number>, 'reasons': [\<string\>] }\n\n"
 
         When csv file processing is finished, below event is send.<br>
-        "data: { 'status': 'done', 'totalRows': <<number>>, 'processedRowsCount': <<number>>, 'successRows': [<<{ 'rowNumber': <<number>>, 'id': <<number>> }>>], 'failedRows': [<< { 'rowNumber': <<number>>, 'reasons': [<<string>>] } >>] }\n\n"
+        "data: { 'status': 'done', 'totalRows': \<number\>, 'processedRowsCount': \<number\>, 'successRows': [\<{ 'rowNumber': \<number\>, 'id': \<number\> }\>], 'failedRows': [\< { 'rowNumber': \<number\>, 'reasons': [\<string\>] } \>] }\n\n"
         - totalRows: The total number of rows in the csv
         - processedRowsCount: The number of processed rows
         - successRows: The successfully processed rows having the row number and the id of the record
         - failedRows: The failed rows having the row number and reasons for the failure
+
+        Note: When using EventSource in javascript, in onmessage event handler the data can be accessed through event.data which will be json like below<br>
+        { 'status': 'processing', 'outcome': 'success', 'rowNumber': \<number\>, 'id': \<number\> }
       content:
         text/event-stream:
           schema:
@@ -42,16 +45,16 @@ get:
             example: |
               When processing is in progress
               If the row is successfully processed
-              "data: { 'status': 'processing', 'outcome': 'success', 'rowNumber': <<number>>, 'id': <<number>> }\n\n"
+              "data: { 'status': 'processing', 'outcome': 'success', 'rowNumber': <number>, 'id': <number> }\n\n"
 
               If the row is failed to process
-              "data: { 'status': 'processing', 'outcome': 'failed', 'rowNumber': <<number>>, 'reasons': [<<string>>] }\n\n"
+              "data: { 'status': 'processing', 'outcome': 'failed', 'rowNumber': <number>, 'reasons': [<string>] }\n\n"
 
               When processing is done
-              "data: { 'status': 'done', 'totalRows': <<number>>, 'successRows': [<<{ 'rowNumber': <<number>>, 'id': <<number>> }>>], 'failedRows': [<< { 'rowNumber': <<number>>, 'reasons': [<<string>>] } >>] }\n\n"
-    '401':
+              "data: { 'status': 'done', 'totalRows': <number>, 'successRows': [<{ 'rowNumber': <number>, 'id': <number> }>], 'failedRows': [< { 'rowNumber': <number>, 'reasons': [<string>] } >] }\n\n"
+    "401":
       $ref: ../../components/error/unauthorized.yaml
-    '403':
+    "403":
       $ref: ../../components/error/forbidden.yaml
-    '500':
+    "500":
       $ref: ../../components/error/internalServerError.yaml
