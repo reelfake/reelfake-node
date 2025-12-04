@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { Op, ValidationError, Transaction } from 'sequelize';
+import { ValidationError, Transaction } from 'sequelize';
 import sequelize from '../sequelize.config';
 
 import { AppError } from '../utils';

@@ -44,7 +44,16 @@ function validateMovieByIdRouteQuery(req: Request, res: Response, next: NextFunc
   next();
 }
 
-const upload = multer({ dest: '/Users/pratap.reddy/repos/reelfake-node/movie_uploads' });
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, `${process.cwd()}/movie_uploads`);
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}_${file.originalname}`);
+  },
+});
+
+const upload = multer({ storage });
 
 // GET
 router.get('/', validateMoviesRouteQuery, routeFnWrapper(getMovies));

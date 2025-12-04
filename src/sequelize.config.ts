@@ -1,18 +1,6 @@
-import dotenv from 'dotenv';
-
-const envName = process.env.NODE_ENV;
-
-if (envName === 'development') {
-  dotenv.config({ path: `${process.cwd()}/.env.dev` });
-}
-
-if (envName === 'test') {
-  dotenv.config({ path: `${process.cwd()}/.env.test` });
-}
-
+import { envVars } from './constants';
 import { Sequelize } from 'sequelize';
 import pg from 'pg';
-import { envVars } from './constants';
 
 const db = envVars.db;
 const user = envVars.user;

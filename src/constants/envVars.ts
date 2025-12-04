@@ -1,3 +1,15 @@
+import dotenv from 'dotenv';
+
+const envName = process.env.NODE_ENV;
+
+if (envName === 'development') {
+  dotenv.config({ path: `${process.cwd()}/.env.dev` });
+}
+
+if (envName === 'test') {
+  dotenv.config({ path: `${process.cwd()}/.env.test` });
+}
+
 type EnvironmentVariables = {
   nodeEnv: string;
   jwtSecret: string;

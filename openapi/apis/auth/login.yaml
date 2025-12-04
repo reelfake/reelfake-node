@@ -12,7 +12,7 @@ post:
         schema:
           $ref: ../../components/auth/loginRequestBody.yaml
   responses:
-    '201':
+    '200':
       description: User logged in successfully
       headers:
         Set-Cookie:
@@ -23,7 +23,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: ../../components/auth/loginResponseBody.yaml
+            $ref: ../../components/auth/userProfileResponseBody.yaml
     '401':
       description: Invalid credentials
       content:

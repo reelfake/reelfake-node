@@ -365,7 +365,7 @@ paths:
             schema:
               $ref: '#/components/schemas/loginRequestBody'
       responses:
-        '201':
+        '200':
           description: User logged in successfully
           headers:
             Set-Cookie:
@@ -376,7 +376,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/loginResponseBody'
+                $ref: '#/components/schemas/userProfileResponseBody'
         '401':
           description: Invalid credentials
           content:
@@ -2974,18 +2974,6 @@ components:
         password:
           type: string
           format: password
-    loginResponseBody:
-      type: object
-      properties:
-        message:
-          type: string
-          example: Login successful
-    logoutResponseBody:
-      type: object
-      properties:
-        message:
-          type: string
-          example: Logged out successfully
     userProfileResponseBody:
       oneOf:
         - type: object
@@ -3089,6 +3077,12 @@ components:
                   type: string
                 postalCode:
                   type: string
+    logoutResponseBody:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Logged out successfully
     citiesResponseBody:
       oneOf:
         - type: object

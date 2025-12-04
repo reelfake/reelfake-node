@@ -3,6 +3,7 @@ import express from 'express';
 import compression from 'compression';
 import path from 'path';
 import cors from 'cors';
+import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { allowOnlyMe } from './middlewares';
 import { AppError, getOpenApiDocsHtmlString, getOpenApiReDocsHtmlString, getOpenApiUril, testDbConnection } from './utils';
@@ -25,7 +26,6 @@ import {
 import sequelize from './sequelize.config';
 import { envVars } from './constants';
 
-// app.use(helmet());
 // app.use(morgan('tiny', { stream: logStream }));
 
 const app = express();
@@ -36,6 +36,8 @@ app.use(
   })
 );
 app.use(express.json());
+
+app.use(helmet());
 
 app.use(cookieParser());
 app.use((req, res, next) => {

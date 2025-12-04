@@ -68,6 +68,24 @@ async function findUser(email: string) {
   return undefined;
 }
 
+async function getUserData(id: number, userRole: USER_ROLES) {
+  let userData;
+
+  switch (userRole) {
+    case USER_ROLES.CUSTOMER:
+      userData = await CustomerModel.getCustomerDetail(id);
+      break;
+    case USER_ROLES.STAFF:
+    case USER_ROLES.STORE_MANAGER:
+      userData = await StaffModel.getStaffDetail(id);
+      break;
+    default:
+      throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
+  }
+
+  return userData;
+}
+
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
@@ -92,8 +110,10 @@ export const login = async (req: Request, res: Response) => {
 
   const authToken = generateAuthToken(user.id, user.email, user.role);
 
+  const userData = await getUserData(user.id, user.role);
+
   res
-    .status(201)
+    .status(200)
     .cookie('auth_token', authToken, {
       httpOnly: true,
       secure: true,
@@ -101,7 +121,7 @@ export const login = async (req: Request, res: Response) => {
       path: '/',
       maxAge: TOKEN_EXPIRING_IN_MS,
     })
-    .json({ message: 'Login successful' });
+    .send(userData);
 };
 
 export const logout = (req: Request, res: Response) => {
@@ -115,19 +135,7 @@ export const getUserProfile = async (req: CustomRequest, res: Response) => {
     throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
   }
 
-  let userData;
-
-  switch (user.role) {
-    case USER_ROLES.CUSTOMER:
-      userData = await CustomerModel.getCustomerDetail(user.id);
-      break;
-    case USER_ROLES.STAFF:
-    case USER_ROLES.STORE_MANAGER:
-      userData = await StaffModel.getStaffDetail(user.id);
-      break;
-    default:
-      throw new AppError(ERROR_MESSAGES.INVALID_AUTH_TOKEN, 401);
-  }
+  const userData = await getUserData(user.id, user.role);
 
   res.status(200).send(userData);
 };
