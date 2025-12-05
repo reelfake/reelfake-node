@@ -93,28 +93,31 @@ describe('Staff Controller', () => {
     cookie = loginResponse.get('Set-Cookie')?.at(0) || '';
   };
 
-  beforeEach(() => {
-    cookie = '';
-  });
-
   afterEach(() => {
     jest.restoreAllMocks();
   });
 
   describe('POST /staff', () => {
-    it('should create new staff', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
+    describe('as store manager', () => {
+      beforeAll(async () => {
+        const credential = await getStoreManagerCredential();
+        await login(credential.email, credential.password);
+      });
 
-      const payload = getStaffPayload();
+      afterAll(async () => {
+        await server.get('/api/auth/logout').set('Cookie', cookie);
+      });
 
-      expect(await getAddressCount(payload.address)).toEqual(0);
+      it('should create new staff', async () => {
+        const payload = getStaffPayload();
 
-      const response = await server.post('/api/staff').set('Cookie', cookie).send(payload);
-      expect(response.status).toBe(201);
-      const newStaffId = response.body.id;
+        expect(await getAddressCount(payload.address)).toEqual(0);
 
-      const queryText = `
+        const response = await server.post('/api/staff').set('Cookie', cookie).send(payload);
+        expect(response.status).toBe(201);
+        const newStaffId = response.body.id;
+
+        const queryText = `
         SELECT staff.id AS "id", staff.first_name AS "firstName", staff.last_name AS "lastName",
         staff.email AS "email", staff.active AS "active", staff.store_id AS "storeId", 
         staff.phone_number AS "phoneNumber",
@@ -131,34 +134,31 @@ describe('Staff Controller', () => {
         LEFT JOIN country ON city.country_id = country.id
         WHERE staff.id = ${newStaffId}
       `;
-      const [actualData] = await execQuery(queryText);
-      expect(response.body).toEqual(actualData);
+        const [actualData] = await execQuery(queryText);
+        expect(response.body).toEqual(actualData);
 
-      expect(await getAddressCount(payload.address)).toEqual(1);
-    });
+        expect(await getAddressCount(payload.address)).toEqual(1);
+      });
 
-    it('should create staff with the store id of existing store', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
+      it('should create staff with the store id of existing store', async () => {
+        const storePayload = getStorePayload();
+        const staffPayload = getStaffPayload();
 
-      const storePayload = getStorePayload();
-      const staffPayload = getStaffPayload();
+        const newStoreResponse = await server.post('/api/stores').set('Cookie', cookie).send(storePayload);
+        const newStore = newStoreResponse.body;
+        const newStoreId = newStore.id;
 
-      const newStoreResponse = await server.post('/api/stores').set('Cookie', cookie).send(storePayload);
-      const newStore = newStoreResponse.body;
-      const newStoreId = newStore.id;
+        const newStaffResponse = await server
+          .post('/api/staff')
+          .set('Cookie', cookie)
+          .send({
+            ...staffPayload,
+            storeId: newStoreId,
+          });
 
-      const newStaffResponse = await server
-        .post('/api/staff')
-        .set('Cookie', cookie)
-        .send({
-          ...staffPayload,
-          storeId: newStoreId,
-        });
+        expect(newStaffResponse.status).toEqual(201);
 
-      expect(newStaffResponse.status).toEqual(201);
-
-      const queryText = `
+        const queryText = `
       SELECT staff.id AS "id", staff.first_name AS "firstName", staff.last_name AS "lastName",
       staff.email AS "email", staff.active AS "active", staff.store_id AS "storeId", 
       staff.phone_number AS "phoneNumber",
@@ -175,24 +175,21 @@ describe('Staff Controller', () => {
       LEFT JOIN country ON city.country_id = country.id
       WHERE staff.id = ${newStaffResponse.body.id}
     `;
-      const [actualData] = await execQuery(queryText);
+        const [actualData] = await execQuery(queryText);
 
-      expect(newStaffResponse.body).toEqual(actualData);
+        expect(newStaffResponse.body).toEqual(actualData);
 
-      const [storeIdQueryResult] = await execQuery(
-        `SELECT store_id AS "storeId" FROM staff WHERE id = ${newStaffResponse.body.id}`
-      );
-      const storeIdOfNewStaff = storeIdQueryResult.storeId;
-      expect(storeIdOfNewStaff).toEqual(newStoreId);
-    });
+        const [storeIdQueryResult] = await execQuery(
+          `SELECT store_id AS "storeId" FROM staff WHERE id = ${newStaffResponse.body.id}`
+        );
+        const storeIdOfNewStaff = storeIdQueryResult.storeId;
+        expect(storeIdOfNewStaff).toEqual(newStoreId);
+      });
 
-    it('should create staff with the existing address', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
+      it('should create staff with the existing address', async () => {
+        const payload = getStaffPayload();
 
-      const payload = getStaffPayload();
-
-      const [existingAddress] = await execQuery(`
+        const [existingAddress] = await execQuery(`
         SELECT address.id, address.address_line AS "addressLine", city.city_name AS "cityName", 
         city.state_name AS "stateName", country.country_name AS country, 
         address.postal_code AS "postalCode"
@@ -204,19 +201,19 @@ describe('Staff Controller', () => {
         ) LIMIT 1
       `);
 
-      payload.address = {
-        addressLine: existingAddress.addressLine,
-        cityName: existingAddress.cityName,
-        stateName: existingAddress.stateName,
-        country: existingAddress.country,
-        postalCode: existingAddress.postalCode,
-      };
+        payload.address = {
+          addressLine: existingAddress.addressLine,
+          cityName: existingAddress.cityName,
+          stateName: existingAddress.stateName,
+          country: existingAddress.country,
+          postalCode: existingAddress.postalCode,
+        };
 
-      const response = await server.post('/api/staff').set('Cookie', cookie).send(payload);
+        const response = await server.post('/api/staff').set('Cookie', cookie).send(payload);
 
-      expect(response.status).toEqual(201);
+        expect(response.status).toEqual(201);
 
-      const queryText = `
+        const queryText = `
         SELECT staff.id AS "id", staff.first_name AS "firstName", staff.last_name AS "lastName",
         staff.email AS "email", staff.active AS "active", staff.store_id AS "storeId", 
         staff.phone_number AS "phoneNumber",
@@ -233,24 +230,21 @@ describe('Staff Controller', () => {
         LEFT JOIN country ON city.country_id = country.id
         WHERE staff.id = ${response.body.id}
       `;
-      const [actualData] = await execQuery(queryText);
-      expect(response.body).toEqual(actualData);
+        const [actualData] = await execQuery(queryText);
+        expect(response.body).toEqual(actualData);
 
-      const [addressIdQueryResult] = await execQuery(`
+        const [addressIdQueryResult] = await execQuery(`
         SELECT address_id AS "addressId" FROM staff WHERE id = ${response.body.id}  
       `);
 
-      const addressIdOfNewStaff = addressIdQueryResult.addressId;
-      expect(Number(addressIdOfNewStaff)).toEqual(Number(existingAddress.id));
-    });
+        const addressIdOfNewStaff = addressIdQueryResult.addressId;
+        expect(Number(addressIdOfNewStaff)).toEqual(Number(existingAddress.id));
+      });
 
-    it('should not create staff with address which is in use by a store', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
+      it('should not create staff with address which is in use by a store', async () => {
+        const staffPayload = getStaffPayload();
 
-      const staffPayload = getStaffPayload();
-
-      const [addressInUseQueryResult] = await execQuery(`
+        const [addressInUseQueryResult] = await execQuery(`
         SELECT address.address_line AS "addressLine", city.city_name AS "cityName", 
         city.state_name AS "stateName", country.country_name AS "country",
         address.postal_code AS "postalCode"
@@ -260,47 +254,41 @@ describe('Staff Controller', () => {
         LIMIT 1  
       `);
 
-      const addressInUse = { ...addressInUseQueryResult };
+        const addressInUse = { ...addressInUseQueryResult };
 
-      const response = await server
-        .post('/api/staff')
-        .set('Cookie', cookie)
-        .send({
-          ...staffPayload,
-          address: { ...addressInUse },
-        });
-      expect(response.status).toEqual(400);
-      expect(response.body.message).toEqual('The address is in use by a store');
-    });
+        const response = await server
+          .post('/api/staff')
+          .set('Cookie', cookie)
+          .send({
+            ...staffPayload,
+            address: { ...addressInUse },
+          });
+        expect(response.status).toEqual(400);
+        expect(response.body.message).toEqual('The address is in use by a store');
+      });
 
-    it('should not create staff with phone number which is in use by a store', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
+      it('should not create staff with phone number which is in use by a store', async () => {
+        const payload = getStaffPayload();
 
-      const payload = getStaffPayload();
+        const [phoneNumberQueryResult] = await execQuery(`SELECT phone_number AS "phoneNumber" FROM store LIMIT 1`);
+        const phoneNumberInUse = phoneNumberQueryResult['phoneNumber'];
 
-      const [phoneNumberQueryResult] = await execQuery(`SELECT phone_number AS "phoneNumber" FROM store LIMIT 1`);
-      const phoneNumberInUse = phoneNumberQueryResult['phoneNumber'];
+        const response = await server
+          .post('/api/staff')
+          .set('Cookie', cookie)
+          .send({
+            ...payload,
+            phoneNumber: phoneNumberInUse,
+          });
 
-      const response = await server
-        .post('/api/staff')
-        .set('Cookie', cookie)
-        .send({
-          ...payload,
-          phoneNumber: phoneNumberInUse,
-        });
+        expect(response.status).toEqual(400);
+        expect(response.body.message).toEqual('The phone number is in use by a store');
+      });
 
-      expect(response.status).toEqual(400);
-      expect(response.body.message).toEqual('The phone number is in use by a store');
-    });
+      it('should not create staff with address which is in use by other staff', async () => {
+        const payload = getStaffPayload();
 
-    it('should not create staff with address which is in use by other staff', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
-
-      const payload = getStaffPayload();
-
-      const [addressInUserQueryResult] = await execQuery(`
+        const [addressInUserQueryResult] = await execQuery(`
         SELECT address.address_line AS "addressLine", city.city_name AS "cityName",
         city.state_name AS "stateName", country.country_name AS "country", address.postal_code AS "postalCode"
         FROM staff LEFT JOIN address ON staff.address_id = address.id
@@ -309,36 +297,34 @@ describe('Staff Controller', () => {
         LIMIT 1
       `);
 
-      const addressInUse = { ...addressInUserQueryResult };
+        const addressInUse = { ...addressInUserQueryResult };
 
-      const response = await server
-        .post('/api/staff')
-        .set('Cookie', cookie)
-        .send({ ...payload, address: { ...addressInUse } });
+        const response = await server
+          .post('/api/staff')
+          .set('Cookie', cookie)
+          .send({ ...payload, address: { ...addressInUse } });
 
-      expect(response.status).toEqual(400);
-      expect(response.body.message).toEqual('The address is in use by other staff');
-    });
+        expect(response.status).toEqual(400);
+        expect(response.body.message).toEqual('The address is in use by other staff');
+      });
 
-    it('should not create staff with phone number which is in use by other staff', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
+      it('should not create staff with phone number which is in use by other staff', async () => {
+        const payload = getStaffPayload();
 
-      const payload = getStaffPayload();
+        const [phoneNumberQueryResult] = await execQuery(`SELECT phone_number AS "phoneNumber" FROM staff LIMIT 1`);
+        const phoneNumberInUse = phoneNumberQueryResult['phoneNumber'];
 
-      const [phoneNumberQueryResult] = await execQuery(`SELECT phone_number AS "phoneNumber" FROM staff LIMIT 1`);
-      const phoneNumberInUse = phoneNumberQueryResult['phoneNumber'];
+        const response = await server
+          .post('/api/staff')
+          .set('Cookie', cookie)
+          .send({
+            ...payload,
+            phoneNumber: phoneNumberInUse,
+          });
 
-      const response = await server
-        .post('/api/staff')
-        .set('Cookie', cookie)
-        .send({
-          ...payload,
-          phoneNumber: phoneNumberInUse,
-        });
-
-      expect(response.status).toEqual(400);
-      expect(response.body.message).toEqual('The phone number is in use by other staff');
+        expect(response.status).toEqual(400);
+        expect(response.body.message).toEqual('The phone number is in use by other staff');
+      });
     });
 
     it('should not let staff to create staff', async () => {
@@ -369,10 +355,16 @@ describe('Staff Controller', () => {
   });
 
   describe('PUT /staff/:id', () => {
-    it('should update staff with the new phone number', async () => {
+    beforeAll(async () => {
       const credential = await getStoreManagerCredential();
       await login(credential.email, credential.password);
+    });
 
+    afterAll(async () => {
+      await server.get('/api/auth/logout').set('Cookie', cookie);
+    });
+
+    it('should update staff with the new phone number', async () => {
       const payload1 = getStaffPayload();
 
       const newStaffResponse = await server.post('/api/staff').set('Cookie', cookie).send(payload1);
@@ -393,9 +385,6 @@ describe('Staff Controller', () => {
     });
 
     it('should update staff with the new address', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
-
       const payload1 = getStaffPayload();
       const payload2 = getStaffPayload();
       const storePayload = getStorePayload();
@@ -422,9 +411,6 @@ describe('Staff Controller', () => {
     });
 
     it('should not update staff with the address if it is outside the state of assigned store', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
-
       const payload = getStaffPayload();
       const payload2 = getStaffPayload();
       const storePayload = getStorePayload();
@@ -454,9 +440,6 @@ describe('Staff Controller', () => {
     });
 
     it('should not update staff with the address that belongs to a store', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
-
       const payload = getStaffPayload();
       const newStaffResponse = await server.post('/api/staff').set('Cookie', cookie).send(payload);
       const newStaff = newStaffResponse.body;
@@ -479,9 +462,6 @@ describe('Staff Controller', () => {
     });
 
     it('should not update staff with the address that belongs to other staff', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
-
       const payload = getStaffPayload();
       const newStaffResponse = await server.post('/api/staff').set('Cookie', cookie).send(payload);
       const newStaff = newStaffResponse.body;
@@ -504,9 +484,6 @@ describe('Staff Controller', () => {
     });
 
     it('should not update staff with the phone number that is used by a store', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
-
       const payload = getStaffPayload();
       const newStaffResponse = await server.post('/api/staff').set('Cookie', cookie).send(payload);
       const newStaff = newStaffResponse.body;
@@ -526,9 +503,6 @@ describe('Staff Controller', () => {
     });
 
     it('should not update staff with the phone number that is used by other staff', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
-
       const payload = getStaffPayload();
       const newStaffResponse = await server.post('/api/staff').set('Cookie', cookie).send(payload);
       const newStaff = newStaffResponse.body;
@@ -548,9 +522,6 @@ describe('Staff Controller', () => {
     });
 
     it('should not update staff with email address that is used by other staff', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
-
       const payload1 = getStaffPayload();
       const payload2 = getStaffPayload();
       const newStaff1Response = await server.post('/api/staff').set('Cookie', cookie).send(payload1);
@@ -568,9 +539,6 @@ describe('Staff Controller', () => {
     });
 
     it('should not update staff with store that is outside state of the staff', async () => {
-      const credential = await getStoreManagerCredential();
-      await login(credential.email, credential.password);
-
       const payload = getStaffPayload();
       const newStaffResponse = await server.post('/api/staff').set('Cookie', cookie).send(payload);
       const newStaff = newStaffResponse.body;
@@ -590,9 +558,6 @@ describe('Staff Controller', () => {
     });
 
     it('should not let staff to update staff data', async () => {
-      const storeManagerCredential = await getStoreManagerCredential();
-      await login(storeManagerCredential.email, storeManagerCredential.password);
-
       const payload = getStaffPayload();
       const newStaffResponse = await server.post('/api/staff').set('Cookie', cookie).send(payload);
       const staffId = newStaffResponse.body.id;
@@ -615,9 +580,6 @@ describe('Staff Controller', () => {
     });
 
     it('should not let customer to update staff data', async () => {
-      const storeManagerCredential = await getStoreManagerCredential();
-      await login(storeManagerCredential.email, storeManagerCredential.password);
-
       const payload = getStaffPayload();
       const newStaffResponse = await server.post('/api/staff').set('Cookie', cookie).send(payload);
       const staffId = newStaffResponse.body.id;
@@ -803,6 +765,21 @@ describe('Staff Controller', () => {
   describe('PUT /:id/change_password', () => {
     const passwordMock = 'hello_old@123';
     const newPassword = 'hello_new@123';
+    let id: number | null;
+    let email: string | null;
+    let password: string | null;
+
+    beforeAll(async () => {
+      const credential = await getStaffWithPassword();
+      id = credential.id;
+      email = credential.email;
+      password = credential.password;
+      await login(credential.email, credential.password);
+    });
+
+    afterAll(async () => {
+      await server.get('/api/auth/logout').set('Cookie', cookie);
+    });
 
     const getStaffWithPassword = async () => {
       const queryText = `
@@ -822,25 +799,26 @@ describe('Staff Controller', () => {
     };
 
     it('should be able to update password by providing current and new password', async () => {
-      const { id, email, password } = await getStaffWithPassword();
-      await login(email, password);
-
       const apiResponse = await server.put(`/api/staff/change_password`).set('Cookie', cookie).send({
         currentPassword: password,
         newPassword,
         confirmedNewPassword: newPassword,
       });
+
       expect(apiResponse.status).toEqual(200);
       expect(apiResponse.body).toEqual({
         id,
         email,
       });
+
+      const credential = await getStaffWithPassword();
+      id = credential.id;
+      email = credential.email;
+      password = credential.password;
+      await login(credential.email, credential.password);
     });
 
     it('should return error when changing password and request does not have current password', async () => {
-      const { id, email, password } = await getStaffWithPassword();
-      await login(email, password);
-
       const apiResponse = await server.put(`/api/staff/change_password`).set('Cookie', cookie).send({
         newPassword,
         confirmedNewPassword: newPassword,
@@ -850,9 +828,6 @@ describe('Staff Controller', () => {
     });
 
     it('should return error when changing password and request does not have confirmed password', async () => {
-      const { id, email, password } = await getStaffWithPassword();
-      await login(email, password);
-
       const apiResponse = await server.put(`/api/staff/change_password`).set('Cookie', cookie).send({
         currentPassword: password,
         newPassword,
@@ -862,9 +837,6 @@ describe('Staff Controller', () => {
     });
 
     it('should return error when changing password and new and confirmed password are not same', async () => {
-      const { id, email, password } = await getStaffWithPassword();
-      await login(email, password);
-
       const apiResponse = await server
         .put(`/api/staff/change_password`)
         .set('Cookie', cookie)
@@ -878,9 +850,6 @@ describe('Staff Controller', () => {
     });
 
     it('should return error when changing password and current password is not correct', async () => {
-      const { id, email, password } = await getStaffWithPassword();
-      await login(email, password);
-
       const apiResponse = await server.put(`/api/staff/change_password`).set('Cookie', cookie).send({
         currentPassword: 'incorrect_password',
         newPassword,
@@ -891,9 +860,6 @@ describe('Staff Controller', () => {
     });
 
     it('should return error when changing password and new password is less than 8 characters', async () => {
-      const { id, email, password } = await getStaffWithPassword();
-      await login(email, password);
-
       const apiResponse = await server.put(`/api/staff/change_password`).set('Cookie', cookie).send({
         currentPassword: password,
         newPassword: 'test',

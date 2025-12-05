@@ -150,6 +150,10 @@ describe('Inventory Controller', () => {
   });
 
   describe('POST /api/inventory', () => {
+    afterEach(async () => {
+      await server.get('/api/auth/logout').set('Cookie', cookie);
+    });
+
     it('should add the inventory', async () => {
       const credential = credentials[credCounter++];
       await login(credential.email, credential.password);
