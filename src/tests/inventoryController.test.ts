@@ -47,8 +47,16 @@ describe('Inventory Controller', () => {
 
   const server = supertest(app);
   const login = async (email: string, password: string) => {
-    const loginResponse = await server.post('/api/auth/login').send({ email, password });
+    let loginResponse = await server.post('/api/auth/login').send({ email, password });
     cookie = loginResponse.get('Set-Cookie')?.at(0) || '';
+    if (!cookie || loginResponse.status !== 200) {
+      loginResponse = await server.post('/api/auth/login').send({ email, password });
+      cookie = loginResponse.get('Set-Cookie')?.at(0) || '';
+    }
+
+    if (loginResponse.status !== 200) {
+      throw new Error(`Login failed for ${email}`);
+    }
   };
 
   const getMovieNotInStock = async (): Promise<MovieQueryItem> => {
@@ -118,6 +126,7 @@ describe('Inventory Controller', () => {
     `;
     const queryResult = await execQuery(queryText);
     const [storeData] = queryResult;
+
     return {
       id: Number(storeData.id),
       storeManagerId: Number(storeData.storeManagerId),

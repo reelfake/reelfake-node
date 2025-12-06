@@ -45,6 +45,8 @@ export type ParsedCsvRow = {
   rentalRate: number;
 };
 
+export type CsvRowWithIndex = CsvRow & { index: number };
+
 function parseGenres(genres: string[]) {
   const genresCopy = [...genres];
   const genreIds = [];
@@ -101,56 +103,56 @@ export function parseCsvRow(row: CsvRow): ParsedCsvRow {
   };
 }
 
-export type CsvRowWithIndex = CsvRow & { index: number };
-export type ParsedCsvRowWithIndex = ParsedCsvRow & { index: number };
-
 export class UploadUtil {
-  static FILE_PATH: string;
-  static CSV_STREAM: csv.CsvParserStream<CsvRow, CsvRowWithIndex>;
-  static TOTAL_ROWS: number;
-  static IS_DONE: boolean;
-  static IS_INITIATED = false;
-  static UNIQUE_KEY = 'tmdbId';
+  FILE_PATH: string;
+  CSV_STREAM: csv.CsvParserStream<CsvRow, CsvRowWithIndex>;
+  TOTAL_ROWS: number;
+  IS_DONE: boolean;
+  IS_INITIATED: boolean;
+  UNIQUE_KEY = 'tmdbId';
 
-  static initiate(filePath: string) {
-    UploadUtil.TOTAL_ROWS = 0;
-    UploadUtil.FILE_PATH = filePath;
+  static PENDING_UPLOAD = new Map<String, UploadUtil>();
 
-    UploadUtil.IS_INITIATED = true;
-    UploadUtil.CSV_STREAM = fs
+  constructor(filePath: string) {
+    this.TOTAL_ROWS = 0;
+    this.FILE_PATH = filePath;
+    this.IS_DONE = false;
+    this.IS_INITIATED = true;
+
+    this.CSV_STREAM = fs
       .createReadStream(filePath, { encoding: 'utf-8', ...(envVars.nodeEnv === 'test' && { highWaterMark: 10 * 1000 }) })
       .pipe(csv.parse<CsvRow, CsvRowWithIndex>({ headers: true }))
-      .transform((row: CsvRow) => ({ ...row, index: ++UploadUtil.TOTAL_ROWS }));
+      .transform((row: CsvRow) => ({ ...row, index: ++this.TOTAL_ROWS }));
   }
 
-  static deleteFile() {
-    if (fs.existsSync(UploadUtil.FILE_PATH)) {
-      fs.unlinkSync(UploadUtil.FILE_PATH);
+  deleteFile() {
+    if (fs.existsSync(this.FILE_PATH)) {
+      fs.unlinkSync(this.FILE_PATH);
     }
   }
 
-  static abort() {
-    UploadUtil.IS_DONE = true;
-    UploadUtil.CSV_STREAM.destroy(new Error('ABORTED'));
+  abort() {
+    this.IS_DONE = true;
+    this.CSV_STREAM.destroy(new Error('ABORTED'));
   }
 
-  static async *parseCsv(): AsyncGenerator<CsvRowWithIndex> {
+  async *parseCsv(): AsyncGenerator<CsvRowWithIndex> {
     const queue: CsvRowWithIndex[] = [];
     let done = false;
     let error = null;
     let resolveNext: any = null;
 
-    UploadUtil.CSV_STREAM.on('error', (err) => {
-      UploadUtil.IS_DONE = true;
+    this.CSV_STREAM.on('error', (err) => {
+      this.IS_DONE = true;
       error = err;
       if (resolveNext) {
         resolveNext(Promise.reject(err));
         resolveNext = null;
       }
     });
-    UploadUtil.CSV_STREAM.on('data', (row: CsvRowWithIndex) => {
-      UploadUtil.CSV_STREAM.pause();
-      UploadUtil.IS_DONE = false;
+    this.CSV_STREAM.on('data', (row: CsvRowWithIndex) => {
+      this.CSV_STREAM.pause();
+      this.IS_DONE = false;
       if (resolveNext) {
         resolveNext({ done: false, value: row });
         resolveNext = null;
@@ -158,8 +160,8 @@ export class UploadUtil {
         queue.push(row);
       }
     });
-    UploadUtil.CSV_STREAM.on('close', () => {
-      UploadUtil.IS_DONE = true;
+    this.CSV_STREAM.on('close', () => {
+      this.IS_DONE = true;
       done = true;
       if (resolveNext) {
         resolveNext({ done: true, value: undefined });
@@ -172,7 +174,7 @@ export class UploadUtil {
 
       if (queue.length > 0) {
         yield queue.shift() as CsvRowWithIndex;
-        UploadUtil.CSV_STREAM.resume();
+        this.CSV_STREAM.resume();
         continue;
       }
 
@@ -180,17 +182,17 @@ export class UploadUtil {
 
       const result: any = await new Promise((resolve) => (resolveNext = resolve));
       if (result.done) break;
-      UploadUtil.CSV_STREAM.resume();
+      this.CSV_STREAM.resume();
       yield result.value;
     }
   }
 
-  static async validate(
+  async validate(
     validator: (rowNumber: number, row: CsvRow, delay?: number) => Promise<{ isValid: boolean; reasons: string[] }>,
     onRowProcessed: (rowNumber: number, isValid: boolean, reasons: string[]) => void,
     delayBetweenEvents = 0
   ) {
-    for await (const row of UploadUtil.parseCsv()) {
+    for await (const row of this.parseCsv()) {
       const validationResult = await validator(row.index, row, delayBetweenEvents);
       onRowProcessed(row.index, validationResult.isValid, validationResult.reasons);
     }
@@ -239,16 +241,13 @@ export class UploadUtil {
     }
   }
 
-  static async process(
+  async process(
     rowHandler: (row: { index: number } & CsvRow) => Promise<{ id: number; tmdbId: number }>,
     successCallback?: (rowNumber: number, id: number) => void,
     errorCallback?: (rowNumber: number, errors: UploadError[]) => void
   ) {
-    for await (const row of UploadUtil.parseCsv()) {
+    for await (const row of this.parseCsv()) {
       try {
-        // const parsed = parseCsvRow(row);
-        // const parsedIncludingIndex = { index: row.index, ...parsed };
-
         const { id, rowNumber } = await UploadUtil.executeRowHandler(row, rowHandler);
         successCallback?.(rowNumber, id);
       } catch (err) {
@@ -260,10 +259,10 @@ export class UploadUtil {
           throw err;
         }
       } finally {
-        UploadUtil.deleteFile();
+        this.deleteFile();
       }
     }
-    return UploadUtil.TOTAL_ROWS;
+    return this.TOTAL_ROWS;
   }
 }
 
