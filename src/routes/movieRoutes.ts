@@ -1,3 +1,4 @@
+import fs from 'fs';
 import { Request, Response, NextFunction } from 'express';
 import { Router } from 'express';
 import multer from 'multer';
@@ -46,6 +47,10 @@ function validateMovieByIdRouteQuery(req: Request, res: Response, next: NextFunc
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
+    const dirExist = fs.existsSync(`${process.cwd()}/movie_uploads`);
+    if (!dirExist) {
+      fs.mkdirSync(`${process.cwd()}/movie_uploads`);
+    }
     cb(null, `${process.cwd()}/movie_uploads`);
   },
   filename: (req, file, cb) => {

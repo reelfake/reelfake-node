@@ -43,6 +43,10 @@ post:
                 properties:
                   trackingUrl:
                     type: string
+                    description: |
+                      The tracking url will be /movies/upload/track_validation with the query string "delay_event_ms"
+                      that was to /movies/upload/validate.
+                    example: /movies/upload/track_validation?delay_event_ms=500
               - type: object
                 properties:
                   totalRows:

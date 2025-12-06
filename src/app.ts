@@ -29,6 +29,7 @@ import { envVars } from './constants';
 // app.use(morgan('tiny', { stream: logStream }));
 
 const app = express();
+app.use(compression());
 app.use(
   cors({
     origin: /^https?:\/\/.+/,
@@ -40,12 +41,6 @@ app.use(express.json());
 app.use(helmet());
 
 app.use(cookieParser());
-app.use((req, res, next) => {
-  if (req.path.endsWith('/movies/upload/track') || req.path.endsWith('/movies/upload/validate')) {
-    return next();
-  }
-  compression()(req, res, next);
-});
 
 app.use(allowOnlyMe);
 

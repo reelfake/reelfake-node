@@ -316,11 +316,20 @@ export const validateUpload = async (req: Request, res: Response) => {
     res.status(200).json({ totalRows, invalidRows });
     return;
   } else {
-    let path = '/movies/upload/track_validation';
-    if (delayEventMs > 0) {
-      path += `?delay_event_ms=${delayEventMs}`;
+    // req.headers.orgin - https://localhost:3000
+    // req.hostname - reelfake.cloud
+    // req.url - /upload/validate?enable_tracking=true&delay_event_ms=500
+    // req.originalUrl - /api/movies/upload/validate?enable_tracking=true&delay_event_ms=500
+
+    const { query } = req;
+    let queryString = '';
+    if ('delay_event_ms' in query) {
+      queryString = `?delay_event_ms=${query['delay_event_ms']}`;
     }
-    res.status(202).json({ trackingUrl: `${req.protocol}://localhost:${DEFAULT_PORT}/api${path}` });
+
+    const trackingUrl = `/movies/upload/track_validation${queryString}`;
+
+    res.status(202).json({ trackingUrl });
   }
 };
 
