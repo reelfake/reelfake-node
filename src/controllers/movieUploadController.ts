@@ -1,12 +1,12 @@
 import type { Request, Response } from 'express';
 import { ValidationError, Transaction } from 'sequelize';
+
 import sequelize from '../sequelize.config';
-
-import { AppError } from '../utils';
 import { UploadUtil, CsvRow, UploadError, parseCsvRow } from '../utils/upload';
-
+import { AppError } from '../utils';
 import { MovieModel } from '../models';
-import { DEFAULT_PORT } from '../constants';
+import { ERROR_MESSAGES } from '../constants';
+import { CustomRequest } from '../types';
 
 const fieldsForBulkCreate = [
   'tmdbId',
@@ -28,6 +28,9 @@ const fieldsForBulkCreate = [
   'posterUrl',
   'rentalRate',
 ];
+
+const uploadValidationMap = new Map<string, UploadUtil>();
+const uploadMap = new Map<string, UploadUtil>();
 
 async function validateCsvRow(rowNumber: number, row: CsvRow, delay = 0) {
   if (delay > 0) {
@@ -85,19 +88,40 @@ async function validateCsvRow(rowNumber: number, row: CsvRow, delay = 0) {
   }
 }
 
-export const trackUpload = async (req: Request, res: Response) => {
-  const successRows: { rowNumber: number; id: number }[] = [];
-  const failedRows: { rowNumber: number; reasons: string[] }[] = [];
+export const trackUpload = async (req: CustomRequest, res: Response) => {
+  const { user } = req;
+  if (!user) {
+    throw new AppError(ERROR_MESSAGES.FORBIDDEN, 403);
+  }
+
+  const { delay_event_ms } = req.query;
+  const delayEventMs = delay_event_ms ? Number(delay_event_ms) : 0;
+
+  if (isNaN(delayEventMs)) {
+    throw new AppError('Delay event query string should be a number', 400);
+  }
+
+  if (delayEventMs > 1000) {
+    throw new AppError('Delay event (ms) should be less than 1000 milliseconds', 400);
+  }
+
+  let successRowsCount = 0;
+  let failedRowsCount = 0;
 
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
   res.flushHeaders();
 
+  const uploadUtil = uploadMap.get(user.email);
+  if (!uploadUtil) {
+    throw new AppError('Upload validation request is not found', 404);
+  }
+
   try {
-    const totalRows = await UploadUtil.process(
+    const totalRows = await uploadUtil.process(
       async (row: { index: number } & CsvRow) => {
-        const validationResult = await validateCsvRow(row.index, row);
+        const validationResult = await validateCsvRow(row.index, row, delayEventMs);
         if (validationResult.isValid === false) {
           throw validationResult.reasons.map((reason) => new UploadError('ValidationFailed', row.index, reason));
         }
@@ -107,46 +131,59 @@ export const trackUpload = async (req: Request, res: Response) => {
           ignoreDuplicates: false,
           validate: true,
         });
+
         return { id: Number(movieInstance.getDataValue('id')), tmdbId: movieInstance.getDataValue('tmdbId') };
       },
       (rowNumber: number, id: number) => {
-        successRows.push({ rowNumber, id });
+        successRowsCount++;
         res.write(`data: ${JSON.stringify({ status: 'processing', outcome: 'success', rowNumber, id })}\n\n`);
+        res.flush();
       },
       (rowNumber: number, errors: UploadError[]) => {
-        failedRows.push({ rowNumber, reasons: errors.map((err) => err.message) });
+        failedRowsCount++;
         res.write(
           `data: ${JSON.stringify({ status: 'processing', outcome: 'failed', rowNumber, reasons: errors.map((err) => err.message) })}\n\n`
         );
+        res.flush();
       }
     );
     res.write(
       `data: ${JSON.stringify({
         status: 'done',
         totalRows,
-        successRows,
-        failedRows,
+        successRowsCount,
+        failedRowsCount,
       })}\n\n`
     );
+    res.flush();
   } catch (err) {
     const uploadError = err as UploadError;
     res.write(
       `data: ${JSON.stringify({ status: 'api-error', rowNumber: uploadError.rowNumber, message: uploadError.message })}\n\n`
     );
+    res.flush();
   } finally {
-    UploadUtil.deleteFile();
+    uploadUtil.deleteFile();
+    uploadMap.delete(user.email);
     res.end();
   }
+
   req.on('close', () => {
+    uploadMap.delete(user.email);
     res.end();
   });
 };
 
-export const uploadMovies = async (req: Request, res: Response) => {
+export const uploadMovies = async (req: CustomRequest, res: Response) => {
   const filePath = req.file?.path;
   if (!filePath) {
     res.status(404).json({ message: 'File not found in the request' });
     return;
+  }
+
+  const { user } = req;
+  if (!user) {
+    throw new AppError(ERROR_MESSAGES.FORBIDDEN, 403);
   }
 
   const enable_tracking = 'enable_tracking' in req.query ? req.query.enable_tracking : undefined;
@@ -156,7 +193,7 @@ export const uploadMovies = async (req: Request, res: Response) => {
   const stopOnError =
     stop_on_error !== undefined ? ['', 'yes', 'true'].includes(stop_on_error.toString().toLowerCase().trim()) : false;
 
-  UploadUtil.initiate(filePath);
+  const uploadUtil = new UploadUtil(filePath);
 
   if (!enableTracking) {
     let t: Transaction | undefined = undefined;
@@ -166,8 +203,7 @@ export const uploadMovies = async (req: Request, res: Response) => {
     try {
       const successRows: { rowNumber: number; id: number }[] = [];
       const failedRows: { rowNumber: number; reasons: string[] }[] = [];
-
-      const totalRows = await UploadUtil.process(
+      const totalRows = await uploadUtil.process(
         async (row: { index: number } & CsvRow): Promise<{ id: number; tmdbId: number }> => {
           const validationResult = await validateCsvRow(row.index, row);
           if (validationResult.isValid === false) {
@@ -208,12 +244,20 @@ export const uploadMovies = async (req: Request, res: Response) => {
       }
     }
   } else {
-    // Do not process the csv and instead wait for the tracking url to be triggered by client
-    res.status(202).json({ trackingUrl: `${req.protocol}://${req.hostname}:${8000}/api/movies/upload/track` });
+    uploadMap.set(user.email, uploadUtil);
+
+    const { query } = req;
+    let queryString = '';
+    if ('delay_event_ms' in query) {
+      queryString = `?delay_event_ms=${query['delay_event_ms']}`;
+    }
+
+    const trackingUrl = `/movies/upload/track${queryString}`;
+    res.status(202).json({ trackingUrl });
   }
 };
 
-export const trackUploadValidation = async (req: Request, res: Response) => {
+export const trackUploadValidation = async (req: CustomRequest, res: Response) => {
   let totalRows = 0;
   let validRowsCount = 0;
   let invalidRowsCount = 0;
@@ -230,17 +274,27 @@ export const trackUploadValidation = async (req: Request, res: Response) => {
     throw new AppError('Delay event (ms) should be less than 1000 milliseconds', 400);
   }
 
+  const { user } = req;
+  if (!user) {
+    throw new AppError(ERROR_MESSAGES.FORBIDDEN, 403);
+  }
+
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
   res.flushHeaders();
 
+  const uploadUtil = uploadValidationMap.get(user.email);
+  if (!uploadUtil) {
+    throw new AppError('Upload validation request is not found', 404);
+  }
+
   req.on('close', () => {
-    UploadUtil.abort();
+    uploadUtil.abort();
   });
 
   try {
-    await UploadUtil.validate(
+    await uploadUtil.validate(
       validateCsvRow,
       (rowNumber: number, isValid: boolean, reasons: string[]) => {
         processedCount++;
@@ -268,11 +322,12 @@ export const trackUploadValidation = async (req: Request, res: Response) => {
     }
   }
 
-  UploadUtil.deleteFile();
+  uploadUtil.deleteFile();
+  uploadValidationMap.delete(user.email);
   res.end();
 };
 
-export const validateUpload = async (req: Request, res: Response) => {
+export const validateUpload = async (req: CustomRequest, res: Response) => {
   const filePath = req.file?.path;
   const { delay_event_ms } = req.query;
   const delayEventMs = delay_event_ms ? Number(delay_event_ms) : 0;
@@ -290,11 +345,17 @@ export const validateUpload = async (req: Request, res: Response) => {
     return;
   }
 
+  const { user } = req;
+
+  if (!user) {
+    throw new AppError(ERROR_MESSAGES.FORBIDDEN, 403);
+  }
+
   const enable_tracking = 'enable_tracking' in req.query ? req.query.enable_tracking : undefined;
   const enableTracking =
     enable_tracking !== undefined ? ['', 'yes', 'true'].includes(enable_tracking.toString().toLowerCase().trim()) : false;
 
-  UploadUtil.initiate(filePath);
+  const uploadUtil = new UploadUtil(filePath);
 
   let totalRows = 0;
   let invalidRowsCount = 0;
@@ -302,7 +363,7 @@ export const validateUpload = async (req: Request, res: Response) => {
 
   if (!enableTracking) {
     try {
-      await UploadUtil.validate(validateCsvRow, (rowNumber: number, isValid: boolean, reasons: string[]) => {
+      await uploadUtil.validate(validateCsvRow, (rowNumber: number, isValid: boolean, reasons: string[]) => {
         if (!isValid) {
           invalidRowsCount++;
           invalidRows.push({ rowNumber, reasons });
@@ -310,12 +371,14 @@ export const validateUpload = async (req: Request, res: Response) => {
         totalRows++;
       });
     } finally {
-      UploadUtil.deleteFile();
+      uploadUtil.deleteFile();
     }
 
     res.status(200).json({ totalRows, invalidRows });
     return;
   } else {
+    uploadValidationMap.set(user.email, uploadUtil);
+
     // req.headers.orgin - https://localhost:3000
     // req.hostname - reelfake.cloud
     // req.url - /upload/validate?enable_tracking=true&delay_event_ms=500

@@ -15,7 +15,7 @@ get:
       description: |
         The query string delay_event_ms when passed in request will pause for the given millisecond between every row processing. This query string is forwarded from the /movies/upload/validate route.
   responses:
-    "200":
+    '200':
       description: |
         Depending on enable_tracking query the response will differ. If the query is added to request and enabled below response stream is send.
 
@@ -30,11 +30,10 @@ get:
         "data: { 'status': 'processing', 'outcome': 'failed', 'rowNumber': <number>, 'reasons': [\<string\>] }\n\n"
 
         When csv file processing is finished, below event is send.<br>
-        "data: { 'status': 'done', 'totalRows': \<number\>, 'processedRowsCount': \<number\>, 'successRows': [\<{ 'rowNumber': \<number\>, 'id': \<number\> }\>], 'failedRows': [\< { 'rowNumber': \<number\>, 'reasons': [\<string\>] } \>] }\n\n"
+        "data: { 'status': 'done', 'totalRows': \<number\>, 'successRowsCount': \<number\>, 'failedRowsCount': \<number\> }\n\n"
         - totalRows: The total number of rows in the csv
-        - processedRowsCount: The number of processed rows
-        - successRows: The successfully processed rows having the row number and the id of the record
-        - failedRows: The failed rows having the row number and reasons for the failure
+        - successRowsCount: The number of rows which are processed without any error
+        - failedRowsCount: The number of rows which failed to process
 
         Note: When using EventSource in javascript, in onmessage event handler the data can be accessed through event.data which will be json like below<br>
         { 'status': 'processing', 'outcome': 'success', 'rowNumber': \<number\>, 'id': \<number\> }
@@ -51,10 +50,10 @@ get:
               "data: { 'status': 'processing', 'outcome': 'failed', 'rowNumber': <number>, 'reasons': [<string>] }\n\n"
 
               When processing is done
-              "data: { 'status': 'done', 'totalRows': <number>, 'successRows': [<{ 'rowNumber': <number>, 'id': <number> }>], 'failedRows': [< { 'rowNumber': <number>, 'reasons': [<string>] } >] }\n\n"
-    "401":
+              "data: { 'status': 'done', 'totalRows': <number>, 'successRowsCount': <number>, 'failedRowsCount': <number> }\n\n"
+    '401':
       $ref: ../../components/error/unauthorized.yaml
-    "403":
+    '403':
       $ref: ../../components/error/forbidden.yaml
-    "500":
+    '500':
       $ref: ../../components/error/internalServerError.yaml

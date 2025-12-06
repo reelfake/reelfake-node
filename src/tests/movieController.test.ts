@@ -35,8 +35,8 @@ type UploadEventSummary = {
   index: number;
   status: string;
   totalRows: number;
-  successRows: { rowNumber: number; id: number }[];
-  failedRows: { rowNumber: number; reasons: string[] }[];
+  successRowsCount: number;
+  failedRowsCount: number;
 };
 
 type ValidationEventData = {
@@ -1395,6 +1395,7 @@ describe('Movie Controller', () => {
           };
         }
       );
+
       const credential = await getStoreManagerCredential();
       await login(credential.email, credential.password);
 
@@ -1613,7 +1614,6 @@ describe('Movie Controller', () => {
         4: ['(tmdbId: invalid_tmdb_id) The tmdb_id is not a number'],
         5: ["(countries_of_origin: ['mx','zz']) The given countries are invalid"],
       };
-      const expectedRowNumbers = Array.from({ length: expectedTotalRows }, (_, i) => i + 1);
 
       const parseEventData = (event: string) => {
         const statusCheckRegex = /^data: \{"status":"(processing|done)"/.exec(event);
@@ -1640,20 +1640,17 @@ describe('Movie Controller', () => {
           return { status, outcome, rowNumber, id: newMovieId, reasons };
         } else {
           const doneEventData =
-            /^data: \{"status":"(processing|done)","totalRows":(\d+),"successRows":(\[.*\]),"failedRows":(\[.*\])\}\n\n$/.exec(
+            /^data: \{"status":"(processing|done)","totalRows":(\d+),"successRowsCount":(\d+),"failedRowsCount":(\d+)\}\n\n$/.exec(
               event
             );
           const totalRows = doneEventData?.at(2) ? Number(doneEventData.at(2)) : -1;
-          const successRowsMatchingText = doneEventData?.at(3);
-          const failedRowsMatchingText = doneEventData?.at(4);
+          const successRowsCountText = doneEventData?.at(3);
+          const failedRowsCountText = doneEventData?.at(4);
 
-          const successRowsText = successRowsMatchingText ? successRowsMatchingText : JSON.stringify([]);
-          const failedRowsText = failedRowsMatchingText ? failedRowsMatchingText : JSON.stringify([]);
+          const successRowsCount = successRowsCountText ? Number(successRowsCountText) : -1;
+          const failedRowsCount = failedRowsCountText ? Number(failedRowsCountText) : -1;
 
-          const successRows = JSON.parse(successRowsText) as { rowNumber: number; id: number }[];
-          const failedRows = JSON.parse(failedRowsText) as { rowNumber: number; reasons: string[] }[];
-
-          return { status: 'done', totalRows, successRows, failedRows };
+          return { status: 'done', totalRows, successRowsCount, failedRowsCount };
         }
       };
 
@@ -1710,17 +1707,11 @@ describe('Movie Controller', () => {
                 });
 
                 // Validate each item of success rows (id and rowNumber)
-                const expectedSuccessRowsNumber = expectedRowNumbers.filter((num) => !expectedFailedRowsNumber.includes(num));
-                eventSummary.successRows.forEach((r, i) => {
-                  expect(r.id).toBeGreaterThan(0);
-                  expect(r.rowNumber).toEqual(expectedSuccessRowsNumber[i]);
-                });
+                const expectedSuccessRowsCount = expectedTotalRows - expectedFailedRowsNumber.length;
+                expect(eventSummary.successRowsCount).toEqual(expectedSuccessRowsCount);
 
                 // Validate each item of failed rows (rowNumber and reasons)
-                eventSummary.failedRows.forEach((r) => {
-                  expect(expectedFailedRowsNumber).toContain(r.rowNumber);
-                  expect(r.reasons).toEqual(expectedFailedRows[r.rowNumber]);
-                });
+                expect(eventSummary.failedRowsCount).toEqual(expectedFailedRowsNumber.length);
 
                 const newMovieIds: number[] = [];
 
