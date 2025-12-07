@@ -2,7 +2,7 @@ import { DEFAULT_PORT, envVars } from '../constants';
 
 export function getOpenApiUril(hostname: string) {
   const isHttps = envVars.nodeEnv === 'production';
-  const port = envVars.nodeEnv === 'production' ? 8080 : envVars.port || DEFAULT_PORT;
+  const port = envVars.nodeEnv === 'production' ? 8080 : DEFAULT_PORT;
 
   const url = `${isHttps ? 'https' : 'http'}://${hostname}${isHttps ? '' : ':' + port}/openapi`;
   return url;

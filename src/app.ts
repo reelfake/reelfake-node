@@ -27,7 +27,6 @@ import sequelize from './sequelize.config';
 import { envVars } from './constants';
 
 // app.use(morgan('tiny', { stream: logStream }));
-
 const app = express();
 app.use(compression());
 app.use(
@@ -38,7 +37,19 @@ app.use(
 );
 app.use(express.json());
 
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'", 'https://cdn.redoc.ly', 'https://fonts.googleapis.com', 'https://unpkg.com'],
+        workerSrc: ['blob:'],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://unpkg.com'],
+        imgSrc: ['data:', 'https://cdn.redoc.ly'],
+        scriptSrc: ["'unsafe-inline'", 'https:'],
+      },
+    },
+  })
+);
 
 app.use(cookieParser());
 
