@@ -109,6 +109,14 @@ get:
         Example: postal_code=%048, postal_code=500% and postal_code=%000%.
       schema:
         type: string
+    - in: query
+      name: delay
+      schema:
+        type: integer
+        format: int32
+        maximum: 60000
+      required: false
+      description: The amount of time, in milliseconds, to pause the request
   responses:
     '200':
       description: Successfully returned list of customer summary

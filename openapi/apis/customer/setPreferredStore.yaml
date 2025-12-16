@@ -19,6 +19,14 @@ patch:
       description: The id of the store to be set as preferred on
       schema:
         type: integer
+    - in: query
+      name: delay
+      schema:
+        type: integer
+        format: int32
+        maximum: 60000
+      required: false
+      description: The amount of time, in milliseconds, to pause the request
   responses:
     '204':
       description: Successfully updated the customer

@@ -4,6 +4,15 @@ post:
   operationId: addInventory
   tags:
     - inventory
+  parameters:
+    - in: query
+      name: delay
+      schema:
+        type: integer
+        format: int32
+        maximum: 60000
+      required: false
+      description: The amount of time, in milliseconds, to pause the request
   requestBody:
     description: Payload for the new inventory
     required: true

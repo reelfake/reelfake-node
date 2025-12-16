@@ -13,6 +13,14 @@ post:
       description: |
         When enable_tracking is true, a tracking url will be sent to the client using which the client can stream the upload result.
         The acceptable values are true, yes or nothing. Examples - /api/movies/upload?enable_tracking, /api/movies/upload?enable_tracking=true and /api/movies/upload?enable_tracking=yes.
+    - in: query
+      name: delay
+      schema:
+        type: integer
+        format: int32
+        maximum: 60000
+      required: false
+      description: The amount of time, in milliseconds, to pause the request
   requestBody:
     content:
       text/csv:

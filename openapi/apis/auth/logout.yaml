@@ -3,6 +3,15 @@ get:
   operationId: logout
   tags:
     - authentication
+  parameters:
+    - in: query
+      name: delay
+      schema:
+        type: integer
+        format: int32
+        maximum: 60000
+      required: false
+      description: The amount of time, in milliseconds, to pause the request
   responses:
     '200':
       description: User logged out successfully

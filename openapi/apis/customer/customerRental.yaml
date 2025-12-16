@@ -6,6 +6,15 @@ get:
   operationId: getCustomerRentals
   tags:
     - customer
+  parameters:
+    - in: query
+      name: delay
+      schema:
+        type: integer
+        format: int32
+        maximum: 60000
+      required: false
+      description: The amount of time, in milliseconds, to pause the request
   responses:
     '200':
       description: Successfully returned the customer data

@@ -81,6 +81,14 @@ paths:
           schema:
             type: integer
             format: float
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned list of actor summary
@@ -143,6 +151,14 @@ paths:
           schema:
             type: boolean
             default: false
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned actorDetail object
@@ -272,6 +288,14 @@ paths:
           schema:
             type: integer
             default: 1
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned a list of available addresses
@@ -303,6 +327,14 @@ paths:
           schema:
             type: string
             example: Melbourne
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned a list of available addresses in a city
@@ -334,6 +366,14 @@ paths:
           schema:
             type: string
             example: New South Wales
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned a list of available addresses in a state
@@ -357,6 +397,15 @@ paths:
       security: []
       tags:
         - authentication
+      parameters:
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       requestBody:
         description: Provide the user email and password for login
         required: true
@@ -392,6 +441,15 @@ paths:
       operationId: logout
       tags:
         - authentication
+      parameters:
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: User logged out successfully
@@ -414,6 +472,15 @@ paths:
       operationId: getUserProfile
       tags:
         - authentication
+      parameters:
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned the logged in user detail
@@ -441,6 +508,14 @@ paths:
           required: false
           schema:
             type: boolean
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned a list of the cities
@@ -466,6 +541,15 @@ paths:
       security: []
       tags:
         - country
+      parameters:
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned a list of countries
@@ -498,6 +582,14 @@ paths:
           description: The id of the customer
           schema:
             type: integer
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       requestBody:
         description: New password in the payload
         required: true
@@ -533,6 +625,14 @@ paths:
           description: The id of the customer
           schema:
             type: integer
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       requestBody:
         description: Payload for the current and new password
         required: true
@@ -667,6 +767,14 @@ paths:
             Example: postal_code=%048, postal_code=500% and postal_code=%000%.
           schema:
             type: string
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned list of customer summary
@@ -794,6 +902,14 @@ paths:
             Example: postal_code=%048, postal_code=500% and postal_code=%000%.
           schema:
             type: string
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned list of customer summary
@@ -811,6 +927,15 @@ paths:
       operationId: registerCustomer
       tags:
         - customer
+      parameters:
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       requestBody:
         description: Payload for the new customer
         required: true
@@ -847,6 +972,15 @@ paths:
       operationId: getCustomerRentals
       tags:
         - customer
+      parameters:
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned the customer data
@@ -880,6 +1014,14 @@ paths:
           description: The id of the customer
           schema:
             type: integer
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned the customer data
@@ -966,6 +1108,14 @@ paths:
           description: The id of the customer
           schema:
             type: integer
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '204':
           description: Successfully updated the customer
@@ -993,6 +1143,14 @@ paths:
           description: The id of the customer
           schema:
             type: integer
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '204':
           description: Successfully updated the customer
@@ -1028,6 +1186,14 @@ paths:
           description: The id of the store to be set as preferred on
           schema:
             type: integer
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '204':
           description: Successfully updated the customer
@@ -1048,6 +1214,15 @@ paths:
       security: []
       tags:
         - genre
+      parameters:
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned a list of available movie genres
@@ -1073,6 +1248,15 @@ paths:
       operationId: addInventory
       tags:
         - inventory
+      parameters:
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       requestBody:
         description: Payload for the new inventory
         required: true
@@ -1111,6 +1295,14 @@ paths:
           description: Inventory Id
           schema:
             type: integer
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       requestBody:
         description: Payload of the inventory to update
         required: true
@@ -1164,6 +1356,15 @@ paths:
       security: []
       tags:
         - movie_language
+      parameters:
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned a list of available movie languages
@@ -1251,6 +1452,14 @@ paths:
           schema:
             type: string
             format: number
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned a list of movies (including pagination data) for the given page
@@ -1326,6 +1535,14 @@ paths:
           schema:
             type: boolean
             default: false
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned the movie data with or without the actors
@@ -1412,6 +1629,14 @@ paths:
           description: Id of the movie
           schema:
             type: integer
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       requestBody:
         description: Payload for the new actors
         required: true
@@ -1448,6 +1673,14 @@ paths:
           description: The id of the movie
           schema:
             type: integer
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned the stock count in all the stores
@@ -1486,6 +1719,14 @@ paths:
             maximum: 1000
           description: |
             The query string delay_event_ms when passed in request will pause for the given millisecond between every row processing.
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       requestBody:
         content:
           text/csv:
@@ -1543,6 +1784,15 @@ paths:
       operationId: trackUploadValidation
       tags:
         - movie
+      parameters:
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: |
@@ -1596,6 +1846,14 @@ paths:
           description: |
             When enable_tracking is true, a tracking url will be sent to the client using which the client can stream the upload result.
             The acceptable values are true, yes or nothing. Examples - /api/movies/upload?enable_tracking, /api/movies/upload?enable_tracking=true and /api/movies/upload?enable_tracking=yes.
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       requestBody:
         content:
           text/csv:
@@ -1664,6 +1922,14 @@ paths:
             maximum: 1000
           description: |
             The query string delay_event_ms when passed in request will pause for the given millisecond between every row processing. This query string is forwarded from the /movies/upload/validate route.
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: |
@@ -1721,6 +1987,14 @@ paths:
           description: The id of the staff
           schema:
             type: integer
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       requestBody:
         description: Payload for the new password
         required: true
@@ -1757,6 +2031,14 @@ paths:
           description: Staff id
           schema:
             type: integer
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       requestBody:
         description: Payload for the current and new password
         required: true
@@ -1883,6 +2165,14 @@ paths:
             Example: postal_code=%048, postal_code=500% and postal_code=%000%.
           schema:
             type: string
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned list of all staff
@@ -2030,6 +2320,14 @@ paths:
             Example: postal_code=%048, postal_code=500% and postal_code=%000%.
           schema:
             type: string
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned list of all staff
@@ -2052,6 +2350,15 @@ paths:
       operationId: getStoreManagers
       tags:
         - staff
+      parameters:
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned list of store managers
@@ -2074,6 +2381,15 @@ paths:
       security: []
       tags:
         - staff
+      parameters:
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned list of store managers
@@ -2103,6 +2419,14 @@ paths:
           description: Id of the staff
           schema:
             type: integer
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned staff detail
@@ -2192,6 +2516,14 @@ paths:
           schema:
             type: integer
             format: int32
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned most rented movies
@@ -2224,6 +2556,14 @@ paths:
           schema:
             type: integer
             format: int32
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned statistics
@@ -2256,6 +2596,14 @@ paths:
           schema:
             type: integer
             format: int32
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned statistics
@@ -2288,6 +2636,14 @@ paths:
           schema:
             type: integer
             format: int32
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned statistics
@@ -2310,6 +2666,15 @@ paths:
       security: []
       tags:
         - store
+      parameters:
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned an array of storeItem
@@ -2374,6 +2739,14 @@ paths:
           schema:
             type: boolean
             default: false
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned the store data with or without the staff
@@ -2467,6 +2840,14 @@ paths:
           description: The id of the store
           schema:
             type: integer
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned the number of in-stock movies in a given store
@@ -2509,6 +2890,14 @@ paths:
           schema:
             type: integer
             default: 1
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned movies in a store
@@ -2536,6 +2925,14 @@ paths:
           description: The id of the store
           schema:
             type: integer
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned staff employed in a store
@@ -2559,6 +2956,15 @@ paths:
       operationId: getRentals
       tags:
         - rental
+      parameters:
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned a list of rentals for the logged in user
@@ -2590,6 +2996,15 @@ paths:
       operationId: getRentalsForStore
       tags:
         - rental
+      parameters:
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned a list of rentals for the store
@@ -2630,6 +3045,14 @@ paths:
           description: The id of the rental
           schema:
             type: string
+        - in: query
+          name: delay
+          schema:
+            type: integer
+            format: int32
+            maximum: 60000
+          required: false
+          description: The amount of time, in milliseconds, to pause the request
       responses:
         '200':
           description: Successfully returned a rental detail

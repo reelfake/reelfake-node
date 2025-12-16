@@ -14,6 +14,14 @@ get:
         maximum: 1000
       description: |
         The query string delay_event_ms when passed in request will pause for the given millisecond between every row processing. This query string is forwarded from the /movies/upload/validate route.
+    - in: query
+      name: delay
+      schema:
+        type: integer
+        format: int32
+        maximum: 60000
+      required: false
+      description: The amount of time, in milliseconds, to pause the request
   responses:
     '200':
       description: |

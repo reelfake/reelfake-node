@@ -4,8 +4,17 @@ get:
   operationId: trackUploadValidation
   tags:
     - movie
+  parameters:
+    - in: query
+      name: delay
+      schema:
+        type: integer
+        format: int32
+        maximum: 60000
+      required: false
+      description: The amount of time, in milliseconds, to pause the request
   responses:
-    "200":
+    '200':
       description: |
         Depending on enable_tracking query the response will differ. If the query is added to request and enabled below response stream is send.
 
@@ -35,9 +44,9 @@ get:
 
               When processing is done
               "data: { 'status': 'done', 'totalRows': <number>, 'processedRowsCount': <number>, 'validRowsCount': <number>, 'invalidRowsCount': <number> }\n\n"
-    "401":
+    '401':
       $ref: ../../components/error/unauthorized.yaml
-    "403":
+    '403':
       $ref: ../../components/error/forbidden.yaml
-    "500":
+    '500':
       $ref: ../../components/error/internalServerError.yaml
