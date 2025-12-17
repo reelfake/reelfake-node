@@ -59,11 +59,14 @@ app.use(async (req, res, next) => {
   const { delay } = req.query;
   const delayMs = Number(delay);
 
-  if (isNaN(delayMs) || delayMs > 60000) {
+  if (delay && (isNaN(delayMs) || delayMs > 60000)) {
     return next(new AppError('Delay query must be number less than 60000', 400));
   }
 
-  await new Promise((resolve) => setTimeout(resolve, delayMs));
+  if (delayMs > 0 && delayMs < 60000) {
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+  }
+
   next();
 });
 
