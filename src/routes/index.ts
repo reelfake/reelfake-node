@@ -12,3 +12,5 @@ export { default as customerRoutes } from './customerRoutes';
 export { default as authRoutes } from './authRoutes';
 export { default as rentalRoutes } from './rentalRoutes';
 export { default as inventoryRoutes } from './inventoryRoutes';
+export { default as cartRoutes } from './cartRoutes';
+export { default as wishlistRoutes } from './wishlistRoute';

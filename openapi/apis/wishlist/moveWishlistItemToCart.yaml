@@ -1,0 +1,85 @@
+post:
+  summary: Move the wishlisted movie to cart. This api will remove the movie from wishlist and add to cart.
+  description: This route is accessible only to the logged in customer.
+  operationId: moveToCart
+  tags:
+    - wishlist
+  parameters:
+    - in: path
+      name: id
+      required: true
+      description: The id of the wishlisted movie to move to cart.
+      schema:
+        type: integer
+  responses:
+    '201':
+      description: Successfully moved the wishlisted movie to cart.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              id:
+                type: integer
+                description: Id of the cart item.
+              movie:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: Unique id of the resource
+                  title:
+                    type: string
+                    description: The title of the movie
+                  runtime:
+                    type: integer
+                    description: The length of the movie
+                  releaseDate:
+                    type: string
+                    description: Date on which the movie is or will be released
+                    format: date
+                  genres:
+                    type: array
+                    description: |
+                      The genres that the movie belongs to. The valid genres are action, adventure, animation, 
+                      comedy, crime, documentary, drama, family, fantasy, history, horror, music , mystery, romance, 
+                      science fiction, thriller, war and western.
+                    items:
+                      type: string
+                  countriesOfOrigin:
+                    type: array
+                    description: The countries of origin of the movie
+                    items:
+                      type: string
+                  language:
+                    type: string
+                    description: The language that the movie is in
+                  popularity:
+                    type: number
+                    description: A number indicating how popular the movie is
+                    format: float
+                  ratingAverage:
+                    type: number
+                    description: The average rating of the movie
+                    format: float
+                  ratingCount:
+                    type: integer
+                    description: The number of ratings that the movie has got
+                  posterUrl:
+                    type: string
+                    description: Link to the movie poster
+                    format: uri
+                  rentalRate:
+                    type: number
+                    description: The rental rate of the movie
+                    format: float
+    '401':
+      $ref: ../../components/error/unauthorized.yaml
+    '403':
+      $ref: ../../components/error/forbidden.yaml
+    '400':
+      $ref: ../../components/error/badRequest.yaml
+    '404':
+      $ref: ../../components/error/notFound.yaml
+    '500':
+      $ref: ../../components/error/internalServerError.yaml

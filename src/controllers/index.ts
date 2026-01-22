@@ -1,7 +1,13 @@
 // Auth
 export { getUserProfile, login, logout } from './authController';
 // Stats
-export { getStatistics, getMostRentedMovies, getSalesByStore, getSalesByMonth, getSalesByCity } from './statsController';
+export {
+  getStatistics,
+  getMostRentedMovies,
+  getSalesByStore,
+  getSalesByMonth,
+  getSalesByCity,
+} from './statsController';
 // Genres
 export { getGenres } from './genreController';
 // City
@@ -11,7 +17,15 @@ export { getCountries } from './countryController';
 // Movie language
 export { getMovieLanguages } from './movieLanguageController';
 // Movie
-export { getMovies, getMovieById, findInStores, createMovie, addActors, updateMovie, deleteMovie } from './movieController';
+export {
+  getMovies,
+  getMovieById,
+  findInStores,
+  createMovie,
+  addActors,
+  updateMovie,
+  deleteMovie,
+} from './movieController';
 // Movie actor
 export { uploadMovies, trackUpload, validateUpload, trackUploadValidation } from './movieUploadController';
 // Actor
@@ -59,3 +73,7 @@ export {
 export { getRentals, getRentalById, getRentalsForStore } from './rentalController';
 // Inventory
 export { addInventory, updateInventory, deleteInventory } from './inventoryController';
+// Cart
+export { getCart, addCart, updateCartItemCount, deleteCart, moveToWishlist } from './cartController';
+// Wishlist
+export { addWishlist, deleteWishlist, getWishlist, moveToCart } from './wishlistController';

@@ -494,6 +494,200 @@ paths:
           $ref: '#/components/responses/notFound'
         '500':
           $ref: '#/components/responses/internalServerError'
+  /cart:
+    get:
+      summary: Get the items in the cart for the logged in customer
+      description: |
+        This api will return cart items only for the logged customer. 
+        There is no need to pass customer id separately as it reads from the authentication cookie.
+      operationId: getCart
+      tags:
+        - cart
+      responses:
+        '200':
+          description: Successfully returned cart items
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/cartResponseBody'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    post:
+      summary: Add movie to the cart
+      description: This route is accessible only to the logged in customer.
+      operationId: addCart
+      tags:
+        - cart
+      requestBody:
+        description: Payload for the new cart
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/addCartRequestBody'
+      responses:
+        '201':
+          description: Successfully added movie to the cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/addCartResponseBody'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /cart/{id}/move_to_wishlist:
+    post:
+      summary: Move the cart item to wishlist. This api will remove the movie from cart and add to wishlist.
+      description: This route is accessible only to the logged in customer.
+      operationId: moveToWishlist
+      tags:
+        - cart
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the cart item to move to wishlist.
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Successfully moved the cart item to wishlist.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: Id of the wishlist item.
+                  movie:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        description: Unique id of the resource
+                      title:
+                        type: string
+                        description: The title of the movie
+                      runtime:
+                        type: integer
+                        description: The length of the movie
+                      releaseDate:
+                        type: string
+                        description: Date on which the movie is or will be released
+                        format: date
+                      genres:
+                        type: array
+                        description: |
+                          The genres that the movie belongs to. The valid genres are action, adventure, animation, 
+                          comedy, crime, documentary, drama, family, fantasy, history, horror, music , mystery, romance, 
+                          science fiction, thriller, war and western.
+                        items:
+                          type: string
+                      countriesOfOrigin:
+                        type: array
+                        description: The countries of origin of the movie
+                        items:
+                          type: string
+                      language:
+                        type: string
+                        description: The language that the movie is in
+                      popularity:
+                        type: number
+                        description: A number indicating how popular the movie is
+                        format: float
+                      ratingAverage:
+                        type: number
+                        description: The average rating of the movie
+                        format: float
+                      ratingCount:
+                        type: integer
+                        description: The number of ratings that the movie has got
+                      posterUrl:
+                        type: string
+                        description: Link to the movie poster
+                        format: uri
+                      rentalRate:
+                        type: number
+                        description: The rental rate of the movie
+                        format: float
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /cart/{id}:
+    delete:
+      summary: Removes the item from the cart.
+      description: This route is accessible only to the logged in customer.
+      operationId: deleteCart
+      tags:
+        - cart
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the cart item to be deleted.
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Successfully added movie to the cart
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    put:
+      summary: Update the movie count in the cart.
+      description: This route is accessible only to the logged in customer.
+      operationId: updateCartItemCount
+      tags:
+        - cart
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the cart item to be updated.
+          schema:
+            type: integer
+      requestBody:
+        description: New quantity for the movie in the cart.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/updateCartRequestBody'
+      responses:
+        '204':
+          description: Successfully added movie to the cart
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
   /cities:
     get:
       summary: Get the list of the cities
@@ -3077,6 +3271,169 @@ paths:
           $ref: '#/components/responses/notFound'
         '500':
           $ref: '#/components/responses/internalServerError'
+  /wishlist:
+    get:
+      summary: Get the wishlisted movies for the logged in customer
+      description: |
+        This api will return wishlisted items only for the logged customer. 
+        There is no need to pass customer id separately as it reads from the authentication cookie.
+      operationId: getWishlist
+      tags:
+        - wishlist
+      responses:
+        '200':
+          description: Successfully returned cart items
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/wishlistResponseBody'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    post:
+      summary: Add movie to the wishlist
+      description: This route is accessible only to the logged in customer.
+      operationId: addWishlist
+      tags:
+        - wishlist
+      requestBody:
+        description: Payload for the new wishlist
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/addWishlistRequestBody'
+      responses:
+        '201':
+          description: Successfully added movie to the wishlist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/addWishlistResponseBody'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /wishlist/{id}/move_to_cart:
+    post:
+      summary: Move the wishlisted movie to cart. This api will remove the movie from wishlist and add to cart.
+      description: This route is accessible only to the logged in customer.
+      operationId: moveToCart
+      tags:
+        - wishlist
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the wishlisted movie to move to cart.
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Successfully moved the wishlisted movie to cart.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: Id of the cart item.
+                  movie:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        description: Unique id of the resource
+                      title:
+                        type: string
+                        description: The title of the movie
+                      runtime:
+                        type: integer
+                        description: The length of the movie
+                      releaseDate:
+                        type: string
+                        description: Date on which the movie is or will be released
+                        format: date
+                      genres:
+                        type: array
+                        description: |
+                          The genres that the movie belongs to. The valid genres are action, adventure, animation, 
+                          comedy, crime, documentary, drama, family, fantasy, history, horror, music , mystery, romance, 
+                          science fiction, thriller, war and western.
+                        items:
+                          type: string
+                      countriesOfOrigin:
+                        type: array
+                        description: The countries of origin of the movie
+                        items:
+                          type: string
+                      language:
+                        type: string
+                        description: The language that the movie is in
+                      popularity:
+                        type: number
+                        description: A number indicating how popular the movie is
+                        format: float
+                      ratingAverage:
+                        type: number
+                        description: The average rating of the movie
+                        format: float
+                      ratingCount:
+                        type: integer
+                        description: The number of ratings that the movie has got
+                      posterUrl:
+                        type: string
+                        description: Link to the movie poster
+                        format: uri
+                      rentalRate:
+                        type: number
+                        description: The rental rate of the movie
+                        format: float
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /wishlist/{id}:
+    delete:
+      summary: Removes the item from the wishlist.
+      description: This route is accessible only to the logged in customer.
+      operationId: deleteWishlist
+      tags:
+        - wishlist
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the wishlisted item.
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Successfully added movie to the wishlist
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
 components:
   securitySchemes:
     cookieAuth:
@@ -3509,6 +3866,144 @@ components:
         message:
           type: string
           example: Logged out successfully
+    cartResponseBody:
+      type: object
+      properties:
+        items:
+          type: object
+          properties:
+            id:
+              type: integer
+              description: Unique id of the resource
+            quantity:
+              type: integer
+              description: The count representing the number of certain product in cart
+            movie:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  description: Unique id of the resource
+                title:
+                  type: string
+                  description: The title of the movie
+                runtime:
+                  type: integer
+                  description: The length of the movie
+                releaseDate:
+                  type: string
+                  description: Date on which the movie is or will be released
+                  format: date
+                genres:
+                  type: array
+                  description: |
+                    The genres that the movie belongs to. The valid genres are action, adventure, animation, 
+                    comedy, crime, documentary, drama, family, fantasy, history, horror, music , mystery, romance, 
+                    science fiction, thriller, war and western.
+                  items:
+                    type: string
+                countriesOfOrigin:
+                  type: array
+                  description: The countries of origin of the movie
+                  items:
+                    type: string
+                language:
+                  type: string
+                  description: The language that the movie is in
+                popularity:
+                  type: number
+                  description: A number indicating how popular the movie is
+                  format: float
+                ratingAverage:
+                  type: number
+                  description: The average rating of the movie
+                  format: float
+                ratingCount:
+                  type: integer
+                  description: The number of ratings that the movie has got
+                posterUrl:
+                  type: string
+                  description: Link to the movie poster
+                  format: uri
+                rentalRate:
+                  type: number
+                  description: The rental rate of the movie
+                  format: float
+    addCartRequestBody:
+      type: object
+      properties:
+        movieId:
+          type: integer
+          description: Id of the movie to add to cart
+        quantity:
+          type: integer
+          description: The count representing the number of certain product in cart
+    addCartResponseBody:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique id of the resource
+        quantity:
+          type: integer
+          description: The count representing the number of certain product in cart
+        movie:
+          type: object
+          properties:
+            id:
+              type: integer
+              description: Unique id of the resource
+            title:
+              type: string
+              description: The title of the movie
+            runtime:
+              type: integer
+              description: The length of the movie
+            releaseDate:
+              type: string
+              description: Date on which the movie is or will be released
+              format: date
+            genres:
+              type: array
+              description: |
+                The genres that the movie belongs to. The valid genres are action, adventure, animation, 
+                comedy, crime, documentary, drama, family, fantasy, history, horror, music , mystery, romance, 
+                science fiction, thriller, war and western.
+              items:
+                type: string
+            countriesOfOrigin:
+              type: array
+              description: The countries of origin of the movie
+              items:
+                type: string
+            language:
+              type: string
+              description: The language that the movie is in
+            popularity:
+              type: number
+              description: A number indicating how popular the movie is
+              format: float
+            ratingAverage:
+              type: number
+              description: The average rating of the movie
+              format: float
+            ratingCount:
+              type: integer
+              description: The number of ratings that the movie has got
+            posterUrl:
+              type: string
+              description: Link to the movie poster
+              format: uri
+            rentalRate:
+              type: number
+              description: The rental rate of the movie
+              format: float
+    updateCartRequestBody:
+      type: object
+      properties:
+        quantity:
+          type: integer
+          description: The count representing the number of certain product in cart
     citiesResponseBody:
       oneOf:
         - type: object
@@ -5561,6 +6056,129 @@ components:
                   type: string
                 postalCode:
                   type: string
+    wishlistResponseBody:
+      type: object
+      properties:
+        items:
+          type: object
+          properties:
+            id:
+              type: integer
+              description: Unique id of the resource
+            movie:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  description: Unique id of the resource
+                title:
+                  type: string
+                  description: The title of the movie
+                runtime:
+                  type: integer
+                  description: The length of the movie
+                releaseDate:
+                  type: string
+                  description: Date on which the movie is or will be released
+                  format: date
+                genres:
+                  type: array
+                  description: |
+                    The genres that the movie belongs to. The valid genres are action, adventure, animation, 
+                    comedy, crime, documentary, drama, family, fantasy, history, horror, music , mystery, romance, 
+                    science fiction, thriller, war and western.
+                  items:
+                    type: string
+                countriesOfOrigin:
+                  type: array
+                  description: The countries of origin of the movie
+                  items:
+                    type: string
+                language:
+                  type: string
+                  description: The language that the movie is in
+                popularity:
+                  type: number
+                  description: A number indicating how popular the movie is
+                  format: float
+                ratingAverage:
+                  type: number
+                  description: The average rating of the movie
+                  format: float
+                ratingCount:
+                  type: integer
+                  description: The number of ratings that the movie has got
+                posterUrl:
+                  type: string
+                  description: Link to the movie poster
+                  format: uri
+                rentalRate:
+                  type: number
+                  description: The rental rate of the movie
+                  format: float
+    addWishlistRequestBody:
+      type: object
+      properties:
+        movieId:
+          type: integer
+          description: Id of the movie to add to cart
+    addWishlistResponseBody:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique id of the resource
+        movie:
+          type: object
+          properties:
+            id:
+              type: integer
+              description: Unique id of the resource
+            title:
+              type: string
+              description: The title of the movie
+            runtime:
+              type: integer
+              description: The length of the movie
+            releaseDate:
+              type: string
+              description: Date on which the movie is or will be released
+              format: date
+            genres:
+              type: array
+              description: |
+                The genres that the movie belongs to. The valid genres are action, adventure, animation, 
+                comedy, crime, documentary, drama, family, fantasy, history, horror, music , mystery, romance, 
+                science fiction, thriller, war and western.
+              items:
+                type: string
+            countriesOfOrigin:
+              type: array
+              description: The countries of origin of the movie
+              items:
+                type: string
+            language:
+              type: string
+              description: The language that the movie is in
+            popularity:
+              type: number
+              description: A number indicating how popular the movie is
+              format: float
+            ratingAverage:
+              type: number
+              description: The average rating of the movie
+              format: float
+            ratingCount:
+              type: integer
+              description: The number of ratings that the movie has got
+            posterUrl:
+              type: string
+              description: Link to the movie poster
+              format: uri
+            rentalRate:
+              type: number
+              description: The rental rate of the movie
+              format: float
   responses:
     badRequest:
       description: The request does not have the data that api needed

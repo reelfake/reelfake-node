@@ -1,0 +1,24 @@
+delete:
+  summary: Removes the item from the wishlist.
+  description: This route is accessible only to the logged in customer.
+  operationId: deleteWishlist
+  tags:
+    - wishlist
+  parameters:
+    - in: path
+      name: id
+      required: true
+      description: The id of the wishlisted item.
+      schema:
+        type: integer
+  responses:
+    '204':
+      description: Successfully added movie to the wishlist
+    '401':
+      $ref: ../../components/error/unauthorized.yaml
+    '403':
+      $ref: ../../components/error/forbidden.yaml
+    '404':
+      $ref: ../../components/error/notFound.yaml
+    '500':
+      $ref: ../../components/error/internalServerError.yaml

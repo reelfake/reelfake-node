@@ -12,6 +12,8 @@ import InventoryModel from './inventoryModel';
 import CustomerModel from './customerModel';
 import StaffModel from './staffModel';
 import RentalModel from './rentalModel';
+import CartModel from './cartModel';
+import WishlistModel from './wishlist';
 
 export {
   BaseModel,
@@ -28,6 +30,8 @@ export {
   CustomerModel,
   StaffModel,
   RentalModel,
+  CartModel,
+  WishlistModel,
 };
 
 CityModel.belongsTo(CountryModel, { as: 'country', foreignKey: 'countryId' });
@@ -75,3 +79,11 @@ RentalModel.belongsTo(StaffModel, { as: 'processedBy', foreignKey: 'staffId' });
 // Rental <-> Inventory relationship
 InventoryModel.hasMany(RentalModel, { as: 'rental', foreignKey: 'inventoryId' });
 RentalModel.belongsTo(InventoryModel, { as: 'inventory', foreignKey: 'inventoryId' });
+
+// Cart to customer and movie relationship
+CartModel.belongsTo(CustomerModel, { as: 'customer', foreignKey: 'customerId' });
+CartModel.belongsTo(MovieModel, { as: 'movie', foreignKey: 'movieId' });
+
+// Wishlist to customer and movie relationship
+WishlistModel.belongsTo(CustomerModel, { as: 'customer', foreignKey: 'customerId' });
+WishlistModel.belongsTo(MovieModel, { as: 'movie', foreignKey: 'movieId' });

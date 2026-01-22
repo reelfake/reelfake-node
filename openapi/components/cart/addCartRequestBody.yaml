@@ -1,0 +1,8 @@
+type: object
+properties:
+  movieId:
+    type: integer
+    description: Id of the movie to add to cart
+  quantity:
+    type: integer
+    description: The count representing the number of certain product in cart

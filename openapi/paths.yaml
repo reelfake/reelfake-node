@@ -21,6 +21,14 @@
 /auth/me:
   $ref: apis/auth/userProfile.yaml
 # ##################################
+# CART API
+/cart:
+  $ref: apis/cart/cartForLoggedInCustomer.yaml
+/cart/{id}/move_to_wishlist:
+  $ref: apis/cart/moveCartItemToWishlist.yaml
+/cart/{id}:
+  $ref: apis/cart/cartById.yaml
+# ##################################
 # CITY API
 /cities:
   $ref: apis/city/cities.yaml
@@ -128,3 +136,11 @@
   $ref: apis/rental/rentalsByStore.yaml
 /rentals/{id}:
   $ref: apis/rental/rentalById.yaml
+# ##################################
+# WISHLIST API
+/wishlist:
+  $ref: apis/wishlist/wishlistForLoggedInCustomer.yaml
+/wishlist/{id}/move_to_cart:
+  $ref: apis/wishlist/moveWishlistItemToCart.yaml
+/wishlist/{id}:
+  $ref: apis/wishlist/wishlistById.yaml

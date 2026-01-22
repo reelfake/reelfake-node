@@ -1,0 +1,51 @@
+get:
+  summary: Get the wishlisted movies for the logged in customer
+  description: |
+    This api will return wishlisted items only for the logged customer. 
+    There is no need to pass customer id separately as it reads from the authentication cookie.
+  operationId: getWishlist
+  tags:
+    - wishlist
+  responses:
+    '200':
+      description: Successfully returned cart items
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/wishlist/wishlistResponseBody.yaml
+    '401':
+      $ref: ../../components/error/unauthorized.yaml
+    '403':
+      $ref: ../../components/error/forbidden.yaml
+    '500':
+      $ref: ../../components/error/internalServerError.yaml
+post:
+  summary: Add movie to the wishlist
+  description: This route is accessible only to the logged in customer.
+  operationId: addWishlist
+  tags:
+    - wishlist
+  requestBody:
+    description: Payload for the new wishlist
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../components/wishlist/addWishlistRequestBody.yaml
+  responses:
+    '201':
+      description: Successfully added movie to the wishlist
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/wishlist/addWishlistResponseBody.yaml
+    '401':
+      $ref: ../../components/error/unauthorized.yaml
+    '403':
+      $ref: ../../components/error/forbidden.yaml
+    '400':
+      $ref: ../../components/error/badRequest.yaml
+    '404':
+      $ref: ../../components/error/notFound.yaml
+    '500':
+      $ref: ../../components/error/internalServerError.yaml

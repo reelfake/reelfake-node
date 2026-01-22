@@ -1,0 +1,59 @@
+type: object
+properties:
+  id:
+    type: integer
+    description: Unique id of the resource
+  quantity:
+    type: integer
+    description: The count representing the number of certain product in cart
+  movie:
+    type: object
+    properties:
+      id:
+        type: integer
+        description: Unique id of the resource
+      title:
+        type: string
+        description: The title of the movie
+      runtime:
+        type: integer
+        description: The length of the movie
+      releaseDate:
+        type: string
+        description: Date on which the movie is or will be released
+        format: date
+      genres:
+        type: array
+        description: |
+          The genres that the movie belongs to. The valid genres are action, adventure, animation, 
+          comedy, crime, documentary, drama, family, fantasy, history, horror, music , mystery, romance, 
+          science fiction, thriller, war and western.
+        items:
+          type: string
+      countriesOfOrigin:
+        type: array
+        description: The countries of origin of the movie
+        items:
+          type: string
+      language:
+        type: string
+        description: The language that the movie is in
+      popularity:
+        type: number
+        description: A number indicating how popular the movie is
+        format: float
+      ratingAverage:
+        type: number
+        description: The average rating of the movie
+        format: float
+      ratingCount:
+        type: integer
+        description: The number of ratings that the movie has got
+      posterUrl:
+        type: string
+        description: Link to the movie poster
+        format: uri
+      rentalRate:
+        type: number
+        description: The rental rate of the movie
+        format: float

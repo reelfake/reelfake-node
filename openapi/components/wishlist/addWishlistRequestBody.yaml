@@ -1,0 +1,5 @@
+type: object
+properties:
+  movieId:
+    type: integer
+    description: Id of the movie to add to cart

@@ -6,7 +6,13 @@ import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { allowOnlyMe } from './middlewares';
-import { AppError, getOpenApiDocsHtmlString, getOpenApiReDocsHtmlString, getOpenApiUril, testDbConnection } from './utils';
+import {
+  AppError,
+  getOpenApiDocsHtmlString,
+  getOpenApiReDocsHtmlString,
+  getOpenApiUril,
+  testDbConnection,
+} from './utils';
 import {
   statsRoutes,
   addressRoutes,
@@ -22,6 +28,8 @@ import {
   authRoutes,
   rentalRoutes,
   inventoryRoutes,
+  cartRoutes,
+  wishlistRoutes,
 } from './routes';
 import sequelize from './sequelize.config';
 import { envVars } from './constants';
@@ -33,7 +41,7 @@ app.use(
   cors({
     origin: /^https?:\/\/.+/,
     credentials: true,
-  })
+  }),
 );
 app.use(express.json());
 
@@ -48,7 +56,7 @@ app.use(
         scriptSrc: ["'unsafe-inline'", 'https:'],
       },
     },
-  })
+  }),
 );
 
 app.use(cookieParser());
@@ -147,6 +155,12 @@ app.use('/api/rentals', rentalRoutes);
 
 // Inventory
 app.use('/api/inventory', inventoryRoutes);
+
+// Cart
+app.use('/api/cart', cartRoutes);
+
+// Wishlist
+app.use('/api/wishlist', wishlistRoutes);
 
 app.use('*', (req: Request, res: Response) => {
   res.status(404).json({

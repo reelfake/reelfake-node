@@ -1,0 +1,5 @@
+type: object
+properties:
+  quantity:
+    type: integer
+    description: The count representing the number of certain product in cart

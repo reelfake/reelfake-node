@@ -125,7 +125,7 @@ export async function execQuery(
   queryText: string,
   fieldMap: Record<string, string> = {},
   excludeTimestamps: boolean = true,
-  removeTmdbId: boolean = true
+  removeTmdbId: boolean = true,
 ) {
   let result: object[] | undefined = undefined;
   try {
@@ -286,6 +286,25 @@ export async function getCustomerCredential() {
     `);
 
   return { email, password: passwordMock };
+}
+
+export async function getMultipleCustomerCredentials(count: number) {
+  const credentials: { id: number; email: string; password: string }[] = [];
+
+  const customers = await execQuery(`
+    SELECT id, email
+    FROM customer WHERE active = true LIMIT ${count}
+  `);
+
+  const hashedPassword = await hashPassword(passwordMock);
+
+  await execQuery(`
+      UPDATE customer SET user_password = '${hashedPassword}' WHERE id IN (${customers.map((c) => c.id).join(',')})
+    `);
+
+  credentials.push(...customers.map((c) => ({ id: +c.id, email: c.email, password: passwordMock })));
+
+  return credentials;
 }
 
 export async function hashPassword(password: string) {
