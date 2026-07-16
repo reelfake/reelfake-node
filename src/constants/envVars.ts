@@ -1,12 +1,12 @@
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 
 const envName = process.env.NODE_ENV;
 
-if (envName === 'development') {
+if (envName === "development") {
   dotenv.config({ path: `${process.cwd()}/.env.dev` });
 }
 
-if (envName === 'test') {
+if (envName === "test") {
   dotenv.config({ path: `${process.cwd()}/.env.test` });
 }
 
@@ -19,27 +19,29 @@ type EnvironmentVariables = {
   host: string;
   port: number;
   enableSequelizeLogs?: boolean;
-  shouldBlockNonOwner?: boolean;
-  apiOwnerSecretKey?: string;
 };
 
 function setupEnvironmentVariables() {
-  const db = process.env['DB_NAME'];
-  const user = process.env['DB_USER'];
-  const password = process.env['DB_PASSWORD'];
-  const host = process.env['DB_HOST'];
-  const port = process.env['DB_PORT'];
-  const jwtSecret = process.env['JWT_SECRET'];
-  const shouldBlockNonOwner = process.env['SHOULD_BLOCK_NON_OWNER']?.toLowerCase() === 'true';
-  const apiOwnerSecretKey = process.env['API_OWNER_SECRET_KEY'];
-  const enableSequelizeLogs = process.env['ENABLE_SEQUELIZE_LOGS']?.toLowerCase() === 'true';
+  const db = process.env["DB_NAME"];
+  const user = process.env["DB_USER"];
+  const password = process.env["DB_PASSWORD"];
+  const host = process.env["DB_HOST"];
+  const port = process.env["DB_PORT"];
+  const jwtSecret = process.env["JWT_SECRET"];
+  const enableSequelizeLogs =
+    process.env["ENABLE_SEQUELIZE_LOGS"]?.toLowerCase() ===
+    "true";
 
   if (process.env.NODE_ENV === undefined) {
-    throw new Error('NODE_ENV is missing form the environment variables');
+    throw new Error(
+      "NODE_ENV is missing form the environment variables",
+    );
   }
 
   if (!db || !user || !password || !host || !port) {
-    throw new Error('Missing environment variables required for connecting to the database');
+    throw new Error(
+      "Missing environment variables required for connecting to the database",
+    );
   }
 
   if (isNaN(Number(port))) {
@@ -47,7 +49,9 @@ function setupEnvironmentVariables() {
   }
 
   if (!jwtSecret) {
-    throw new Error('JWT_SECRET is missing from the environment variables');
+    throw new Error(
+      "JWT_SECRET is missing from the environment variables",
+    );
   }
 
   return {
@@ -58,12 +62,11 @@ function setupEnvironmentVariables() {
     password,
     host,
     enableSequelizeLogs,
-    shouldBlockNonOwner,
-    apiOwnerSecretKey,
     port: Number(port),
   };
 }
 
-const envVars: EnvironmentVariables = setupEnvironmentVariables();
+const envVars: EnvironmentVariables =
+  setupEnvironmentVariables();
 
 export default envVars;
