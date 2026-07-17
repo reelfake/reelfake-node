@@ -9,11 +9,11 @@ import path from "path";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
+import morgan from "morgan";
 import {
   AppError,
   getOpenApiDocsHtmlString,
   getOpenApiReDocsHtmlString,
-  getOpenApiUril,
   testDbConnection,
 } from "./utils";
 import {
@@ -37,8 +37,8 @@ import {
 import sequelize from "./sequelize.config";
 import { envVars } from "./constants";
 
-// app.use(morgan('tiny', { stream: logStream }));
 const app = express();
+app.use(morgan(":method (:response-time ms) :url :status"));
 app.use(compression());
 app.use(
   cors({
@@ -67,6 +67,11 @@ app.use(
         ],
         imgSrc: ["data:", "https://cdn.redoc.ly"],
         scriptSrc: ["'unsafe-inline'", "https:"],
+        connectSrc: [
+          "'self'",
+          "http://127.0.0.1:*",
+          "ws://127.0.0.1:*",
+        ],
       },
     },
   }),
@@ -123,13 +128,11 @@ app.get("/openapi", (req, res) => {
 });
 
 app.get("/api/docs", (req, res) => {
-  const docsUrl = getOpenApiUril(req.hostname);
-  res.send(getOpenApiDocsHtmlString(docsUrl));
+  res.send(getOpenApiDocsHtmlString());
 });
 
 app.get("/api/redocs", (req, res) => {
-  const docsUrl = getOpenApiUril(req.hostname);
-  res.send(getOpenApiReDocsHtmlString(docsUrl));
+  res.send(getOpenApiReDocsHtmlString());
 });
 
 app.get("/api/test", async (req, res) => {
@@ -235,3 +238,11 @@ app.use(
 );
 
 export default app;
+
+/*
+docker run --name reelfake-api -d -p 8080:8080 \
+-e DB_HOST=localhost -e DB_PORT=5432 -e DB_NAME=reelfake_db \
+-e DB_USER=postgres -e DB_PASSWORD=password_dev \
+-e ENABLE_SEQUELIZE_LOGS=true \
+-e JWT_SECRET=ab0375f8ae451e4ee09b4d28f08b8d3c4ca2c2f4a58d39ff92e5b2278a03ca0c reelfake-backend
+*/

@@ -1,14 +1,4 @@
-import { DEFAULT_PORT, envVars } from '../constants';
-
-export function getOpenApiUril(hostname: string) {
-  const isHttps = envVars.nodeEnv === 'production';
-  const port = envVars.nodeEnv === 'production' ? 8080 : DEFAULT_PORT;
-
-  const url = `${isHttps ? 'https' : 'http'}://${hostname}${isHttps ? '' : ':' + port}/openapi`;
-  return url;
-}
-
-export function getOpenApiDocsHtmlString(docsUrl: string) {
+export function getOpenApiDocsHtmlString() {
   return `
     <!doctype html>
     <html lang="en">
@@ -25,7 +15,7 @@ export function getOpenApiDocsHtmlString(docsUrl: string) {
         <script>
         window.onload = () => {
             window.ui = SwaggerUIBundle({
-                url: "${docsUrl}",
+                url: "/openapi",
                 dom_id: '#swagger-ui',
             });
         };
@@ -35,7 +25,7 @@ export function getOpenApiDocsHtmlString(docsUrl: string) {
     `;
 }
 
-export function getOpenApiReDocsHtmlString(docsUrl: string) {
+export function getOpenApiReDocsHtmlString() {
   return `
     <!doctype html>
     <html>
@@ -53,7 +43,7 @@ export function getOpenApiReDocsHtmlString(docsUrl: string) {
     </head>
     <body>
         <redoc
-        spec-url="${docsUrl}"
+        spec-url="/openapi"
         theme='{
             "sidebar": {
                 "backgroundColor": "#263238",
