@@ -11,21 +11,20 @@
 
 1. [Introduction](#introduction)
 2. [API Specs](#api-specification)
-3. [How to access the apis?](#how-to-access-the-apis)
-4. [Running locally](#running-on-localhost)<br>
+3. [Running locally](#running-on-localhost)<br>
    a. [Start database](#start-the-container-for-database)<br>
    b. [Start api](#start-the-container-for-the-api)<br>
-5. [Running on Cloud](#running-on-cloud)<br>
+4. [Running on Cloud](#running-on-cloud)<br>
    a. [Start database instance](#instance-for-database)<br>
    b. [Start api instance](#instance-for-api)<br>
-6. [Postman Collection](#postman-collection)<br>
-7. [Examples](#examples)<br>
+5. [Postman Collection](#postman-collection)<br>
+6. [Examples](#examples)<br>
    a. [Forgot Password](#forgot-password)<br>
    b. [Login](#login)<br>
    c. [Add Movie](#add-movie)<br>
    d. [Add Movie with Actors](#add-movie-with-actors)<br>
    e. [Track File Validation for Upload](#track-file-validation-for-upload)<br>
-8. [Generating JWT Secret](#generating-jwt-secret)
+7. [Generating JWT Secret](#generating-jwt-secret)
 
 ## Introduction
 
@@ -43,15 +42,9 @@ You have a simple api with GET, POST, PUT, PATCH and DELETE operations with the 
 
 ## Api Specification
 
-|DOCS                           |REDOCS                           |
-|-------------------------------|---------------------------------|
-|https://reelfake.cloud/api/docs|https://reelfake.cloud/api/redocs|
-
-## How to access the apis?
-
-The apis are accessible through https://reelfake.cloud/api. Not all the rouets are accessible. To know which routes are accessible, please follow the api specifications.
-
-If you want to complete api access, you will either need to run it locally or need to bring your own cloud. Please follow the instructions below to get the api running.
+|DOCS                            |REDOCS                            |
+|--------------------------------|----------------------------------|
+|http://localhost:{PORT}/api/docs|http://localhost:{PORT}/api/redocs|
 
 ## Running on localhost
 
