@@ -1,126 +1,31 @@
 {
   "info": {
-    "_postman_id": "a89a8999-99a7-41a6-8c86-69337412d457",
-    "name": "Reelfake API",
+    "_postman_id": "3cf5ab5a-7b96-4922-857e-bec8b007ed82",
+    "name": "ReelFake API Backup (localhost)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "548394"
   },
   "item": [
     {
-      "name": "Auth",
-      "item": [
-        {
-          "name": "Logout",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8000/api/auth/logout",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "auth",
-                "logout"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Login",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"email\": \"brandonwiggins25@example.com\",\n    \"password\": \"test@123\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://localhost:8000/api/auth/login",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "auth",
-                "login"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get User Profile",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8000/api/auth/me",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "auth",
-                "me"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Register as customer",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"firstName\": \"Pratap\",\n    \"lastName\": \"Reddy\",\n    \"email\": \"pratap.reddy@example.com\",\n    \"password\": \"password@123\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://localhost:8000/api/customers/register",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "customers",
-                "register"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
       "name": "Movie",
       "item": [
         {
-          "name": "Get movies",
+          "name": "Add Movie",
           "request": {
-            "method": "GET",
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
             "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"tmdbId\": 1242898,\n    \"imdbId\": \"tt31227572\",\n    \"title\": \"Predator: Badlands\",\n    \"originalTitle\": \"Predator: Badlands\",\n    \"overview\": \"A young Predator outcast from his clan finds an unlikely ally on his journey in search of the ultimate adversary.\",\n    \"runtime\": 107,\n    \"releaseDate\": \"2025-11-07\",\n    \"genres\": [\n        \"Action\",\n        \"Adventure\",\n        \"Science Fiction\",\n        \"Thriller\"\n    ],\n    \"countriesOfOrigin\": [\n        \"US\"\n    ],\n    \"language\": \"en\",\n    \"movieStatus\": \"Released\",\n    \"popularity\": 0.04,\n    \"budget\": 105000000,\n    \"revenue\": 200000000,\n    \"ratingAverage\": 7.6,\n    \"ratingCount\": 34000,\n    \"posterUrl\": \"https://image.tmdb.org/t/p/w500/ebyxeBh56QNXxSJgTnmz7fXAlwk.jpg\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
             "url": {
               "raw": "http://localhost:8000/api/movies",
               "protocol": "http",
@@ -137,12 +42,48 @@
           "response": []
         },
         {
-          "name": "Filter by release date & countries",
+          "name": "Get Movie",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8000/api/movies?release_date=2020-01-01,2020-12-31&countries=cl,in",
+              "raw": "http://localhost:8000/api/movies/442417",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "movies",
+                "442417"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add movie (with actors)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"tmdbId\": 1410614,\n    \"imdbId\": null,\n    \"title\": \"Shantanu Holmes\",\n    \"originalTitle\": \"Shantanu Holmes\",\n    \"overview\": \"Have a look in a chaotic 24-hour adventure in the life of a private investigator Shantanu Kumar\\u2022\\u2022\",\n    \"runtime\": 22,\n    \"releaseDate\": \"2025-01-01\",\n    \"genres\": [\n        \"Mystery\"\n    ],\n    \"countriesOfOrigin\": [\n        \"IN\"\n    ],\n    \"language\": \"hi\",\n    \"movieStatus\": \"Released\",\n    \"popularity\": 0.0552,\n    \"budget\": 46,\n    \"revenue\": 0,\n    \"ratingAverage\": 8.7,\n    \"ratingCount\": 3,\n    \"posterUrl\": \"https://image.tmdb.org/t/p/w500/2tcB6ciAKkW6hVSggHVzXzXd6Ox.jpg\",\n    \"actors\": [\n        {\n            \"tmdbId\": 5152285,\n            \"imdbId\": null,\n            \"actorName\": \"Rishav Kumar\",\n            \"biography\": \"Aukat under-construction \\ud83d\\udea7\",\n            \"birthday\": null,\n            \"deathday\": null,\n            \"placeOfBirth\": \"Patna, Bihar, India\",\n            \"popularity\": 0.0,\n            \"profilePictureUrl\": \"https://image.tmdb.org/t/p/w500/qUrKO8upDKQtMvUGeofmIvVdf7H.jpg\",\n            \"characterName\": \"Shantanu Kumar\",\n            \"castOrder\": 0\n        },\n        {\n            \"tmdbId\": 5152314,\n            \"imdbId\": null,\n            \"actorName\": \"Abhinav Kundu\",\n            \"biography\": \"\",\n            \"birthday\": null,\n            \"deathday\": null,\n            \"placeOfBirth\": \"Beijing, China\",\n            \"popularity\": 0.0071,\n            \"profilePictureUrl\": \"https://image.tmdb.org/t/p/w500/ndCiYFtFdJFUUQ07BiyWcL1EhkD.jpg\",\n            \"characterName\": \"Monu\",\n            \"castOrder\": 1\n        },\n        {\n            \"tmdbId\": 5152326,\n            \"imdbId\": null,\n            \"actorName\": \"Raj Ranjan\",\n            \"biography\": \"\",\n            \"birthday\": null,\n            \"deathday\": null,\n            \"placeOfBirth\": null,\n            \"popularity\": 0.0071,\n            \"profilePictureUrl\": \"https://image.tmdb.org/t/p/w500/ck52LMGuZmj5abYhZQiiD1fBku9.jpg\",\n            \"characterName\": \"Servant (Voice)\",\n            \"castOrder\": 2\n        }\n    ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/movies",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -151,16 +92,38 @@
               "path": [
                 "api",
                 "movies"
-              ],
-              "query": [
-                {
-                  "key": "release_date",
-                  "value": "2020-01-01,2020-12-31"
-                },
-                {
-                  "key": "countries",
-                  "value": "cl,in"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add movie (without actors)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"tmdbId\": 1410614,\n    \"imdbId\": null,\n    \"title\": \"Shantanu Holmes\",\n    \"originalTitle\": \"Shantanu Holmes\",\n    \"overview\": \"Have a look in a chaotic 24-hour adventure in the life of a private investigator Shantanu Kumar\\u2022\\u2022\",\n    \"runtime\": 22,\n    \"releaseDate\": \"2025-01-01\",\n    \"genres\": [\n        \"Mystery\"\n    ],\n    \"countriesOfOrigin\": [\n        \"IN\"\n    ],\n    \"language\": \"hi\",\n    \"movieStatus\": \"Released\",\n    \"popularity\": 0.0552,\n    \"budget\": 46,\n    \"revenue\": 0,\n    \"ratingAverage\": 8.7,\n    \"ratingCount\": 3,\n    \"posterUrl\": \"https://image.tmdb.org/t/p/w500/2tcB6ciAKkW6hVSggHVzXzXd6Ox.jpg\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
                 }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/movies",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "movies"
               ]
             }
           },
@@ -192,15 +155,24 @@
           "response": []
         },
         {
-          "name": "Get Movie",
+          "name": "Add actors to movie",
           "request": {
             "auth": {
               "type": "noauth"
             },
-            "method": "GET",
+            "method": "POST",
             "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n    {\n        \"tmdbId\": 5152285,\n        \"imdbId\": null,\n        \"actorName\": \"Rishav Kumar\",\n        \"biography\": \"Aukat under-construction \\ud83d\\udea7\",\n        \"birthday\": null,\n        \"deathday\": null,\n        \"placeOfBirth\": \"Patna, Bihar, India\",\n        \"popularity\": 0.0,\n        \"profilePictureUrl\": \"https://image.tmdb.org/t/p/w500/qUrKO8upDKQtMvUGeofmIvVdf7H.jpg\",\n        \"characterName\": \"Shantanu Kumar\",\n        \"castOrder\": 0\n    },\n    {\n        \"tmdbId\": 5152314,\n        \"imdbId\": null,\n        \"actorName\": \"Abhinav Kundu\",\n        \"biography\": \"\",\n        \"birthday\": null,\n        \"deathday\": null,\n        \"placeOfBirth\": \"Beijing, China\",\n        \"popularity\": 0.0071,\n        \"profilePictureUrl\": \"https://image.tmdb.org/t/p/w500/ndCiYFtFdJFUUQ07BiyWcL1EhkD.jpg\",\n        \"characterName\": \"Monu\",\n        \"castOrder\": 1\n    },\n    {\n        \"tmdbId\": 5152326,\n        \"imdbId\": null,\n        \"actorName\": \"Raj Ranjan\",\n        \"biography\": \"\",\n        \"birthday\": null,\n        \"deathday\": null,\n        \"placeOfBirth\": null,\n        \"popularity\": 0.0071,\n        \"profilePictureUrl\": \"https://image.tmdb.org/t/p/w500/ck52LMGuZmj5abYhZQiiD1fBku9.jpg\",\n        \"characterName\": \"Servant (Voice)\",\n        \"castOrder\": 2\n    }\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
             "url": {
-              "raw": "http://localhost:8000/api/movies/442417",
+              "raw": "http://localhost:8000/api/movies/442417/add_actors",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -209,19 +181,79 @@
               "path": [
                 "api",
                 "movies",
-                "442417"
+                "442417",
+                "add_actors"
               ]
             }
           },
           "response": []
         },
         {
-          "name": "Has all genres",
+          "name": "Update movie",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"Sexy Zone Anniversary Tour 2021 SZ10TH\",\n    \"overview\": \"Sexy Zone's 10th birthday special concert.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/v1/movies/570359",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "v1",
+                "movies",
+                "570359"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete movie",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/v1/movies/2424232",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "v1",
+                "movies",
+                "2424232"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Paginate Movies (filters)",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8000/api/movies?genres=[\"science fiction\",\"action\",\"mystery\"]",
+              "raw": "http://localhost:8000/api/movies?release_date=2020-01-01,2020-12-31",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -233,8 +265,8 @@
               ],
               "query": [
                 {
-                  "key": "genres",
-                  "value": "[\"science fiction\",\"action\",\"mystery\"]"
+                  "key": "release_date",
+                  "value": "2020-01-01,2020-12-31"
                 }
               ]
             }
@@ -242,12 +274,12 @@
           "response": []
         },
         {
-          "name": "Any of genres",
+          "name": "Paginate Movies",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8000/api/movies?genres=science fiction",
+              "raw": "http://localhost:8000/api/movies?countries=cl,in",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -259,8 +291,8 @@
               ],
               "query": [
                 {
-                  "key": "genres",
-                  "value": "science fiction"
+                  "key": "countries",
+                  "value": "cl,in"
                 }
               ]
             }
@@ -268,12 +300,23 @@
           "response": []
         },
         {
-          "name": "Any of languages",
+          "name": "Validate file for upload",
           "request": {
-            "method": "GET",
+            "method": "POST",
             "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "uuid": "886323a5-a830-4429-8ee9-8c3114127904",
+                  "src": "/Users/pratap.reddy/sample_movies_test.csv"
+                }
+              ]
+            },
             "url": {
-              "raw": "http://localhost:8000/api/movies?languages=hi,fr",
+              "raw": "http://localhost:8000/api/movies/upload/validate?enable_tracking=true",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -281,12 +324,14 @@
               "port": "8000",
               "path": [
                 "api",
-                "movies"
+                "movies",
+                "upload",
+                "validate"
               ],
               "query": [
                 {
-                  "key": "languages",
-                  "value": "hi,fr"
+                  "key": "enable_tracking",
+                  "value": "true"
                 }
               ]
             }
@@ -294,12 +339,23 @@
           "response": []
         },
         {
-          "name": "By language",
+          "name": "Upload movies file",
           "request": {
-            "method": "GET",
+            "method": "POST",
             "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "uuid": "682d3db2-570f-4c5c-959e-f1291ca1e1ca",
+                  "src": "/Users/pratap.reddy/movies_january_2025.csv"
+                }
+              ]
+            },
             "url": {
-              "raw": "http://localhost:8000/api/movies?languages=te",
+              "raw": "http://localhost:8000/api/movies/upload?stop_on_error=false",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -307,12 +363,13 @@
               "port": "8000",
               "path": [
                 "api",
-                "movies"
+                "movies",
+                "upload"
               ],
               "query": [
                 {
-                  "key": "languages",
-                  "value": "te"
+                  "key": "stop_on_error",
+                  "value": "false"
                 }
               ]
             }
@@ -322,18 +379,27 @@
       ]
     },
     {
-      "name": "Movie Language",
+      "name": "Auth",
       "item": [
         {
-          "name": "Get languages",
+          "name": "Login",
           "request": {
             "auth": {
               "type": "noauth"
             },
-            "method": "GET",
+            "method": "POST",
             "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"breannaparrish15@example.com\",\n    \"password\": \"test@123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
             "url": {
-              "raw": "http://localhost:8000/api/movie_languages",
+              "raw": "http://localhost:8000/api/auth/login",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -341,7 +407,616 @@
               "port": "8000",
               "path": [
                 "api",
-                "movie_languages"
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/auth/logout",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get logged in user",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/auth/me",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Staff",
+      "item": [
+        {
+          "name": "Get Staff (Pagination)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/staff",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "staff"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get store managers",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/staff/managers",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "staff",
+                "managers"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get store managers Summary",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/staff/managers/summary",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "staff",
+                "managers",
+                "summary"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get staff with filter",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/staff?address_line=%karen%",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "staff"
+              ],
+              "query": [
+                {
+                  "key": "address_line",
+                  "value": "%karen%"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get staff summary with filter",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/staff/summary?first_name=%christina%",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "staff",
+                "summary"
+              ],
+              "query": [
+                {
+                  "key": "first_name",
+                  "value": "%christina%"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get staff in a state",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/staff?state=victoria&city=Geelong",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "staff"
+              ],
+              "query": [
+                {
+                  "key": "state",
+                  "value": "victoria"
+                },
+                {
+                  "key": "city",
+                  "value": "Geelong"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get staff detail",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/staff/18",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "staff",
+                "18"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Change staff password",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"currentPassword\": \"test@123\",\n    \"newPassword\": \"newtest@123\",\n    \"confirmedNewPassword\": \"newtest@123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/staff/1/change_password",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "staff",
+                "1",
+                "change_password"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update staff",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"firstName\": \"Test\",\n    \"lastName\": \"User\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/staff/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "staff",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update staff address",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"address\": {\n        \"addressLine\": \"234 new address st\",\n        \"cityName\": \"Sydney\",\n        \"stateName\": \"New South Wales\",\n        \"country\": \"Australia\",\n        \"postalCode\": \"3984\"\n    }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/staff/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "staff",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Staff",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Test9\",\n  \"lastName\": \"User9\",\n  \"email\": \"test9.user9@example.com\",\n  \"phoneNumber\": \"482937294\",\n  \"avatar\": \"https://example.com/adsfasdf\",\n  \"address\": {\n    \"addressLine\": \"123 new address st\",\n    \"cityName\": \"Melbourne\",\n    \"stateName\": \"Victoria\",\n    \"country\": \"Australia\",\n    \"postalCode\": \"3984\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/staff",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "staff"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot Staff Password",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"newPassword\": \"test@123\",\n    \"confirmedNewPassword\": \"test@123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/staff/43/forgot_password",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "staff",
+                "43",
+                "forgot_password"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get staff summary",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/staff/summary",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "staff",
+                "summary"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Store",
+      "item": [
+        {
+          "name": "Get store staff",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/stores/1/staff",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "stores",
+                "1",
+                "staff"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get store detail",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/stores/2",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "stores",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get movies in store",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/stores/1/movies?page=last",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "stores",
+                "1",
+                "movies"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "last"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get stores",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/stores",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "stores"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add store",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"phoneNumber\": \"0184294283\",\n    \"address\": {\n        \"addressLine\": \"150 Ashley Springs\",\n        \"cityName\": \"Albury-Wodonga\",\n        \"stateName\": \"New South Wales\",\n        \"country\": \"Australia\",\n        \"postalCode\": \"08178\"\n    },\n    \"storeManager\": {\n        \"firstName\": \"Usha Sree\",\n        \"lastName\": \"Musini\",\n        \"phoneNumber\": \"9482482485\",\n        \"email\": \"usha.musini@example.com\",\n        \"address\": {\n            \"addressLine\": \"123 New Staff Street\",\n            \"cityName\": \"Sydney\",\n            \"stateName\": \"New South Wales\",\n            \"country\": \"Australia\",\n            \"postalCode\": \"48292\"\n        }\n    }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/stores",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "stores"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update store",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"storeManager\": {\n        \"firstName\": \"Brave\",\n        \"lastName\": \"Soldier\",\n        \"phoneNumber\": \"9482482485\",\n        \"email\": \"usha.musini@example.com\",\n        \"address\": {\n            \"addressLine\": \"000 updated street for store\",\n            \"cityName\": \"Sydney\",\n            \"stateName\": \"New South Wales\",\n            \"country\": \"Australia\",\n            \"postalCode\": \"48292\"\n        }\n    }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/stores/45",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "stores",
+                "45"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Stock Count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/stores/1/stock",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "stores",
+                "1",
+                "stock"
               ]
             }
           },
@@ -353,7 +1028,7 @@
       "name": "Actor",
       "item": [
         {
-          "name": "Get actor detail",
+          "name": "Get Actor",
           "request": {
             "auth": {
               "type": "noauth"
@@ -383,7 +1058,73 @@
           "response": []
         },
         {
-          "name": "Get actors",
+          "name": "Add actor",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"tmdbId\": 438243843,\n    \"actorName\": \"Sample Actor\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/actors",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "actors"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add actor movie",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"movieId\": 442417,\n    \"characterName\": \"Sample Actor\",\n    \"castOrder\": 33\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/actors/3/add_to_movie",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "actors",
+                "3",
+                "add_to_movie"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Paginate Actors",
           "request": {
             "method": "GET",
             "header": [],
@@ -409,7 +1150,7 @@
           "response": []
         },
         {
-          "name": "Get actors using filters",
+          "name": "Paginate Actors (filters)",
           "request": {
             "method": "GET",
             "header": [],
@@ -461,7 +1202,7 @@
           "response": []
         },
         {
-          "name": "Search by name (single page)",
+          "name": "Search actors by name (single page)",
           "request": {
             "method": "GET",
             "header": [],
@@ -487,12 +1228,12 @@
           "response": []
         },
         {
-          "name": "Search by name (pagination)",
+          "name": "Search actors by name (pagination)",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8000/api/actors?name=%jodie%",
+              "raw": "http://localhost:8000/api/actors?name=%tom%",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -505,59 +1246,7 @@
               "query": [
                 {
                   "key": "name",
-                  "value": "%jodie%"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get actors by place of birth",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8000/api/actors?place_of_birth=jakarta",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "actors"
-              ],
-              "query": [
-                {
-                  "key": "place_of_birth",
-                  "value": "jakarta"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get actors by place of birth (wildcard)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8000/api/actors?place_of_birth=%art%",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "actors"
-              ],
-              "query": [
-                {
-                  "key": "place_of_birth",
-                  "value": "%art%"
+                  "value": "%tom%"
                 }
               ]
             }
@@ -569,6 +1258,98 @@
     {
       "name": "Customer",
       "item": [
+        {
+          "name": "Delete customer",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/v1/customers/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "v1",
+                "customers",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register customer",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"firstName\": \"Sample\",\n    \"lastName\": \"Customer\",\n    \"email\": \"sample.customer@example.com\",\n    \"password\": \"test@123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/customers/register",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "customers",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update registered customer",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"firstName\": \"Sample\",\n    \"lastName\": \"Customer\",\n    \"email\": \"sample.customer@example.com\",\n    \"phoneNumber\": \"+84-848298232\",\n    \"address\": {\n        \"addressLine\": \"492 New Customer Address\",\n        \"cityName\": \"Melbourne\",\n        \"stateName\": \"Victoria\",\n        \"country\": \"Australia\",\n        \"postalCode\": \"482932\"\n    },\n    \"preferredStoreId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/v1/customers/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "v1",
+                "customers",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
         {
           "name": "Get customers",
           "request": {
@@ -644,7 +1425,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8000/api/customers/15370",
+              "raw": "http://localhost:8000/api/customers/50",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -653,7 +1434,72 @@
               "path": [
                 "api",
                 "customers",
-                "15370"
+                "50"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update customer",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"phoneNumber\": \"xx42-xxx-244\",\n    \"address\": {\n        \"addressLine\": \"492 Again Updated Address\",\n        \"cityName\": \"Sydney\",\n        \"stateName\": \"New South Wales\",\n        \"country\": \"Australia\",\n        \"postalCode\": \"482024\"\n    }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/v1/customers/15386",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "v1",
+                "customers",
+                "15386"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Set customer password",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"newPassword\": \"test@123\",\n    \"confirmedNewPassword\": \"test@123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/customers/2/forgot_password",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "customers",
+                "2",
+                "forgot_password"
               ]
             }
           },
@@ -686,271 +1532,7 @@
           "response": []
         },
         {
-          "name": "Forgot Password",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "PUT",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"newPassword\": \"test@123\",\n    \"confirmedNewPassword\": \"test@123\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://localhost:8000/api/customers/1/forgot_password",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "customers",
-                "1",
-                "forgot_password"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Change Password",
-          "request": {
-            "method": "PUT",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"currentPassword\": \"oldtest@123\",\n    \"newPassword\": \"test@123\",\n    \"confirmedNewPassword\": \"test@123\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://localhost:8000/api/customers/1/change_password",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "customers",
-                "1",
-                "change_password"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Staff",
-      "item": [
-        {
-          "name": "Get Staff (Pagination)",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8000/api/staff",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "staff"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get store managers",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8000/api/staff/managers",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "staff",
-                "managers"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get staff with filter",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8000/api/staff?first_name=jo%&last_name=%ed%",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "staff"
-              ],
-              "query": [
-                {
-                  "key": "first_name",
-                  "value": "jo%"
-                },
-                {
-                  "key": "last_name",
-                  "value": "%ed%"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get staff summary with filter",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8000/api/staff/summary?first_name=%ben%",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "staff",
-                "summary"
-              ],
-              "query": [
-                {
-                  "key": "first_name",
-                  "value": "%ben%"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get staff in a state",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8000/api/staff?state=victoria",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "staff"
-              ],
-              "query": [
-                {
-                  "key": "state",
-                  "value": "victoria"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get staff detail",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8000/api/staff/40",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "staff",
-                "40"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Change staff password",
-          "request": {
-            "method": "PUT",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"currentPassword\": \"test@123\",\n    \"newPassword\": \"newtest@123\",\n    \"confirmedNewPassword\": \"newtest@123\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://localhost:8000/api/staff/1/change_password",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "staff",
-                "1",
-                "change_password"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Forgot Staff Password",
+          "name": "Forgot Customer Password",
           "request": {
             "method": "PUT",
             "header": [],
@@ -964,7 +1546,7 @@
               }
             },
             "url": {
-              "raw": "http://localhost:8000/api/staff/18/forgot_password",
+              "raw": "http://localhost:8000/api/customers/10/forgot_password",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -972,8 +1554,8 @@
               "port": "8000",
               "path": [
                 "api",
-                "staff",
-                "18",
+                "customers",
+                "10",
                 "forgot_password"
               ]
             }
@@ -981,7 +1563,7 @@
           "response": []
         },
         {
-          "name": "Get staff summary",
+          "name": "Get my rentals",
           "request": {
             "auth": {
               "type": "noauth"
@@ -989,7 +1571,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8000/api/staff/summary",
+              "raw": "http://localhost:8000/api/customers/my_rentals",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -997,23 +1579,20 @@
               "port": "8000",
               "path": [
                 "api",
-                "staff",
-                "summary"
+                "customers",
+                "my_rentals"
               ]
             }
           },
           "response": []
         },
         {
-          "name": "Get store managers summary",
+          "name": "Set preferred store",
           "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
+            "method": "PATCH",
             "header": [],
             "url": {
-              "raw": "http://localhost:8000/api/staff/managers/summary",
+              "raw": "http://localhost:8000/api/customers/1/preferred_store/2",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -1021,164 +1600,10 @@
               "port": "8000",
               "path": [
                 "api",
-                "staff",
-                "managers",
-                "summary"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Store",
-      "item": [
-        {
-          "name": "Get store staff",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8000/api/stores/1/staff",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "stores",
+                "customers",
                 "1",
-                "staff"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get store detail",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8000/api/stores/1",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "stores",
-                "1"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get movies in store",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8000/api/stores/1/movies?page=last",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "stores",
-                "1",
-                "movies"
-              ],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "last"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get stores",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8000/api/stores",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "stores"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Stock Count",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8000/api/stores/1/stock",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "stores",
-                "1",
-                "stock"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get movies in store",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8000/api/stores/1/movies",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "stores",
-                "1",
-                "movies"
+                "preferred_store",
+                "2"
               ]
             }
           },
@@ -1192,10 +1617,13 @@
         {
           "name": "Get cities",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8000/api/cities",
+              "raw": "http://localhost:8000/api/v1/cities",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -1203,57 +1631,8 @@
               "port": "8000",
               "path": [
                 "api",
+                "v1",
                 "cities"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Country",
-      "item": [
-        {
-          "name": "Get countries",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8000/api/countries",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "countries"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Genre",
-      "item": [
-        {
-          "name": "Get genres",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8000/api/genres",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "genres"
               ]
             }
           },
@@ -1267,10 +1646,13 @@
         {
           "name": "Get addresses",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8000/api/addresses",
+              "raw": "http://localhost:8000/api/v1/addresses?page=last",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -1278,19 +1660,29 @@
               "port": "8000",
               "path": [
                 "api",
+                "v1",
                 "addresses"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "last"
+                }
               ]
             }
           },
           "response": []
         },
         {
-          "name": "Get addresses by city",
+          "name": "Get addresses in city",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8000/api/addresses/city/melbourne",
+              "raw": "http://localhost:8000/api/v1/addresses/city/melbourne",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -1298,6 +1690,7 @@
               "port": "8000",
               "path": [
                 "api",
+                "v1",
                 "addresses",
                 "city",
                 "melbourne"
@@ -1307,12 +1700,15 @@
           "response": []
         },
         {
-          "name": "Get addresses by state",
+          "name": "Get addresses in state",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8000/api/addresses/state/victoria",
+              "raw": "http://localhost:8000/api/v1/addresses/state/new south wales",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -1320,9 +1716,10 @@
               "port": "8000",
               "path": [
                 "api",
+                "v1",
                 "addresses",
                 "state",
-                "victoria"
+                "new south wales"
               ]
             }
           },
@@ -1334,7 +1731,7 @@
       "name": "Rental",
       "item": [
         {
-          "name": "Get rentals",
+          "name": "Get Rentals",
           "request": {
             "method": "GET",
             "header": [],
@@ -1375,7 +1772,7 @@
           "response": []
         },
         {
-          "name": "Get rentals from my store",
+          "name": "Get rentals for store",
           "request": {
             "auth": {
               "type": "noauth"
@@ -1401,6 +1798,341 @@
       ]
     },
     {
+      "name": "Inventory",
+      "item": [
+        {
+          "name": "Add Inventory",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"movie_id\": 442417,\n    \"store_id\": 1,\n    \"stock_count\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/inventory",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "inventory"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Inventory",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"movie_id\": 442417,\n    \"store_id\": 23\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http:///localhost:8000/api/inventory/13192301",
+              "protocol": "http",
+              "path": [
+                "localhost:8000",
+                "api",
+                "inventory",
+                "13192301"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/inventory/13192301",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "inventory",
+                "13192301"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Stats",
+      "item": [
+        {
+          "name": "Statistics",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/stats",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "stats"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/stats/most_rented_movies?limit=10",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "stats",
+                "most_rented_movies"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Most Rented Movies",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/stats/most_rented_movies?limit=100",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "stats",
+                "most_rented_movies"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "100"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sales by Store",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/stats/sales_by_store?limit=100",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "stats",
+                "sales_by_store"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "100"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sales by City",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/stats/sales_by_city?limit=100",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "stats",
+                "sales_by_city"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "100"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sales by Month",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/stats/sales_by_month?limit=100",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "stats",
+                "sales_by_month"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "100"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "item": [
+        {
+          "name": "Get Cart",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/cart",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "cart"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Cart",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"movieId\": 16938,\n    \"quantity\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/cart",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "cart"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Cart",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"quantity\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/cart/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "cart",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "Api info",
       "request": {
         "method": "GET",
@@ -1414,26 +2146,6 @@
           "port": "8000",
           "path": [
             "api"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Statistics",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:8000/api/stats",
-          "protocol": "http",
-          "host": [
-            "localhost"
-          ],
-          "port": "8000",
-          "path": [
-            "api",
-            "stats"
           ]
         }
       },
