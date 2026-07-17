@@ -18,18 +18,14 @@
 5. [Running on Cloud](#running-on-cloud)<br>
    a. [Start database instance](#instance-for-database)<br>
    b. [Start api instance](#instance-for-api)<br>
-6. [Using the api](#using-the-api)<br>
-   a. [Base url](#base-url)<br>
-   b. [Protected and Unprotected Routes](#protected-and-unprotected-routes)<br>
-   c. [Using customer / staff / store manager for login](#using-customer-staff-store-manager-for-login)
-7. [Postman Collection](#postman-collection)<br>
-8. [Examples](#examples)<br>
+6. [Postman Collection](#postman-collection)<br>
+7. [Examples](#examples)<br>
    a. [Forgot Password](#forgot-password)<br>
    b. [Login](#login)<br>
    c. [Add Movie](#add-movie)<br>
    d. [Add Movie with Actors](#add-movie-with-actors)<br>
    e. [Track File Validation for Upload](#track-file-validation-for-upload)<br>
-9. [Generating JWT Secret](#generating-jwt-secret)
+8. [Generating JWT Secret](#generating-jwt-secret)
 
 ## Introduction
 
@@ -142,52 +138,6 @@ The below instructions are for deploying to Amazon Lightsail that I use (make su
 
 1. The docker command for deploying to Lightsail is same as running it locally. You will just need to change the DB_HOST for the api which must point to the database instance.
 2. AWS keeps improving so the steps above might or might not change in future. Follow [Create a Lightsail Instance](https://docs.aws.amazon.com/lightsail/latest/userguide/how-to-create-amazon-lightsail-instance-virtual-private-server-vps.html) for guidance.
-
-## Using the api
-
-### Base url
-
-The base url is https://reelfake.cloud/api if you are planning to use the one deployed to my instance. Otherwise depending on where you host the api the base url could differ. If you are running locally the bsae url will http://localhost:{{port}}/api or http://127.0.0.1:{{port}}/api. The port defaults to 8000 if you do not specify anything in the environment variable. If you are running on ec2, lightsail or any other cloud then the hostname will be the ip address depending on how you have configured the http traffic.
-
-### Protected and Unprotected Routes
-
-Some routes requires authentication through login and some routes can be accessed without login. To check which routes are protected or unprotected, please follow the [api specification](#api-specs).
-
-### Using customer / staff / store manager for login
-
-To login as customer, staff or any store manager you can fetch the data and decide which one to use. This does not require login.
-
-|Resource     |Url Path                       |
-|-------------|-------------------------------|
-|Customer     |/api/customers/summary         |
-|Staff        |/api/staff/summary             |
-|Store Manager|/api/staff/managers/summary    |
-
-To know the response returned by the summary api, please follow the [api specs](#api-specs).
-
-Below are the sample request for setting the password.
-
-*Customer*
-
-```curl
-curl --location --request PUT 'https://reelfake.cloud/api/customers/{id}/forgot_password' \
---header 'Content-Type: application/json' \
---data-raw '{
-    "newPassword": "test@123",
-    "confirmedNewPassword": "test@123"
-}'
-```
-
-*Staff / Store Manager*
-
-```curl
-curl --location --request PUT 'https://reelfake.cloud/api/staff/{id}/forgot_password' \
---header 'Content-Type: application/json' \
---data-raw '{
-    "newPassword": "test@123",
-    "confirmedNewPassword": "test@123"
-}'
-```
 
 ## Postman Collection
 
