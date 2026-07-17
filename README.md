@@ -134,7 +134,7 @@ The below instructions are for deploying to Amazon Lightsail that I use (make su
 
 ## Postman Collection
 
-You can use the [postman collection](https://drive.google.com/file/d/1MVjfk2LI4SR919Nn2Hre1gv8IAOUuuSm/view?usp=sharing) if you want to try the api on reelfake.cloud.
+You can use the [postman collection](/postman/reelfake_api_postman.json?download=true). This postman collection assumes you are running the api on localhost on port 8000. But you can change the host to where ever you are hosting.
 Note that this postman collection does not have all the requests mostly POST, PUT and DELETE that mutates the data.
 
 ## Examples
