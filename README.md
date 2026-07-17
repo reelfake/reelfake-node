@@ -92,9 +92,15 @@ For this step, you will need to generate the jwt secret (refer [Generating JWT S
 -e DB_PORT=5432 -e DB_NAME=reelfake_db -e DB_USER=postgres -e DB_PASSWORD=password_from_above \
 -e JWT_SECRET={{Generated JWT Secret}} --network reelfake-net pratapreddy15/reelfake-backend</code></pre>
 
-#### Monitor the api logs (if REELFAKE_USERS_DB_NAME is enabled then you can see the db transaction related logs)
+### Start the container for the api (with sql related logs)
 
-<pre><code>docker logs -f container_name_from_above</code></pre>
+<pre><code>docker run -d --name reelfake-api -p port_of_choice:8080 -e ENABLE_SEQUELIZE_LOGS=true -e DB_HOST=reelfake-db \
+-e DB_PORT=5432 -e DB_NAME=reelfake_db -e DB_USER=postgres -e DB_PASSWORD=password_from_above \
+-e JWT_SECRET={{Generated JWT Secret}} --network reelfake-net pratapreddy15/reelfake-backend</code></pre>
+
+#### Monitor the api logs (if ENABLE_SEQUELIZE_LOGS is enabled then you can see the db transaction related logs)
+
+<pre><code>docker logs -f reelfake-api</code></pre>
 
 ## Running on cloud
 
