@@ -59,22 +59,38 @@ If you want to complete api access, you will either need to run it locally or ne
 
 ## Running on localhost
 
+We will use below names for the docker resources
+|             |Container        |
+|-------------|-----------------|
+|Database     |reelfake-db      |
+|API          |reelfake-api     |
+
+|Volume       |Network          |
+|-------------|-----------------|
+|reelfake-vol |reelfake-net     |
+
 ### Start the container for database
 
-<pre><code>docker run -d --name container_name_of_choice -p 5432:5432 -v volume_name_of_choice:/var/lib/postgresql/data \
+<pre><code>docker run -d --name reelfake-db -p 5432:5432 -v reelfake-vol:/var/lib/postgresql/data \
 -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=password_of_choice pratapreddy15/reelfake-postgres</code></pre>
 
 #### Verify the database is up
 
-<code>docker logs -f container_name_from_above</code>
+<code>docker logs -f reelfake-db</code>
+
+#### Create a network to connect the database and api
+<code>docker network create reelfake-net</code>
+
+#### Connect the database container to the network
+<code>docker network connect reelfake-net</code>
 
 ### Start the container for the api
 
 For this step, you will need to generate the jwt secret (refer [Generating JWT Secret](#generating-jwt-secret))
 
-<pre><code>docker run -d --name container_name_of_choice -p port_of_choice:8080 -e DB_HOST=172.17.0.2 \
+<pre><code>docker run -d --name reelfake-api -p port_of_choice:8080 -e DB_HOST=reelfake-db \
 -e DB_PORT=5432 -e DB_NAME=reelfake_db -e DB_USER=postgres -e DB_PASSWORD=password_from_above \
--e JWT_SECRET={{Generated JWT Secret}} pratapreddy15/reelfake-backend</code></pre>
+-e JWT_SECRET={{Generated JWT Secret}} --network reelfake-net pratapreddy15/reelfake-backend</code></pre>
 
 #### Monitor the api logs (if REELFAKE_USERS_DB_NAME is enabled then you can see the db transaction related logs)
 
