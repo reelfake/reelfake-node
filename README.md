@@ -139,6 +139,9 @@ Note that this postman collection does not have all the requests mostly POST, PU
 
 ## Examples
 
+**Note:**
+All the examples are targetting localhost:8000 which you can change to where ever you have hosted the api (which could be localhost also).
+
 Get the list of customers, staff or store managers to choose from
 
 |Resource     |Url Path                       |
@@ -154,9 +157,9 @@ const email = 'test@example.com';
 const newPassword = 'test@123';
 const confirmedNewPassword = 'test@123';
 
-// For staff / store manager url will be https://reelfake.cloud/api/staff/1/forgot_password
+// For staff / store manager url will be http://localhost:8000/api/staff/1/forgot_password
 
-const response = await fetch('https://reelfake.cloud/api/customers/1/forgot_password', {
+const response = await fetch('http://localhost:8000/api/customers/1/forgot_password', {
    method: 'POST',
    headers: {
      'Content-Type': 'application/json',
@@ -183,7 +186,7 @@ if (response.status !== 200) {
 const email = 'test@example.com';
 const password = 'test@123';
 
-const response = await fetch('https://reelfake.cloud/api/auth/login', {
+const response = await fetch('http://localhost:8000/api/auth/login', {
    method: 'POST',
    headers: {
      'Content-Type': 'application/json',
@@ -229,7 +232,7 @@ const sampleMovie = {
 // First, reset password if you haven't
 // Second, login
 // Finally, add a movie
-const response = await fetch(`${baseUrl}/movies`, {
+const response = await fetch('http://localhost:8000/api/movies', {
  method: 'POST',
  headers: requestHeaders,
  body: JSON.stringify(payload),
@@ -320,11 +323,11 @@ The route /movies/upload/validate provides a query option enable_tracking that s
 You can download the [sample csv](https://drive.google.com/file/d/1vsubzQ-HyZX6OZtK5Tb0vWiUBU0CgiCF/view?usp=sharing) file to try the file validation api.
 
 ```javascript
-// The csv file upload is accessible only to store manager role
+// The csv file upload feature is accessible only to store manager role
 
 // Login as store manager (using the forgot password route to reset password for any store manager)
 
-const baseUrl = 'https://reelfake.cloud/api';
+const baseUrl = 'http://localhost:8000/api';
 
 async function uploadFile(formData) {
   try {
